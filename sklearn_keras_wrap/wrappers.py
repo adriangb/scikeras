@@ -3,18 +3,20 @@
 import warnings
 from collections import defaultdict, namedtuple
 import copy
+import inspect
 
 import numpy as np
+
+from sklearn.metrics import r2_score as sklearn_r2_score
+from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.models import Model, Sequential, clone_model
 from tensorflow.python.keras.saving import saving_utils
 from tensorflow.python.keras.layers import serialize, deserialize
-from tensorflow.python.util import tf_inspect
 from tensorflow.python.keras.utils.generic_utils import has_arg
 from tensorflow.python.keras.utils.np_utils import to_categorical
-from tensorflow.python.util.tf_export import keras_export
 
 
 # namedtuple used for pickling Model instances
@@ -31,114 +33,11 @@ KNOWN_KERAS_FN_NAMES = (
     "predict",
 )
 
-
-def _merge_dicts(*args):
-    """Utility to merge multiple dictionaries last one wins style.
-    """
-    res = dict()
-    for arg in args:
-        res.update(arg)
-    return res
-
-
-def _check_array_sizes(y_true, y_pred, sample_weight):
-    """Array size checks for scoring functions.
-    """
-    if y_true.ndim == 1:
-        y_true = y_true.reshape(-1, 1)
-    if y_pred.ndim == 1:
-        y_pred = y_pred.reshape(-1, 1)
-
-    if y_true.shape != y_pred.shape:
-        raise ValueError(
-            "Shape of `y_true` and `y_pred` did not match: %s != %s"
-            % (y_true.shape, y_pred.shape)
-        )
-    if sample_weight is not None:
-        if y_true.shape[0] != sample_weight.shape[0]:
-            raise ValueError(
-                "Shape of `y_true` and `sample_weight` did not match: %s != %s"
-                % (y_true.shape, sample_weight.shape)
-            )
-        if sample_weight.ndim != 1:
-            raise ValueError(
-                "`sample_weight` must be an array of shape (n_samples,)"
-            )
-
-    return y_true, y_pred, sample_weight
-
-
-def _accuracy_score(y_true, y_pred, sample_weight=None, **kwargs):
-    """Accuracy score for classification functions.
-
-    Implementation borrowed from scikit-learn:
-    scikit-learn/scikit-learn/sklearn/metrics/_classification.py
-    """
-    y_true, y_pred, sample_weight = _check_array_sizes(
-        y_true, y_pred, sample_weight
-    )
-    # default cls_type is "multiclass"
-    cls_type = kwargs.get("cls_type", "multiclass")
-
-    if cls_type in ("multiclass", "binary"):
-        score = y_true == y_pred
-    if cls_type == "multilabel-indicator":
-        # need to manually compute this one
-        # pass kwargs since many arguments are shared
-        # classes_ should have shape (n_samples, n_outputs)
-        # compute accuracy like scikit-learn does,
-        # each row (categories each sample matched)
-        # must EXACTLY match between the prediction and truth ys
-        n_samples = y_true.shape[0]
-        if sample_weight is None:
-            sample_weight = np.ones(dtype=int, shape=(n_samples,))
-        differing_labels = np.count_nonzero(y_true - y_pred, axis=1)
-        score = differing_labels == 0
-    elif cls_type == "multiclass-multioutput":
-        # return the mean of the scores
-        # this is what scikit-learn does by default
-        score = np.mean(np.all(y_true == y_pred, axis=1))
-
-    return np.average(np.squeeze(score), weights=sample_weight)
-
-
-def _r2_score(y_true, y_pred, sample_weight=None, **kwargs):
-    """R^2 (coefficient of determination) regression score function.
-
-    Implementation borrowed from scikit-learn:
-    scikit-learn/scikit-learn/sklearn/metrics/_regression.py
-    """
-    y_true, y_pred, sample_weight = _check_array_sizes(
-        y_true, y_pred, sample_weight
-    )
-
-    if y_pred.shape[0] < 2:
-        msg = "R^2 score is not well-defined with less than two samples."
-        warnings.warn(msg)
-        return float("nan")
-
-    if sample_weight is not None:
-        weight = sample_weight[:, np.newaxis]
-    else:
-        weight = 1.0
-
-    numerator = (weight * (y_true - y_pred) ** 2).sum(axis=0, dtype=np.float64)
-    denominator = (
-        weight
-        * (y_true - np.average(y_true, axis=0, weights=sample_weight)) ** 2
-    ).sum(axis=0, dtype=np.float64)
-    nonzero_denominator = denominator != 0
-    nonzero_numerator = numerator != 0
-    valid_score = nonzero_denominator & nonzero_numerator
-    output_scores = np.ones([y_true.shape[1]])
-    output_scores[valid_score] = 1 - (
-        numerator[valid_score] / denominator[valid_score]
-    )
-    # arbitrary set to zero to avoid -inf scores, having a constant
-    # y_true is not interesting for scoring a regression anyway
-    output_scores[nonzero_numerator & ~nonzero_denominator] = 0.0
-
-    return np.average(output_scores)
+# used by inspect to resolve parameters of parent classes
+ARGS_KWARGS_IDENTIFIERS = (
+    inspect.Parameter.VAR_KEYWORD,
+    inspect.Parameter.VAR_POSITIONAL,
+)
 
 
 def _clone_prebuilt_model(build_fn):
@@ -236,13 +135,10 @@ class BaseWrapper:
         # all child classes
         init_params = []
         # reverse the MRO, we want the 1st one to overwrite the nth
-        for clss_ in reversed(tf_inspect.getmro(self.__class__)):
-            if clss_ == object:
-                continue
-            argspec = tf_inspect.getfullargspec(clss_.__init__)
-            for p in argspec.args + argspec.kwonlyargs:
-                if p != "self":
-                    init_params.append(p)
+        for class_ in reversed(inspect.getmro(self.__class__)):
+            for p in inspect.signature(class_.__init__).parameters.values():
+                if p.kind not in ARGS_KWARGS_IDENTIFIERS and p.name != 'self':
+                    init_params.append(p.name)
 
         # add parameters from sk_params
         self._init_params = set(init_params + list(sk_params.keys()))
@@ -277,7 +173,7 @@ class BaseWrapper:
         elif isinstance(build_fn, Model):
             # pre-built Keras model
             self.__call__ = _clone_prebuilt_model
-        elif tf_inspect.isfunction(build_fn):
+        elif inspect.isfunction(build_fn):
             if hasattr(self, "__call__"):
                 raise ValueError(
                     "This class cannot implement `__call__` if"
@@ -367,9 +263,7 @@ class BaseWrapper:
         kwargs = self._filter_params(self.__call__, params_to_check=kwargs)
 
         # combine all arguments
-        build_args = _merge_dicts(
-            model_args, X_y_args, sample_weight_arg, kwargs
-        )
+        build_args = {**model_args, **X_y_args, **sample_weight_arg, **kwargs}
 
         # build model
         model = self.__call__(**build_args)
@@ -426,7 +320,7 @@ class BaseWrapper:
 
         # fit model and save history
         # order implies kwargs overwrites fit_args
-        fit_args = _merge_dicts(fit_args, kwargs)
+        fit_args = {**fit_args, **kwargs}
 
         self.history = self.model.fit(x=X, y=y, **fit_args)
 
@@ -586,7 +480,7 @@ class BaseWrapper:
         predict_args = self._filter_params(self.model.predict)
 
         # predict with Keras model
-        pred_args = _merge_dicts(predict_args, kwargs)
+        pred_args = {**predict_args, **kwargs}
         y_pred = self.model.predict(X, **pred_args)
 
         # post process y
@@ -622,7 +516,7 @@ class BaseWrapper:
         # compute Keras model score
         y_pred = self.predict(X, **kwargs)
 
-        return self._scorer(y, y_pred, sample_weight, **extra_args)
+        return self._scorer(y, y_pred, sample_weight=sample_weight)
 
     def _filter_params(self, fn, params_to_check=None):
         """Filters all instance attributes (parameters) and
@@ -800,13 +694,12 @@ class BaseWrapper:
             setattr(self, key, _unpack_obj(val))
 
 
-@keras_export("keras.wrappers.scikit_learn.KerasClassifier")
 class KerasClassifier(BaseWrapper):
     """Implementation of the scikit-learn classifier API for Keras.
     """
 
     _estimator_type = "classifier"
-    _scorer = staticmethod(_accuracy_score)
+    _scorer = staticmethod(sklearn_accuracy_score)
 
     @staticmethod
     def _pre_process_y(y):
@@ -988,7 +881,7 @@ class KerasClassifier(BaseWrapper):
         predict_args = self._filter_params(self.model.predict)
 
         # call the Keras model
-        predict_args = _merge_dicts(predict_args, kwargs)
+        predict_args = {**predict_args, **kwargs}
         outputs = self.model.predict(X, **predict_args)
 
         # join list of outputs into single output array
@@ -999,13 +892,12 @@ class KerasClassifier(BaseWrapper):
         return class_probabilities
 
 
-@keras_export("keras.wrappers.scikit_learn.KerasRegressor")
 class KerasRegressor(BaseWrapper):
     """Implementation of the scikit-learn regressor API for Keras.
     """
 
     _estimator_type = "regressor"
-    _scorer = staticmethod(_r2_score)
+    _scorer = staticmethod(sklearn_r2_score)
 
     def _pre_process_y(self, y):
         """Split y for multi-output tasks.
