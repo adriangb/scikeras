@@ -7,8 +7,6 @@ from sklearn_keras_wrap import wrappers
 from sklearn_keras_wrap.wrappers import (
     KerasClassifier,
     KerasRegressor,
-    _r2_score,
-    _accuracy_score,
 )
 
 import pytest
@@ -31,7 +29,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics import r2_score as sklearn_r2_score
-from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 
 from tensorflow.python.framework.ops import convert_to_tensor
 from tensorflow.python import keras
@@ -106,7 +103,9 @@ def build_fn_reg(hidden_dim):
     model.add(keras.layers.Activation("relu"))
     model.add(keras.layers.Dense(1))
     model.add(keras.layers.Activation("linear"))
-    model.compile(optimizer="sgd", loss="mean_absolute_error", metrics=["accuracy"])
+    model.compile(
+        optimizer="sgd", loss="mean_absolute_error", metrics=["accuracy"]
+    )
     return model
 
 
@@ -129,7 +128,7 @@ def assert_regression_works(reg):
     assert preds.shape == (TEST_SAMPLES,)
 
 
-class TestScikitLearnAPIWrapper:
+class TestBasicAPI:
     """Tests basic functionality."""
 
     def test_classify_build_fn(self):
@@ -167,7 +166,10 @@ class TestScikitLearnAPIWrapper:
                 return build_fn_clf(hidden_dim)
 
         clf = InheritClassBuildFnClf(
-            build_fn=None, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS,
+            build_fn=None,
+            hidden_dim=HIDDEN_DIM,
+            batch_size=BATCH_SIZE,
+            epochs=EPOCHS,
         )
 
         assert_classification_works(clf)
@@ -207,7 +209,10 @@ class TestScikitLearnAPIWrapper:
                 return build_fn_reg(hidden_dim)
 
         reg = InheritClassBuildFnReg(
-            build_fn=None, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS,
+            build_fn=None,
+            hidden_dim=HIDDEN_DIM,
+            batch_size=BATCH_SIZE,
+            epochs=EPOCHS,
         )
 
         assert_regression_works(reg)
@@ -276,7 +281,9 @@ def build_fn_clscs(X, n_outputs_, hidden_layer_sizes=None, n_classes_=None):
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(n_classes_, activation="softmax"))
-    model.compile("adam", loss="categorical_crossentropy", metrics=["accuracy"])
+    model.compile(
+        "adam", loss="categorical_crossentropy", metrics=["accuracy"]
+    )
     return model
 
 
@@ -291,7 +298,9 @@ def build_fn_clscf(X, n_outputs_, hidden_layer_sizes=None, n_classes_=None):
         z = Dense(size, activation="relu")(z)
     y = Dense(n_classes_, activation="softmax")(z)
     model = Model(inputs=x, outputs=y)
-    model.compile("adam", loss="categorical_crossentropy", metrics=["accuracy"])
+    model.compile(
+        "adam", loss="categorical_crossentropy", metrics=["accuracy"]
+    )
     return model
 
 
@@ -323,7 +332,7 @@ CONFIG = {
 }
 
 
-class TestScikitLearnAPIWrapperAdvFunc:
+class TestAdvancedAPIFuncs:
     """Tests advanced features such as pipelines and hyperparameter tuning."""
 
     def test_standalone(self):
@@ -360,11 +369,14 @@ class TestScikitLearnAPIWrapperAdvFunc:
                 build_fn, epochs=1, validation_split=0.1, hidden_layer_sizes=[]
             )
             check(
-                GridSearchCV(estimator, {"hidden_layer_sizes": [[], [5]]}), loader,
+                GridSearchCV(estimator, {"hidden_layer_sizes": [[], [5]]}),
+                loader,
             )
             check(
                 RandomizedSearchCV(
-                    estimator, {"epochs": np.random.randint(1, 5, 2)}, n_iter=2,
+                    estimator,
+                    {"epochs": np.random.randint(1, 5, 2)},
+                    n_iter=2,
                 ),
                 loader,
             )
@@ -375,7 +387,9 @@ class TestScikitLearnAPIWrapperAdvFunc:
             loader, model, build_fn, ensembles = CONFIG[config]
             base_estimator = model(build_fn, epochs=1)
             for ensemble in ensembles:
-                estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
+                estimator = ensemble(
+                    base_estimator=base_estimator, n_estimators=2
+                )
                 check(estimator, loader)
 
     def test_calibratedclassifiercv(self):
@@ -383,7 +397,9 @@ class TestScikitLearnAPIWrapperAdvFunc:
         for config in ["MLPClassifier"]:
             loader, _, build_fn, _ = CONFIG[config]
             base_estimator = KerasClassifier(build_fn, epochs=1)
-            estimator = CalibratedClassifierCV(base_estimator=base_estimator, cv=5)
+            estimator = CalibratedClassifierCV(
+                base_estimator=base_estimator, cv=5
+            )
             check(estimator, loader)
 
 
@@ -411,7 +427,7 @@ class ClassWithCallback(wrappers.KerasClassifier):
         return build_fn_clf(hidden_dim)
 
 
-class TestScikitLearnAPIWrapperCallbacks:
+class TestCallbacks:
     """Tests use of Callbacks."""
 
     def test_callbacks_passed_as_arg(self):
@@ -434,7 +450,10 @@ class TestScikitLearnAPIWrapperCallbacks:
             assert estimator.callbacks[0].called != SentinalCallback.called
             old_callback = estimator.callbacks[0]
             deserialized_estimator = pickle.loads(pickle.dumps(estimator))
-            assert deserialized_estimator.callbacks[0].called == old_callback.called
+            assert (
+                deserialized_estimator.callbacks[0].called
+                == old_callback.called
+            )
 
     def test_callbacks_inherit(self):
         """Test estimators that inherit from KerasClassifier and implement
@@ -448,11 +467,14 @@ class TestScikitLearnAPIWrapperCallbacks:
         assert clf.callbacks[0].called != SentinalCallback.called
         serialized_estimator = pickle.dumps(clf)
         deserialized_estimator = pickle.loads(serialized_estimator)
-        assert deserialized_estimator.callbacks[0].called == clf.callbacks[0].called
+        assert (
+            deserialized_estimator.callbacks[0].called
+            == clf.callbacks[0].called
+        )
         assert_classification_works(deserialized_estimator)
 
 
-class TestScikitLearnAPIWrapperSampleWeights:
+class TestSampleWeights:
     """Tests involving the sample_weight parameter.
          TODO: fix warning regarding sample_weight shape coercing.
     """
@@ -534,7 +556,7 @@ def dynamic_classifier(X, y, n_classes_):
     return model
 
 
-class TestScikitLearnAPIWrapperYShapes:
+class TestOutputShapes:
     """Tests that compare output shapes to `MLPClassifier` from sklearn to
          check that ouput shapes respect sklearn API.
     """
@@ -627,7 +649,7 @@ class TestScikitLearnAPIWrapperYShapes:
         assert y_pred_prob_keras.shape == y_pred_prob_sklearn.shape
 
 
-class TestScikitLearnAPIWrapperPrebuiltModel:
+class TestPrebuiltModel:
     """Tests using a prebuilt model instance."""
 
     def test_prebuilt_model(self):
@@ -646,7 +668,9 @@ class TestScikitLearnAPIWrapperPrebuiltModel:
             # make y the same shape as will be used by .fit
             if config != "MLPRegressor":
                 y_train = to_categorical(y_train)
-                keras_model = build_fn(X=x_train, n_classes_=n_classes_, n_outputs_=1)
+                keras_model = build_fn(
+                    X=x_train, n_classes_=n_classes_, n_outputs_=1
+                )
             else:
                 keras_model = build_fn(X=x_train, n_outputs_=1)
 
@@ -670,7 +694,9 @@ class TestScikitLearnAPIWrapperPrebuiltModel:
             # make y the same shape as will be used by .fit
             if config != "MLPRegressor":
                 y_train = to_categorical(y_train)
-                keras_model = build_fn(X=x_train, n_classes_=n_classes_, n_outputs_=1)
+                keras_model = build_fn(
+                    X=x_train, n_classes_=n_classes_, n_outputs_=1
+                )
             else:
                 keras_model = build_fn(X=x_train, n_outputs_=1)
 
@@ -681,8 +707,8 @@ class TestScikitLearnAPIWrapperPrebuiltModel:
                 check(estimator, loader)
 
 
-class FunctionAPIMultiInputMultiOutputClassifier(KerasClassifier):
-    """Tests Functional API Classifier with 2 inputs and 2 outputs
+class FunctionalAPIMultiInputClassifier(KerasClassifier):
+    """Tests Functional API Classifier with 2 inputs.
     """
 
     def __call__(self, X, n_classes_):
@@ -694,11 +720,10 @@ class FunctionAPIMultiInputMultiOutputClassifier(KerasClassifier):
 
         x3 = Concatenate(axis=-1)([x1, x2])
 
-        binary_out = Dense(1, activation="sigmoid")(x3)
-        cat_out = Dense(n_classes_[1], activation="softmax")(x3)
+        cat_out = Dense(n_classes_, activation="softmax")(x3)
 
-        model = Model([inp1, inp2], [binary_out, cat_out])
-        losses = ["binary_crossentropy", "categorical_crossentropy"]
+        model = Model([inp1, inp2], [cat_out])
+        losses = ["categorical_crossentropy"]
         model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
 
         return model
@@ -707,11 +732,58 @@ class FunctionAPIMultiInputMultiOutputClassifier(KerasClassifier):
     def _pre_process_X(X):
         """To support multiple inputs, a custom method must be defined.
         """
-        return [(X[:, 0], X[:, 1:4])], dict()
+        return [X[:, 0], X[:, 1:4]], dict()
+
+
+class FunctionalAPIMultiOutputClassifier(KerasClassifier):
+    """Tests Functional API Classifier with 2 outputs of different type.
+    """
+
+    def __call__(self, X, n_classes_):
+        inp = Input((4,))
+
+        x1 = Dense(100)(inp)
+
+        binary_out = Dense(1, activation="sigmoid")(x1)
+        cat_out = Dense(n_classes_[1], activation="softmax")(x1)
+
+        model = Model([inp], [binary_out, cat_out])
+        losses = ["binary_crossentropy", "categorical_crossentropy"]
+        model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
+
+        return model
+
+    def _post_process_y(self, y):
+        """To support targets of different type, we need to post-precess each one
+           manually, there is no way to determine the types accurately.
+
+           Takes KerasClassifier._post_process_y as a starting point and
+           hardcodes the post-processing.
+        """
+        classes_ = self.classes_
+
+        class_predictions = [
+            classes_[0][np.where(y[0] > 0.5, 1, 0)],
+            classes_[1][np.argmax(y[1], axis=1)]
+        ]
+
+        class_probabilities = np.squeeze(np.column_stack(y))
+
+        y = np.squeeze(np.column_stack(class_predictions))
+
+        extra_args = {"class_probabilities": class_probabilities}
+
+        return y, extra_args
+
+    def score(self, X, y):
+        """Taken from sklearn.multiouput.MultiOutputClassifier
+        """
+        y_pred = self.predict(X)
+        return np.mean(np.all(y == y_pred, axis=1))
 
 
 class FunctionAPIMultiLabelClassifier(KerasClassifier):
-    """Tests Functional API Classifier with 2 inputs and 2 outputs
+    """Tests Functional API Classifier with multiple binary outputs.
     """
 
     def __call__(self, X, n_outputs_):
@@ -831,7 +903,7 @@ class TestSerializeCustomLayers:
             check(estimator, load_boston)
 
 
-class TestScikitLearnAPIWrapperScoring:
+class TestScoring:
     """Tests scoring methods.
     """
 
@@ -851,10 +923,11 @@ class TestScikitLearnAPIWrapperScoring:
             """Wrap Keras operations to numpy."""
             y_true = convert_to_tensor(y_true)
             y_pred = convert_to_tensor(y_pred)
-            return KerasRegressor.root_mean_squared_error(y_true, y_pred).numpy()
+            return KerasRegressor.root_mean_squared_error(
+                y_true, y_pred
+            ).numpy()
 
         score_functions = (
-            _r2_score,
             keras_backend_r2,
         )
         correct_scorer = sklearn_r2_score
@@ -862,95 +935,46 @@ class TestScikitLearnAPIWrapperScoring:
         for (y_true, y_pred) in datasets:
             for f in score_functions:
                 np.testing.assert_almost_equal(
-                    f(y_true, y_pred), correct_scorer(y_true, y_pred), decimal=5,
-                )
-
-    def test_scoring_accuracy(self):
-        """Test custom accuracy implementation against scikit-learn's."""
-
-        n_samples = 50
-
-        def make_multiclass(y):
-            return y.reshape(-1, 1)
-
-        datasets = []
-        y_true = np.random.randint(low=0, high=n_samples, size=n_samples)
-        y_pred = np.random.randint(low=0, high=n_samples, size=n_samples)
-        datasets.append((make_multiclass(y_true), make_multiclass(y_pred)))
-        score_functions = (_accuracy_score,)
-        correct_scorer = sklearn_accuracy_score
-
-        for (y_true, y_pred) in datasets:
-            for f in score_functions:
-                np.testing.assert_almost_equal(
-                    f(y_true, y_pred), correct_scorer(y_true, y_pred), decimal=5,
-                )
-
-    def test_scoring_accuracy_multilabel(self):
-        """Test that accuracy score function works for multilabel ouputs."""
-        n_samples = 50
-        n_outputs = 5
-        n_classes = 2
-
-        def make_multilabel(y):
-            return np.repeat(y.reshape(-1, 1), n_outputs, axis=1)
-
-        datasets = []
-        y_true = np.random.randint(low=0, high=n_classes, size=n_samples)
-        y_pred = np.random.randint(low=0, high=n_classes, size=n_samples)
-        datasets.append((make_multilabel(y_true), make_multilabel(y_pred)))
-        score_functions = (_accuracy_score,)
-        correct_scorer = sklearn_accuracy_score
-
-        for (y_true, y_pred) in datasets:
-            for f in score_functions:
-                np.testing.assert_almost_equal(
-                    f(y_true, y_pred), correct_scorer(y_true, y_pred), decimal=5,
-                )
-
-    def test_scoring_accuracy_multiclass_multioutput(self):
-        """Test that accuracy score function works for multioutput ouputs."""
-        n_samples = 50
-        n_outputs = 5
-        n_classes = 10
-
-        def make_multioutput(y):
-            return np.repeat(y.reshape(-1, 1), n_outputs, axis=1)
-
-        datasets = []
-        y_true = np.random.randint(low=0, high=n_classes, size=n_samples)
-        y_pred = np.random.randint(low=0, high=n_classes, size=n_samples)
-        datasets.append((make_multioutput(y_true), make_multioutput(y_pred)))
-        score_functions = (
-            lambda y1, y2: _accuracy_score(y1, y2, cls_type="multiclass-multioutput"),
-        )
-
-        def correct_scorer(y1, y2):
-            return np.mean(np.all(y1 == y2, axis=1))
-
-        for (y_true, y_pred) in datasets:
-            for f in score_functions:
-                np.testing.assert_almost_equal(
-                    f(y_true, y_pred), correct_scorer(y_true, y_pred), decimal=5,
+                    f(y_true, y_pred),
+                    correct_scorer(y_true, y_pred),
+                    decimal=5,
                 )
 
 
-class TestScikitLearnAPIWrapperMultiInputOutput:
+class TestMultiInputOutput:
     """Tests involving multiple inputs / outputs.
     """
 
-    def test_multi_input_and_output(self):
+    def test_multi_input(self):
         """Compares to the scikit-learn RandomForestRegressor classifier.
         """
-        clf = FunctionAPIMultiInputMultiOutputClassifier()
+        clf = FunctionalAPIMultiInputClassifier()
         (x_train, y_train), (x_test, y_test) = testing_utils.get_test_data(
             train_samples=TRAIN_SAMPLES,
             test_samples=TEST_SAMPLES,
             input_shape=(4,),
             num_classes=3,
         )
-        y_train = np.stack([y_train == 1, y_train], axis=1)  # simulate 2 outputs
-        y_test = np.stack([y_test == 1, y_test], axis=1)  # simulate 2 outputs
+
+        clf.fit(x_train, y_train)
+        clf.predict(x_test)
+        clf.score(x_train, y_train)
+
+    def test_multi_output(self):
+        """Compares to the scikit-learn RandomForestRegressor classifier.
+        """
+        clf = FunctionalAPIMultiOutputClassifier()
+        (x_train, y_train), (x_test, y_test) = testing_utils.get_test_data(
+            train_samples=TRAIN_SAMPLES,
+            test_samples=TEST_SAMPLES,
+            input_shape=(4,),
+            num_classes=3,
+        )
+
+        # simulate 2 outputs
+        y_train = np.stack([y_train == 1, y_train], axis=1)
+        y_test = np.stack([y_test == 1, y_test], axis=1)
+
         clf.fit(x_train, y_train)
         clf.predict(x_test)
         clf.score(x_train, y_train)
@@ -965,7 +989,10 @@ class TestScikitLearnAPIWrapperMultiInputOutput:
         y = MultiLabelBinarizer().fit_transform(y)
 
         (x_train, _), (_, _) = testing_utils.get_test_data(
-            train_samples=y.shape[0], test_samples=0, input_shape=(4,), num_classes=3,
+            train_samples=y.shape[0],
+            test_samples=0,
+            input_shape=(4,),
+            num_classes=3,
         )
 
         clf_keras.fit(x_train, y)
