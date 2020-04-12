@@ -20,18 +20,31 @@ Scikit-Learn API implementation for Keras.
 
 
 * Free software: MIT license
-* Documentation: https://sklearn-keras-wrap.readthedocs.io.
 
 
-Features
---------
+Background
+----------
 
 * TODO
 
-Credits
--------
+Basic Usage
+-----------
 
-This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
+* TODO
 
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
+Advanced Usage
+--------------
+
+* TODO: add multi input and multi output
+* TODO: add callbacks
+* TODO: add different methods of initializing model
+
+Contributing
+------------
+* TODO: add pre commit hook info
+* TODO: add release process
+
+
+bump2version patch --message "Commit message"
+
+git push --tags

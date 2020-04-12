@@ -10,7 +10,8 @@ with open("README.rst") as readme_file:
 with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
-requirements = []
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
 
 setup_requirements = [
     "pytest-runner",
@@ -41,11 +42,13 @@ setup(
     include_package_data=True,
     keywords="sklearn_keras_wrap",
     name="sklearn_keras_wrap",
-    packages=find_packages(include=["sklearn_keras_wrap", "sklearn_keras_wrap.*"]),
+    packages=find_packages(
+        include=["sklearn_keras_wrap", "sklearn_keras_wrap.*"]
+    ),
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/adriangb/sklearn_keras_wrap",
-    version="0.1.0",
+    version="0.1.3",
     zip_safe=False,
 )
