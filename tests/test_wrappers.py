@@ -3,16 +3,8 @@
 
 import pickle
 
-from sklearn_keras_wrap import wrappers
-from sklearn_keras_wrap.wrappers import (
-    KerasClassifier,
-    KerasRegressor,
-)
-
-import pytest
-
 import numpy as np
-
+import pytest
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.datasets import load_boston, load_digits, load_iris
 from sklearn.ensemble import (
@@ -23,17 +15,15 @@ from sklearn.ensemble import (
     RandomForestClassifier,
     RandomForestRegressor,
 )
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.neural_network import MLPClassifier
-from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics import r2_score as sklearn_r2_score
-
-from tensorflow.python.framework.ops import convert_to_tensor
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.neural_network import MLPClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MultiLabelBinarizer, StandardScaler
 from tensorflow.python import keras
-from tensorflow.python.keras import testing_utils
+from tensorflow.python.framework.ops import convert_to_tensor
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras import testing_utils
 from tensorflow.python.keras.layers import (
     Concatenate,
     Conv2D,
@@ -44,6 +34,8 @@ from tensorflow.python.keras.layers import (
 from tensorflow.python.keras.models import Model, Sequential, clone_model
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
+from sklearn_keras_wrap import wrappers
+from sklearn_keras_wrap.wrappers import KerasClassifier, KerasRegressor
 
 INPUT_DIM = 5
 HIDDEN_DIM = 5
@@ -764,7 +756,7 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
 
         class_predictions = [
             classes_[0][np.where(y[0] > 0.5, 1, 0)],
-            classes_[1][np.argmax(y[1], axis=1)]
+            classes_[1][np.argmax(y[1], axis=1)],
         ]
 
         class_probabilities = np.squeeze(np.column_stack(y))
@@ -927,9 +919,7 @@ class TestScoring:
                 y_true, y_pred
             ).numpy()
 
-        score_functions = (
-            keras_backend_r2,
-        )
+        score_functions = (keras_backend_r2,)
         correct_scorer = sklearn_r2_score
 
         for (y_true, y_pred) in datasets:

@@ -1,23 +1,20 @@
 """Wrapper for using the Scikit-Learn API with Keras models.
 """
-import warnings
-from collections import defaultdict, namedtuple
 import copy
 import inspect
+import warnings
+from collections import defaultdict, namedtuple
 
 import numpy as np
-
-from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
-
-from tensorflow.python.keras.losses import is_categorical_crossentropy
+from sklearn.metrics import r2_score as sklearn_r2_score
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.layers import deserialize, serialize
+from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.models import Model, Sequential, clone_model
 from tensorflow.python.keras.saving import saving_utils
-from tensorflow.python.keras.layers import serialize, deserialize
 from tensorflow.python.keras.utils.generic_utils import has_arg
 from tensorflow.python.keras.utils.np_utils import to_categorical
-
 
 # namedtuple used for pickling Model instances
 SavedKerasModel = namedtuple(
@@ -137,7 +134,7 @@ class BaseWrapper:
         # reverse the MRO, we want the 1st one to overwrite the nth
         for class_ in reversed(inspect.getmro(self.__class__)):
             for p in inspect.signature(class_.__init__).parameters.values():
-                if p.kind not in ARGS_KWARGS_IDENTIFIERS and p.name != 'self':
+                if p.kind not in ARGS_KWARGS_IDENTIFIERS and p.name != "self":
                     init_params.append(p.name)
 
         # add parameters from sk_params
