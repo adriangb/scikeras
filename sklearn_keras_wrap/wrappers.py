@@ -6,6 +6,7 @@ import warnings
 from collections import defaultdict, namedtuple
 
 import numpy as np
+from sklearn.utils.multiclass import type_of_target
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from tensorflow.python.keras import backend as K
@@ -720,46 +721,38 @@ class KerasClassifier(BaseWrapper):
         """
         y, _ = super(KerasClassifier, KerasClassifier)._pre_process_y(y)
 
-        if y.shape[1] == 1:
-            # single output
-            if np.unique(y).size == 2:
-                # y = array([1, 0, 1, 0]) or y = array(['used', 'new', 'used'])
-                cls_type = "binary"
-                # single task, single label, binary classification
-                classes_ = np.unique(y)
-                # convert to 0 indexed classes
-                y = np.searchsorted(classes_, y)
-                classes_ = [classes_]
-                y = [y]
-            elif np.unique(y).size > 2:
-                # y = array([1, 5, 2]) or
-                # y = array(['apple', 'orange', 'banana'])
-                cls_type = "multiclass"
-                classes_ = np.unique(y)
-                # convert to 0 indexed classes
-                y = np.searchsorted(classes_, y)
-                classes_ = [classes_]
-                y = [y]
-        elif y.shape[1] > 1:
-            # multi-output / multi-task
-            if np.unique(y).size == 2:
-                # y = array([1, 1, 1, 0], [0, 0, 1, 1])
-                cls_type = "multilabel-indicator"
-                # split into lists for multi-output Keras
-                # will be processed as multiple binary classifications
-                classes_ = [np.array([0, 1])] * y.shape[1]
-                y = np.split(y, y.shape[1], axis=1)
-            else:
-                # y = array(['apple', 0, 5], ['orange', 1, 3])
-                cls_type = "multiclass-multioutput"
-                # split into lists for multi-output Keras
-                # each will be processesed as a seperate multiclass problem
-                y = np.split(y, y.shape[1], axis=1)
-                classes_ = [np.unique(y_) for y_ in y]
+        cls_type = type_of_target(y)
 
-        if not classes_:
-            # other situations, such as 3 dimensional arrays, are not supported
-            raise ValueError("Invalid shape for y: " + str(y.shape))
+        if cls_type == "binary":
+            # y = array([1, 0, 1, 0]) or y = array(['used', 'new', 'used'])
+            # single task, single label, binary classification
+            classes_ = np.unique(y)
+            # convert to 0 indexed classes
+            y = np.searchsorted(classes_, y)
+            classes_ = [classes_]
+            y = [y]
+        elif cls_type == "multiclass":
+            # y = array([1, 5, 2]) or
+            # y = array(['apple', 'orange', 'banana'])
+            classes_ = np.unique(y)
+            # convert to 0 indexed classes
+            y = np.searchsorted(classes_, y)
+            classes_ = [classes_]
+            y = [y]
+        elif cls_type == "multilabel-indicator":
+            # y = array([1, 1, 1, 0], [0, 0, 1, 1])
+            # split into lists for multi-output Keras
+            # will be processed as multiple binary classifications
+            classes_ = [np.array([0, 1])] * y.shape[1]
+            y = np.split(y, y.shape[1], axis=1)
+        elif cls_type == "multiclass-multioutput":
+            # y = array(['apple', 0, 5], ['orange', 1, 3])
+            # split into lists for multi-output Keras
+            # each will be processesed as a seperate multiclass problem
+            y = np.split(y, y.shape[1], axis=1)
+            classes_ = [np.unique(y_) for y_ in y]
+        else:
+            raise ValueError("Unknown label type: %r" % cls_type)
 
         # self.classes_ is kept as an array when n_outputs==1 for compatibility
         # with ensembles and other meta estimators

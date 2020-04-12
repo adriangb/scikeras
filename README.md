@@ -175,7 +175,7 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
         return np.mean(np.all(y == y_pred, axis=1))
 ```
 
-The default implementation of `_pre_process_y` for `KerasClassifier` attempts to automatically determine the type of problem, similar to what is done by other `Scikit-Learn` classifiers. You may need to override this method if it is unable to determine the correct type for your data. The default implementation is provided as a static method so that you can test it without needing to instantiate a `KerasClassifier`.
+The default implementation of `_pre_process_y` for `KerasClassifier` attempts to automatically determine the type of problem using `sklearn.utils.multiclass.type_of_target`. You may need to override this method if it is unable to determine the correct type for your data. The default implementation is provided as a static method so that you can test it without needing to instantiate a `KerasClassifier`.
 
 ### Multi-input problems
 
