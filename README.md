@@ -1,7 +1,7 @@
 # Scikit-Learn Wrapper for Keras
 
 
-[![build status](https://secure.travis-ci.org/adriangb/sklearn_keras_wrap.png?branch=master)](https://travis-ci.org/geopandas/geopandas) [![Coverage Status](https://codecov.io/gh/adriangb/sklearn_keras_wrap/branch/master/graph/badge.svg)](https://codecov.io/gh/geopandas/geopandas)
+[![build status](https://secure.travis-ci.org/adriangb/sklearn_keras_wrap.png?branch=master)](https://travis-ci.org/github/adriangb/sklearn_keras_wrap) [![Coverage Status](https://codecov.io/gh/adriangb/sklearn_keras_wrap/branch/master/graph/badge.svg)](https://codecov.io/gh/adriangb/sklearn_keras_wrap)
 
 
 The goal of this project is to provide wrappers for Keras models so that they can be used as part of a Scikit-Learn workflow. These wrappers seeek to emulate the base classes found in `sklearn.base`. Three wrappers are provided:
@@ -90,7 +90,7 @@ class MLPRegressor(KerasRegressor):
 ```
 
 A couple of notes:
-1. It is very important to call super().__init__() to properly register kwargs and the model building function.
+1. It is very important to call `super().__init__()` to properly register kwargs and the model building function.
 2. You must assign all parameters to a public attribute of the same name and should *not* change it's value. To change the value from a default you can either (1) change the value in the model building function (as above) or save the parameter under another name (ex: `_hidden_layer_sizes`, remember to also use this name in the model building function).
 3. You should set a default for all tunable arguments (in this case, `hidden_layer_sizes=None`) as this is expected by the Scikit-Learn API.
 
@@ -222,11 +222,11 @@ If submitting a PR, please make sure that:
 
 - All existing tests should pass. Please make sure that the test
   suite passes, both locally and on
-  [Travis CI](https://travis-ci.org/geopandas/geopandas).  Status on
+  [Travis CI](https://travis-ci.org/github/adriangb/sklearn_keras_wrap).  Status on
   Travis will be visible on a pull request.
 
 - New functionality should include tests. Please write reasonable
-  tests for your code and make sure that they pass on your pull request. Testing is done with [`Pytest`](https://docs.pytest.org/en/latest/) and coverage is checked with [`CodeCov`](https://codecov.io/gh/adriangb/sklearn_keras_wrap)
+  tests for your code and make sure that they pass on your pull request. Testing is done with [`Pytest`](https://docs.pytest.org/en/latest/) and coverage is checked with [`CodeCov`](https://codecov.io/gh/adriangb/sklearn_keras_wrap) and a minimum of 94% coverage is required to pass a build.
 
 - Classes, methods, functions, etc. should have docstrings. The first line of a docstring should be a standalone summary. Parameters and return values should be documented explicitly.
 
@@ -238,7 +238,7 @@ If submitting a PR, please make sure that:
   code format throughout the project.
 
 - Imports should be grouped with standard library imports first,
-  3rd-party libraries next, and GeoPandas imports third. Within each
+  3rd-party libraries next, and imports from this module third. Within each
   grouping, imports should be alphabetized. Always use absolute
   imports when possible, and explicit relative imports for local
   imports when necessary in tests.
@@ -249,7 +249,7 @@ If submitting a PR, please make sure that:
 
     $ python -m pip install pre-commit
 
-  From the root of the geopandas repository, you should then install
+  From the root of the repository, you should then install
   `pre-commit`:
 
     $ pre-commit install
