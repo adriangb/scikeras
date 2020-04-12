@@ -698,6 +698,11 @@ class KerasClassifier(BaseWrapper):
     _estimator_type = "classifier"
     _scorer = staticmethod(sklearn_accuracy_score)
 
+    classes_ = None
+    n_outputs_ = None
+    n_classes_ = None
+    cls_type = None
+
     @staticmethod
     def _pre_process_y(y):
         """Handles manipulation of y inputs to fit or score.
@@ -765,7 +770,7 @@ class KerasClassifier(BaseWrapper):
             n_outputs_ = 1
         else:
             n_classes_ = [class_.shape[0] for class_ in classes_]
-            n_outputs_ = len(classes_)
+            n_outputs_ = len(n_classes_)
 
         extra_args = {
             "classes_": classes_,
@@ -895,6 +900,8 @@ class KerasRegressor(BaseWrapper):
 
     _estimator_type = "regressor"
     _scorer = staticmethod(sklearn_r2_score)
+
+    n_outputs_ = None
 
     def _pre_process_y(self, y):
         """Split y for multi-output tasks.
