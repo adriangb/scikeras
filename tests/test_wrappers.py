@@ -537,8 +537,9 @@ def dynamic_classifier(X, cls_type_, n_classes_, n_outputs_keras_):
         out = [Dense(1, activation="sigmoid")(x1)]
     elif cls_type_ == "multilabel-indicator":
         loss = "binary_crossentropy"
-        out = [Dense(1, activation="sigmoid")(x1) for _ in
-               range(n_outputs_keras_)]
+        out = [
+            Dense(1, activation="sigmoid")(x1) for _ in range(n_outputs_keras_)
+        ]
     elif cls_type_ == "multiclass-multioutput":
         loss = "binary_crossentropy"
         out = [Dense(n, activation="softmax")(x1) for n in n_classes_]
@@ -568,8 +569,7 @@ def dynamic_regressor(X, n_outputs_keras_):
     model = Model([inp], out)
 
     model.compile(
-        optimizer="adam",
-        loss=wrappers.KerasRegressor.root_mean_squared_error,
+        optimizer="adam", loss=wrappers.KerasRegressor.root_mean_squared_error,
     )
     return model
 
@@ -578,8 +578,7 @@ class FullyCompliantClassifier(wrappers.KerasClassifier):
     """A classifier that sets all parameters in __init__ and nothing more."""
 
     def __init__(
-        self, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE,
-        epochs=EPOCHS
+        self, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS
     ):
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
@@ -594,8 +593,7 @@ class FullyCompliantRegressor(wrappers.KerasRegressor):
     """A classifier that sets all parameters in __init__ and nothing more."""
 
     def __init__(
-        self, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE,
-        epochs=EPOCHS
+        self, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS
     ):
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size

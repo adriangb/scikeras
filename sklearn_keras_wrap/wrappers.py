@@ -11,7 +11,9 @@ from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import (
-    check_X_y, check_array, _check_sample_weight
+    check_X_y,
+    check_array,
+    _check_sample_weight,
 )
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.layers import deserialize, serialize
@@ -19,7 +21,8 @@ from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.models import Model, Sequential, clone_model
 from tensorflow.python.keras.saving import saving_utils
 from tensorflow.python.keras.utils.generic_utils import (
-    has_arg, register_keras_serializable
+    has_arg,
+    register_keras_serializable,
 )
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
@@ -44,20 +47,20 @@ ARGS_KWARGS_IDENTIFIERS = (
 )
 
 _DEFAULT_TAGS = {
-    'non_deterministic': True,  # can't easily set random_state
-    'requires_positive_X': False,
-    'requires_positive_y': False,
-    'X_types': ['2darray'],
-    'poor_score': True,
-    'no_validation': False,
-    'multioutput': True,
+    "non_deterministic": True,  # can't easily set random_state
+    "requires_positive_X": False,
+    "requires_positive_y": False,
+    "X_types": ["2darray"],
+    "poor_score": True,
+    "no_validation": False,
+    "multioutput": True,
     "allow_nan": False,
-    'stateless': False,
-    'multilabel': False,
-    '_skip_test': False,
-    'multioutput_only': False,
-    'binary_only': False,
-    'requires_fit': True
+    "stateless": False,
+    "multilabel": False,
+    "_skip_test": False,
+    "multioutput_only": False,
+    "binary_only": False,
+    "requires_fit": True,
 }
 
 
@@ -435,17 +438,17 @@ class BaseWrapper:
         """
         # basic checks
         X, y = check_X_y(
-            X, y,
+            X,
+            y,
             allow_nd=True,  # allow X to have more than 2 dimensions
             multi_output=True,  # allow y to be 2D
         )
 
-        X = check_array(X, allow_nd=True, dtype=['float64', 'int'])
+        X = check_array(X, allow_nd=True, dtype=["float64", "int"])
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
-                sample_weight, X,
-                dtype=['float64', 'int']
+                sample_weight, X, dtype=["float64", "int"]
             )
 
         # pre process X, y
@@ -490,7 +493,7 @@ class BaseWrapper:
             )
 
         # basic input checks
-        X = check_array(X, allow_nd=True, dtype=['float64', 'int'])
+        X = check_array(X, allow_nd=True, dtype=["float64", "int"])
 
         # pre process X
         X, _ = self._pre_process_X(X)
@@ -535,8 +538,7 @@ class BaseWrapper:
         # validate sample weights
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
-                sample_weight, X,
-                dtype=['float64', 'int']
+                sample_weight, X, dtype=["float64", "int"]
             )
 
         # pre process X, y
@@ -573,9 +575,10 @@ class BaseWrapper:
         parameters = []
         # reverse the MRO, we want the 1st one to overwrite the nth
         # for class_ in reversed(inspect.getmro(self.__class__)):
-        for p in inspect.signature(self.__class__.__init__).parameters.values():
-            if p.kind not in ARGS_KWARGS_IDENTIFIERS and \
-                    p.name != "self":
+        for p in inspect.signature(
+            self.__class__.__init__
+        ).parameters.values():
+            if p.kind not in ARGS_KWARGS_IDENTIFIERS and p.name != "self":
                 parameters.append(p)
 
         # Extract and sort argument names excluding 'self'
@@ -655,7 +658,7 @@ class BaseWrapper:
     def _get_tags(self):
         collected_tags = {}
         for base_class in reversed(inspect.getmro(self.__class__)):
-            if hasattr(base_class, '_more_tags'):
+            if hasattr(base_class, "_more_tags"):
                 # need the if because mixins might not have _more_tags
                 # but might do redundant work in estimators
                 # (i.e. calling more tags on BaseEstimator multiple times)
@@ -763,7 +766,7 @@ class KerasClassifier(BaseWrapper):
     _scorer = staticmethod(sklearn_accuracy_score)
 
     def _more_tags(self):
-        return {'multilabel': True}
+        return {"multilabel": True}
 
     @staticmethod
     def _pre_process_y(y):
@@ -941,7 +944,7 @@ class KerasClassifier(BaseWrapper):
             )
 
         # basic input checks
-        X = check_array(X, allow_nd=True, dtype=['float64', 'int'])
+        X = check_array(X, allow_nd=True, dtype=["float64", "int"])
 
         # pre process X
         X, _ = self._pre_process_X(X)
@@ -980,7 +983,7 @@ class KerasRegressor(BaseWrapper):
 
     def _post_process_y(self, y):
         """Ensures output is float64 and squeeze."""
-        return np.squeeze(y.astype('float64')), dict()
+        return np.squeeze(y.astype("float64")), dict()
 
     def _pre_process_y(self, y):
         """Split y for multi-output tasks.
@@ -993,7 +996,7 @@ class KerasRegressor(BaseWrapper):
 
         extra_args = {
             "n_outputs_": n_outputs_,
-            "n_outputs_keras_": n_outputs_keras_
+            "n_outputs_keras_": n_outputs_keras_,
         }
 
         y = [y]  # pack into single output list
