@@ -348,7 +348,6 @@ class TestAdvancedAPIFuncs:
             estimator = Pipeline([("s", StandardScaler()), ("e", estimator)])
             check(estimator, loader)
 
-    @pytest.mark.slow
     def test_searchcv(self):
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         for config in [
@@ -523,44 +522,53 @@ class TestSampleWeights:
         self.check_sample_weights_work(clf)
 
 
-def dynamic_classifier(X, n_classes_):
+def dynamic_classifier(X, cls_type_, n_classes_, n_outputs_keras_):
     """Creates a basic MLP classifier dynamically choosing binary/multiclass
     classification loss and ouput activations.
     """
     n_features = X.shape[1]
-    if n_classes_ == 2:
-        # binary
+
+    inp = Input(shape=(n_features,))
+
+    x1 = Dense(100)(inp)
+
+    if cls_type_ == "binary":
         loss = "binary_crossentropy"
-        output_activation = "sigmoid"
-        output_size = 1
+        out = [Dense(1, activation="sigmoid")(x1)]
+    elif cls_type_ == "multilabel-indicator":
+        loss = "binary_crossentropy"
+        out = [Dense(1, activation="sigmoid")(x1) for _ in
+               range(n_outputs_keras_)]
+    elif cls_type_ == "multiclass-multioutput":
+        loss = "binary_crossentropy"
+        out = [Dense(n, activation="softmax")(x1) for n in n_classes_]
     else:
+        # multiclass
         loss = "categorical_crossentropy"
-        output_activation = "softmax"
-        output_size = n_classes_
-    n_features = X.shape[1]
-    model = keras.models.Sequential()
-    model.add(keras.layers.Dense(n_features, input_shape=(n_features,)))
-    model.add(keras.layers.Activation("relu"))
-    model.add(keras.layers.Dense(100))
-    model.add(keras.layers.Activation("relu"))
-    model.add(keras.layers.Dense(output_size))
-    model.add(keras.layers.Activation(output_activation))
-    model.compile(optimizer="sgd", loss=loss)
+        out = [Dense(n_classes_, activation="softmax")(x1)]
+
+    model = Model([inp], out)
+
+    model.compile(optimizer="adam", loss=loss)
+
     return model
 
 
-def dynamic_regressor(X, n_outputs_):
+def dynamic_regressor(X, n_outputs_keras_):
     """Creates a basic MLP regressor dynamically.
     """
     n_features = X.shape[1]
-    model = keras.models.Sequential()
-    model.add(keras.layers.Dense(n_features, input_shape=(n_features,)))
-    model.add(keras.layers.Activation("relu"))
-    model.add(keras.layers.Dense(100))
-    model.add(keras.layers.Activation("relu"))
-    model.add(keras.layers.Dense(n_outputs_))
+
+    inp = Input(shape=(n_features,))
+
+    x1 = Dense(100)(inp)
+
+    out = [Dense(n_outputs_keras_)(x1)]
+
+    model = Model([inp], out)
+
     model.compile(
-        optimizer="sgd",
+        optimizer="adam",
         loss=wrappers.KerasRegressor.root_mean_squared_error,
     )
     return model
@@ -578,8 +586,8 @@ class FullyCompliantClassifier(wrappers.KerasClassifier):
         self.epochs = epochs
         return super().__init__()
 
-    def __call__(self, X, n_classes_):
-        return dynamic_classifier(X, n_classes_)
+    def __call__(self, X, cls_type_, n_classes_, n_outputs_):
+        return dynamic_classifier(X, cls_type_, n_classes_, n_outputs_keras_)
 
 
 class FullyCompliantRegressor(wrappers.KerasRegressor):
@@ -875,11 +883,7 @@ class FunctionAPIMultiOutputRegressor(KerasRegressor):
 
         x1 = Dense(100)(inp)
 
-        outputs = []
-        for _ in range(n_outputs_):
-            # simulate multiple binary classification outputs
-            # in reality, these would come from different nodes
-            outputs.append(Dense(1)(x1))
+        outputs = [Dense(n_outputs_)(x1)]
 
         model = Model([inp], outputs)
         losses = "mean_squared_error"
