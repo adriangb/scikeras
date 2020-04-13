@@ -6,9 +6,9 @@ import warnings
 from collections import defaultdict, namedtuple
 
 import numpy as np
-from sklearn.utils.multiclass import type_of_target
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
+from sklearn.utils.multiclass import type_of_target
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.layers import deserialize, serialize
 from tensorflow.python.keras.losses import is_categorical_crossentropy
@@ -27,7 +27,6 @@ SavedKerasModel = namedtuple(
 KNOWN_KERAS_FN_NAMES = (
     "fit",
     "evaluate",
-    "predict_classes",
     "predict",
 )
 
@@ -36,6 +35,22 @@ ARGS_KWARGS_IDENTIFIERS = (
     inspect.Parameter.VAR_KEYWORD,
     inspect.Parameter.VAR_POSITIONAL,
 )
+
+_DEFAULT_TAGS = {
+    'non_deterministic': True,  # can't easily set random_state
+    'requires_positive_X': False,
+    'requires_positive_y': False,
+    'X_types': ['2darray'],
+    'poor_score': True,
+    'no_validation': False,
+    'multioutput': True,
+    "allow_nan": False,
+    'stateless': False,
+    'multilabel': False,
+    '_skip_test': False,
+    'multioutput_only': False,
+    'binary_only': False,
+    'requires_fit': True}
 
 
 def _clone_prebuilt_model(build_fn):
@@ -118,39 +133,32 @@ class BaseWrapper:
         Model.predict,
     ]
 
+    _sk_params = None
     model = None
+    history = None
 
     def __init__(self, build_fn=None, **sk_params):
 
         self.build_fn = build_fn
 
-        # the sklearn API requires that all __init__ parameters be saved as an
-        # instance attribute of the same name
-        for name, val in sk_params.items():
-            setattr(self, name, val)
+        if sk_params:
 
-        # collect all __init__ params for this base class as well as
-        # all child classes
-        init_params = []
-        # reverse the MRO, we want the 1st one to overwrite the nth
-        for class_ in reversed(inspect.getmro(self.__class__)):
-            for p in inspect.signature(class_.__init__).parameters.values():
-                if p.kind not in ARGS_KWARGS_IDENTIFIERS and p.name != "self":
-                    init_params.append(p.name)
+            # for backwards compatibility
 
-        # add parameters from sk_params
-        self._init_params = set(init_params + list(sk_params.keys()))
+            # the sklearn API requires that all __init__ parameters be saved
+            # as an instance attribute of the same name
+            for name, val in sk_params.items():
+                setattr(self, name, val)
+
+            # save keys so that we can count these as __init__ params
+            self._sk_params = list(sk_params.keys())
 
         # check that all __init__ parameters were assigned (as per sklearn API)
-        for param in self._init_params:
+        for param in self.get_params(deep=False):
             if not hasattr(self, param):
-                raise RuntimeError("Parameter %s was not assigned")
-
-        # determine what type of build_fn to use
-        self._check_build_fn(build_fn)
-
-        # check that all parameters correspond to a fit or model param
-        self._check_params(self.get_params(deep=False))
+                raise RuntimeError(
+                    "Parameter %s was not assigned, this is req. by sklearn"
+                )
 
     def _check_build_fn(self, build_fn):
         """Checks `build_fn`.
@@ -168,17 +176,18 @@ class BaseWrapper:
                     "If not using the `build_fn` param, "
                     "you must implement `__call__`"
                 )
+            final_build_fn = self.__call__
         elif isinstance(build_fn, Model):
             # pre-built Keras model
-            self.__call__ = _clone_prebuilt_model
+            final_build_fn = _clone_prebuilt_model
         elif inspect.isfunction(build_fn):
             if hasattr(self, "__call__"):
                 raise ValueError(
                     "This class cannot implement `__call__` if"
-                    "using the `build_fn` parameter"
+                    " using the `build_fn` parameter"
                 )
             # a callable method/function
-            self.__call__ = build_fn
+            final_build_fn = build_fn
         elif (
             callable(build_fn)
             and hasattr(build_fn, "__class__")
@@ -187,34 +196,16 @@ class BaseWrapper:
             if hasattr(self, "__call__"):
                 raise ValueError(
                     "This class cannot implement `__call__` if"
-                    "using the `build_fn` parameter"
+                    " using the `build_fn` parameter"
                 )
             # an instance of a class implementing __call__
-            self.__call__ = build_fn.__call__
+            final_build_fn = build_fn.__call__
         else:
             raise ValueError("`build_fn` must be a callable or None")
         # append legal parameters
-        self._legal_params_fns.append(self.__call__)
+        self._legal_params_fns.append(final_build_fn)
 
-    def _check_params(self, params):
-        """Checks for user typos in `params`.
-
-        To disable, override this method in child class.
-
-        Arguments:
-            params: dictionary; the parameters to be checked
-
-        Raises:
-            ValueError: if any member of `params` is not a valid argument.
-        """
-        for param_name in params:
-            for fn in self._legal_params_fns:
-                if has_arg(fn, param_name) or param_name in self._init_params:
-                    break
-            else:
-                raise ValueError(
-                    "{} is not a legal parameter".format(param_name)
-                )
+        return final_build_fn
 
     def _build_keras_model(self, X, y, sample_weight, **kwargs):
         """Build the Keras model.
@@ -240,31 +231,34 @@ class BaseWrapper:
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
-        # dynamically build model, i.e. self.__call__ builds a Keras model
+        # dynamically build model, i.e. final_build_fn builds a Keras model
+
+        # determine what type of build_fn to use
+        final_build_fn = self._check_build_fn(self.build_fn)
 
         # get model arguments
-        model_args = self._filter_params(self.__call__)
+        model_args = self._filter_params(final_build_fn)
 
         # add `sample_weight` param
         # while it is not usually needed to build the model, some Keras models
         # require knowledge of the type of sample_weight to be built.
         sample_weight_arg = self._filter_params(
-            self.__call__, params_to_check={"sample_weight": sample_weight}
+            final_build_fn, params_to_check={"sample_weight": sample_weight}
         )
 
         # check if the model building function requires X and/or y to be passed
         X_y_args = self._filter_params(
-            self.__call__, params_to_check={"X": X, "y": y}
+            final_build_fn, params_to_check={"X": X, "y": y}
         )
 
         # filter kwargs
-        kwargs = self._filter_params(self.__call__, params_to_check=kwargs)
+        kwargs = self._filter_params(final_build_fn, params_to_check=kwargs)
 
         # combine all arguments
         build_args = {**model_args, **X_y_args, **sample_weight_arg, **kwargs}
 
         # build model
-        model = self.__call__(**build_args)
+        model = final_build_fn(**build_args)
 
         # append legal parameter names from model
         for known_keras_fn in KNOWN_KERAS_FN_NAMES:
@@ -394,8 +388,8 @@ class BaseWrapper:
     def _pre_process_X(X):
         """Handles manipulation of X before fitting.
 
-             Subclass and override this method to process X, for example
-             accomodate a multi-input model.
+        Subclass and override this method to process X, for example
+        accomodate a multi-input model.
 
         Arguments:
             X : 2D numpy array
@@ -432,11 +426,10 @@ class BaseWrapper:
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
-
         # pre process X, y
         X, _ = self._pre_process_X(X)
         y, extra_args = self._pre_process_y(y)
-        # update self.classes_, self.n_outputs_, self.n_classes_, self.cls_type
+        # update self.classes_, self.n_outputs_, self.n_classes_, self.cls_type_
         for attr_name, attr_val in extra_args.items():
             setattr(self, attr_name, attr_val)
 
@@ -535,6 +528,24 @@ class BaseWrapper:
                 res.update({name: value})
         return res
 
+    def _get_param_names(self):
+        """Get parameter names for the estimator"""
+        # collect all __init__ params for this base class as well as
+        # all child classes
+        parameters = []
+        # reverse the MRO, we want the 1st one to overwrite the nth
+        # for class_ in reversed(inspect.getmro(self.__class__)):
+        for p in inspect.signature(self.__class__.__init__).parameters.values():
+            if p.kind not in ARGS_KWARGS_IDENTIFIERS and \
+                    p.name != "self":
+                parameters.append(p)
+
+        # Extract and sort argument names excluding 'self'
+        if self._sk_params:
+            return sorted([p.name for p in parameters] + self._sk_params)
+
+        return sorted([p.name for p in parameters])
+
     def get_params(self, deep=True):
         """Get parameters for this estimator.
 
@@ -550,7 +561,7 @@ class BaseWrapper:
                 Parameter names mapped to their values.
         """
         out = dict()
-        for key in self._init_params:
+        for key in self._get_param_names():
             value = getattr(self, key)
             if deep and hasattr(value, "get_params"):
                 deep_items = value.get_params().items()
@@ -599,6 +610,20 @@ class BaseWrapper:
             valid_params[key].set_params(**sub_params)
 
         return self
+
+    def _more_tags(self):
+        return _DEFAULT_TAGS
+
+    def _get_tags(self):
+        collected_tags = {}
+        for base_class in reversed(inspect.getmro(self.__class__)):
+            if hasattr(base_class, '_more_tags'):
+                # need the if because mixins might not have _more_tags
+                # but might do redundant work in estimators
+                # (i.e. calling more tags on BaseEstimator multiple times)
+                more_tags = base_class._more_tags(self)
+                collected_tags.update(more_tags)
+        return collected_tags
 
     def __getstate__(self):
         """Get state of instance as a picklable/copyable dict.
@@ -699,10 +724,8 @@ class KerasClassifier(BaseWrapper):
     _estimator_type = "classifier"
     _scorer = staticmethod(sklearn_accuracy_score)
 
-    classes_ = None
-    n_outputs_ = None
-    n_classes_ = None
-    cls_type = None
+    def _more_tags(self):
+        return {'multilabel': True}
 
     @staticmethod
     def _pre_process_y(y):
@@ -721,9 +744,9 @@ class KerasClassifier(BaseWrapper):
         """
         y, _ = super(KerasClassifier, KerasClassifier)._pre_process_y(y)
 
-        cls_type = type_of_target(y)
+        cls_type_ = type_of_target(y)
 
-        if cls_type == "binary":
+        if cls_type_ == "binary":
             # y = array([1, 0, 1, 0]) or y = array(['used', 'new', 'used'])
             # single task, single label, binary classification
             classes_ = np.unique(y)
@@ -731,7 +754,7 @@ class KerasClassifier(BaseWrapper):
             y = np.searchsorted(classes_, y)
             classes_ = [classes_]
             y = [y]
-        elif cls_type == "multiclass":
+        elif cls_type_ == "multiclass":
             # y = array([1, 5, 2]) or
             # y = array(['apple', 'orange', 'banana'])
             classes_ = np.unique(y)
@@ -739,20 +762,20 @@ class KerasClassifier(BaseWrapper):
             y = np.searchsorted(classes_, y)
             classes_ = [classes_]
             y = [y]
-        elif cls_type == "multilabel-indicator":
+        elif cls_type_ == "multilabel-indicator":
             # y = array([1, 1, 1, 0], [0, 0, 1, 1])
             # split into lists for multi-output Keras
             # will be processed as multiple binary classifications
             classes_ = [np.array([0, 1])] * y.shape[1]
             y = np.split(y, y.shape[1], axis=1)
-        elif cls_type == "multiclass-multioutput":
+        elif cls_type_ == "multiclass-multioutput":
             # y = array(['apple', 0, 5], ['orange', 1, 3])
             # split into lists for multi-output Keras
             # each will be processesed as a seperate multiclass problem
             y = np.split(y, y.shape[1], axis=1)
             classes_ = [np.unique(y_) for y_ in y]
         else:
-            raise ValueError("Unknown label type: %r" % cls_type)
+            raise ValueError("Unknown label type: %r" % cls_type_)
 
         # self.classes_ is kept as an array when n_outputs==1 for compatibility
         # with ensembles and other meta estimators
@@ -769,7 +792,7 @@ class KerasClassifier(BaseWrapper):
             "classes_": classes_,
             "n_outputs_": n_outputs_,
             "n_classes_": n_classes_,
-            "cls_type": cls_type,
+            "cls_type_": cls_type_,
         }
 
         return y, extra_args
@@ -791,11 +814,11 @@ class KerasClassifier(BaseWrapper):
             cls_ = self.classes_
 
         y = copy.deepcopy(y)
-        cls_type = self.cls_type
+        cls_type_ = self.cls_type_
 
         class_predictions = []
         for i, (y_, classes_) in enumerate(zip(y, cls_)):
-            if cls_type == "binary":
+            if cls_type_ == "binary":
                 if y_.shape[1] == 1:
                     class_predictions.append(
                         classes_[np.where(y_ > 0.5, 1, 0)]
@@ -808,13 +831,13 @@ class KerasClassifier(BaseWrapper):
                     class_predictions.append(
                         classes_[np.argmax(np.where(y_ > 0.5, 1, 0), axis=1)]
                     )
-            elif cls_type == "multiclass":
+            elif cls_type_ == "multiclass":
                 # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
                 # array(['apple', 'orange'])
                 class_predictions.append(classes_[np.argmax(y_, axis=1)])
-            elif cls_type == "multilabel-indicator":
+            elif cls_type_ == "multilabel-indicator":
                 class_predictions.append(np.where(y_ > 0.5, 1, 0))
-            elif cls_type == "multiclass-multioutput":
+            elif cls_type_ == "multiclass-multioutput":
                 # array([0.9, 0.1], [.2, .8]) -> array(['apple', 'fruit'])
                 class_predictions.append(classes_[np.argmax(y_, axis=1)])
             else:
