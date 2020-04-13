@@ -586,7 +586,7 @@ class FullyCompliantClassifier(wrappers.KerasClassifier):
         self.epochs = epochs
         return super().__init__()
 
-    def __call__(self, X, cls_type_, n_classes_, n_outputs_):
+    def __call__(self, X, cls_type_, n_classes_, n_outputs_keras_):
         return dynamic_classifier(X, cls_type_, n_classes_, n_outputs_keras_)
 
 
@@ -602,8 +602,8 @@ class FullyCompliantRegressor(wrappers.KerasRegressor):
         self.epochs = epochs
         return super().__init__()
 
-    def __call__(self, X, n_outputs_):
-        return dynamic_regressor(X, n_outputs_)
+    def __call__(self, X, n_outputs_keras_):
+        return dynamic_regressor(X, n_outputs_keras_)
 
 
 @pytest.mark.xfail(reason="Issues not yet fixed")
