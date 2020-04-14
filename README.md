@@ -4,12 +4,7 @@
 [![build status](https://secure.travis-ci.org/adriangb/sklearn_keras_wrap.png?branch=master)](https://travis-ci.org/github/adriangb/sklearn_keras_wrap) [![Coverage Status](https://codecov.io/gh/adriangb/sklearn_keras_wrap/branch/master/graph/badge.svg)](https://codecov.io/gh/adriangb/sklearn_keras_wrap)
 
 
-The goal of this project is to provide wrappers for Keras models so that they can be used as part of a `Scikit-Learn` workflow. These wrappers seeek to emulate the base classes found in `sklearn.base`. Three wrappers are provided:
-
-1. `BaseWrapper`: basic implementation that wraps Keras models for use with `Scikit-Learn` workflows. Inherit from this wrapper to build other types of estimators, ex a [Transformer](https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html). Refer to `KerasClassifier` and `KerasRegressor` for inspiration.
-2. `KerasClassifier`: implements the `Scikit-Learn` classifier interface, akin to `sklearn.base.ClassifierMixin`. By default, scoring is done using `sklearn.metrics.accuracy_score`.
-3. `KerasRegressor`: implements the `Scikit-Learn` classifier interface, akin to `sklearn.base.RegressorMixin`. By default, scoring is done using `sklearn.metrics.r2_score`. Note that `Keras` does *not* have R2 as a built in loss function. A basic implementation of a `Keras` compatible R2 loss funciton is provided in `KerasRegressor.root_mean_squared_error`.
-
+The goal of this project is to provide wrappers for Keras models so that they can be used as part of a `Scikit-Learn` workflow. These wrappers seeek to emulate the base classes found in `sklearn.base`. 
 
 This project was originally part of Keras itself, but to simplify maintenence and implementation it is now hosted in this repository.
 
@@ -17,7 +12,20 @@ Learn more about the [`Scikit-Learn` API](https://scikit-learn.org/stable/module
 
 Learn more about [Keras](https://www.tensorflow.org/guide/keras), TensorFlow's Python API.
 
-Python versions supported: the maximum overlap between `Scikit-Learn` and `TensorFlow`. Currently, this means `Python >=3.5 and <=3.7`.
+Python versions supported: the maximum overlap between `Scikit-Learn` and `TensorFlow`. Currently, this means Python >=3.5 and <=3.7.
+
+
+### Wrappers
+
+### `BaseWrapper`
+Base implementation that wraps Keras models for use with `Scikit-Learn` workflows. Inherit from this wrapper to build other types of estimators, for example a [Transformer](https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html). Refer to `KerasClassifier` and `KerasRegressor` for inspiration.
+
+
+### `KerasClassifier`
+Implements the `Scikit-Learn` classifier interface, akin to `sklearn.base.ClassifierMixin`. By default, scoring is done using `sklearn.metrics.accuracy_score`.
+
+### `KerasRegressor`
+Implements the `Scikit-Learn` classifier interface, akin to `sklearn.base.RegressorMixin`. By default, scoring is done using `sklearn.metrics.r2_score`. Note that `Keras` does *not* have R2 as a built in loss function. A basic implementation of a `Keras` compatible R2 loss funciton is provided in `KerasRegressor.root_mean_squared_error`.
 
 ## Basic Usage
 
@@ -162,9 +170,23 @@ There are 2 ways to pass these argumements:
 ### Multi-output problems
 `Scikit-Learn` supports a limited number of multi-ouput problems and does not support any multi-input problems. See [`Multiclass and multilabel algorithms`](https://scikit-learn.org/stable/modules/multiclass.html) for more details.
 
-These wrappers suppport all of the multi-output types that `Scikit-Learn` supports out of the box. So for example, you can create a model that has multiple `sigmoid` output layers, resulting in a multiple binary classification problem. This type of problem is denoted `multilabel classification` in `Scikit-Learn`. Another example is a model with multiple `softmax` outputs, resulting in what is known as a `multiouput-multiclass` classification. There are obviously many ways to pair up a `Keras` model with a `Scikit-Learn` output type. Conversion to and from `Keras` outputs are done in the wrappers `_pre_process_y` and `_post_process_y` methods. The signatures are:
+These wrappers suppport all of the multi-output types that `Scikit-Learn` supports out of the box. So for example, you can create a model that has multiple `sigmoid` output layers, resulting in a multiple binary classification problem. This type of problem is denoted `multilabel-indicator` in `Scikit-Learn`. Another example is a model with multiple `softmax` outputs, resulting in what is known as a `multiouput-multiclass` classification. There are many ways to pair up a `Keras` model with a `Scikit-Learn` output type, summarized below:
 
-### `_pre_process_y`
+|                                        | Number of targets | Target cardinality | Valid `type_of_target`   | Keras Output Mode | Keras Output Type |
+|----------------------------------------|-------------------|--------------------|--------------------------|-------------------|------------------|
+| Multiclass classification              | 1                 | >2                 | ‘multiclass'             | Single softmax    | Numpy array      |
+| Multilabel classification              | >1                | 2 (0 or 1)         | 'multilabel-indicator'   | Multiple sigmoid  | List of arrays   |
+| Multioutput regression                 | >1                | Continuous         | 'continuous-multioutput' | Single            | Single array     |
+| Multioutput- multiclass classification | >1                | >2                 | 'multiclass-multioutput' | Multiple softmax  | List of arrays   |
+
+This table mirrors the [`Scikit-Learn` multi-output documentation](https://scikit-learn.org/stable/modules/multiclass.html).
+
+As noted above, `Keras` returns a list of arrays in many cases. This list is joined back into a single array by `_post_process_y`.
+
+#### Output pre-processing
+Conversion from `Scikit-Learn` formatted `y` and `Keras` formatted `y` are done in the wrappers `_pre_process_y` and `_post_process_y` methods. The signatures are:
+
+#### `_pre_process_y`
 Signature: `_pre_process_y(y: np.array) -> np.array, dict`
 Inputs:
 * `y` always a single `numpy.array`
@@ -172,15 +194,15 @@ Outputs:
 * `y`: a single `numpy.array` for a single `Keras` output or a list of `numpy.array` for a `Keras` model with multiple outputs
 *  `extra_args`: a dictionary containing extra parameters determined within `_pre_process_y` such as `classes_`. If used within `fit`, these parameters will overwrite instance parameters of the same name.
 
-### `_post_process_y`
+#### `_post_process_y`
 Signature: `_post_process_y(y: np.array) -> np.array, dict`
 Inputs:
-* `y` raw output form the `Keras` model's `predict` method.
+* `y` raw output form the `Keras` model's `predict` method, can be an array or list of arrays.
 Outputs:
 * `y`: a single `numpy.array`. For classificaiton, this should contain class predictions.
-*  `extra_args`: for regression, this parameter is unused. For classification, this parameter contains prediction probabilities.
+*  `extra_args`: for regression, this parameter is unused. For classification, this parameter contains prediction probabilities under the key `class_probabilities`.
 
-To support a custom mapping from `Keras` to `Scikit-Learn`, you can subclass a wrapper and modify `_pre_process_y` and `_post_process_y`. For example, to support a mixed  binary/multiclass classification:
+To support a custom mapping from `Keras` to `Scikit-Learn`, you can subclass a wrapper and modify `_pre_process_y` and `_post_process_y`. For example, to support a mixed  binary/multiclass classification as a `multioutput-multiclass` problem:
 
 ```python3
 class FunctionalAPIMultiOutputClassifier(KerasClassifier):
@@ -234,7 +256,7 @@ The default implementation of `_pre_process_y` for `KerasClassifier` attempts to
 
 ### Multi-input problems
 
-As mentioned above, `Scikit-Learn` does not support multi-input problems since `X` must be a sinlge `numpy.array`. However, in order to extend this functionality, the wrappers provide a `_pre_process_X` method that allows mapping a single `numpy.arary` to a multi-input `Keras` model. For example:
+As mentioned above, `Scikit-Learn` does not support multi-input problems since `X` must be a sinlge `numpy.array`. However, in order to extend this functionality, the wrappers provide a `_pre_process_X` method that allows mapping a single `numpy.arary` to a list of `numpy.array` for multi-input `Keras` models. For example:
 
 ```python3
 class FunctionalAPIMultiInputClassifier(KerasClassifier):
@@ -350,7 +372,7 @@ If submitting a PR, please make sure that:
   automatically run `black` and `flake8` when you make a git
   commit. This can be done by installing `pre-commit`:
 
-    $ python -m pip install pre-commit
+    $ python -m pip install pre-commit black flake8
 
   From the root of the repository, you should then install
   `pre-commit`:
