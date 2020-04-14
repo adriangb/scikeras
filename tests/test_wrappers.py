@@ -20,6 +20,7 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MultiLabelBinarizer, StandardScaler
+from sklearn.utils.estimator_checks import check_estimator
 from tensorflow.python import keras
 from tensorflow.python.framework.ops import convert_to_tensor
 from tensorflow.python.keras import backend as K
@@ -347,7 +348,6 @@ class TestAdvancedAPIFuncs:
             estimator = Pipeline([("s", StandardScaler()), ("e", estimator)])
             check(estimator, loader)
 
-    @pytest.mark.slow
     def test_searchcv(self):
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         for config in [
@@ -522,30 +522,106 @@ class TestSampleWeights:
         self.check_sample_weights_work(clf)
 
 
-def dynamic_classifier(X, y, n_classes_):
+def dynamic_classifier(X, cls_type_, n_classes_, n_outputs_keras_):
     """Creates a basic MLP classifier dynamically choosing binary/multiclass
     classification loss and ouput activations.
     """
     n_features = X.shape[1]
-    if n_classes_ == 2:
-        # binary
+
+    inp = Input(shape=(n_features,))
+
+    x1 = Dense(100)(inp)
+
+    if cls_type_ == "binary":
         loss = "binary_crossentropy"
-        output_activation = "sigmoid"
-        output_size = 1
+        out = [Dense(1, activation="sigmoid")(x1)]
+    elif cls_type_ == "multilabel-indicator":
+        loss = "binary_crossentropy"
+        out = [
+            Dense(1, activation="sigmoid")(x1) for _ in range(n_outputs_keras_)
+        ]
+    elif cls_type_ == "multiclass-multioutput":
+        loss = "binary_crossentropy"
+        out = [Dense(n, activation="softmax")(x1) for n in n_classes_]
     else:
+        # multiclass
         loss = "categorical_crossentropy"
-        output_activation = "softmax"
-        output_size = n_classes_
-    n_features = X.shape[1]
-    model = keras.models.Sequential()
-    model.add(keras.layers.Dense(n_features, input_shape=(n_features,)))
-    model.add(keras.layers.Activation("relu"))
-    model.add(keras.layers.Dense(100))
-    model.add(keras.layers.Activation("relu"))
-    model.add(keras.layers.Dense(output_size))
-    model.add(keras.layers.Activation(output_activation))
-    model.compile(optimizer="sgd", loss=loss, metrics=["accuracy"])
+        out = [Dense(n_classes_, activation="softmax")(x1)]
+
+    model = Model([inp], out)
+
+    model.compile(optimizer="adam", loss=loss)
+
     return model
+
+
+def dynamic_regressor(X, n_outputs_keras_):
+    """Creates a basic MLP regressor dynamically.
+    """
+    n_features = X.shape[1]
+
+    inp = Input(shape=(n_features,))
+
+    x1 = Dense(100)(inp)
+
+    out = [Dense(n_outputs_keras_)(x1)]
+
+    model = Model([inp], out)
+
+    model.compile(
+        optimizer="adam", loss=wrappers.KerasRegressor.root_mean_squared_error,
+    )
+    return model
+
+
+class FullyCompliantClassifier(wrappers.KerasClassifier):
+    """A classifier that sets all parameters in __init__ and nothing more."""
+
+    def __init__(
+        self, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS
+    ):
+        self.hidden_dim = hidden_dim
+        self.batch_size = batch_size
+        self.epochs = epochs
+        return super().__init__()
+
+    def __call__(self, X, cls_type_, n_classes_, n_outputs_keras_):
+        return dynamic_classifier(X, cls_type_, n_classes_, n_outputs_keras_)
+
+
+class FullyCompliantRegressor(wrappers.KerasRegressor):
+    """A classifier that sets all parameters in __init__ and nothing more."""
+
+    def __init__(
+        self, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS
+    ):
+        self.hidden_dim = hidden_dim
+        self.batch_size = batch_size
+        self.epochs = epochs
+        return super().__init__()
+
+    def __call__(self, X, n_outputs_keras_):
+        return dynamic_regressor(X, n_outputs_keras_)
+
+
+@pytest.mark.xfail(reason="Issues not yet fixed")
+class TestFullyCompliantWrappers:
+    """Tests wrappers that fully comply with the Scikit-Learn
+        API by not using kwargs. Testing done with Scikit-Learn's
+        internal model validation tool
+    """
+
+    @pytest.mark.parametrize(
+        "check", check_estimator(FullyCompliantClassifier, generate_only=True)
+    )
+    def test_fully_compliant_classifier_instance(self, check):
+        check[1](check[0])
+
+    @pytest.mark.parametrize(
+        "check", check_estimator(FullyCompliantRegressor, generate_only=True)
+    )
+    def test_fully_compliant_regressor_instance(self, check):
+        check[1](check[0])
 
 
 class TestOutputShapes:
@@ -805,11 +881,7 @@ class FunctionAPIMultiOutputRegressor(KerasRegressor):
 
         x1 = Dense(100)(inp)
 
-        outputs = []
-        for _ in range(n_outputs_):
-            # simulate multiple binary classification outputs
-            # in reality, these would come from different nodes
-            outputs.append(Dense(1)(x1))
+        outputs = [Dense(n_outputs_)(x1)]
 
         model = Model([inp], outputs)
         losses = "mean_squared_error"
