@@ -15,8 +15,7 @@ Learn more about [Keras](https://www.tensorflow.org/guide/keras), TensorFlow's P
 Python versions supported: the maximum overlap between `Scikit-Learn` and `TensorFlow`. Currently, this means Python >=3.5 and <=3.7.
 
 ## Installation
-This package is available on PyPi at []().
-To install:
+This package is available on PyPi:
 ```
 pip install sklearn-keras-wrap
 ```
