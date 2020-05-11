@@ -14,8 +14,16 @@ Learn more about [Keras](https://www.tensorflow.org/guide/keras), TensorFlow's P
 
 Python versions supported: the maximum overlap between `Scikit-Learn` and `TensorFlow`. Currently, this means Python >=3.5 and <=3.7.
 
+## Installation
+This package is available on PyPi at []().
+To install:
+```
+pip install sklearn-keras-wrap
+```
 
-### Wrappers
+The only dependencies are `scikit-learn>=0.21.0` (older version may work, but are untested) and `TensorFlow>=2.1.0`.
+
+## Wrapper Classes
 
 ### `BaseWrapper`
 Base implementation that wraps Keras models for use with `Scikit-Learn` workflows. Inherit from this wrapper to build other types of estimators, for example a [Transformer](https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html). Refer to `KerasClassifier` and `KerasRegressor` for inspiration.
