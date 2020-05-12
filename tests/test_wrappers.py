@@ -21,6 +21,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MultiLabelBinarizer, StandardScaler
 from sklearn.utils.estimator_checks import check_estimator
+
 from tensorflow.python import keras
 from tensorflow.python.framework.ops import convert_to_tensor
 from tensorflow.python.keras import backend as K
@@ -32,7 +33,7 @@ from tensorflow.python.keras.layers import (
     Flatten,
     Input,
 )
-from tensorflow.python.keras.models import Model, Sequential, clone_model
+from tensorflow.python.keras.models import Model, Sequential
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from sklearn_keras_wrap import wrappers
@@ -720,7 +721,7 @@ class TestOutputShapes:
 class TestPrebuiltModel:
     """Tests using a prebuilt model instance."""
 
-    def test_prebuilt_model(self):
+    def test_basic(self):
         """Tests using a prebuilt model."""
         for config in [
             "MLPRegressor",
@@ -745,34 +746,27 @@ class TestPrebuiltModel:
             estimator = model(build_fn=keras_model)
             check(estimator, loader)
 
-    def test_uncompiled_prebuilt_model_raises_error(self):
-        """Tests that an uncompiled model cannot be used as build_fn param."""
+    @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
+    def test_ensemble(self, config):
+        """Tests using a prebuilt model in an ensemble learner."""
+        loader, model, build_fn, ensembles = CONFIG[config]
+        data = loader()
+        x_train, y_train = data.data[:100], data.target[:100]
 
-        for config in [
-            "MLPRegressor",
-            "MLPClassifier",
-            "CNNClassifier",
-            "CNNClassifierF",
-        ]:
-            loader, model, build_fn, _ = CONFIG[config]
-            data = loader()
-            x_train, y_train = data.data[:100], data.target[:100]
+        n_classes_ = np.unique(y_train).size
+        # make y the same shape as will be used by .fit
+        if config != "MLPRegressor":
+            y_train = to_categorical(y_train)
+            keras_model = build_fn(
+                X=x_train, n_classes_=n_classes_, n_outputs_=1
+            )
+        else:
+            keras_model = build_fn(X=x_train, n_outputs_=1)
 
-            n_classes_ = np.unique(y_train).size
-            # make y the same shape as will be used by .fit
-            if config != "MLPRegressor":
-                y_train = to_categorical(y_train)
-                keras_model = build_fn(
-                    X=x_train, n_classes_=n_classes_, n_outputs_=1
-                )
-            else:
-                keras_model = build_fn(X=x_train, n_outputs_=1)
-
-            # clone to simulate uncompiled model
-            keras_model = clone_model(keras_model)
-            estimator = model(build_fn=keras_model)
-            with pytest.raises(ValueError):
-                check(estimator, loader)
+        base_estimator = model(build_fn=keras_model)
+        for ensemble in ensembles:
+            estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
+            check(estimator, loader)
 
 
 class FunctionalAPIMultiInputClassifier(KerasClassifier):
