@@ -3,7 +3,7 @@
 import copy
 import inspect
 import warnings
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 
 import numpy as np
 from sklearn.exceptions import NotFittedError
@@ -18,7 +18,7 @@ from sklearn.utils.validation import (
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.layers import deserialize, serialize
 from tensorflow.python.keras.losses import is_categorical_crossentropy
-from tensorflow.python.keras.models import Model, Sequential, clone_model
+from tensorflow.python.keras.models import Model, Sequential
 from tensorflow.python.keras.saving import saving_utils
 from tensorflow.python.keras.utils.generic_utils import (
     has_arg,
@@ -26,11 +26,6 @@ from tensorflow.python.keras.utils.generic_utils import (
 )
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
-
-# namedtuple used for pickling Model instances
-SavedKerasModel = namedtuple(
-    "SavedKerasModel", "cls model training_config weights"
-)
 
 # known keras function names that will be added to _legal_params_fns if they
 # exist in the generated model
@@ -64,30 +59,31 @@ _DEFAULT_TAGS = {
 }
 
 
-def _clone_prebuilt_model(build_fn):
-    """Clones and compiles a pre-built model when build_fn is an existing
-            Keras model instance.
+class SavedKerasModel:
+    """A serializable representation of a Keras Model object."""
 
-    Arguments:
-        build_fn : instance of Keras Model.
+    __slots__ = "training_config", "model", "weights"
 
-    Returns: copy of the input model with no training.
-    """
-    model = clone_model(build_fn)
-    # clone_model does not compy over compilation parameters, do those manually
-    model_metadata = saving_utils.model_metadata(build_fn)
-    if "training_config" in model_metadata:
-        training_config = model_metadata["training_config"]
-    else:
-        raise ValueError(
-            "To use %s as `build_fn`, you must compile" "it first." % build_fn
-        )
+    def __init__(self, model_obj):
+        if not isinstance(model_obj, Model):
+            raise TypeError("`model_obj` must be an instance of a Keras Model")
+        # pack up model
+        model_metadata = saving_utils.model_metadata(model_obj)
+        self.training_config = model_metadata.get("training_config", None)
+        self.model = serialize(model_obj)
+        self.weights = model_obj.get_weights()
 
-    model.compile(
-        **saving_utils.compile_args_from_training_config(training_config)
-    )
-
-    return model
+    def unpack(self):
+        restored_model = deserialize(self.model)
+        training_config = self.training_config
+        if training_config is not None:
+            restored_model.compile(
+                **saving_utils.compile_args_from_training_config(
+                    training_config
+                )
+            )
+        restored_model.set_weights(self.weights)
+        return restored_model
 
 
 class BaseWrapper:
@@ -149,6 +145,12 @@ class BaseWrapper:
 
     def __init__(self, build_fn=None, **sk_params):
 
+        if isinstance(build_fn, Model):
+            # need to pack for serialization
+            # this techincally breaks the Scikit-Learn API
+            # but not packing the parameter will cause issues with
+            # ensemble estimators
+            build_fn = SavedKerasModel(build_fn)
         self.build_fn = build_fn
 
         if sk_params:
@@ -187,9 +189,9 @@ class BaseWrapper:
                     "you must implement `__call__`"
                 )
             final_build_fn = self.__call__
-        elif isinstance(build_fn, Model):
-            # pre-built Keras model
-            final_build_fn = _clone_prebuilt_model
+        elif isinstance(build_fn, SavedKerasModel):
+            # pre-built Keras model that was packed for pickling
+            final_build_fn = build_fn.unpack
         elif inspect.isfunction(build_fn):
             if hasattr(self, "__call__"):
                 raise ValueError(
@@ -689,16 +691,7 @@ class BaseWrapper:
             except TypeError:
                 pass  # is this a Keras serializable?
             try:
-                model_metadata = saving_utils.model_metadata(obj)
-                training_config = model_metadata["training_config"]
-                model = serialize(obj)
-                weights = obj.get_weights()
-                return SavedKerasModel(
-                    cls=obj.__class__,
-                    model=model,
-                    weights=weights,
-                    training_config=training_config,
-                )
+                return SavedKerasModel(obj)
             except (TypeError, AttributeError):
                 pass  # try manually packing the object
             if hasattr(obj, "__dict__"):
@@ -734,15 +727,7 @@ class BaseWrapper:
             """Recursively unpacks objects.
             """
             if isinstance(obj, SavedKerasModel):
-                restored_model = deserialize(obj.model)
-                training_config = obj.training_config
-                restored_model.compile(
-                    **saving_utils.compile_args_from_training_config(
-                        training_config
-                    )
-                )
-                restored_model.set_weights(obj.weights)
-                return restored_model
+                return obj.unpack()
             if hasattr(obj, "__dict__"):
                 for key, val in obj.__dict__.items():
                     obj.__dict__[key] = _unpack_obj(val)
