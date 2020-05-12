@@ -21,6 +21,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MultiLabelBinarizer, StandardScaler
 from sklearn.utils.estimator_checks import check_estimator
+
 from tensorflow.python import keras
 from tensorflow.python.framework.ops import convert_to_tensor
 from tensorflow.python.keras import backend as K
@@ -720,7 +721,7 @@ class TestOutputShapes:
 class TestPrebuiltModel:
     """Tests using a prebuilt model instance."""
 
-    def test_prebuilt_model(self):
+    def test_basic(self):
         """Tests using a prebuilt model."""
         for config in [
             "MLPRegressor",
@@ -743,6 +744,28 @@ class TestPrebuiltModel:
                 keras_model = build_fn(X=x_train, n_outputs_=1)
 
             estimator = model(build_fn=keras_model)
+            check(estimator, loader)
+
+    @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
+    def test_ensemble(self, config):
+        """Tests using a prebuilt model in an ensemble learner."""
+        loader, model, build_fn, ensembles = CONFIG[config]
+        data = loader()
+        x_train, y_train = data.data[:100], data.target[:100]
+
+        n_classes_ = np.unique(y_train).size
+        # make y the same shape as will be used by .fit
+        if config != "MLPRegressor":
+            y_train = to_categorical(y_train)
+            keras_model = build_fn(
+                X=x_train, n_classes_=n_classes_, n_outputs_=1
+            )
+        else:
+            keras_model = build_fn(X=x_train, n_outputs_=1)
+
+        base_estimator = model(build_fn=keras_model)
+        for ensemble in ensembles:
+            estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
             check(estimator, loader)
 
 
