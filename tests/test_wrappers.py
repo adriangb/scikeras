@@ -20,7 +20,8 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MultiLabelBinarizer, StandardScaler
-from sklearn.utils.estimator_checks import check_estimator
+
+# from sklearn.utils.estimator_checks import check_estimator
 
 from tensorflow.python import keras
 from tensorflow.python.framework.ops import convert_to_tensor
@@ -605,24 +606,26 @@ class FullyCompliantRegressor(wrappers.KerasRegressor):
         return dynamic_regressor(X, n_outputs_keras_)
 
 
-@pytest.mark.xfail(reason="Issues not yet fixed")
-class TestFullyCompliantWrappers:
-    """Tests wrappers that fully comply with the Scikit-Learn
-        API by not using kwargs. Testing done with Scikit-Learn's
-        internal model validation tool
-    """
+# @pytest.mark.xfail(reason="Issues not yet fixed")
+# class TestFullyCompliantWrappers:
+#     """Tests wrappers that fully comply with the Scikit-Learn
+#         API by not using kwargs. Testing done with Scikit-Learn's
+#         internal model validation tool
+#     """
 
-    @pytest.mark.parametrize(
-        "check", check_estimator(FullyCompliantClassifier, generate_only=True)
-    )
-    def test_fully_compliant_classifier_instance(self, check):
-        check[1](check[0])
+#     @pytest.mark.parametrize(
+#         "check",
+#         check_estimator(FullyCompliantClassifier, generate_only=True)
+#     )
+#     def test_fully_compliant_classifier_instance(self, check):
+#         check[1](check[0])
 
-    @pytest.mark.parametrize(
-        "check", check_estimator(FullyCompliantRegressor, generate_only=True)
-    )
-    def test_fully_compliant_regressor_instance(self, check):
-        check[1](check[0])
+#     @pytest.mark.parametrize(
+#         "check",
+#         check_estimator(FullyCompliantRegressor, generate_only=True)
+#     )
+#     def test_fully_compliant_regressor_instance(self, check):
+#         check[1](check[0])
 
 
 class TestOutputShapes:
