@@ -16,6 +16,8 @@ from sklearn.utils.validation import (
     check_array,
     _check_sample_weight,
 )
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn.pipeline import make_pipeline
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.layers import deserialize, serialize
 from tensorflow.python.keras.losses import is_categorical_crossentropy
@@ -25,7 +27,6 @@ from tensorflow.python.keras.utils.generic_utils import (
     has_arg,
     register_keras_serializable,
 )
-from tensorflow.python.keras.utils.np_utils import to_categorical
 
 
 # known keras function names that will be added to _legal_params_fns if they
@@ -365,7 +366,7 @@ class BaseWrapper:
         """Checks that the model output number and y shape match, reshape as needed.
         """
         # check if this is a multi-output model
-        if self.n_outputs_keras_ != len(self.model_.outputs):
+        if self.keras_expected_n_ouputs_ != len(self.model_.outputs):
             raise RuntimeError(
                 "Detected an input of size "
                 "{}, but {} has {} outputs".format(
@@ -807,18 +808,24 @@ class KerasClassifier(BaseWrapper):
         if cls_type_ == "binary":
             # y = array([1, 0, 1, 0])
             # single task, single label, binary classification
-            n_outputs_keras_ = 1  # single sigmoid output expected
-            classes_ = np.unique(y)
-            # convert to 0 indexed classes
-            y = np.searchsorted(classes_, y)
+            keras_expected_n_ouputs_ = 1  # single sigmoid output expected
+            # encode
+            encoder = LabelEncoder()
+            y = encoder.fit_transform(y)
+            classes_ = encoder.classes_
+            # make lists
+            encoders_ = [encoder]
             classes_ = [classes_]
             y = [y]
         elif cls_type_ == "multiclass":
             # y = array([1, 5, 2])
-            n_outputs_keras_ = 1  # single softmax output expected
-            classes_ = np.unique(y)
-            # convert to 0 indexed classes
-            y = np.searchsorted(classes_, y)
+            keras_expected_n_ouputs_ = 1  # single softmax output expected
+            # encode
+            encoder = LabelEncoder()
+            y = encoder.fit_transform(y)
+            classes_ = encoder.classes_
+            # make lists
+            encoders_ = [encoder]
             classes_ = [classes_]
             y = [y]
         elif cls_type_ == "multilabel-indicator":
@@ -827,19 +834,29 @@ class KerasClassifier(BaseWrapper):
             # will be processed as multiple binary classifications
             classes_ = [np.array([0, 1])] * y.shape[1]
             y = np.split(y, y.shape[1], axis=1)
-            n_outputs_keras_ = len(y)
+            keras_expected_n_ouputs_ = len(y)
+            # encode
+            encoders_ = [LabelEncoder() for _ in range(len(y))]
+            y = [
+                encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)
+            ]
+            classes_ = [encoder.classes_ for encoder in encoders_]
         elif cls_type_ == "multiclass-multioutput":
             # y = array([1, 0, 5], [2, 1, 3])
             # split into lists for multi-output Keras
             # each will be processesed as a seperate multiclass problem
             y = np.split(y, y.shape[1], axis=1)
-            classes_ = [np.unique(y_) for y_ in y]
-            y = [np.searchsorted(classes_[i], y_) for i, y_ in enumerate(y)]
-            n_outputs_keras_ = len(y)
+            keras_expected_n_ouputs_ = len(y)
+            # encode
+            encoders_ = [LabelEncoder() for _ in range(len(y))]
+            y = [
+                encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)
+            ]
+            classes_ = [encoder.classes_ for encoder in encoders_]
         else:
             raise ValueError("Unknown label type: {}".format(cls_type_))
 
-        # self.classes_ is kept as an array when n_outputs==1 for compatibility
+        # self.classes_ is kept as an array when n_outputs>1 for compatibility
         # with ensembles and other meta estimators
         # which do not support multioutput
         if len(classes_) == 1:
@@ -852,8 +869,9 @@ class KerasClassifier(BaseWrapper):
 
         extra_args = {
             "classes_": classes_,
+            "encoders_": encoders_,
             "n_outputs_": n_outputs_,
-            "n_outputs_keras_": n_outputs_keras_,
+            "keras_expected_n_ouputs_": keras_expected_n_ouputs_,
             "n_classes_": n_classes_,
             "cls_type_": cls_type_,
         }
@@ -869,38 +887,59 @@ class KerasClassifier(BaseWrapper):
             # convert single-target y to a list for easier processing
             y = [y]
 
-        # self.classes_ is kept as an array when n_outputs==1 for compatibility
-        # with meta estimators
-        if self.n_outputs_ == 1:
-            cls_ = [self.classes_]
-        else:
-            cls_ = self.classes_
-
-        y = copy.deepcopy(y)
         cls_type_ = self.cls_type_
 
         class_predictions = []
-        for i, (y_, classes_) in enumerate(zip(y, cls_)):
+
+        def to_target(y_i):
+            idx = np.argmax(y_i, axis=-1)
+            y_ = np.zeros(y_i.shape)
+            y_[np.arange(y_i.shape[0]), idx] = 1
+            return y_
+
+        for i in range(self.n_outputs_):
+
             if cls_type_ == "binary":
-                if y_.shape[1] == 1 and len(classes_) > 1:
+                # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
+                if (
+                    isinstance(self.encoders_[i], LabelEncoder)
+                    and len(self.encoders_[i].classes_) == 1
+                ):
+                    # special case: single input label for sigmoid output
+                    # may give more predicted classes than inputs for
+                    # small sample sizes!
+                    # don't even bother inverse transforming, just fill.
+                    class_predictions.append(
+                        np.full(
+                            shape=(y[i].shape[0], 1),
+                            fill_value=self.encoders_[i].classes_[0],
+                        )
+                    )
+                else:
+                    class_predictions.append(
+                        self.encoders_[i].inverse_transform(
+                            y[i].round().astype(int)
+                        )
+                    )
+                if y[i].shape[1] == 1 and len(self.encoders_[i].classes_) == 2:
                     # result from a single sigmoid output
                     # reformat so that we have 2 columns
-                    y[i] = np.concatenate([1 - y_, y_], axis=1)
-                # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
-                class_predictions.append(classes_[np.argmax(y[i], axis=1)])
-            elif cls_type_ == "multiclass":
+                    y[i] = np.concatenate([1 - y[i], y[i]], axis=1)
+            elif cls_type_ in ("multiclass", "multiclass-multioutput"):
                 # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
                 # array(['apple', 'orange'])
-                class_predictions.append(classes_[np.argmax(y_, axis=1)])
+                idx = np.argmax(y[i], axis=-1)
+                y_ = np.zeros(y[i].shape, dtype=int)
+                y_[np.arange(y[i].shape[0]), idx] = 1
+                class_predictions.append(
+                    self.encoders_[i].inverse_transform(y_)
+                )
             elif cls_type_ == "multilabel-indicator":
-                class_predictions.append(np.where(y_ > 0.5, 1, 0))
-            elif cls_type_ == "multiclass-multioutput":
-                if y_.shape[1] == 1 and len(classes_) > 1:
-                    # result from a single sigmoid output
-                    # reformat so that we have 2 columns
-                    y_ = np.concatenate([1 - y_, y_], axis=1)
-                # array([0.9, 0.1], [.2, .8]) -> array(['apple', 'fruit'])
-                class_predictions.append(classes_[np.argmax(y_, axis=1)])
+                class_predictions.append(
+                    self.encoders_[i].inverse_transform(
+                        np.argmax(y[i], axis=1)
+                    )
+                )
 
         class_probabilities = np.squeeze(np.column_stack(y))
 
@@ -919,11 +958,17 @@ class KerasClassifier(BaseWrapper):
             losses = self.model_.loss
         else:
             losses = [self.model_.loss] * self.n_outputs_
-        for i, (loss, y_) in enumerate(zip(losses, y)):
+        for i, loss in enumerate(losses):
             if is_categorical_crossentropy(loss) and (
-                y_.ndim == 1 or y_.shape[1] == 1
+                y[i].ndim == 1 or y[i].shape[1] == 1
             ):
-                y[i] = to_categorical(y_)
+                encoder = OneHotEncoder(sparse=False)
+                if y[i].ndim == 1:
+                    y[i] = y[i].reshape(-1, 1)
+                y[i] = encoder.fit_transform(y[i])
+                self.encoders_[i] = make_pipeline(
+                    self.encoders_[i], encoder, "passthrough",
+                )
 
         return super()._check_output_model_compatibility(y)
 
@@ -1019,11 +1064,11 @@ class KerasRegressor(BaseWrapper):
 
         n_outputs_ = y.shape[1]
         # for regression, multi-output is handled by single Keras output
-        n_outputs_keras_ = 1
+        keras_expected_n_ouputs_ = 1
 
         extra_args = {
             "n_outputs_": n_outputs_,
-            "n_outputs_keras_": n_outputs_keras_,
+            "keras_expected_n_ouputs_": keras_expected_n_ouputs_,
         }
 
         y = [y]  # pack into single output list

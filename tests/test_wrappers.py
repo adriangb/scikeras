@@ -510,7 +510,7 @@ class TestSampleWeights:
         self.check_sample_weights_work(clf)
 
 
-def dynamic_classifier(X, cls_type_, n_classes_, n_outputs_keras_):
+def dynamic_classifier(X, cls_type_, n_classes_, keras_expected_n_ouputs_):
     """Creates a basic MLP classifier dynamically choosing binary/multiclass
     classification loss and ouput activations.
     """
@@ -526,7 +526,8 @@ def dynamic_classifier(X, cls_type_, n_classes_, n_outputs_keras_):
     elif cls_type_ == "multilabel-indicator":
         loss = "binary_crossentropy"
         out = [
-            Dense(1, activation="sigmoid")(x1) for _ in range(n_outputs_keras_)
+            Dense(1, activation="sigmoid")(x1)
+            for _ in range(keras_expected_n_ouputs_)
         ]
     elif cls_type_ == "multiclass-multioutput":
         loss = "binary_crossentropy"
@@ -573,8 +574,10 @@ class FullyCompliantClassifier(wrappers.KerasClassifier):
         self.epochs = epochs
         return super().__init__()
 
-    def __call__(self, X, cls_type_, n_classes_, n_outputs_keras_):
-        return dynamic_classifier(X, cls_type_, n_classes_, n_outputs_keras_)
+    def __call__(self, X, cls_type_, n_classes_, keras_expected_n_ouputs_):
+        return dynamic_classifier(
+            X, cls_type_, n_classes_, keras_expected_n_ouputs_
+        )
 
 
 class FullyCompliantRegressor(wrappers.KerasRegressor):
