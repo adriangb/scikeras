@@ -6,6 +6,7 @@ import warnings
 from collections import defaultdict
 
 import numpy as np
+from sklearn.base import _DEFAULT_TAGS
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
@@ -41,22 +42,15 @@ ARGS_KWARGS_IDENTIFIERS = (
     inspect.Parameter.VAR_POSITIONAL,
 )
 
-_DEFAULT_TAGS = {
-    "non_deterministic": True,  # can't easily set random_state
-    "requires_positive_X": False,
-    "requires_positive_y": False,
-    "X_types": ["2darray"],
-    "poor_score": True,
-    "no_validation": False,
-    "multioutput": True,
-    "allow_nan": False,
-    "stateless": False,
-    "multilabel": False,
-    "_skip_test": False,
-    "multioutput_only": False,
-    "binary_only": False,
-    "requires_fit": True,
-}
+# get default tags from sklearn.base
+# add customization for these wrappers
+_DEFAULT_TAGS.update(
+    {
+        "non_deterministic": True,  # can't easily set random_state
+        "poor_score": True,
+        "multioutput": True,
+    }
+)
 
 
 class SavedKerasModel:
@@ -166,11 +160,14 @@ class BaseWrapper:
             self._sk_params = list(sk_params.keys())
 
         # check that all __init__ parameters were assigned (as per sklearn API)
-        for param in self.get_params(deep=False):
-            if not hasattr(self, param):
-                raise RuntimeError(
-                    "Parameter %s was not assigned, this is req. by sklearn"
-                )
+        try:
+            self.get_params(deep=False)
+        except AttributeError as e:
+            raise RuntimeError("Unasigned input parameter: {}".format(e))
+
+    @property
+    def __name__(self):
+        return self.__class__.__name__
 
     def _check_build_fn(self, build_fn):
         """Checks `build_fn`.
@@ -213,7 +210,7 @@ class BaseWrapper:
             # an instance of a class implementing __call__
             final_build_fn = build_fn.__call__
         else:
-            raise ValueError("`build_fn` must be a callable or None")
+            raise TypeError("`build_fn` must be a callable or None")
         # append legal parameters
         self._legal_params_fns.append(final_build_fn)
 
@@ -337,14 +334,19 @@ class BaseWrapper:
         """Checks that the model output number and y shape match, reshape as needed.
         """
         # check if this is a multi-output model
-        if self.n_outputs_keras_ != len(y):
+        if self.n_outputs_keras_ != len(self.model_.outputs):
             raise RuntimeError(
-                "Detected a model with %s ouputs, but y has incompatible"
-                " shape %s" % (self.n_outputs_keras_, len(y))
+                "Detected an input of size "
+                "{}, but {} has {} outputs".format(
+                    (y[0].shape[0], len(y)),
+                    self.model_,
+                    len(self.model_.outputs),
+                )
             )
 
         # tf v1 does not accept single item lists
         # tf v2 does
+        # so go with what tf v1 accepts
         if len(y) == 1:
             y = y[0]
         else:
@@ -703,8 +705,6 @@ class BaseWrapper:
                 new_obj = obj_type([_pack_obj(o) for o in obj])
                 return new_obj
 
-            return obj
-
         state = self.__dict__.copy()
         for key, val in self.__dict__.items():
             state[key] = _pack_obj(val)
@@ -749,9 +749,28 @@ class KerasClassifier(BaseWrapper):
 
     _estimator_type = "classifier"
     _scorer = staticmethod(sklearn_accuracy_score)
+    _tags = {
+        "multilabel": True,
+        "_xfail_checks": {
+            "check_sample_weights_invariance": "can't easily \
+                set Keras random seed",
+            "check_classifiers_multilabel_representation_invariance": "can't \
+                easily set Keras random seed",
+            "check_estimators_data_not_an_array": "can't easily \
+                set Keras random seed",
+            "check_classifier_data_not_an_array": "can't set \
+                Keras random seed",
+            "check_classifiers_classes": "can't meet \
+                performance target",
+            "check_supervised_y_2d": "can't easily set \
+                Keras random seed",
+            "check_fit_idempotent": "tf does not use \
+                sparse tensors",
+        },
+    }
 
     def _more_tags(self):
-        return {"multilabel": True}
+        return self._tags
 
     @staticmethod
     def _pre_process_y(y):
@@ -804,9 +823,10 @@ class KerasClassifier(BaseWrapper):
             # each will be processesed as a seperate multiclass problem
             y = np.split(y, y.shape[1], axis=1)
             classes_ = [np.unique(y_) for y_ in y]
+            y = [np.searchsorted(classes_[i], y_) for i, y_ in enumerate(y)]
             n_outputs_keras_ = len(y)
         else:
-            raise ValueError("Unknown label type: %r" % cls_type_)
+            raise ValueError("Unknown label type: {}".format(cls_type_))
 
         # self.classes_ is kept as an array when n_outputs==1 for compatibility
         # with ensembles and other meta estimators
@@ -851,18 +871,12 @@ class KerasClassifier(BaseWrapper):
         class_predictions = []
         for i, (y_, classes_) in enumerate(zip(y, cls_)):
             if cls_type_ == "binary":
-                if y_.shape[1] == 1:
+                if y_.shape[1] == 1 and len(classes_) > 1:
                     # result from a single sigmoid output
-                    class_predictions.append(
-                        classes_[np.where(y_ > 0.5, 1, 0)]
-                    )
                     # reformat so that we have 2 columns
                     y[i] = np.concatenate([1 - y_, y_], axis=1)
-                else:
-                    # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
-                    class_predictions.append(
-                        classes_[np.argmax(np.where(y_ > 0.5, 1, 0), axis=1)]
-                    )
+                # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
+                class_predictions.append(classes_[np.argmax(y[i], axis=1)])
             elif cls_type_ == "multiclass":
                 # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
                 # array(['apple', 'orange'])
@@ -870,12 +884,12 @@ class KerasClassifier(BaseWrapper):
             elif cls_type_ == "multilabel-indicator":
                 class_predictions.append(np.where(y_ > 0.5, 1, 0))
             elif cls_type_ == "multiclass-multioutput":
+                if y_.shape[1] == 1 and len(classes_) > 1:
+                    # result from a single sigmoid output
+                    # reformat so that we have 2 columns
+                    y_ = np.concatenate([1 - y_, y_], axis=1)
                 # array([0.9, 0.1], [.2, .8]) -> array(['apple', 'fruit'])
                 class_predictions.append(classes_[np.argmax(y_, axis=1)])
-            else:
-                raise ValueError(
-                    "Unknown classification task type '%s'" % cls_
-                )
 
         class_probabilities = np.squeeze(np.column_stack(y))
 
@@ -958,8 +972,25 @@ class KerasRegressor(BaseWrapper):
 
     _estimator_type = "regressor"
     _scorer = staticmethod(sklearn_r2_score)
+    _tags = {
+        "multilabel": True,
+        "_xfail_checks": {
+            "check_sample_weights_invariance": "can't easily set \
+                Keras random seed",
+            "check_estimators_data_not_an_array": "can't easily set \
+                Keras random seed",
+            "check_regressor_data_not_an_array": "can't set Keras random seed",
+            "check_supervised_y_2d": "can't easily set Keras random seed",
+            "check_fit_idempotent": "tf does not use sparse tensors",
+            "check_regressors_int": "can't easily set Keras \
+                random seed",
+            "check_methods_subset_invariance": "can't easily set \
+                Keras random seed",
+        },
+    }
 
-    n_outputs_ = None
+    def _more_tags(self):
+        return self._tags
 
     def fit(self, X, y, sample_weight=None, **kwargs):
         """Convert y to float, regressors cannot accept ints."""
