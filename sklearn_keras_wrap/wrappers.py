@@ -53,31 +53,62 @@ _DEFAULT_TAGS.update(
 )
 
 
-class SavedKerasModel:
-    """A serializable representation of a Keras Model object."""
+def unpack_keras_model(model, training_config, weights):
+    """Creates a new Keras model object using the input
+    parameters.
 
-    __slots__ = "training_config", "model", "weights"
+    Returns
+    -------
+    Model
+        A copy of the input Keras Model,
+        compiled if the original was compiled.
+    """
+    restored_model = deserialize(model)
+    if training_config is not None:
+        restored_model.compile(
+            **saving_utils.compile_args_from_training_config(training_config)
+        )
+    restored_model.set_weights(weights)
+    restored_model.__reduce_ex__ = pack_keras_model.__get__(restored_model)
+    return restored_model
 
-    def __init__(self, model_obj):
-        if not isinstance(model_obj, Model):
-            raise TypeError("`model_obj` must be an instance of a Keras Model")
-        # pack up model
-        model_metadata = saving_utils.model_metadata(model_obj)
-        self.training_config = model_metadata.get("training_config", None)
-        self.model = serialize(model_obj)
-        self.weights = model_obj.get_weights()
 
-    def unpack(self):
-        restored_model = deserialize(self.model)
-        training_config = self.training_config
-        if training_config is not None:
-            restored_model.compile(
-                **saving_utils.compile_args_from_training_config(
-                    training_config
-                )
-            )
-        restored_model.set_weights(self.weights)
-        return restored_model
+def pack_keras_model(model_obj, protocol):
+    """Pickle a Keras Model.
+
+    Arguments:
+        model_obj: an instance of a Keras Model.
+        protocol: pickle protocol version, ignored.
+
+    Returns
+    -------
+    Pickled model
+        A tuple following the pickle protocol.
+    """
+    if not isinstance(model_obj, Model):
+        raise TypeError("`model_obj` must be an instance of a Keras Model")
+    # pack up model
+    model_metadata = saving_utils.model_metadata(model_obj)
+    training_config = model_metadata.get("training_config", None)
+    model = serialize(model_obj)
+    weights = model_obj.get_weights()
+    return (unpack_keras_model, (model, training_config, weights))
+
+
+def make_model_picklable(model_obj):
+    """Makes a Keras Model object picklable without cloning.
+
+    Arguments:
+        model_obj: an instance of a Keras Model.
+
+    Returns
+    -------
+    Model
+        The input model, but directly picklable.
+    """
+    if not isinstance(model_obj, Model):
+        raise TypeError("`model_obj` must be an instance of a Keras Model")
+    model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
 
 
 class BaseWrapper:
@@ -140,11 +171,9 @@ class BaseWrapper:
     def __init__(self, build_fn=None, **sk_params):
 
         if isinstance(build_fn, Model):
-            # need to pack for serialization
-            # this techincally breaks the Scikit-Learn API
-            # but not packing the parameter will cause issues with
-            # ensemble estimators
-            build_fn = SavedKerasModel(build_fn)
+            # ensure prebuilt model can be serialized
+            make_model_picklable(build_fn)
+
         self.build_fn = build_fn
 
         if sk_params:
@@ -186,9 +215,11 @@ class BaseWrapper:
                     "you must implement `__call__`"
                 )
             final_build_fn = self.__call__
-        elif isinstance(build_fn, SavedKerasModel):
-            # pre-built Keras model that was packed for pickling
-            final_build_fn = build_fn.unpack
+        elif isinstance(build_fn, Model):
+            # pre-built Keras Model
+            def final_build_fn():
+                return build_fn
+
         elif inspect.isfunction(build_fn):
             if hasattr(self, "__call__"):
                 raise ValueError(
@@ -280,7 +311,7 @@ class BaseWrapper:
         """Fits the Keras model.
 
         This method will process all arguments and call the Keras
-        model's `fit` method with approriate arguments.
+        model's `fit` method with appropriate arguments.
 
         Arguments:
             X : array-like, shape `(n_samples, n_features)`
@@ -673,29 +704,29 @@ class BaseWrapper:
     def __getstate__(self):
         """Get state of instance as a picklable/copyable dict.
 
-             Used by various scikit-learn methods to clone estimators. Also
-             used for pickling.
-             Because some objects (mainly Keras `Model` instances) are not
-             pickleable, it is necessary to iterate through all attributes
-             and clone the unpicklables manually.
+        Used by various scikit-learn methods to clone estimators. Also
+        used for pickling.
+
+        Because some objects (namely Keras `Model` instances) are not
+        pickleable, it is necessary to iterate through all attributes
+        and handle Model instances seperately.
 
         Returns:
             state : dictionary containing a copy of all attributes of this
-                    estimator with Keras Model instances being saved as
-                    HDF5 binary objects.
+                    estimator that can be replaced using __setstate__.
         """
 
         def _pack_obj(obj):
             """Recursively packs objects.
             """
             try:
+                # first try to copy directly
                 return copy.deepcopy(obj)
             except TypeError:
-                pass  # is this a Keras serializable?
-            try:
-                return SavedKerasModel(obj)
-            except (TypeError, AttributeError):
-                pass  # try manually packing the object
+                pass
+            if isinstance(obj, Model):
+                make_model_picklable(obj)
+                return obj
             if hasattr(obj, "__dict__"):
                 for key, val in obj.__dict__.items():
                     obj.__dict__[key] = _pack_obj(val)
@@ -713,34 +744,12 @@ class BaseWrapper:
     def __setstate__(self, state):
         """Set state of live object from state saved via __getstate__.
 
-             Because some objects (mainly Keras `Model` instances) are not
-             pickleable, it is necessary to iterate through all attributes
-             and clone the unpicklables manually.
-
         Arguments:
             state : dict
                 dictionary from a previous call to `get_state` that will be
                 unpacked to this instance's `__dict__`.
         """
-
-        def _unpack_obj(obj):
-            """Recursively unpacks objects.
-            """
-            if isinstance(obj, SavedKerasModel):
-                return obj.unpack()
-            if hasattr(obj, "__dict__"):
-                for key, val in obj.__dict__.items():
-                    obj.__dict__[key] = _unpack_obj(val)
-                return obj
-            if isinstance(obj, (list, tuple)):
-                obj_type = type(obj)
-                new_obj = obj_type([_unpack_obj(o) for o in obj])
-                return new_obj
-
-            return obj  # not much we can do at this point, cross fingers
-
-        for key, val in state.items():
-            setattr(self, key, _unpack_obj(val))
+        self.__dict__.update(state)
 
 
 class KerasClassifier(BaseWrapper):
