@@ -330,71 +330,60 @@ CONFIG = {
 class TestAdvancedAPIFuncs:
     """Tests advanced features such as pipelines and hyperparameter tuning."""
 
-    def test_standalone(self):
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_standalone(self, config):
         """Tests standalone estimator."""
-        for config in [
-            "MLPRegressor",
-            "MLPClassifier",
-            "CNNClassifier",
-            "CNNClassifierF",
-        ]:
-            loader, model, build_fn, _ = CONFIG[config]
-            estimator = model(build_fn, epochs=1)
-            check(estimator, loader)
+        loader, model, build_fn, _ = CONFIG[config]
+        estimator = model(build_fn, epochs=1)
+        check(estimator, loader)
 
-    def test_pipeline(self):
+    @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
+    def test_pipeline(self, config):
         """Tests compatibility with Scikit-learn's pipeline."""
-        for config in ["MLPRegressor", "MLPClassifier"]:
-            loader, model, build_fn, _ = CONFIG[config]
-            estimator = model(build_fn, epochs=1)
-            estimator = Pipeline([("s", StandardScaler()), ("e", estimator)])
-            check(estimator, loader)
+        loader, model, build_fn, _ = CONFIG[config]
+        estimator = model(build_fn, epochs=1)
+        estimator = Pipeline([("s", StandardScaler()), ("e", estimator)])
+        check(estimator, loader)
 
-    def test_searchcv(self):
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_searchcv(self, config):
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
-        for config in [
-            "MLPRegressor",
-            "MLPClassifier",
-            "CNNClassifier",
-            "CNNClassifierF",
-        ]:
-            loader, model, build_fn, _ = CONFIG[config]
-            estimator = model(
-                build_fn, epochs=1, validation_split=0.1, hidden_layer_sizes=[]
-            )
-            check(
-                GridSearchCV(estimator, {"hidden_layer_sizes": [[], [5]]}),
-                loader,
-            )
-            check(
-                RandomizedSearchCV(
-                    estimator,
-                    {"epochs": np.random.randint(1, 5, 2)},
-                    n_iter=2,
-                ),
-                loader,
-            )
+        loader, model, build_fn, _ = CONFIG[config]
+        estimator = model(
+            build_fn, epochs=1, validation_split=0.1, hidden_layer_sizes=[]
+        )
+        check(
+            GridSearchCV(estimator, {"hidden_layer_sizes": [[], [5]]}), loader,
+        )
+        check(
+            RandomizedSearchCV(
+                estimator, {"epochs": np.random.randint(1, 5, 2)}, n_iter=2,
+            ),
+            loader,
+        )
 
-    def test_ensemble(self):
+    @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
+    def test_ensemble(self, config):
         """Tests compatibility with Scikit-learn's ensembles."""
-        for config in ["MLPRegressor", "MLPClassifier"]:
-            loader, model, build_fn, ensembles = CONFIG[config]
-            base_estimator = model(build_fn, epochs=1)
-            for ensemble in ensembles:
-                estimator = ensemble(
-                    base_estimator=base_estimator, n_estimators=2
-                )
-                check(estimator, loader)
-
-    def test_calibratedclassifiercv(self):
-        """Tests compatibility with Scikit-learn's calibrated classifier CV."""
-        for config in ["MLPClassifier"]:
-            loader, _, build_fn, _ = CONFIG[config]
-            base_estimator = KerasClassifier(build_fn, epochs=1)
-            estimator = CalibratedClassifierCV(
-                base_estimator=base_estimator, cv=5
-            )
+        loader, model, build_fn, ensembles = CONFIG[config]
+        base_estimator = model(build_fn, epochs=1)
+        for ensemble in ensembles:
+            estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
             check(estimator, loader)
+
+    @pytest.mark.parametrize("config", ["MLPClassifier"])
+    def test_calibratedclassifiercv(self, config):
+        """Tests compatibility with Scikit-learn's calibrated classifier CV."""
+        loader, _, build_fn, _ = CONFIG[config]
+        base_estimator = KerasClassifier(build_fn, epochs=1)
+        estimator = CalibratedClassifierCV(base_estimator=base_estimator, cv=5)
+        check(estimator, loader)
 
 
 class SentinalCallback(keras.callbacks.Callback):
@@ -424,30 +413,27 @@ class ClassWithCallback(wrappers.KerasClassifier):
 class TestCallbacks:
     """Tests use of Callbacks."""
 
-    def test_callbacks_passed_as_arg(self):
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_callbacks_passed_as_arg(self, config):
         """Tests estimators created passing a callback to __init__."""
-        for config in [
-            "MLPRegressor",
-            "MLPClassifier",
-            "CNNClassifier",
-            "CNNClassifierF",
-        ]:
-            loader, model, build_fn, _ = CONFIG[config]
-            callback = SentinalCallback()
-            estimator = model(build_fn, epochs=1, callbacks=[callback])
-            # check that callback did not break estimator
-            check(estimator, loader)
-            # check that callback is preserved after pickling
-            data = loader()
-            X, y = data.data[:100], data.target[:100]
-            estimator.fit(X, y)
-            assert estimator.callbacks[0].called != SentinalCallback.called
-            old_callback = estimator.callbacks[0]
-            deserialized_estimator = pickle.loads(pickle.dumps(estimator))
-            assert (
-                deserialized_estimator.callbacks[0].called
-                == old_callback.called
-            )
+        loader, model, build_fn, _ = CONFIG[config]
+        callback = SentinalCallback()
+        estimator = model(build_fn, epochs=1, callbacks=[callback])
+        # check that callback did not break estimator
+        check(estimator, loader)
+        # check that callback is preserved after pickling
+        data = loader()
+        X, y = data.data[:100], data.target[:100]
+        estimator.fit(X, y)
+        assert estimator.callbacks[0].called != SentinalCallback.called
+        old_callback = estimator.callbacks[0]
+        deserialized_estimator = pickle.loads(pickle.dumps(estimator))
+        assert (
+            deserialized_estimator.callbacks[0].called == old_callback.called
+        )
 
     def test_callbacks_inherit(self):
         """Test estimators that inherit from KerasClassifier and implement
@@ -717,30 +703,28 @@ class TestOutputShapes:
 class TestPrebuiltModel:
     """Tests using a prebuilt model instance."""
 
-    def test_basic(self):
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_basic(self, config):
         """Tests using a prebuilt model."""
-        for config in [
-            "MLPRegressor",
-            "MLPClassifier",
-            "CNNClassifier",
-            "CNNClassifierF",
-        ]:
-            loader, model, build_fn, _ = CONFIG[config]
-            data = loader()
-            x_train, y_train = data.data[:100], data.target[:100]
+        loader, model, build_fn, _ = CONFIG[config]
+        data = loader()
+        x_train, y_train = data.data[:100], data.target[:100]
 
-            n_classes_ = np.unique(y_train).size
-            # make y the same shape as will be used by .fit
-            if config != "MLPRegressor":
-                y_train = to_categorical(y_train)
-                keras_model = build_fn(
-                    X=x_train, n_classes_=n_classes_, n_outputs_=1
-                )
-            else:
-                keras_model = build_fn(X=x_train, n_outputs_=1)
+        n_classes_ = np.unique(y_train).size
+        # make y the same shape as will be used by .fit
+        if config != "MLPRegressor":
+            y_train = to_categorical(y_train)
+            keras_model = build_fn(
+                X=x_train, n_classes_=n_classes_, n_outputs_=1
+            )
+        else:
+            keras_model = build_fn(X=x_train, n_outputs_=1)
 
-            estimator = model(build_fn=keras_model)
-            check(estimator, loader)
+        estimator = model(build_fn=keras_model)
+        check(estimator, loader)
 
     @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
     def test_ensemble(self, config):
