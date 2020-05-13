@@ -766,6 +766,8 @@ class KerasClassifier(BaseWrapper):
                 Keras random seed",
             "check_fit_idempotent": "tf does not use \
                 sparse tensors",
+            "check_methods_subset_invariance": "can't easily set \
+                Keras random seed",
         },
     }
 
