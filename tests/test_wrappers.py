@@ -15,13 +15,13 @@ from sklearn.ensemble import (
     RandomForestClassifier,
     RandomForestRegressor,
 )
+from sklearn.exceptions import NotFittedError
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MultiLabelBinarizer, StandardScaler
-
-# from sklearn.utils.estimator_checks import check_estimator
+from sklearn.utils.estimator_checks import parametrize_with_checks
 
 from tensorflow.python import keras
 from tensorflow.python.framework.ops import convert_to_tensor
@@ -557,7 +557,7 @@ def dynamic_classifier(X, cls_type_, n_classes_, n_outputs_keras_):
     return model
 
 
-def dynamic_regressor(X, n_outputs_keras_):
+def dynamic_regressor(X, n_outputs_):
     """Creates a basic MLP regressor dynamically.
     """
     n_features = X.shape[1]
@@ -566,7 +566,7 @@ def dynamic_regressor(X, n_outputs_keras_):
 
     x1 = Dense(100)(inp)
 
-    out = [Dense(n_outputs_keras_)(x1)]
+    out = [Dense(n_outputs_)(x1)]
 
     model = Model([inp], out)
 
@@ -602,30 +602,23 @@ class FullyCompliantRegressor(wrappers.KerasRegressor):
         self.epochs = epochs
         return super().__init__()
 
-    def __call__(self, X, n_outputs_keras_):
-        return dynamic_regressor(X, n_outputs_keras_)
+    def __call__(self, X, n_outputs_):
+        return dynamic_regressor(X, n_outputs_)
 
 
-# @pytest.mark.xfail(reason="Issues not yet fixed")
-# class TestFullyCompliantWrappers:
-#     """Tests wrappers that fully comply with the Scikit-Learn
-#         API by not using kwargs. Testing done with Scikit-Learn's
-#         internal model validation tool
-#     """
+class TestFullyCompliantWrappers:
+    """Tests wrappers that fully comply with the Scikit-Learn
+        API by not using kwargs. Testing done with Scikit-Learn's
+        internal model validation tool
+    """
 
-#     @pytest.mark.parametrize(
-#         "check",
-#         check_estimator(FullyCompliantClassifier, generate_only=True)
-#     )
-#     def test_fully_compliant_classifier_instance(self, check):
-#         check[1](check[0])
+    @parametrize_with_checks([FullyCompliantClassifier()])
+    def test_fully_compliant_classifier(self, estimator, check):
+        check(estimator)
 
-#     @pytest.mark.parametrize(
-#         "check",
-#         check_estimator(FullyCompliantRegressor, generate_only=True)
-#     )
-#     def test_fully_compliant_regressor_instance(self, check):
-#         check[1](check[0])
+    @parametrize_with_checks([FullyCompliantRegressor()])
+    def test_fully_compliant_regressor(self, estimator, check):
+        check(estimator)
 
 
 class TestOutputShapes:
@@ -818,28 +811,6 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
 
         return model
 
-    def _post_process_y(self, y):
-        """To support targets of different type, we need to post-precess each one
-           manually, there is no way to determine the types accurately.
-
-           Takes KerasClassifier._post_process_y as a starting point and
-           hardcodes the post-processing.
-        """
-        classes_ = self.classes_
-
-        class_predictions = [
-            classes_[0][np.where(y[0] > 0.5, 1, 0)],
-            classes_[1][np.argmax(y[1], axis=1)],
-        ]
-
-        class_probabilities = np.squeeze(np.column_stack(y))
-
-        y = np.squeeze(np.column_stack(class_predictions))
-
-        extra_args = {"class_probabilities": class_probabilities}
-
-        return y, extra_args
-
     def score(self, X, y):
         """Taken from sklearn.multiouput.MultiOutputClassifier
         """
@@ -1005,7 +976,7 @@ class TestMultiInputOutput:
     """
 
     def test_multi_input(self):
-        """Compares to the scikit-learn RandomForestRegressor classifier.
+        """Tests custom multi-input Keras model.
         """
         clf = FunctionalAPIMultiInputClassifier()
         (x_train, y_train), (x_test, y_test) = testing_utils.get_test_data(
@@ -1020,26 +991,28 @@ class TestMultiInputOutput:
         clf.score(x_train, y_train)
 
     def test_multi_output(self):
-        """Compares to the scikit-learn RandomForestRegressor classifier.
+        """Compares to scikit-learn RandomForestClassifier classifier.
         """
-        clf = FunctionalAPIMultiOutputClassifier()
-        (x_train, y_train), (x_test, y_test) = testing_utils.get_test_data(
-            train_samples=TRAIN_SAMPLES,
-            test_samples=TEST_SAMPLES,
-            input_shape=(4,),
-            num_classes=3,
-        )
+        clf_keras = FunctionalAPIMultiOutputClassifier()
+        clf_sklearn = RandomForestClassifier()
 
-        # simulate 2 outputs
-        y_train = np.stack([y_train == 1, y_train], axis=1)
-        y_test = np.stack([y_test == 1, y_test], axis=1)
+        # generate data
+        X = np.random.rand(10, 4)
+        y1 = np.random.randint(0, 2, size=(10, 1))
+        y2 = np.random.randint(0, 11, size=(10, 1))
+        y = np.hstack([y1, y2])
 
-        clf.fit(x_train, y_train)
-        clf.predict(x_test)
-        clf.score(x_train, y_train)
+        clf_keras.fit(X, y)
+        y_wrapper = clf_keras.predict(X)
+        clf_keras.score(X, y)
+
+        clf_sklearn.fit(X, y)
+        y_sklearn = clf_sklearn.predict(X)
+
+        assert y_sklearn.shape == y_wrapper.shape
 
     def test_multi_label_clasification(self):
-        """Compares to the scikit-learn RandomForestRegressor classifier.
+        """Compares to scikit-learn RandomForestClassifier classifier.
         """
         clf_keras = FunctionAPIMultiLabelClassifier()
         clf_sklearn = RandomForestClassifier()
@@ -1065,7 +1038,7 @@ class TestMultiInputOutput:
         assert y_pred_keras.shape == y_pred_sklearn.shape
 
     def test_multi_output_regression(self):
-        """Compares to the scikit-learn RandomForestRegressor classifier.
+        """Compares to scikit-learn RandomForestRegressor.
         """
         reg_keras = FunctionAPIMultiOutputRegressor()
         reg_sklearn = RandomForestRegressor()
@@ -1087,3 +1060,141 @@ class TestMultiInputOutput:
         reg_sklearn.score(X, y)
 
         assert y_pred_keras.shape == y_pred_sklearn.shape
+
+    def test_incompatible_output_dimensions(self):
+        """Compares to the scikit-learn RandomForestRegressor classifier.
+        """
+        # create dataset with 4 outputs
+        X = np.random.rand(10, 20)
+        y = np.random.randint(low=0, high=3, size=(10, 4))
+
+        # create a model with 2 outputs
+        def build_fn_clf():
+            """Builds a Sequential based classifier."""
+            model = keras.models.Sequential()
+            model.add(keras.layers.Dense(20, input_shape=(20,)))
+            model.add(keras.layers.Activation("relu"))
+            model.add(keras.layers.Dense(np.unique(y).size))
+            model.add(keras.layers.Activation("softmax"))
+            model.compile(
+                optimizer="sgd",
+                loss="categorical_crossentropy",
+                metrics=["accuracy"],
+            )
+            return model
+
+        clf = wrappers.KerasClassifier(build_fn=build_fn_clf)
+
+        with pytest.raises(RuntimeError):
+            clf.fit(X, y)
+
+
+class TestInvalidBuildFn:
+    """Tests various error cases for BuildFn.
+    """
+
+    def test_invalid_build_fn(self):
+        clf = wrappers.KerasClassifier(build_fn="invalid")
+        with pytest.raises(TypeError):
+            clf.fit(np.array([[0]]), np.array([0]))
+
+    def test_no_build_fn(self):
+        class NoBuildFn(wrappers.KerasClassifier):
+            pass
+
+        clf = NoBuildFn()
+
+        with pytest.raises(ValueError):
+            assert_classification_works(clf)
+
+    def test_call_and_build_fn_function(self):
+        class Clf(wrappers.KerasClassifier):
+            def __call__(self, hidden_dim):
+                return build_fn_clf(hidden_dim)
+
+        def dummy_func():
+            return None
+
+        clf = Clf(build_fn=dummy_func,)
+
+        with pytest.raises(ValueError):
+            assert_classification_works(clf)
+
+    def test_call_and_invalid_build_fn_class(self):
+        class Clf(wrappers.KerasClassifier):
+            def __call__(self, hidden_dim):
+                return build_fn_clf(hidden_dim)
+
+        class DummyBuildClass:
+            def __call__(self, hidden_dim):
+                return build_fn_clf(hidden_dim)
+
+        clf = Clf(build_fn=DummyBuildClass(),)
+
+        with pytest.raises(ValueError):
+            assert_classification_works(clf)
+
+
+class TestUnfitted:
+    """Tests for appropriate error on unfitted models.
+    """
+
+    def test_classify_build_fn(self):
+        """Tests a classification task for errors."""
+        clf = wrappers.KerasClassifier(
+            build_fn=build_fn_clf,
+            hidden_dim=HIDDEN_DIM,
+            batch_size=BATCH_SIZE,
+            epochs=EPOCHS,
+        )
+
+        X = np.random.rand(10, 20)
+
+        with pytest.raises(NotFittedError):
+            clf.predict(X)
+        with pytest.raises(NotFittedError):
+            clf.predict_proba(X)
+
+    def test_regression_build_fn(self):
+        """Tests for errors using KerasRegressor."""
+        reg = wrappers.KerasRegressor(
+            build_fn=build_fn_reg,
+            hidden_dim=HIDDEN_DIM,
+            batch_size=BATCH_SIZE,
+            epochs=EPOCHS,
+        )
+
+        # create dataset
+        X = np.random.rand(10, 20)
+
+        with pytest.raises(NotFittedError):
+            reg.predict(X)
+
+
+class TestBaseEstimatorInputOutputMethods:
+    """Test BaseWrapper methods for pre/post processing y.
+    """
+
+    def test_post_process_y(self):
+        """Quick check for BaseWrapper's _post_process_y method.
+        """
+        y = np.array([0])
+        np.testing.assert_equal(wrappers.BaseWrapper._post_process_y(y)[0], y)
+        assert len(wrappers.BaseWrapper._post_process_y(y)[1]) == 0
+
+
+class TestUnsetParameter:
+    """Tests for appropriate error on unfitted models.
+    """
+
+    def test_unset_input_parameter(self):
+        class ClassBuildFnClf(wrappers.KerasClassifier):
+            def __init__(self, input_param):
+                # does not set input_param
+                super().__init__()
+
+            def __call__(self, hidden_dim):
+                return build_fn_clf(hidden_dim)
+
+        with pytest.raises(RuntimeError):
+            ClassBuildFnClf(input_param=None)
