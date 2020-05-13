@@ -998,8 +998,8 @@ class TestMultiInputOutput:
 
         # generate data
         X = np.random.rand(10, 4)
-        y1 = np.random.random_integers(low=0, high=1, size=(10, 1))
-        y2 = np.random.random_integers(low=0, high=10, size=(10, 1))
+        y1 = np.random.randint(0, 2, size=(10, 1))
+        y2 = np.random.randint(0, 11, size=(10, 1))
         y = np.hstack([y1, y2])
 
         clf_keras.fit(X, y)
