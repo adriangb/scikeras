@@ -1,6 +1,5 @@
 """Wrapper for using the Scikit-Learn API with Keras models.
 """
-import copy
 import inspect
 import warnings
 from collections import defaultdict
@@ -305,6 +304,9 @@ class BaseWrapper:
         for known_keras_fn in KNOWN_KERAS_FN_NAMES:
             if hasattr(model, known_keras_fn):
                 self._legal_params_fns.append(getattr(model, known_keras_fn))
+
+        # make serializable
+        make_model_picklable(model)
 
         return model
 
@@ -701,56 +703,6 @@ class BaseWrapper:
                 more_tags = base_class._more_tags(self)
                 collected_tags.update(more_tags)
         return collected_tags
-
-    def __getstate__(self):
-        """Get state of instance as a picklable/copyable dict.
-
-        Used by various scikit-learn methods to clone estimators. Also
-        used for pickling.
-
-        Because some objects (namely Keras `Model` instances) are not
-        pickleable, it is necessary to iterate through all attributes
-        and handle Model instances seperately.
-
-        Returns:
-            state : dictionary containing a copy of all attributes of this
-                    estimator that can be replaced using __setstate__.
-        """
-
-        def _pack_obj(obj):
-            """Recursively packs objects.
-            """
-            try:
-                # first try to copy directly
-                return copy.deepcopy(obj)
-            except TypeError:
-                pass
-            if isinstance(obj, Model):
-                make_model_picklable(obj)
-                return obj
-            if hasattr(obj, "__dict__"):
-                for key, val in obj.__dict__.items():
-                    obj.__dict__[key] = _pack_obj(val)
-                return obj
-            if isinstance(obj, (list, tuple)):
-                obj_type = type(obj)
-                new_obj = obj_type([_pack_obj(o) for o in obj])
-                return new_obj
-
-        state = self.__dict__.copy()
-        for key, val in self.__dict__.items():
-            state[key] = _pack_obj(val)
-        return state
-
-    def __setstate__(self, state):
-        """Set state of live object from state saved via __getstate__.
-
-        Arguments:
-            state : dict
-                dictionary from a previous call to `get_state` that will be
-                unpacked to this instance's `__dict__`.
-        """
-        self.__dict__.update(state)
 
 
 class KerasClassifier(BaseWrapper):
