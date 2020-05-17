@@ -1184,4 +1184,18 @@ class TestUnsetParameter:
                 return build_fn_clf(hidden_dim)
 
         with pytest.raises(RuntimeError):
-            ClassBuildFnClf(input_param=None)
+            ClassBuildFnClf(input_param=10)
+
+
+class TestPrettyPrint:
+    """Tests pretty printing of models.
+    """
+
+    def test_pprint(self):
+        clf = wrappers.KerasClassifier(
+            build_fn=build_fn_clf,
+            hidden_dim=HIDDEN_DIM,
+            batch_size=BATCH_SIZE,
+            epochs=EPOCHS,
+        )
+        print(clf)
