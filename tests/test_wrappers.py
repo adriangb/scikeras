@@ -1184,4 +1184,4 @@ class TestUnsetParameter:
                 return build_fn_clf(hidden_dim)
 
         with pytest.raises(RuntimeError):
-            ClassBuildFnClf(input_param=None)
+            ClassBuildFnClf(input_param=10)
