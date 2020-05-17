@@ -2,10 +2,9 @@
 """
 import inspect
 import warnings
-from collections import defaultdict
 
 import numpy as np
-from sklearn.base import _DEFAULT_TAGS
+from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
@@ -40,16 +39,6 @@ KNOWN_KERAS_FN_NAMES = (
 ARGS_KWARGS_IDENTIFIERS = (
     inspect.Parameter.VAR_KEYWORD,
     inspect.Parameter.VAR_POSITIONAL,
-)
-
-# get default tags from sklearn.base
-# add customization for these wrappers
-_DEFAULT_TAGS.update(
-    {
-        "non_deterministic": True,  # can't easily set random_state
-        "poor_score": True,
-        "multioutput": True,
-    }
 )
 
 
@@ -111,7 +100,7 @@ def make_model_picklable(model_obj):
     model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
 
 
-class BaseWrapper:
+class BaseWrapper(BaseEstimator):
     """Base class for the Keras scikit-learn wrapper.
 
     Warning: This class should not be used directly.
@@ -168,6 +157,12 @@ class BaseWrapper:
     _sk_params = None
     is_fitted_ = False
 
+    _tags = {
+        "non_deterministic": True,  # can't easily set random_state
+        "poor_score": True,
+        "multioutput": True,
+    }
+
     def __init__(self, build_fn=None, **sk_params):
 
         if isinstance(build_fn, Model):
@@ -190,7 +185,14 @@ class BaseWrapper:
 
         # check that all __init__ parameters were assigned (as per sklearn API)
         try:
-            self.get_params(deep=False)
+            params = self.get_params(deep=False)
+            for key in params.keys():
+                try:
+                    getattr(self, key)
+                except AttributeError:
+                    raise RuntimeError(
+                        "Unasigned input parameter: {}".format(key)
+                    )
         except AttributeError as e:
             raise RuntimeError("Unasigned input parameter: {}".format(e))
 
@@ -346,8 +348,8 @@ class BaseWrapper:
 
         if sample_weight is not None and "sample_weight" not in kwargs:
             raise ValueError(
-                "Parameter `sample_weight` is unsupported by Keras model %s"
-                % self.model_
+                "Parameter `sample_weight` is unsupported by Keras model "
+                + str(self.model_)
             )
 
         # get model.fit's arguments (allows arbitrary model use)
@@ -526,8 +528,7 @@ class BaseWrapper:
         # check if fitted
         if not self.is_fitted_:
             raise NotFittedError(
-                "Estimator %s needs to be fit before `predict` "
-                "can be called" % self
+                "Estimator needs to be fit before `predict` " "can be called"
             )
 
         # basic input checks
@@ -608,101 +609,28 @@ class BaseWrapper:
 
     def _get_param_names(self):
         """Get parameter names for the estimator"""
-        # collect all __init__ params for this base class as well as
-        # all child classes
-        parameters = []
-        # reverse the MRO, we want the 1st one to overwrite the nth
-        # for class_ in reversed(inspect.getmro(self.__class__)):
-        for p in inspect.signature(
-            self.__class__.__init__
-        ).parameters.values():
-            if p.kind not in ARGS_KWARGS_IDENTIFIERS and p.name != "self":
-                parameters.append(p)
-
-        # Extract and sort argument names excluding 'self'
+        parameters = super()._get_param_names()
+        # add kwargs/sk_params if the user gave those as input
         if self._sk_params:
-            return sorted([p.name for p in parameters] + self._sk_params)
-
-        return sorted([p.name for p in parameters])
-
-    def get_params(self, deep=True):
-        """Get parameters for this estimator.
-
-        This method mimics sklearn.base.BaseEstimator.get_params
-
-        Arguments:
-            deep : bool, default=True
-                If True, will return the parameters for this estimator and
-                contained subobjects that are estimators.
-
-        Returns:
-            params : mapping of string to any
-                Parameter names mapped to their values.
-        """
-        out = dict()
-        for key in self._get_param_names():
-            value = getattr(self, key)
-            if deep and hasattr(value, "get_params"):
-                deep_items = value.get_params().items()
-                out.update((key + "__" + k, val) for k, val in deep_items)
-            out[key] = value
-        return out
-
-    def set_params(self, **params):
-        """Set the parameters of this estimator.
-
-        The method works on simple estimators as well as on nested objects
-        (such as in sklearn Pipelines). The latter have parameters of the form
-        ``<component>__<parameter>`` so that it's possible to update each
-        component of a nested object.
-
-        This method mimics sklearn.base.BaseEstimator.set_params
-
-        Arguments:
-            **params : dict
-                Estimator parameters.
-        Returns:
-            self : object
-                Estimator instance.
-        """
-        if not params:
-            # Simple optimization to gain speed
-            return self
-        valid_params = self.get_params(deep=True)
-
-        nested_params = defaultdict(dict)  # grouped by prefix
-        for key, value in params.items():
-            key, delim, sub_key = key.partition("__")
-            if key not in valid_params:
-                raise ValueError(
-                    "Invalid parameter %s for estimator %s. "
-                    "Check the list of available parameters "
-                    "with `estimator.get_params().keys()`." % (key, self)
-                )
-            if delim:
-                nested_params[key][sub_key] = value
-            else:
-                setattr(self, key, value)
-                valid_params[key] = value
-
-        for key, sub_params in nested_params.items():
-            valid_params[key].set_params(**sub_params)
-
-        return self
+            return sorted(parameters + self._sk_params)
+        return parameters
 
     def _more_tags(self):
-        return _DEFAULT_TAGS
+        """Get sklearn tags for the estimator"""
+        tags = super()._more_tags()
+        tags.update(self._tags)
+        return tags
 
-    def _get_tags(self):
-        collected_tags = {}
-        for base_class in reversed(inspect.getmro(self.__class__)):
-            if hasattr(base_class, "_more_tags"):
-                # need the if because mixins might not have _more_tags
-                # but might do redundant work in estimators
-                # (i.e. calling more tags on BaseEstimator multiple times)
-                more_tags = base_class._more_tags(self)
-                collected_tags.update(more_tags)
-        return collected_tags
+    def __repr__(self):
+        repr_ = str(self.__name__)
+        repr_ += "("
+        params = self.get_params()
+        if params:
+            repr_ += "\n"
+        for key, val in params.items():
+            repr_ += "\t" + key + "=" + str(val) + "\n"
+        repr_ += ")"
+        return repr_
 
 
 class KerasClassifier(BaseWrapper):
@@ -711,30 +639,30 @@ class KerasClassifier(BaseWrapper):
 
     _estimator_type = "classifier"
     _scorer = staticmethod(sklearn_accuracy_score)
-    _tags = {
-        "multilabel": True,
-        "_xfail_checks": {
-            "check_sample_weights_invariance": "can't easily \
+    _tags = BaseWrapper._tags.copy()
+    _tags.update(
+        {
+            "multilabel": True,
+            "_xfail_checks": {
+                "check_sample_weights_invariance": "can't easily \
                 set Keras random seed",
-            "check_classifiers_multilabel_representation_invariance": "can't \
+                "check_classifiers_multilabel_representation_invariance": "can't \
                 easily set Keras random seed",
-            "check_estimators_data_not_an_array": "can't easily \
+                "check_estimators_data_not_an_array": "can't easily \
                 set Keras random seed",
-            "check_classifier_data_not_an_array": "can't set \
+                "check_classifier_data_not_an_array": "can't set \
                 Keras random seed",
-            "check_classifiers_classes": "can't meet \
+                "check_classifiers_classes": "can't meet \
                 performance target",
-            "check_supervised_y_2d": "can't easily set \
+                "check_supervised_y_2d": "can't easily set \
                 Keras random seed",
-            "check_fit_idempotent": "tf does not use \
+                "check_fit_idempotent": "tf does not use \
                 sparse tensors",
-            "check_methods_subset_invariance": "can't easily set \
+                "check_methods_subset_invariance": "can't easily set \
                 Keras random seed",
-        },
-    }
-
-    def _more_tags(self):
-        return self._tags
+            },
+        }
+    )
 
     @staticmethod
     def _pre_process_y(y):
@@ -946,8 +874,7 @@ class KerasClassifier(BaseWrapper):
         # check if fitted
         if not self.is_fitted_:
             raise NotFittedError(
-                "Estimator %s needs to be fit before `predict` "
-                "can be called" % self
+                "Estimator needs to be fit before `predict` " "can be called"
             )
 
         # basic input checks
@@ -980,25 +907,27 @@ class KerasRegressor(BaseWrapper):
 
     _estimator_type = "regressor"
     _scorer = staticmethod(sklearn_r2_score)
-    _tags = {
-        "multilabel": True,
-        "_xfail_checks": {
-            "check_sample_weights_invariance": "can't easily set \
+    _tags = BaseWrapper._tags.copy()
+    _tags.update(
+        {
+            "multilabel": True,
+            "_xfail_checks": {
+                "check_sample_weights_invariance": "can't easily set \
                 Keras random seed",
-            "check_estimators_data_not_an_array": "can't easily set \
+                "check_estimators_data_not_an_array": "can't easily set \
                 Keras random seed",
-            "check_regressor_data_not_an_array": "can't set Keras random seed",
-            "check_supervised_y_2d": "can't easily set Keras random seed",
-            "check_fit_idempotent": "tf does not use sparse tensors",
-            "check_regressors_int": "can't easily set Keras \
+                "check_regressor_data_not_an_array": "can't set Keras \
+                    random seed",
+                "check_supervised_y_2d": "can't easily set Keras random seed",
+                "check_fit_idempotent": "tf does not use sparse tensors",
+                "check_regressors_int": "can't easily set Keras \
                 random seed",
-            "check_methods_subset_invariance": "can't easily set \
+                "poor_score": True,
+                "check_methods_subset_invariance": "can't easily set \
                 Keras random seed",
-        },
-    }
-
-    def _more_tags(self):
-        return self._tags
+            },
+        }
+    )
 
     def fit(self, X, y, sample_weight=None, **kwargs):
         """Convert y to float, regressors cannot accept ints."""
