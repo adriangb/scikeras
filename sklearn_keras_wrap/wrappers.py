@@ -621,6 +621,17 @@ class BaseWrapper(BaseEstimator):
         tags.update(self._tags)
         return tags
 
+    def __repr__(self):
+        repr_ = str(self.__name__)
+        repr_ += "("
+        params = self.get_params()
+        if params:
+            repr_ += "\n"
+        for key, val in params.items():
+            repr_ += "\t" + key + "=" + str(val) + "\n"
+        repr_ += ")"
+        return repr_
+
 
 class KerasClassifier(BaseWrapper):
     """Implementation of the scikit-learn classifier API for Keras.
