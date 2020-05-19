@@ -43,13 +43,11 @@ setup(
     include_package_data=True,
     keywords="scikeras",
     name="scikeras",
-    packages=find_packages(
-        include=["scikeras", "scikeras.*"]
-    ),
+    packages=find_packages(include=["scikeras", "scikeras.*"]),
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/adriangb/scikeras",
-    version='0.1.6',
+    version="0.1.6",
     zip_safe=False,
 )
