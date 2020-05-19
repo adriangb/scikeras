@@ -1,7 +1,7 @@
 # Scikit-Learn Wrapper for Keras
 
 
-[![build status](https://secure.travis-ci.org/adriangb/sklearn_keras_wrap.png?branch=master)](https://travis-ci.org/github/adriangb/sklearn_keras_wrap) [![Coverage Status](https://codecov.io/gh/adriangb/sklearn_keras_wrap/branch/master/graph/badge.svg)](https://codecov.io/gh/adriangb/sklearn_keras_wrap)
+[![build status](https://secure.travis-ci.org/adriangb/scikeras.png?branch=master)](https://travis-ci.org/github/adriangb/scikeras) [![Coverage Status](https://codecov.io/gh/adriangb/scikeras/branch/master/graph/badge.svg)](https://codecov.io/gh/adriangb/scikeras)
 
 
 The goal of this project is to provide wrappers for Keras models so that they can be used as part of a `Scikit-Learn` workflow. These wrappers seeek to emulate the base classes found in `sklearn.base`. 
@@ -43,7 +43,7 @@ To use the wrappers, you must specify how to build the `Keras` model. The wrappe
 ### Prebuilt models
 Example usage:
 ```python3
-from sklearn_keras_wrap.wrappers import KerasRegressor
+from scikeras.wrappers import KerasRegressor
 from some_module import keras_model_object
 
 estimator = KerasRegressor(build_fn=keras_model_object)
@@ -63,7 +63,7 @@ The logic for selecting which method to use is in `BaseWrapper._check_build_fn`.
 The signature of the model building function will be used to dynamically determine which parameters should be passed. Parameters are chosen from the arguments of `fit` and from the public parameters of the wrapper instance (ex: `n_classes_` or `n_outputs_`). For example, to create a Multi Layer Perceptron model that is able to dynamically set the input and output sizes as well as hidden layer sizes, you would add `X` and `n_outputs_` to your model building function's signature:
 
 ```python3
-from sklearn_keras_wrap.wrappers import KerasRegressor
+from scikeras.wrappers import KerasRegressor
 
 
 def model_building_function(X, n_outputs_, hidden_layer_sizes):
@@ -95,7 +95,7 @@ The model parameters generated while fitting that are used by various parts of t
 It may be convenient to subclass a wrapper to hardcode keyword arguments and defaults. In general, this is more compatible with the `Scikit-Learn` API. If the class also implements the model building function as `__call__`, this becaome a self-contained estimator that is fully compatible with the `Scikit-Learn` API. A brief example:
 
 ```python3
-from sklearn_keras_wrap.wrappers import KerasRegressor
+from scikeras.wrappers import KerasRegressor
 
 
 class MLPRegressor(KerasRegressor):
@@ -124,7 +124,7 @@ A couple of notes:
 4. In the example above, no kwargs are accepted, and none are passed on. You may choose to accept and pass on keyword arguments. Once the `__init__` method resolution reaches `BaseWrapper`, any keyword arguments that have not been consumed by child classes will be saved as instance attributes and will be accessible to the `Scikit-Learn` API. For example:
 
 ```python3
-from sklearn_keras_wrap.wrappers import KerasRegressor
+from scikeras.wrappers import KerasRegressor
 
 
 class MLPRegressor(KerasRegressor):
@@ -144,7 +144,7 @@ estimator.a_kwarg == "saveme"  # True
 This interface allows for multiple layers of inheritence and consumption of arguments:
 
 ```python3
-from sklearn_keras_wrap.wrappers import KerasRegressor
+from scikeras.wrappers import KerasRegressor
 
 
 class ChildMLPRegressor(MLPRegressor):
@@ -354,11 +354,11 @@ If submitting a PR, please make sure that:
 
 - All existing tests should pass. Please make sure that the test
   suite passes, both locally and on
-  [Travis CI](https://travis-ci.org/github/adriangb/sklearn_keras_wrap).  Status on
+  [Travis CI](https://travis-ci.org/github/adriangb/scikeras).  Status on
   Travis will be visible on a pull request.
 
 - New functionality should include tests. Please write reasonable
-  tests for your code and make sure that they pass on your pull request. Testing is done with [`Pytest`](https://docs.pytest.org/en/latest/) and coverage is checked with [`CodeCov`](https://codecov.io/gh/adriangb/sklearn_keras_wrap) and a minimum of 94% coverage is required to pass a build.
+  tests for your code and make sure that they pass on your pull request. Testing is done with [`Pytest`](https://docs.pytest.org/en/latest/) and coverage is checked with [`CodeCov`](https://codecov.io/gh/adriangb/scikeras) and a minimum of 94% coverage is required to pass a build.
 
 - Classes, methods, functions, etc. should have docstrings. The first line of a docstring should be a standalone summary. Parameters and return values should be documented explicitly.
 

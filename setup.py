@@ -41,15 +41,15 @@ setup(
     long_description=readme + "\n\n" + history,
     long_description_content_type="text/markdown",
     include_package_data=True,
-    keywords="sklearn_keras_wrap",
-    name="sklearn_keras_wrap",
+    keywords="scikeras",
+    name="scikeras",
     packages=find_packages(
-        include=["sklearn_keras_wrap", "sklearn_keras_wrap.*"]
+        include=["scikeras", "scikeras.*"]
     ),
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
-    url="https://github.com/adriangb/sklearn_keras_wrap",
+    url="https://github.com/adriangb/scikeras",
     version="0.1.5.post1",
     zip_safe=False,
 )
