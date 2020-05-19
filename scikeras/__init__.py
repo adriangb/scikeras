@@ -2,4 +2,4 @@
 
 __author__ = """Adrian Garcia Badaracco"""
 __email__ = "adrian@adriangb.com"
-__version__ = "0.1.5.post1"
+__version__ = "__version__ = '0.1.6'"
