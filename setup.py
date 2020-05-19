@@ -23,7 +23,6 @@ test_requirements = [
 
 setup(
     author="Adrian Garcia Badaracco",
-    author_email="adrian@adriangb.com",
     python_requires=">=3.6",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
