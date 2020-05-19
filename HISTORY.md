@@ -1,6 +1,12 @@
 
 #History
 
+## 0.1.6 (2020-05-18)
+
+* Rename repo.
+* Derive BaseWrapper from BaseEstimator.
+* Python 3.8 support.
+
 ## 0.1.5.post1 (2020-05-13)
 
 * Deprecate Python 3.5 (#11).
