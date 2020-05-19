@@ -1,24 +1,22 @@
 os:
-  - linux
+- linux
 language: python
 python:
 - 3.6
 - 3.7
 - 3.8
 install: pip install -U tox-travis tox-pip-version codecov
-script: 
-  - tox
-
+script:
+- tox
 deploy:
   provider: pypi
   distributions: sdist bdist_wheel
   user: adriangb
   skip_existing: true
   password:
-    secure: Q4IouCQOJJihqIQKG4f0ShMgQVu1up4LeFG6JB/P6T4dAQ9ms5fWgFYk/NPOqlTfkO7RyokIQF1/Jrz2YXYi1X9pFuS2389LRKQa/kuCxKV/wYZc0Wop1DyqcERKOsTgL4UrsPG1qZM+Jd+qTFHT1xzJw14CS0+vUs7rgInPWBtzhh/6eYMeK1lX9Zdi4bMQD4vVZ1wAPqTnrceO5Zn5wwddvIsTpeq54f9LyhFsQWHa7cqOEVKMWnM0g02GM2IjkaTqqhbx2j725Xu/CUM/vFzFrp71UXawJvrQaZa9VcMENWcSXbZc4ZJ80umtNWakjWrGXhF3uhelV3GRnhgJ/J1KENYbmj8Jq0Xzv0UCp3YXPxQiLbWORck/GV+1YHhyBRYj1ZYQ5H9LNmUTw3vdL/T4oUgVfJ5M+CvJv3g5Kd+dEkMPwdMz83QSaSpn9d4Umb0/+FweRboGqS6Ja/pWEEu9D/25h3WvXYsucSs1PDnggHqdGDgUyZeuxpnKz2my1D/2FG/tBX6v7JrCW7gL+8L1d87tjIoEsgmgX6bTno/iwh80dsYTGhfNy+8sAUHIgJIMFUSJlXVSxj44hrP6QEWn+vNJaQNcs8jwxuBa7wORUf2+Ae9HAF0W5i0IM3ASSjx70l043sKJSfLRt6eOpkLut+N0OrH/nbcaaGUvE6o=
+    secure: UZtcsg82hiY0zRECCN2S2oB7w8K4qhMnYmwlt0mxBzggxYZiHNL+WDEyao1ahmURVoMHe9rcv9V0iD94tdTHVlbwVDMEZWExA02YJgk/xsRQOifUt2rJXj6C+piOEFSes9htYdspM7AmohoapIlyqDvtRjEMjXbpNxCDItqMyGoxh7+PFJgmQbyHsid11SfHGMMI2L8lbw6UZo1Zhz8WAcwW9U1tR1jQdydcBFQJ7XjH8IafrIL+QL4WyLIV/IX9gYXdh92MRiMvIln5O1Pvx5XcNVHwe0s3yK9e21XStNJUfCgtaD3ak1/q7p5n6Wxv6nN6HZkwUlqXzIs9k+yDufIsnlwu/GMwCZUN76nkm0pVe7Ozojj3YaNa+/pFrfEZmTGVVhwN66XzxtLA2OlTeQGFqYntlbv/DQMPfsOCm0iIdkWrNCemj09r/jxhhZZuzF6F/nsAl4FyMH6NeaiCLcZtgQiym8myv7uyxsPS65Lf0e+JDa7HcSrGsK7ucHCX0y5mkBq0ID9pr37Nhs31BaQ1PzUm+/J3r5Jj/pTNMMMDiUAUoEsBPoIZ39mjoME0xD3x7gi8dFS4wIO6m/TqtGU9+jKSDi1lv19lrDVc4Na/sEaqaaZOw+gq+DT9HzbT+TGNFN5MiVhX8VkE0KRdJav9fAhEEjAnKNqef4bQBUg=
   on:
     tags: true
     repo: adriangb/scikeras
-
 after_success:
-  - codecov
+- codecov
