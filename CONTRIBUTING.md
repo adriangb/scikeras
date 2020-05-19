@@ -5,11 +5,11 @@ If submitting a PR, please make sure that:
 
 - All existing tests should pass. Please make sure that the test
   suite passes, both locally and on
-  [Travis CI](https://travis-ci.org/github/adriangb/sklearn_keras_wrap).  Status on
+  [Travis CI](https://travis-ci.org/github/adriangb/scikeras).  Status on
   Travis will be visible on a pull request.
 
 - New functionality should include tests. Please write reasonable
-  tests for your code and make sure that they pass on your pull request. Testing is done with [`Pytest`](https://docs.pytest.org/en/latest/) and coverage is checked with [`CodeCov`](https://codecov.io/gh/adriangb/sklearn_keras_wrap) and a minimum of 94% coverage is required to pass a build.
+  tests for your code and make sure that they pass on your pull request. Testing is done with [`Pytest`](https://docs.pytest.org/en/latest/) and coverage is checked with [`CodeCov`](https://codecov.io/gh/adriangb/scikeras) and a minimum of 94% coverage is required to pass a build.
 
 - Classes, methods, functions, etc. should have docstrings. The first line of a docstring should be a standalone summary. Parameters and return values should be documented explicitly.
 

@@ -37,8 +37,8 @@ from tensorflow.python.keras.layers import (
 from tensorflow.python.keras.models import Model, Sequential
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
-from sklearn_keras_wrap import wrappers
-from sklearn_keras_wrap.wrappers import KerasClassifier, KerasRegressor
+from scikeras import wrappers
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 INPUT_DIM = 5
 HIDDEN_DIM = 5
