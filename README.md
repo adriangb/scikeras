@@ -12,7 +12,7 @@ Learn more about the [`Scikit-Learn` API](https://scikit-learn.org/stable/module
 
 Learn more about [Keras](https://www.tensorflow.org/guide/keras), TensorFlow's Python API.
 
-Python versions supported: the maximum overlap between `Scikit-Learn` and `TensorFlow`. Currently, this means Python >=3.6 and <=3.7.
+Python versions supported: the maximum overlap between `Scikit-Learn` and `TensorFlow`. Currently, this means Python >=3.6 and <=3.8.
 
 ## Installation
 This package is available on PyPi:
