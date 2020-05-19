@@ -17,7 +17,7 @@ Python versions supported: the maximum overlap between `Scikit-Learn` and `Tenso
 ## Installation
 This package is available on PyPi:
 ```
-pip install sklearn-keras-wrap
+pip install scikeras
 ```
 
 The only dependencies are `scikit-learn>=0.21.0` (older version may work, but are untested) and `TensorFlow>=2.1.0`.
