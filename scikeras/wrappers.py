@@ -2,6 +2,7 @@
 """
 import inspect
 import warnings
+from collections import defaultdict
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -359,7 +360,12 @@ class BaseWrapper(BaseEstimator):
         # order implies kwargs overwrites fit_args
         fit_args = {**fit_args, **kwargs}
 
-        self.history_ = self.model_.fit(x=X, y=y, **fit_args)
+        hist = self.model_.fit(x=X, y=y, **fit_args)
+
+        if not hasattr(self, "history_"):
+            self.history_ = defaultdict(list)
+        keys = set(hist.history).union(self.history_.keys())
+        self.history_ = {k: self.history_[k] + hist.history[k] for k in keys}
         self.is_fitted_ = True
 
         # return self to allow fit_transform and such to work

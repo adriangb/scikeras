@@ -1224,3 +1224,21 @@ class TestPartialFit:
         model = clf.model_
         clf.partial_fit(X, y)
         assert clf.model_ is model, "Model memory address should remain constant"
+
+    @pytest.mark.parametrize(
+        "config", ["MLPRegressor", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_pf_pickle_pf(self, config):
+        loader, model, build_fn, _ = CONFIG[config]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+
+        X, y = data.data[:100], data.target[:100]
+        clf.partial_fit(X, y)
+
+        clf2 = pickle.loads(pickle.dumps(clf))
+        clf2.partial_fit(X, y)
+        assert len(clf.history_["loss"]) == 1
+        assert len(clf2.history_["loss"]) == 2
+        assert np.allclose(clf.history_["loss"][0], clf2.history_["loss"][0])
+        assert clf2.history_["loss"][1] <= clf2.history_["loss"][0]
