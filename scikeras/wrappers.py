@@ -360,7 +360,6 @@ class BaseWrapper(BaseEstimator):
         fit_args = {**fit_args, **kwargs}
 
         self.history_ = self.model_.fit(x=X, y=y, **fit_args)
-
         self.is_fitted_ = True
 
         # return self to allow fit_transform and such to work
@@ -476,6 +475,16 @@ class BaseWrapper(BaseEstimator):
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
+        return self._fit(X, y, sample_weight=sample_weight, **kwargs)
+
+    def _fit(self, X, y, sample_weight=None, _warm_start=False, **kwargs):
+        """
+        Same arguments are self.fit, except for
+
+        Arguments:
+            _warm_start : bool
+                Should the training continue?
+        """
         # basic checks
         X, y = check_X_y(
             X,
@@ -500,9 +509,10 @@ class BaseWrapper(BaseEstimator):
             setattr(self, attr_name, attr_val)
 
         # build model
-        self.model_ = self._build_keras_model(
-            X, y, sample_weight=sample_weight, **kwargs
-        )
+        if _warm_start or not hasattr(self, "model_"):
+            self.model_ = self._build_keras_model(
+                X, y, sample_weight=sample_weight, **kwargs
+            )
 
         y = self._check_output_model_compatibility(y)
 
@@ -510,6 +520,34 @@ class BaseWrapper(BaseEstimator):
         return self._fit_keras_model(
             X, y, sample_weight=sample_weight, **kwargs
         )
+
+    def partial_fit(self, X, y, sample_weight=None, **kwargs):
+        """
+        Partially fit a model.
+
+        Arguments:
+            X : array-like, shape `(n_samples, n_features)`
+                Training samples where `n_samples` is the number of samples
+                and `n_features` is the number of features.
+            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
+                True labels for `X`.
+            sample_weight : array-like of shape (n_samples,), default=None
+                Sample weights. The Keras Model must support this.
+            **kwargs: dictionary arguments
+                Legal arguments are the arguments of the keras model's `fit`
+                method.
+
+        Returns:
+            self : object
+                a reference to the instance that can be chain called
+                (ex: instance.partial_fit(X, y).transform(X) )
+        Raises:
+            ValueError : In case of invalid shape for `y` argument.
+            ValuError : In case sample_weight != None and the Keras model's
+                `fit` method does not support that parameter.
+        """
+        return self._fit(X, y, sample_weight=sample_weight, _warm_start=True, **kwargs)
+
 
     def predict(self, X, **kwargs):
         """Returns predictions for the given test data.

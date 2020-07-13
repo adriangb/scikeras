@@ -2,6 +2,7 @@
 
 
 import pickle
+from copy import copy
 
 import numpy as np
 import pytest
@@ -1199,3 +1200,35 @@ class TestPrettyPrint:
             epochs=EPOCHS,
         )
         print(clf)
+
+
+class TestPartialFit:
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_partial_fit(self, config):
+        loader, model, build_fn, _ = CONFIG[config]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+
+        X, y = data.data[:100], data.target[:100]
+        clf.partial_fit(X, y)
+        # history_ records the history from this partial_fit call
+        # Make sure processes one epoch (zero based indexing)
+        hist = copy(clf.history_.history)
+        assert clf.history_.epoch == [0]
+        assert len(hist["loss"]) == 1
+
+        # Record the loss; let's make sure it changes
+        loss = hist["loss"][0]
+
+        clf2 = pickle.loads(pickle.dumps(clf))
+
+        X, y = data.data[100:200], data.target[100:200]
+        clf2.partial_fit(X, y)
+        new_hist = copy(clf2.history_.history)
+        assert clf2.history_.epoch == [0]
+        assert len(new_hist["loss"]) == 1
+
+        assert not np.allclose(new_hist["loss"][0], loss)
