@@ -452,7 +452,7 @@ class BaseWrapper(BaseEstimator):
         extra_args = dict()
         return X, extra_args
 
-    def fit(self, X, y, sample_weight=None, **kwargs):
+    def fit(self, X, y, sample_weight=None, warm_start=True, **kwargs):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
 
         Arguments:
@@ -463,6 +463,8 @@ class BaseWrapper(BaseEstimator):
                 True labels for `X`.
             sample_weight : array-like of shape (n_samples,), default=None
                 Sample weights. The Keras Model must support this.
+            warm_start : bool, default False
+                If ``warm_start`` is True, don't rebuild the model.
             **kwargs: dictionary arguments
                 Legal arguments are the arguments of the keras model's `fit`
                 method.
@@ -474,16 +476,6 @@ class BaseWrapper(BaseEstimator):
             ValueError : In case of invalid shape for `y` argument.
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
-        """
-        return self._fit(X, y, sample_weight=sample_weight, **kwargs)
-
-    def _fit(self, X, y, sample_weight=None, _warm_start=False, **kwargs):
-        """
-        Same arguments are self.fit, except for
-
-        Arguments:
-            _warm_start : bool
-                Should the training continue?
         """
         # basic checks
         X, y = check_X_y(
@@ -509,7 +501,7 @@ class BaseWrapper(BaseEstimator):
             setattr(self, attr_name, attr_val)
 
         # build model
-        if (not _warm_start) or (not hasattr(self, "model_")):
+        if (not warm_start) or (not hasattr(self, "model_")):
             self.model_ = self._build_keras_model(
                 X, y, sample_weight=sample_weight, **kwargs
             )
@@ -546,7 +538,7 @@ class BaseWrapper(BaseEstimator):
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
-        return self._fit(X, y, sample_weight=sample_weight, _warm_start=True, **kwargs)
+        return self.fit(X, y, sample_weight=sample_weight, warm_start=True, **kwargs)
 
 
     def predict(self, X, **kwargs):
