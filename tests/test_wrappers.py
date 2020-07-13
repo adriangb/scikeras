@@ -1242,3 +1242,16 @@ class TestPartialFit:
         assert len(clf2.history_["loss"]) == 2
         assert np.allclose(clf.history_["loss"][0], clf2.history_["loss"][0])
         assert clf2.history_["loss"][1] <= clf2.history_["loss"][0]
+
+class TestHistory:
+    def test_history(self):
+        loader, model, build_fn, _ = CONFIG["CNNClassifier"]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+
+        X, y = data.data[:100], data.target[:100]
+        clf.partial_fit(X, y)
+
+        assert isinstance(clf.history_, dict)
+        assert all(isinstance(k, str) for k in clf.history_.keys())
+        assert all(isinstance(v, list) for v in clf.history_.values())
