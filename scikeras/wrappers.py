@@ -509,7 +509,7 @@ class BaseWrapper(BaseEstimator):
             setattr(self, attr_name, attr_val)
 
         # build model
-        if _warm_start or not hasattr(self, "model_"):
+        if (not _warm_start) or (not hasattr(self, "model_")):
             self.model_ = self._build_keras_model(
                 X, y, sample_weight=sample_weight, **kwargs
             )
