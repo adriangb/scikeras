@@ -1254,17 +1254,27 @@ class TestPartialFit:
         weights1 = [w.numpy() for w in clf.model_.weights]
         weights2 = [w.numpy() for w in clf2.model_.weights]
         n_weights = [w1.size for w1 in weights1]
+
+        # Make sure there's a decent number of weights
+        # Also make sure that this network is "over-parameterized" (more
+        # weights than examples)
         assert 1000 <= sum(n_weights) <= 2000
         assert 200 <= np.mean(n_weights) <= 300
         assert max(n_weights) >= 1000
+        assert len(n_weights) == 4, "At least 4 layers"
+
         rel_errors = [
             np.linalg.norm(w1 - w2) / np.linalg.norm((w1 + w2) / 2)
             for w1, w2 in zip(weights1, weights2)
         ]
-        assert len(rel_errors) == 4
-        assert any(x > 0.5 for x in rel_errors)
-        assert all(0.01 < x for x in rel_errors)
 
+        # Make sure the relative errors aren't too small, and at least one
+        # layer is very different. Relative error is a normalized measure of
+        # difference. I consider rel_error < 0.1 to be a good approximation,
+        # and rel_error > 0.9 to be completely different.
+        assert all(0.01 < x for x in rel_errors)
+        assert any(x > 0.5 for x in rel_errors)
+        # the rel_error is often higher than 0.5 but the tests are randomn
 
 class TestHistory:
     @pytest.mark.parametrize(
