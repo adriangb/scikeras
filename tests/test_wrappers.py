@@ -1327,6 +1327,7 @@ class TestPartialFit:
         assert any(x > 0.5 for x in rel_errors)
         # the rel_error is often higher than 0.5 but the tests are randomn
 
+
 class TestHistory:
     @pytest.mark.parametrize(
         "config",
