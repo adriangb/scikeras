@@ -1214,16 +1214,21 @@ class TestPartialFit:
         X, y = data.data[:100], data.target[:100]
         clf.partial_fit(X, y)
 
-        # history_ records the history from this partial_fit call
-        # Make sure processes one epoch (zero based indexing)
-        hist = copy(clf.history_.history)
-        assert clf.history_.epoch == [0]
-        assert len(hist["loss"]) == 1
-
         # Make sure new model not created
         model = clf.model_
         clf.partial_fit(X, y)
         assert clf.model_ is model, "Model memory address should remain constant"
+
+    def test_partial_fit_history_len(self, config="CNNClassifier"):
+        loader, model, build_fn, _ = CONFIG[config]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+
+        X, y = data.data[:100], data.target[:100]
+        for k in range(10):
+            clf = clf.partial_fit(X, y)
+            assert len(clf.history_["loss"]) == k + 1
+            assert set(clf.history_.keys()) == {"loss", "accuracy"}
 
     @pytest.mark.parametrize(
         "config", ["MLPRegressor", "CNNClassifier", "CNNClassifierF"],
@@ -1240,8 +1245,7 @@ class TestPartialFit:
         clf2.partial_fit(X, y)
         assert len(clf.history_["loss"]) == 1
         assert len(clf2.history_["loss"]) == 2
-        assert np.allclose(clf.history_["loss"][0], clf2.history_["loss"][0])
-        assert clf2.history_["loss"][1] <= clf2.history_["loss"][0]
+        assert np.allclose(clf.history_["loss"][0], clf2.history_["loss"][0]), "Initial losses should match"
 
 class TestHistory:
     def test_history(self):

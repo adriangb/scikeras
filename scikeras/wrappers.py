@@ -458,7 +458,7 @@ class BaseWrapper(BaseEstimator):
         extra_args = dict()
         return X, extra_args
 
-    def fit(self, X, y, sample_weight=None, warm_start=True, **kwargs):
+    def fit(self, X, y, sample_weight=None, warm_start=False, **kwargs):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
 
         Arguments:
