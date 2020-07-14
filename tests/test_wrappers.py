@@ -1199,3 +1199,148 @@ class TestPrettyPrint:
             epochs=EPOCHS,
         )
         print(clf)
+
+
+class TestWarmStart:
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_warm_start(self, config):
+        """Test the warm start parameter."""
+        warm_start: bool
+
+        loader, model, build_fn, _ = CONFIG[config]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+        X, y = data.data[:100], data.target[:100]
+
+        # Initial fit
+        clf = model(build_fn, epochs=1)
+        clf.fit(X, y)
+        model = clf.model_
+
+        # With warm start, successive calls to fit
+        # should NOT create a new model
+        clf.fit(X, y, warm_start=True)
+        assert model is clf.model_
+
+        # Without warm start, each call to fit
+        # should create a new model instance
+        clf.fit(X, y, warm_start=False)
+        assert model is not clf.model_
+        model = clf.model_  # for successive tests
+
+        # The default should be warm_start=False
+        clf.fit(X, y)
+        assert model is not clf.model_
+
+
+class TestPartialFit:
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_partial_fit(self, config):
+        loader, model, build_fn, _ = CONFIG[config]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+
+        X, y = data.data[:100], data.target[:100]
+        clf.partial_fit(X, y)
+
+        assert len(clf.history_["loss"]) == 1
+        clf.partial_fit(X, y)
+        assert len(clf.history_["loss"]) == 2
+
+        # Make sure new model not created
+        model = clf.model_
+        clf.partial_fit(X, y)
+        assert (
+            clf.model_ is model
+        ), "Model memory address should remain constant"
+
+    def test_partial_fit_history_len(self, config="CNNClassifier"):
+        # history_ records the history from this partial_fit call
+        # Make sure for each call to partial_fit a single entry
+        # into the history is added
+        # As per https://github.com/keras-team/keras/issues/1766,
+        # there is no direct measure of epochs
+        loader, model, build_fn, _ = CONFIG[config]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+
+        X, y = data.data[:100], data.target[:100]
+        for k in range(10):
+            clf = clf.partial_fit(X, y)
+            assert len(clf.history_["loss"]) == k + 1
+            assert set(clf.history_.keys()) == {"loss", "accuracy"}
+
+    @pytest.mark.parametrize(
+        "config", ["CNNClassifier", "CNNClassifierF"],
+    )
+    def test_pf_pickle_pf(self, config):
+        loader, model, build_fn, _ = CONFIG[config]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+
+        X, y = data.data[:100], data.target[:100]
+        clf.partial_fit(X, y)
+
+        # Check that partial_fit -> pickle -> partial_fit
+        # builds up the training
+        # even after pickling by checking that
+        # (1) the history_ attribute grows in length
+        # (2) the loss value decreases
+        clf2 = clf
+        for k in range(2, 4):
+            clf2 = pickle.loads(pickle.dumps(clf2))
+            clf2.partial_fit(X, y)
+            assert len(clf.history_["loss"]) == 1
+            assert len(clf2.history_["loss"]) == k
+            assert np.allclose(
+                clf.history_["loss"][0], clf2.history_["loss"][0]
+            )
+
+        weights1 = [w.numpy() for w in clf.model_.weights]
+        weights2 = [w.numpy() for w in clf2.model_.weights]
+        n_weights = [w1.size for w1 in weights1]
+
+        # Make sure there's a decent number of weights
+        # Also make sure that this network is "over-parameterized" (more
+        # weights than examples)
+        assert 1000 <= sum(n_weights) <= 2000
+        assert 200 <= np.mean(n_weights) <= 300
+        assert max(n_weights) >= 1000
+        assert len(n_weights) == 4, "At least 4 layers"
+
+        rel_errors = [
+            np.linalg.norm(w1 - w2) / np.linalg.norm((w1 + w2) / 2)
+            for w1, w2 in zip(weights1, weights2)
+        ]
+
+        # Make sure the relative errors aren't too small, and at least one
+        # layer is very different. Relative error is a normalized measure of
+        # difference. I consider rel_error < 0.1 to be a good approximation,
+        # and rel_error > 0.9 to be completely different.
+        assert all(0.01 < x for x in rel_errors)
+        assert any(x > 0.5 for x in rel_errors)
+        # the rel_error is often higher than 0.5 but the tests are randomn
+
+
+class TestHistory:
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_history(self, config):
+        loader, model, build_fn, _ = CONFIG[config]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+
+        X, y = data.data[:100], data.target[:100]
+        clf.partial_fit(X, y)
+
+        assert isinstance(clf.history_, dict)
+        assert all(isinstance(k, str) for k in clf.history_.keys())
+        assert all(isinstance(v, list) for v in clf.history_.values())
