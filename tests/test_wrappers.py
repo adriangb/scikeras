@@ -1204,7 +1204,8 @@ class TestPrettyPrint:
 
 class TestPartialFit:
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_partial_fit(self, config):
         loader, model, build_fn, _ = CONFIG[config]
@@ -1215,10 +1216,11 @@ class TestPartialFit:
         clf.partial_fit(X, y)
 
         # history_ records the history from this partial_fit call
-        # Make sure processes one epoch (zero based indexing)
-        hist = copy(clf.history_.history)
-        assert clf.history_.epoch == [0]
-        assert len(hist["loss"]) == 1
+        # Make sure for each call to partial_fit a single entry into the history is added
+        # As per https://github.com/keras-team/keras/issues/1766 there is no direct measure of epochs
+        assert len(clf.history_["loss"]) == 1
+        clf.partial_fit(X, y)
+        assert len(clf.history_["loss"]) == 2
 
         # Make sure new model not created
         model = clf.model_
@@ -1226,7 +1228,8 @@ class TestPartialFit:
         assert clf.model_ is model, "Model memory address should remain constant"
 
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_pf_pickle_pf(self, config):
         loader, model, build_fn, _ = CONFIG[config]
@@ -1235,17 +1238,29 @@ class TestPartialFit:
 
         X, y = data.data[:100], data.target[:100]
         clf.partial_fit(X, y)
-
-        clf2 = pickle.loads(pickle.dumps(clf))
-        clf2.partial_fit(X, y)
-        assert len(clf.history_["loss"]) == 1
-        assert len(clf2.history_["loss"]) == 2
-        assert np.allclose(clf.history_["loss"][0], clf2.history_["loss"][0])
-        assert clf2.history_["loss"][1] <= clf2.history_["loss"][0]
+        
+        # Check that partial_fit -> pickle -> partial_fit builds up the training
+        # even after pickling by checking that
+        # (1) the history_ attribute grows in length
+        # (2) the loss value decreases
+        clf2 = clf
+        for round_num in range(2, 4):  # arbitrary choice of number of rounds
+            clf2 = pickle.loads(pickle.dumps(clf2))
+            clf2.partial_fit(X, y)
+            assert len(clf.history_["loss"]) == 1
+            assert len(clf2.history_["loss"]) == round_num
+            assert np.allclose(clf.history_["loss"][0], clf2.history_["loss"][0])
+        loss_first =  clf2.history_["loss"][0]
+        loss_last = clf2.history_["loss"][-1]
+        assert loss_last <= loss_first or np.allclose(loss_last, loss_first, rtol=1e-3)
 
 class TestHistory:
-    def test_history(self):
-        loader, model, build_fn, _ = CONFIG["CNNClassifier"]
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_history(self, config):
+        loader, model, build_fn, _ = CONFIG[config]
         clf = model(build_fn, epochs=1)
         data = loader()
 
