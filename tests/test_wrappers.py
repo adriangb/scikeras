@@ -1201,6 +1201,7 @@ class TestPrettyPrint:
         )
         print(clf)
 
+
 class TestWarmStart:
     @pytest.mark.parametrize(
         "config",
@@ -1231,7 +1232,8 @@ class TestWarmStart:
 
         # The default should be warm_start=False
         clf.fit(X, y)
-        assert model is not clf.model_              
+        assert model is not clf.model_
+
 
 class TestPartialFit:
     @pytest.mark.parametrize(
@@ -1256,7 +1258,9 @@ class TestPartialFit:
         # Make sure new model not created
         model = clf.model_
         clf.partial_fit(X, y)
-        assert clf.model_ is model, "Model memory address should remain constant"
+        assert (
+            clf.model_ is model
+        ), "Model memory address should remain constant"
 
     @pytest.mark.parametrize(
         "config",
@@ -1269,7 +1273,7 @@ class TestPartialFit:
 
         X, y = data.data[:100], data.target[:100]
         clf.partial_fit(X, y)
-        
+
         # Check that partial_fit -> pickle -> partial_fit builds up the training
         # even after pickling by checking that
         # (1) the history_ attribute grows in length
@@ -1280,10 +1284,15 @@ class TestPartialFit:
             clf2.partial_fit(X, y)
             assert len(clf.history_["loss"]) == 1
             assert len(clf2.history_["loss"]) == round_num
-            assert np.allclose(clf.history_["loss"][0], clf2.history_["loss"][0])
-        loss_first =  clf2.history_["loss"][0]
+            assert np.allclose(
+                clf.history_["loss"][0], clf2.history_["loss"][0]
+            )
+        loss_first = clf2.history_["loss"][0]
         loss_last = clf2.history_["loss"][-1]
-        assert loss_last <= loss_first or np.allclose(loss_last, loss_first, rtol=1e-3)
+        assert loss_last <= loss_first or np.allclose(
+            loss_last, loss_first, rtol=1e-3
+        )
+
 
 class TestHistory:
     @pytest.mark.parametrize(
