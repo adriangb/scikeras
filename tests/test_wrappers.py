@@ -1202,9 +1202,43 @@ class TestPrettyPrint:
         print(clf)
 
 
+class TestWarmStart:
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_warm_start(self, config):
+        """Test the warm start parameter."""
+        warm_start: bool
+
+        loader, model, build_fn, _ = CONFIG[config]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+        X, y = data.data[:100], data.target[:100]
+
+        # Initial fit
+        clf = model(build_fn, epochs=1)
+        clf.fit(X, y)
+        model = clf.model_
+
+        # With warm start, successive calls to fit should NOT create a new model
+        clf.fit(X, y, warm_start=True)
+        assert model is clf.model_
+
+        # Without warm start, each call to fit should create a new model instance
+        clf.fit(X, y, warm_start=False)
+        assert model is not clf.model_
+        model = clf.model_  # for successive tests
+
+        # The default should be warm_start=False
+        clf.fit(X, y)
+        assert model is not clf.model_
+
+
 class TestPartialFit:
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_partial_fit(self, config):
         loader, model, build_fn, _ = CONFIG[config]
@@ -1214,12 +1248,21 @@ class TestPartialFit:
         X, y = data.data[:100], data.target[:100]
         clf.partial_fit(X, y)
 
+        assert len(clf.history_["loss"]) == 1
+        clf.partial_fit(X, y)
+        assert len(clf.history_["loss"]) == 2
+
         # Make sure new model not created
         model = clf.model_
         clf.partial_fit(X, y)
-        assert clf.model_ is model, "Model memory address should remain constant"
+        assert (
+            clf.model_ is model
+        ), "Model memory address should remain constant"
 
     def test_partial_fit_history_len(self, config="CNNClassifier"):
+        # history_ records the history from this partial_fit call
+        # Make sure for each call to partial_fit a single entry into the history is added
+        # As per https://github.com/keras-team/keras/issues/1766 there is no direct measure of epochs
         loader, model, build_fn, _ = CONFIG[config]
         clf = model(build_fn, epochs=1)
         data = loader()
@@ -1231,7 +1274,8 @@ class TestPartialFit:
             assert set(clf.history_.keys()) == {"loss", "accuracy"}
 
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_pf_pickle_pf(self, config):
         loader, model, build_fn, _ = CONFIG[config]
@@ -1241,15 +1285,32 @@ class TestPartialFit:
         X, y = data.data[:100], data.target[:100]
         clf.partial_fit(X, y)
 
-        clf2 = pickle.loads(pickle.dumps(clf))
-        clf2.partial_fit(X, y)
-        assert len(clf.history_["loss"]) == 1
-        assert len(clf2.history_["loss"]) == 2
-        assert np.allclose(clf.history_["loss"][0], clf2.history_["loss"][0]), "Initial losses should match"
+        # Check that partial_fit -> pickle -> partial_fit builds up the training
+        # even after pickling by checking that
+        # (1) the history_ attribute grows in length
+        # (2) the loss value decreases
+        clf2 = clf
+        for k in range(2, 5):
+            clf2 = pickle.loads(pickle.dumps(clf2))
+            clf2.partial_fit(X, y)
+            assert len(clf.history_["loss"]) == 1
+            assert len(clf2.history_["loss"]) == k
+            assert np.allclose(
+                clf.history_["loss"][0], clf2.history_["loss"][0]
+            )
+        loss_first = clf2.history_["loss"][0]
+        loss_last = clf2.history_["loss"][-1]
+        assert loss_last <= loss_first or np.allclose(
+            loss_last, loss_first, rtol=1e-3
+        )
 
 class TestHistory:
-    def test_history(self):
-        loader, model, build_fn, _ = CONFIG["CNNClassifier"]
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_history(self, config):
+        loader, model, build_fn, _ = CONFIG[config]
         clf = model(build_fn, epochs=1)
         data = loader()
 

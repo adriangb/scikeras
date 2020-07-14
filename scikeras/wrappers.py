@@ -544,8 +544,9 @@ class BaseWrapper(BaseEstimator):
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
-        return self.fit(X, y, sample_weight=sample_weight, warm_start=True, **kwargs)
-
+        return self.fit(
+            X, y, sample_weight=sample_weight, warm_start=True, **kwargs
+        )
 
     def predict(self, X, **kwargs):
         """Returns predictions for the given test data.
