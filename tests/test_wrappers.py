@@ -1201,6 +1201,37 @@ class TestPrettyPrint:
         )
         print(clf)
 
+class TestWarmStart:
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_warm_start(self, config):
+        """Test the warm start parameter."""
+        warm_start: bool
+
+        loader, model, build_fn, _ = CONFIG[config]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+        X, y = data.data[:100], data.target[:100]
+
+        # Initial fit
+        clf = model(build_fn, epochs=1)
+        clf.fit(X, y)
+        model = clf.model_
+
+        # With warm start, successive calls to fit should NOT create a new model
+        clf.fit(X, y, warm_start=True)
+        assert model is clf.model_
+
+        # Without warm start, each call to fit should create a new model instance
+        clf.fit(X, y, warm_start=False)
+        assert model is not clf.model_
+        model = clf.model_  # for successive tests
+
+        # The default should be warm_start=False
+        clf.fit(X, y)
+        assert model is not clf.model_              
 
 class TestPartialFit:
     @pytest.mark.parametrize(
