@@ -31,6 +31,7 @@ from ._utils import LabelDimensionTransformer
 from ._utils import TFRandomState
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
+from .utils import get_default_args
 
 
 # known keras function names that will be added to _legal_params_fns if they
@@ -124,6 +125,10 @@ class BaseWrapper(BaseEstimator):
 
         self.build_fn = build_fn
 
+        if build_fn:
+            kwargs = get_default_args(build_fn)
+            if kwargs:
+                sk_params.update(kwargs)
         if sk_params:
 
             # for backwards compatibility
