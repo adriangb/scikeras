@@ -500,7 +500,6 @@ class BaseWrapper(BaseEstimator):
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
-        self.y_input_ = y
         # basic checks
         X, y = check_X_y(
             X,
@@ -668,8 +667,7 @@ class BaseWrapper(BaseEstimator):
         parameters = super()._get_param_names()
         # add kwargs/sk_params if the user gave those as input
         if self._sk_params:
-            parameters = sorted(parameters + self._sk_params)
-        return parameters
+            return = sorted(parameters + self._sk_params)
 
     def _more_tags(self):
         """Get sklearn tags for the estimator"""
