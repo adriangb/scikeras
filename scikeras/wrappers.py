@@ -663,11 +663,11 @@ class BaseWrapper(BaseEstimator):
 
     def _get_param_names(self):
         """Get parameter names for the estimator"""
-        # get nested __init__ parameters
         parameters = super()._get_param_names()
         # add kwargs/sk_params if the user gave those as input
         if self._sk_params:
-            return = sorted(parameters + self._sk_params)
+            return sorted(parameters + self._sk_params)
+        return parameters
 
     def _more_tags(self):
         """Get sklearn tags for the estimator"""
