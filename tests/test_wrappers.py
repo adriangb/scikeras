@@ -15,7 +15,7 @@ from sklearn.ensemble import (
     RandomForestClassifier,
     RandomForestRegressor,
 )
-from sklearn.exceptions import NotFittedError
+from sklearn.exceptions import NotFittedError, DataConversionWarning
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.neural_network import MLPClassifier
@@ -39,6 +39,10 @@ from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from scikeras import wrappers
 from scikeras.wrappers import KerasClassifier, KerasRegressor
+
+
+# Force data conversion warnings to be come errors
+pytestmark = pytest.mark.filterwarnings("error::sklearn.exceptions.DataConversionWarning")
 
 INPUT_DIM = 5
 HIDDEN_DIM = 5
@@ -352,7 +356,7 @@ class TestAdvancedAPIFuncs:
         "config",
         ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
-    def test_searchcv(self, config):
+    def test_searchcv_init_params(self, config):
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         loader, model, build_fn, _ = CONFIG[config]
         estimator = model(
@@ -653,7 +657,8 @@ class TestOutputShapes:
         )
         y_train = y_train.reshape(-1, 1)
         self.keras_clf.fit(X=x_train, y=y_train)
-        self.sklearn_clf.fit(X=x_train, y=y_train)
+        with pytest.warns(DataConversionWarning):
+            self.sklearn_clf.fit(X=x_train, y=y_train)
         y_pred_keras = self.keras_clf.predict(X=x_test)
         y_pred_sklearn = self.sklearn_clf.predict(X=x_test)
         assert y_pred_keras.shape == y_pred_sklearn.shape
@@ -694,7 +699,8 @@ class TestOutputShapes:
         )
         y_train = y_train.reshape(-1, 1)
         self.keras_clf.fit(X=x_train, y=y_train)
-        self.sklearn_clf.fit(X=x_train, y=y_train)
+        with pytest.warns(DataConversionWarning):
+            self.sklearn_clf.fit(X=x_train, y=y_train)
         y_pred_keras = self.keras_clf.predict(X=x_test)
         y_pred_sklearn = self.sklearn_clf.predict(X=x_test)
         assert y_pred_keras.shape == y_pred_sklearn.shape
@@ -1174,6 +1180,7 @@ class TestUnsetParameter:
     """Tests for appropriate error on unfitted models.
     """
 
+    @pytest.mark.filterwarnings("ignore::FutureWarning")
     def test_unset_input_parameter(self):
         class ClassBuildFnClf(wrappers.KerasClassifier):
             def __init__(self, input_param):

@@ -5,7 +5,7 @@ import warnings
 from collections import defaultdict
 
 import numpy as np
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
@@ -42,6 +42,25 @@ ARGS_KWARGS_IDENTIFIERS = (
     inspect.Parameter.VAR_POSITIONAL,
 )
 
+
+class LabelDimensionTransformer(TransformerMixin, BaseEstimator):
+    """Transforms from 1D -> 2D and back.
+    
+    Used when applying LabelTransformer -> OneHotEncoder.
+    """
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        if len(X.shape) == 1:
+            X = X.reshape(-1, 1)
+        return X
+
+    def inverse_transform(self, X):
+        if X.shape[1] == 1:
+            X = np.squeeze(X, axis=1)
+        return X
 
 def unpack_keras_model(model, training_config, weights):
     """Creates a new Keras model object using the input
@@ -409,8 +428,6 @@ class BaseWrapper(BaseEstimator):
                     These parameters are added to `self` by `fit` and
                     consumed (but not reset) by `score`.
         """
-        if y.ndim == 1:
-            y = y.reshape(-1, 1)
 
         extra_args = dict()
 
@@ -444,7 +461,7 @@ class BaseWrapper(BaseEstimator):
         """Handles manipulation of X before fitting.
 
         Subclass and override this method to process X, for example
-        accomodate a multi-input model.
+        accommodate a multi-input model.
 
         Arguments:
             X : 2D numpy array
@@ -483,6 +500,7 @@ class BaseWrapper(BaseEstimator):
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
+        self.y_input_ = y
         # basic checks
         X, y = check_X_y(
             X,
@@ -646,10 +664,11 @@ class BaseWrapper(BaseEstimator):
 
     def _get_param_names(self):
         """Get parameter names for the estimator"""
+        # get nested __init__ parameters
         parameters = super()._get_param_names()
         # add kwargs/sk_params if the user gave those as input
         if self._sk_params:
-            return sorted(parameters + self._sk_params)
+            parameters = sorted(parameters + self._sk_params)
         return parameters
 
     def _more_tags(self):
@@ -720,7 +739,10 @@ class KerasClassifier(BaseWrapper):
 
         cls_type_ = type_of_target(y)
 
-        n_outputs_ = y.shape[1]
+        if len(y.shape) == 1:
+            n_outputs_ = 1
+        else:
+            n_outputs_ = y.shape[1]
 
         if cls_type_ == "binary":
             # y = array([1, 0, 1, 0])
@@ -728,6 +750,9 @@ class KerasClassifier(BaseWrapper):
             keras_expected_n_ouputs_ = 1  # single sigmoid output expected
             # encode
             encoder = LabelEncoder()
+            if len(y.shape) > 1 and y.shape[1] == 1:
+                # Make 1D just so LabelEncoder is happy
+                y = y.reshape(-1, )
             y = encoder.fit_transform(y)
             classes_ = encoder.classes_
             # make lists
@@ -739,6 +764,9 @@ class KerasClassifier(BaseWrapper):
             keras_expected_n_ouputs_ = 1  # single softmax output expected
             # encode
             encoder = LabelEncoder()
+            if len(y.shape) > 1 and y.shape[1] == 1:
+                # Make 1D just so LabelEncoder is happy
+                y = y.reshape(-1, )
             y = encoder.fit_transform(y)
             classes_ = encoder.classes_
             # make lists
@@ -755,7 +783,8 @@ class KerasClassifier(BaseWrapper):
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
-                encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)
+                encoder.fit_transform(y_.reshape(-1, ) if y_.shape[1] == 1 else y_)
+                for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
         elif cls_type_ == "multiclass-multioutput":
@@ -767,7 +796,8 @@ class KerasClassifier(BaseWrapper):
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
-                encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)
+                encoder.fit_transform(y_.reshape(-1, ) if y_.shape[1] == 1 else y_)
+                for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
         else:
@@ -833,21 +863,26 @@ class KerasClassifier(BaseWrapper):
                         )
                     )
                 else:
+                    y_ = y[i].round().astype(int)
+                    if y_.shape[1] == 1:
+                        # Appease the demands of sklearn transformers
+                        y_ = np.squeeze(y_, axis=1)
                     class_predictions.append(
-                        self.encoders_[i].inverse_transform(
-                            y[i].round().astype(int)
-                        )
+                        self.encoders_[i].inverse_transform(y_)
                     )
-                if y[i].shape[1] == 1 and len(self.encoders_[i].classes_) == 2:
+                if len(y[i].shape) == 1 or y[i].shape[1] == 1 and len(self.encoders_[i].classes_) == 2:
                     # result from a single sigmoid output
                     # reformat so that we have 2 columns
-                    y[i] = np.concatenate([1 - y[i], y[i]], axis=1)
+                    y[i] = np.column_stack([1 - y[i], y[i]])
             elif cls_type_ in ("multiclass", "multiclass-multioutput"):
                 # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
                 # array(['apple', 'orange'])
                 idx = np.argmax(y[i], axis=-1)
                 y_ = np.zeros(y[i].shape, dtype=int)
                 y_[np.arange(y[i].shape[0]), idx] = 1
+                if y_.shape[1] == 1:
+                    # Appease the demands of sklearn transformers
+                    y_ = np.squeeze(y_, axis=1)
                 class_predictions.append(
                     self.encoders_[i].inverse_transform(y_)
                 )
@@ -880,11 +915,11 @@ class KerasClassifier(BaseWrapper):
                 y[i].ndim == 1 or y[i].shape[1] == 1
             ):
                 encoder = OneHotEncoder(sparse=False)
-                if y[i].ndim == 1:
-                    y[i] = y[i].reshape(-1, 1)
+                tf1dto2d = LabelDimensionTransformer()
+                y[i] = tf1dto2d.fit_transform(y[i])
                 y[i] = encoder.fit_transform(y[i])
                 self.encoders_[i] = make_pipeline(
-                    self.encoders_[i], encoder, "passthrough",
+                    self.encoders_[i], tf1dto2d, encoder, "passthrough",
                 )
 
         return super()._check_output_model_compatibility(y)
@@ -978,9 +1013,13 @@ class KerasRegressor(BaseWrapper):
     def _pre_process_y(self, y):
         """Split y for multi-output tasks.
         """
-        y, _ = super(KerasRegressor, self)._pre_process_y(y)
+        y, _ = super()._pre_process_y(y)
 
-        n_outputs_ = y.shape[1]
+        if len(y.shape) == 1:
+            n_outputs_ = 1
+        else:
+            n_outputs_ = y.shape[1]
+
         # for regression, multi-output is handled by single Keras output
         keras_expected_n_ouputs_ = 1
 
