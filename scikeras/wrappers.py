@@ -319,8 +319,10 @@ class BaseWrapper(BaseEstimator):
 
         # combine all arguments
         build_args = {
-            **model_args, **X_y_args,  # noqa: E999
-            **sample_weight_arg, **kwargs  # noqa: E999
+            **model_args,  # noqa: E999
+            **X_y_args,  # noqa: E999
+            **sample_weight_arg,  # noqa: E999
+            **kwargs,  # noqa: E999
         }
 
         # build model
