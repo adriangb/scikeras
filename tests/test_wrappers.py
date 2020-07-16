@@ -1217,7 +1217,6 @@ class TestWarmStart:
     )
     def test_warm_start(self, config):
         """Test the warm start parameter."""
-        warm_start: bool
 
         loader, model, build_fn, _ = CONFIG[config]
         clf = model(build_fn, epochs=1)

@@ -45,7 +45,7 @@ ARGS_KWARGS_IDENTIFIERS = (
 
 class LabelDimensionTransformer(TransformerMixin, BaseEstimator):
     """Transforms from 1D -> 2D and back.
-    
+
     Used when applying LabelTransformer -> OneHotEncoder.
     """
 
@@ -318,7 +318,10 @@ class BaseWrapper(BaseEstimator):
         kwargs = self._filter_params(final_build_fn, params_to_check=kwargs)
 
         # combine all arguments
-        build_args = {**model_args, **X_y_args, **sample_weight_arg, **kwargs}
+        build_args = {
+            **model_args, **X_y_args,  # noqa: E999
+            **sample_weight_arg, **kwargs  # noqa: E999
+        }
 
         # build model
         model = final_build_fn(**build_args)
