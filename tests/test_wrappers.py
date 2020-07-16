@@ -261,7 +261,9 @@ def build_fn_regs(X, n_outputs_, hidden_layer_sizes=None, n_classes_=None):
     return model
 
 
-def build_fn_clss(X, n_outputs_, hidden_layer_sizes=None, n_classes_=None):
+def build_fn_clss(
+    X, n_outputs_, hidden_layer_sizes=None, n_classes_=None, solver="adam"
+):
     """Dynamically build classifier."""
     if hidden_layer_sizes is None:
         hidden_layer_sizes = []
@@ -270,7 +272,7 @@ def build_fn_clss(X, n_outputs_, hidden_layer_sizes=None, n_classes_=None):
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(1, activation="softmax"))
-    model.compile("adam", loss="binary_crossentropy", metrics=["accuracy"])
+    model.compile(solver, loss="binary_crossentropy", metrics=["accuracy"])
     return model
 
 
@@ -1534,3 +1536,32 @@ def test_get_params():
     }
     clf2 = clone(clf).set_params(optimizer="adam")
     assert clf2.get_params()["optimizer"] == "adam"
+
+
+def test_search_no_initial_params():
+    """
+    This search tests the case when no custom arguments are passed to
+    KerasClassifier, but defaults for the build_fn want to be searched
+    over.
+    """
+    # Common params to both classifiers
+    params = {"solver": ["sgd", "adam"]}
+
+    # This is the interface we want to mirror:
+    # solver not specified during initialization but it's specified in params
+    X, y = make_classification()
+    model = MLPClassifier(max_iter=2)
+    search = GridSearchCV(model, params)
+    search.fit(X, y)
+    assert search.best_score_ >= 0
+
+    # Let's mirror that behavior:
+    # Don't set solver at initialization but search over it
+    loader, _, build_fn, _ = CONFIG["MLPClassifier"]
+    clf = wrappers.KerasClassifier(build_fn, epochs=1)
+    data = loader()
+    X, y = data.data[:100], data.target[:100]
+
+    search = GridSearchCV(model, params)
+    search.fit(X, y)
+    assert search.best_score_ >= 0

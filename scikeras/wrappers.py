@@ -126,13 +126,11 @@ class BaseWrapper(BaseEstimator):
         self.build_fn = build_fn
 
         if build_fn:
-            kwargs = get_default_args(build_fn)
-            if kwargs:
-                sk_params.update(kwargs)
+            user_specified = sk_params
+            defaults = get_default_args(build_fn)
+            if defaults:
+                sk_params = {**defaults, **user_specified}
         if sk_params:
-
-            # for backwards compatibility
-
             # the sklearn API requires that all __init__ parameters be saved
             # as an instance attribute of the same name
             for name, val in sk_params.items():
@@ -149,10 +147,10 @@ class BaseWrapper(BaseEstimator):
                     getattr(self, key)
                 except AttributeError:
                     raise RuntimeError(
-                        "Unasigned input parameter: {}".format(key)
+                        "Unassigned input parameter: {}".format(key)
                     )
         except AttributeError as e:
-            raise RuntimeError("Unasigned input parameter: {}".format(e))
+            raise RuntimeError("Unassigned input parameter: {}".format(e))
 
     @property
     def __name__(self):
