@@ -1551,6 +1551,7 @@ def test_search_no_initial_params():
     # solver not specified during initialization but it's specified in params
     X, y = make_classification()
     model = MLPClassifier(max_iter=2)
+    assert "solver" in model.get_params()
     search = GridSearchCV(model, params)
     search.fit(X, y)
     assert search.best_score_ >= 0
@@ -1559,9 +1560,10 @@ def test_search_no_initial_params():
     # Don't set solver at initialization but search over it
     loader, _, build_fn, _ = CONFIG["MLPClassifier"]
     clf = wrappers.KerasClassifier(build_fn, epochs=1)
+    assert "solver" in clf.get_params()
     data = loader()
     X, y = data.data[:100], data.target[:100]
 
-    search = GridSearchCV(model, params)
+    search = GridSearchCV(clf, params)
     search.fit(X, y)
     assert search.best_score_ >= 0
