@@ -174,7 +174,9 @@ class BaseWrapper(BaseEstimator):
                 try:
                     getattr(self, key)
                 except AttributeError:
-                    raise RuntimeError("Unassigned input parameter: {}".format(key))
+                    raise RuntimeError(
+                        "Unassigned input parameter: {}".format(key)
+                    )
         except AttributeError as e:
             raise RuntimeError("Unassigned input parameter: {}".format(e))
 
@@ -262,7 +264,9 @@ class BaseWrapper(BaseEstimator):
         model_args = self._filter_params(final_build_fn)
 
         # check if the model building function requires X and/or y to be passed
-        X_y_args = self._filter_params(final_build_fn, params_to_check={"X": X, "y": y})
+        X_y_args = self._filter_params(
+            final_build_fn, params_to_check={"X": X, "y": y}
+        )
 
         # filter kwargs
         kwargs = self._filter_params(final_build_fn, params_to_check=kwargs)
@@ -364,7 +368,9 @@ class BaseWrapper(BaseEstimator):
             raise RuntimeError(
                 "Detected an input of size "
                 "{}, but {} has {} outputs".format(
-                    (y[0].shape[0], len(y)), self.model_, len(self.model_.outputs),
+                    (y[0].shape[0], len(y)),
+                    self.model_,
+                    len(self.model_.outputs),
                 )
             )
 
@@ -572,7 +578,11 @@ class BaseWrapper(BaseEstimator):
 
         # fit model
         return self._fit_keras_model(
+<<<<<<< HEAD
             X, y, sample_weight=sample_weight, warm_start=warm_start, **kwargs
+=======
+            X, y, sample_weight=sample_weight, **kwargs
+>>>>>>> black
         )
 
     def partial_fit(self, X, y, sample_weight=None, **kwargs):
@@ -600,7 +610,9 @@ class BaseWrapper(BaseEstimator):
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
-        return self.fit(X, y, sample_weight=sample_weight, warm_start=True, **kwargs)
+        return self.fit(
+            X, y, sample_weight=sample_weight, warm_start=True, **kwargs
+        )
 
     def predict(self, X, **kwargs):
         """Returns predictions for the given test data.
@@ -629,7 +641,9 @@ class BaseWrapper(BaseEstimator):
         X, _ = self.preprocess_X(X)
 
         # filter kwargs and get attributes for predict
-        kwargs = self._filter_params(self.model_.predict, params_to_check=kwargs)
+        kwargs = self._filter_params(
+            self.model_.predict, params_to_check=kwargs
+        )
         predict_args = self._filter_params(self.model_.predict)
 
         # predict with Keras model
@@ -804,10 +818,14 @@ class KerasClassifier(BaseWrapper):
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
+<<<<<<< HEAD
                 encoder.fit_transform(
                     y_.reshape(-1,) if y_.shape[1] == 1 else y_
                 )
                 for encoder, y_ in zip(encoders_, y)
+=======
+                encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)
+>>>>>>> black
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
         elif cls_type_ == "multiclass-multioutput":
@@ -819,10 +837,14 @@ class KerasClassifier(BaseWrapper):
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
+<<<<<<< HEAD
                 encoder.fit_transform(
                     y_.reshape(-1,) if y_.shape[1] == 1 else y_
                 )
                 for encoder, y_ in zip(encoders_, y)
+=======
+                encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)
+>>>>>>> black
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
         else:
@@ -887,7 +909,13 @@ class KerasClassifier(BaseWrapper):
                         # Appease the demands of sklearn transformers
                         y_ = np.squeeze(y_, axis=1)
                     class_predictions.append(
+<<<<<<< HEAD
                         self.encoders_[i].inverse_transform(y_)
+=======
+                        self.encoders_[i].inverse_transform(
+                            y[i].round().astype(int)
+                        )
+>>>>>>> black
                     )
                 if (
                     len(y[i].shape) == 1
@@ -903,15 +931,20 @@ class KerasClassifier(BaseWrapper):
                 idx = np.argmax(y[i], axis=-1)
                 y_ = np.zeros(y[i].shape, dtype=int)
                 y_[np.arange(y[i].shape[0]), idx] = 1
+<<<<<<< HEAD
                 if y_.shape[1] == 1:
                     # Appease the demands of sklearn transformers
                     y_ = np.squeeze(y_, axis=1)
+=======
+>>>>>>> black
                 class_predictions.append(
                     self.encoders_[i].inverse_transform(y_)
                 )
             elif cls_type_ == "multilabel-indicator":
                 class_predictions.append(
-                    self.encoders_[i].inverse_transform(np.argmax(y[i], axis=1))
+                    self.encoders_[i].inverse_transform(
+                        np.argmax(y[i], axis=1)
+                    )
                 )
 
         class_probabilities = np.squeeze(np.column_stack(y))
@@ -977,7 +1010,9 @@ class KerasClassifier(BaseWrapper):
         X, _ = self.preprocess_X(X)
 
         # filter kwargs and get attributes that are inputs to model.predict
-        kwargs = self._filter_params(self.model_.predict, params_to_check=kwargs)
+        kwargs = self._filter_params(
+            self.model_.predict, params_to_check=kwargs
+        )
         predict_args = self._filter_params(self.model_.predict)
 
         # call the Keras model

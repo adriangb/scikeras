@@ -114,7 +114,9 @@ def build_fn_reg(hidden_dim):
     model.add(keras.layers.Activation("relu"))
     model.add(keras.layers.Dense(1))
     model.add(keras.layers.Activation("linear"))
-    model.compile(optimizer="sgd", loss="mean_absolute_error", metrics=["accuracy"])
+    model.compile(
+        optimizer="sgd", loss="mean_absolute_error", metrics=["accuracy"]
+    )
     return model
 
 
@@ -175,7 +177,10 @@ class TestBasicAPI:
                 return build_fn_clf(hidden_dim)
 
         clf = InheritClassBuildFnClf(
-            build_fn=None, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS,
+            build_fn=None,
+            hidden_dim=HIDDEN_DIM,
+            batch_size=BATCH_SIZE,
+            epochs=EPOCHS,
         )
 
         assert_classification_works(clf)
@@ -215,7 +220,10 @@ class TestBasicAPI:
                 return build_fn_reg(hidden_dim)
 
         reg = InheritClassBuildFnReg(
-            build_fn=None, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS,
+            build_fn=None,
+            hidden_dim=HIDDEN_DIM,
+            batch_size=BATCH_SIZE,
+            epochs=EPOCHS,
         )
 
         assert_regression_works(reg)
@@ -286,7 +294,9 @@ def build_fn_clscs(X, n_outputs_, hidden_layer_sizes=None, n_classes_=None):
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(n_classes_, activation="softmax"))
-    model.compile("adam", loss="categorical_crossentropy", metrics=["accuracy"])
+    model.compile(
+        "adam", loss="categorical_crossentropy", metrics=["accuracy"]
+    )
     return model
 
 
@@ -301,7 +311,9 @@ def build_fn_clscf(X, n_outputs_, hidden_layer_sizes=None, n_classes_=None):
         z = Dense(size, activation="relu")(z)
     y = Dense(n_classes_, activation="softmax")(z)
     model = Model(inputs=x, outputs=y)
-    model.compile("adam", loss="categorical_crossentropy", metrics=["accuracy"])
+    model.compile(
+        "adam", loss="categorical_crossentropy", metrics=["accuracy"]
+    )
     return model
 
 
@@ -337,7 +349,8 @@ class TestAdvancedAPIFuncs:
     """Tests advanced features such as pipelines and hyperparameter tuning."""
 
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_standalone(self, config):
         """Tests standalone estimator."""
@@ -354,7 +367,8 @@ class TestAdvancedAPIFuncs:
         check(estimator, loader)
 
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_searchcv_init_params(self, config):
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
@@ -418,7 +432,8 @@ class TestCallbacks:
     """Tests use of Callbacks."""
 
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_callbacks_passed_as_arg(self, config):
         """Tests estimators created passing a callback to __init__."""
@@ -434,7 +449,9 @@ class TestCallbacks:
         assert estimator.callbacks[0].called != SentinalCallback.called
         old_callback = estimator.callbacks[0]
         deserialized_estimator = pickle.loads(pickle.dumps(estimator))
-        assert deserialized_estimator.callbacks[0].called == old_callback.called
+        assert (
+            deserialized_estimator.callbacks[0].called == old_callback.called
+        )
 
     def test_callbacks_inherit(self):
         """Test estimators that inherit from KerasClassifier and implement
@@ -448,7 +465,10 @@ class TestCallbacks:
         assert clf.callbacks[0].called != SentinalCallback.called
         serialized_estimator = pickle.dumps(clf)
         deserialized_estimator = pickle.loads(serialized_estimator)
-        assert deserialized_estimator.callbacks[0].called == clf.callbacks[0].called
+        assert (
+            deserialized_estimator.callbacks[0].called
+            == clf.callbacks[0].called
+        )
         assert_classification_works(deserialized_estimator)
 
 
@@ -525,7 +545,8 @@ def dynamic_classifier(X, cls_type_, n_classes_, keras_expected_n_ouputs_):
     elif cls_type_ == "multilabel-indicator":
         loss = "binary_crossentropy"
         out = [
-            Dense(1, activation="sigmoid")(x1) for _ in range(keras_expected_n_ouputs_)
+            Dense(1, activation="sigmoid")(x1)
+            for _ in range(keras_expected_n_ouputs_)
         ]
     elif cls_type_ == "multiclass-multioutput":
         loss = "binary_crossentropy"
@@ -743,7 +764,8 @@ class TestPrebuiltModel:
     """Tests using a prebuilt model instance."""
 
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_basic(self, config):
         """Tests using a prebuilt model."""
@@ -755,7 +777,9 @@ class TestPrebuiltModel:
         # make y the same shape as will be used by .fit
         if config != "MLPRegressor":
             y_train = to_categorical(y_train)
-            keras_model = build_fn(X=x_train, n_classes_=n_classes_, n_outputs_=1)
+            keras_model = build_fn(
+                X=x_train, n_classes_=n_classes_, n_outputs_=1
+            )
         else:
             keras_model = build_fn(X=x_train, n_outputs_=1)
 
@@ -773,7 +797,9 @@ class TestPrebuiltModel:
         # make y the same shape as will be used by .fit
         if config != "MLPRegressor":
             y_train = to_categorical(y_train)
-            keras_model = build_fn(X=x_train, n_classes_=n_classes_, n_outputs_=1)
+            keras_model = build_fn(
+                X=x_train, n_classes_=n_classes_, n_outputs_=1
+            )
         else:
             keras_model = build_fn(X=x_train, n_outputs_=1)
 
@@ -973,7 +999,9 @@ class TestScoring:
             """Wrap Keras operations to numpy."""
             y_true = convert_to_tensor(y_true)
             y_pred = convert_to_tensor(y_pred)
-            return KerasRegressor.root_mean_squared_error(y_true, y_pred).numpy()
+            return KerasRegressor.root_mean_squared_error(
+                y_true, y_pred
+            ).numpy()
 
         score_functions = (keras_backend_r2,)
         correct_scorer = sklearn_r2_score
@@ -981,7 +1009,9 @@ class TestScoring:
         for (y_true, y_pred) in datasets:
             for f in score_functions:
                 np.testing.assert_almost_equal(
-                    f(y_true, y_pred), correct_scorer(y_true, y_pred), decimal=5,
+                    f(y_true, y_pred),
+                    correct_scorer(y_true, y_pred),
+                    decimal=5,
                 )
 
 
@@ -1035,7 +1065,10 @@ class TestMultiInputOutput:
         y = MultiLabelBinarizer().fit_transform(y)
 
         (x_train, _), (_, _) = testing_utils.get_test_data(
-            train_samples=y.shape[0], test_samples=0, input_shape=(4,), num_classes=3,
+            train_samples=y.shape[0],
+            test_samples=0,
+            input_shape=(4,),
+            num_classes=3,
         )
 
         clf_keras.fit(x_train, y)
@@ -1088,7 +1121,9 @@ class TestMultiInputOutput:
             model.add(keras.layers.Dense(np.unique(y).size))
             model.add(keras.layers.Activation("softmax"))
             model.compile(
-                optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"],
+                optimizer="sgd",
+                loss="categorical_crossentropy",
+                metrics=["accuracy"],
             )
             return model
 
@@ -1226,7 +1261,8 @@ class TestPrettyPrint:
 
 class TestWarmStart:
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_warm_start(self, config):
         """Test the warm start parameter."""
@@ -1259,7 +1295,8 @@ class TestWarmStart:
 
 class TestPartialFit:
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_partial_fit(self, config):
         loader, model, build_fn, _ = CONFIG[config]
@@ -1276,7 +1313,9 @@ class TestPartialFit:
         # Make sure new model not created
         model = clf.model_
         clf.partial_fit(X, y)
-        assert clf.model_ is model, "Model memory address should remain constant"
+        assert (
+            clf.model_ is model
+        ), "Model memory address should remain constant"
 
     def test_partial_fit_history_len(self, config="CNNClassifier"):
         # history_ records the history from this partial_fit call
@@ -1316,7 +1355,9 @@ class TestPartialFit:
             clf2.partial_fit(X, y)
             assert len(clf.history_["loss"]) == 1
             assert len(clf2.history_["loss"]) == k
-            assert np.allclose(clf.history_["loss"][0], clf2.history_["loss"][0])
+            assert np.allclose(
+                clf.history_["loss"][0], clf2.history_["loss"][0]
+            )
 
         weights1 = [w.numpy() for w in clf.model_.weights]
         weights2 = [w.numpy() for w in clf2.model_.weights]
@@ -1346,7 +1387,8 @@ class TestPartialFit:
 
 class TestHistory:
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_history(self, config):
         loader, model, build_fn, _ = CONFIG[config]
@@ -1524,7 +1566,9 @@ def test_get_params():
         model.add(keras.layers.Dense(NUM_CLASSES))
         model.add(keras.layers.Activation("softmax"))
         model.compile(
-            optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
+            optimizer=optimizer,
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
