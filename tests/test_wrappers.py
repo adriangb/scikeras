@@ -42,7 +42,9 @@ from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 
 # Force data conversion warnings to be come errors
-pytestmark = pytest.mark.filterwarnings("error::sklearn.exceptions.DataConversionWarning")
+pytestmark = pytest.mark.filterwarnings(
+    "error::sklearn.exceptions.DataConversionWarning"
+)
 
 INPUT_DIM = 5
 HIDDEN_DIM = 5

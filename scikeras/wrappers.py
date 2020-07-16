@@ -62,6 +62,7 @@ class LabelDimensionTransformer(TransformerMixin, BaseEstimator):
             X = np.squeeze(X, axis=1)
         return X
 
+
 def unpack_keras_model(model, training_config, weights):
     """Creates a new Keras model object using the input
     parameters.
@@ -750,7 +751,7 @@ class KerasClassifier(BaseWrapper):
             encoder = LabelEncoder()
             if len(y.shape) > 1 and y.shape[1] == 1:
                 # Make 1D just so LabelEncoder is happy
-                y = y.reshape(-1, )
+                y = y.reshape(-1,)
             y = encoder.fit_transform(y)
             classes_ = encoder.classes_
             # make lists
@@ -764,7 +765,7 @@ class KerasClassifier(BaseWrapper):
             encoder = LabelEncoder()
             if len(y.shape) > 1 and y.shape[1] == 1:
                 # Make 1D just so LabelEncoder is happy
-                y = y.reshape(-1, )
+                y = y.reshape(-1,)
             y = encoder.fit_transform(y)
             classes_ = encoder.classes_
             # make lists
@@ -781,7 +782,9 @@ class KerasClassifier(BaseWrapper):
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
-                encoder.fit_transform(y_.reshape(-1, ) if y_.shape[1] == 1 else y_)
+                encoder.fit_transform(
+                    y_.reshape(-1,) if y_.shape[1] == 1 else y_
+                )
                 for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
@@ -794,7 +797,9 @@ class KerasClassifier(BaseWrapper):
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
-                encoder.fit_transform(y_.reshape(-1, ) if y_.shape[1] == 1 else y_)
+                encoder.fit_transform(
+                    y_.reshape(-1,) if y_.shape[1] == 1 else y_
+                )
                 for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
@@ -868,7 +873,11 @@ class KerasClassifier(BaseWrapper):
                     class_predictions.append(
                         self.encoders_[i].inverse_transform(y_)
                     )
-                if len(y[i].shape) == 1 or y[i].shape[1] == 1 and len(self.encoders_[i].classes_) == 2:
+                if (
+                    len(y[i].shape) == 1
+                    or y[i].shape[1] == 1
+                    and len(self.encoders_[i].classes_) == 2
+                ):
                     # result from a single sigmoid output
                     # reformat so that we have 2 columns
                     y[i] = np.column_stack([1 - y[i], y[i]])
