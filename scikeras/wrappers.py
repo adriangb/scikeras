@@ -174,9 +174,7 @@ class BaseWrapper(BaseEstimator):
                 try:
                     getattr(self, key)
                 except AttributeError:
-                    raise RuntimeError(
-                        "Unassigned input parameter: {}".format(key)
-                    )
+                    raise RuntimeError("Unassigned input parameter: {}".format(key))
         except AttributeError as e:
             raise RuntimeError("Unassigned input parameter: {}".format(e))
 
@@ -264,9 +262,7 @@ class BaseWrapper(BaseEstimator):
         model_args = self._filter_params(final_build_fn)
 
         # check if the model building function requires X and/or y to be passed
-        X_y_args = self._filter_params(
-            final_build_fn, params_to_check={"X": X, "y": y}
-        )
+        X_y_args = self._filter_params(final_build_fn, params_to_check={"X": X, "y": y})
 
         # filter kwargs
         kwargs = self._filter_params(final_build_fn, params_to_check=kwargs)
@@ -368,9 +364,7 @@ class BaseWrapper(BaseEstimator):
             raise RuntimeError(
                 "Detected an input of size "
                 "{}, but {} has {} outputs".format(
-                    (y[0].shape[0], len(y)),
-                    self.model_,
-                    len(self.model_.outputs),
+                    (y[0].shape[0], len(y)), self.model_, len(self.model_.outputs),
                 )
             )
 
@@ -606,9 +600,7 @@ class BaseWrapper(BaseEstimator):
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
-        return self.fit(
-            X, y, sample_weight=sample_weight, warm_start=True, **kwargs
-        )
+        return self.fit(X, y, sample_weight=sample_weight, warm_start=True, **kwargs)
 
     def predict(self, X, **kwargs):
         """Returns predictions for the given test data.
@@ -637,9 +629,7 @@ class BaseWrapper(BaseEstimator):
         X, _ = self.preprocess_X(X)
 
         # filter kwargs and get attributes for predict
-        kwargs = self._filter_params(
-            self.model_.predict, params_to_check=kwargs
-        )
+        kwargs = self._filter_params(self.model_.predict, params_to_check=kwargs)
         predict_args = self._filter_params(self.model_.predict)
 
         # predict with Keras model
@@ -921,9 +911,7 @@ class KerasClassifier(BaseWrapper):
                 )
             elif cls_type_ == "multilabel-indicator":
                 class_predictions.append(
-                    self.encoders_[i].inverse_transform(
-                        np.argmax(y[i], axis=1)
-                    )
+                    self.encoders_[i].inverse_transform(np.argmax(y[i], axis=1))
                 )
 
         class_probabilities = np.squeeze(np.column_stack(y))
@@ -989,9 +977,7 @@ class KerasClassifier(BaseWrapper):
         X, _ = self.preprocess_X(X)
 
         # filter kwargs and get attributes that are inputs to model.predict
-        kwargs = self._filter_params(
-            self.model_.predict, params_to_check=kwargs
-        )
+        kwargs = self._filter_params(self.model_.predict, params_to_check=kwargs)
         predict_args = self._filter_params(self.model_.predict)
 
         # call the Keras model
