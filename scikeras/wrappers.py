@@ -80,22 +80,50 @@ class BaseWrapper(BaseEstimator):
     Note that like all other estimators in scikit-learn, `build_fn` or
     your child class should provide default values for its arguments,
     so that you could create the estimator
+
+    1. A function
+    2. An instance of a class that implements the `__call__` method
+    3. An instance of a Keras Model. A copy of this instance will be made
+    4. None. This means you implement a class that inherits from `BaseWrapper`,
+
+    If `build_fn` is callable, the default values for the arguments will be the
+    parameters for the class. For example,
+
+    >>> from scikeras.wrappers import KerasClassifier
+    >>> def build_fn(solver="sgd"):
+    ...     layers = [...]
+    ...     model = Sequential(layers)
+    ...     model.compile(optimizer=solver, ...)
+    ...     return model
+    ...
+    >>> clf = KerasClassifier(build_fn)
+    >>> clf.set_params(solver="adam")
+    KerasClassifier(
+            build_fn=<function build_fn at 0x10f683ee0>
+            solver=adam
+    )
+
+    `sk_params` takes both model parameters and fitting parameters. Legal model
+    parameters are the arguments of `build_fn`. Note that like all other
+    estimators in scikit-learn, `build_fn` or your child class should provide
+    default values for its arguments, so that you could create the estimator
     without passing any values to `sk_params`.
 
-    `sk_params` could also accept parameters for calling `fit`, `predict`,
-    `predict_proba`, and `score` methods (e.g., `epochs`, `batch_size`).
-    fitting (predicting) parameters are selected in the following order:
+    `sk_params` could also accept parameters for calling the Keras
+    `fit`, `predict`, `predict_proba`, and `score` methods (e.g.,
+    `epochs`, `batch_size`).  fitting (predicting) parameters are selected
+    in the following order:
 
     1. Values passed to the dictionary arguments of
-    `fit`, `predict`, `predict_proba`, and `score` methods
+      `fit`, `predict`, `predict_proba`, and `score` methods
     2. Values passed to `sk_params`
     3. The default values of the `keras.models.Sequential`
-    `fit`, `predict`, `predict_proba` and `score` methods
+      `fit`, `predict`, `predict_proba` and `score` methods
 
-    When using scikit-learn's `grid_search` API, legal tunable parameters are
-    those you could pass to `sk_params`, including fitting parameters.
-    In other words, you could use `grid_search` to search for the best
-    `batch_size` or `epochs` as well as the model parameters.
+    `KerasClassifier` or `KerasRegressor`: The `__call__` method of the
+    present class will then be treated as the default `build_fn`.
+    If `build_fn` has parameters X or y, these will be passed automatically.
+
     """
 
     # basic legal parameter set, based on functions that will normally be
@@ -125,7 +153,7 @@ class BaseWrapper(BaseEstimator):
 
         self.build_fn = build_fn
 
-        if build_fn:
+        if build_fn and callable(build_fn):
             user_specified = sk_params
             defaults = get_default_args(build_fn)
             if defaults:
