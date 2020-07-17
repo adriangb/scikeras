@@ -418,6 +418,35 @@ class BaseWrapper(BaseEstimator):
         else:
             y = tuple(np.squeeze(y_) for y_ in y)
         return y
+    
+    def _validate_data(self, X, y=None, reset=True):
+        if y is not None:
+            X, y = check_X_y(
+                X,
+                y,
+                allow_nd=True,  # allow X to have more than 2 dimensions
+                multi_output=True,  # allow y to be 2D
+            )
+        X = check_array(X, allow_nd=True, dtype=["float64", "int"])
+
+        n_features = X.shape[1]
+
+        if reset:
+            self.n_features_in_ = n_features
+        else:
+            if not hasattr(self, "n_features_in_"):
+                raise RuntimeError(
+                    "The reset parameter is False but there is no "
+                    "n_features_in_ attribute. Is this estimator fitted?"
+                )
+            if n_features != self.n_features_in_:
+                raise ValueError(
+                    f"X has {n_features} features, but this {self.__name__} "
+                    f"is expecting {self.n_features_in_} features as input."
+                )
+        if y is None:
+            return X
+        return X, y
 
     @staticmethod
     def _pre_process_y(y):
@@ -506,15 +535,10 @@ class BaseWrapper(BaseEstimator):
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
-        # basic checks
-        X, y = check_X_y(
-            X,
-            y,
-            allow_nd=True,  # allow X to have more than 2 dimensions
-            multi_output=True,  # allow y to be 2D
-        )
-
-        X = check_array(X, allow_nd=True, dtype=["float64", "int"])
+        try:
+            X, y = self._validate_data(X=X, y=y, reset=True)
+        except Exception:
+            X, y = self._validate_data(X=X, y=y, reset=True)
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
@@ -592,7 +616,7 @@ class BaseWrapper(BaseEstimator):
             )
 
         # basic input checks
-        X = check_array(X, allow_nd=True, dtype=["float64", "int"])
+        X = self._validate_data(X=X, y=None, reset=False)
 
         # pre process X
         X, _ = self._pre_process_X(X)
@@ -962,7 +986,7 @@ class KerasClassifier(BaseWrapper):
             )
 
         # basic input checks
-        X = check_array(X, allow_nd=True, dtype=["float64", "int"])
+        X = self._validate_data(X=X, y=None, reset=False)
 
         # pre process X
         X, _ = self._pre_process_X(X)
@@ -1013,10 +1037,11 @@ class KerasRegressor(BaseWrapper):
         }
     )
 
-    def fit(self, X, y, sample_weight=None, **kwargs):
-        """Convert y to float, regressors cannot accept ints."""
-        y = check_array(y, dtype="float64", ensure_2d=False)
-        return super().fit(X, y, sample_weight=sample_weight, **kwargs)
+    def _validate_data(self, X, y=None, reset=True):
+        """Convert y to float, regressors cannot accept int."""
+        if y is not None:
+            y = check_array(y, dtype="float64", ensure_2d=False)
+        return super()._validate_data(X=X, y=y, reset=reset)
 
     def _post_process_y(self, y):
         """Ensures output is float64 and squeeze."""
