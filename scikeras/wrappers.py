@@ -418,7 +418,7 @@ class BaseWrapper(BaseEstimator):
         else:
             y = tuple(np.squeeze(y_) for y_ in y)
         return y
-    
+
     def _validate_data(self, X, y=None, reset=True):
         if y is not None:
             X, y = check_X_y(
