@@ -535,10 +535,7 @@ class BaseWrapper(BaseEstimator):
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
-        try:
-            X, y = self._validate_data(X=X, y=y, reset=True)
-        except Exception:
-            X, y = self._validate_data(X=X, y=y, reset=True)
+        X, y = self._validate_data(X=X, y=y, reset=True)
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
