@@ -535,7 +535,16 @@ class BaseWrapper(BaseEstimator):
             ValuError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
-        X, y = self._validate_data(X=X, y=y, reset=True)
+        if warm_start and not hasattr(self, "n_features_in_"):
+            # Warm start requested but not fitted yet
+            reset = True
+        elif warm_start:
+            # Already fitted and warm start requested
+            reset = False
+        else:
+            # No warm start requested
+            reset = True
+        X, y = self._validate_data(X=X, y=y, reset=reset)
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
@@ -866,12 +875,6 @@ class KerasClassifier(BaseWrapper):
         cls_type_ = self.cls_type_
 
         class_predictions = []
-
-        def to_target(y_i):
-            idx = np.argmax(y_i, axis=-1)
-            y_ = np.zeros(y_i.shape)
-            y_[np.arange(y_i.shape[0]), idx] = 1
-            return y_
 
         for i in range(self.n_outputs_):
 
