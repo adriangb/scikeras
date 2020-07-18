@@ -1352,3 +1352,28 @@ class TestHistory:
         assert isinstance(clf.history_, dict)
         assert all(isinstance(k, str) for k in clf.history_.keys())
         assert all(isinstance(v, list) for v in clf.history_.values())
+
+
+class TestNFeaturesIn:
+    @pytest.mark.parametrize(
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+    )
+    def test_validate_data(self, config):
+        """Tests the _validate_data method.
+
+        https://scikit-learn-enhancement-proposals.readthedocs.io/en/latest/slep010/proposal.html
+        """  # noqa
+
+        loader, model, build_fn, _ = CONFIG[config]
+        clf = model(build_fn, epochs=1)
+        data = loader()
+        X, y = data.data[:100], data.target[:100]
+
+        with pytest.raises(RuntimeError):
+            clf._validate_data(X=X, y=y, reset=False)
+
+        clf._validate_data(X=X, y=y, reset=True)  # no error
+
+        with pytest.raises(ValueError):
+            clf._validate_data(X=X[:, :1], y=y, reset=False)
