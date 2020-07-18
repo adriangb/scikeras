@@ -5,6 +5,7 @@ import pickle
 
 import numpy as np
 import pytest
+from sklearn.base import clone
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.datasets import load_boston, load_digits, load_iris
 from sklearn.ensemble import (
@@ -573,11 +574,16 @@ class FullyCompliantClassifier(wrappers.KerasClassifier):
     """A classifier that sets all parameters in __init__ and nothing more."""
 
     def __init__(
-        self, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS
+        self,
+        hidden_dim=HIDDEN_DIM,
+        batch_size=BATCH_SIZE,
+        epochs=EPOCHS,
+        random_state=None,
     ):
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.epochs = epochs
+        self.random_state = random_state
         return super().__init__()
 
     def __call__(self, X, cls_type_, n_classes_, keras_expected_n_ouputs_):
@@ -590,11 +596,16 @@ class FullyCompliantRegressor(wrappers.KerasRegressor):
     """A classifier that sets all parameters in __init__ and nothing more."""
 
     def __init__(
-        self, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS
+        self,
+        hidden_dim=HIDDEN_DIM,
+        batch_size=BATCH_SIZE,
+        epochs=EPOCHS,
+        random_state=None,
     ):
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.epochs = epochs
+        self.random_state = random_state
         return super().__init__()
 
     def __call__(self, X, n_outputs_):
@@ -1403,12 +1414,13 @@ class DeterministicRegressor(KerasRegressor):
 
 
 class TestRandomState:
-
     @pytest.mark.parametrize(
-        "random_state",
-        [0, 123, np.random.RandomState(0)],
+        "random_state", [0, 123, np.random.RandomState(0)],
     )
-    def test_random_states(self, random_state):
+    @pytest.mark.parametrize(
+        "model", [FullyCompliantRegressor, FullyCompliantClassifier]
+    )
+    def test_random_states(self, random_state, model):
         (X, y), (_, _) = testing_utils.get_test_data(
             train_samples=TRAIN_SAMPLES,
             test_samples=TEST_SAMPLES,
@@ -1416,29 +1428,46 @@ class TestRandomState:
             num_classes=NUM_CLASSES,
         )
 
+        estimator = model()
+
         # With seed
-        reg = DeterministicRegressor(random_state=random_state)
-        reg.fit(X, y)
-        reg.fit(X, y)
-        y1 = reg.predict(X)
-        reg.fit(X, y)
-        y2 = reg.predict(X)
+        if "random_state" in estimator.get_params():
+            estimator.set_params(random_state=random_state)
+        estimator.fit(X, y)
+        y1 = estimator.predict(X)
+        estimator.fit(X, y)
+        y2 = estimator.predict(X)
         assert np.allclose(y1, y2)
 
         # Without seed
-        reg = DeterministicRegressor(random_state=None)
-        reg.fit(X, y)
-        reg.fit(X, y)
-        y1 = reg.predict(X)
-        reg.fit(X, y)
-        y2 = reg.predict(X)
+        if "random_state" in estimator.get_params():
+            estimator.set_params(random_state=None)
+        estimator.fit(X, y)
+        y1 = estimator.predict(X)
+        estimator.fit(X, y)
+        y2 = estimator.predict(X)
         assert not np.allclose(y1, y2)
 
         # With seed
-        reg = DeterministicRegressor(random_state=random_state)
-        reg.fit(X, y)
-        reg.fit(X, y)
-        y1 = reg.predict(X)
-        reg.fit(X, y)
-        y2 = reg.predict(X)
+        if "random_state" in estimator.get_params():
+            estimator.set_params(random_state=random_state)
+        estimator.fit(X, y)
+        y1 = estimator.predict(X)
+        estimator.fit(X, y)
+        y2 = estimator.predict(X)
+        assert np.allclose(y1, y2)
+
+        # Cloned estimators
+        if "random_state" in estimator.get_params():
+            estimator.set_params(random_state=None)
+        estimator1 = clone(estimator)
+        estimator2 = clone(estimator)
+        if "random_state" in estimator1.get_params():
+            estimator1.set_params(random_state=random_state)
+        if "random_state" in estimator2.get_params():
+            estimator2.set_params(random_state=random_state)
+        estimator1.fit(X, y)
+        estimator2.fit(X, y)
+        y1 = estimator1.predict(X)
+        y2 = estimator2.predict(X)
         assert np.allclose(y1, y2)

@@ -48,7 +48,7 @@ ARGS_KWARGS_IDENTIFIERS = (
 
 class TFRandomState:
 
-    def __init__(self, seed: int = 0):
+    def __init__(self, seed):
         self.seed = seed
         self._not_found = object()
 
@@ -92,6 +92,7 @@ class TFRandomState:
             del os.environ["TF_DETERMINISTIC_OPS"]
         random.setstate(self.orig_random_state)
         np.random.set_state(self.orig_np_random_state)
+        tf.random.set_seed(None)  # TODO: can we revert instead of unset?
         K.set_session(self.orig_K_session)
 
 
@@ -182,7 +183,7 @@ class BaseWrapper(BaseEstimator):
     Arguments:
         build_fn: callable function or class instance
         **sk_params: model parameters & fitting parameters
-    
+
     Special parameters:
         random_state: if random_state is a parameter of a child
             class or if passed as part of sk_params,
@@ -236,7 +237,6 @@ class BaseWrapper(BaseEstimator):
     is_fitted_ = False
 
     _tags = {
-        "non_deterministic": True,  # can't easily set random_state
         "poor_score": True,
         "multioutput": True,
     }
@@ -383,7 +383,11 @@ class BaseWrapper(BaseEstimator):
         }
 
         # build model
-        model = final_build_fn(**build_args)
+        if self._random_state is not None:
+            with TFRandomState(self._random_state):
+                model = final_build_fn(**build_args)
+        else:
+            model = final_build_fn(**build_args)
 
         # append legal parameter names from model
         for known_keras_fn in KNOWN_KERAS_FN_NAMES:
@@ -417,7 +421,7 @@ class BaseWrapper(BaseEstimator):
                 a reference to the instance that can be chain called
                 (ex: instance.fit(X,y).transform(X) )
         Raises:
-            ValuError : In case sample_weight != None and the Keras model's
+            ValueError : In case sample_weight != None and the Keras model's
                         `fit` method does not support that parameter.
         """
         # add `sample_weight` param, required to be explicit by some sklearn
@@ -630,7 +634,7 @@ class BaseWrapper(BaseEstimator):
                 self._random_state = self.random_state
         else:
             self._random_state = None
- 
+
         # Data checks
         if warm_start and not hasattr(self, "n_features_in_"):
             # Warm start requested but not fitted yet
@@ -831,22 +835,10 @@ class KerasClassifier(BaseWrapper):
         {
             "multilabel": True,
             "_xfail_checks": {
-                "check_sample_weights_invariance": "can't easily \
-                set Keras random seed",
-                "check_classifiers_multilabel_representation_invariance": "can't \
-                easily set Keras random seed",
-                "check_estimators_data_not_an_array": "can't easily \
-                set Keras random seed",
-                "check_classifier_data_not_an_array": "can't set \
-                Keras random seed",
                 "check_classifiers_classes": "can't meet \
                 performance target",
-                "check_supervised_y_2d": "can't easily set \
-                Keras random seed",
                 "check_fit_idempotent": "tf does not use \
                 sparse tensors",
-                "check_methods_subset_invariance": "can't easily set \
-                Keras random seed",
             },
         }
     )
@@ -1117,19 +1109,8 @@ class KerasRegressor(BaseWrapper):
         {
             "multilabel": True,
             "_xfail_checks": {
-                "check_sample_weights_invariance": "can't easily set \
-                Keras random seed",
-                "check_estimators_data_not_an_array": "can't easily set \
-                Keras random seed",
-                "check_regressor_data_not_an_array": "can't set Keras \
-                    random seed",
-                "check_supervised_y_2d": "can't easily set Keras random seed",
                 "check_fit_idempotent": "tf does not use sparse tensors",
-                "check_regressors_int": "can't easily set Keras \
-                random seed",
-                "poor_score": True,
-                "check_methods_subset_invariance": "can't easily set \
-                Keras random seed",
+                "check_methods_subset_invariance": "can't meet tol",
             },
         }
     )
