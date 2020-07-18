@@ -291,7 +291,7 @@ class BaseWrapper(BaseEstimator):
                 a reference to the instance that can be chain called
                 (ex: instance.fit(X,y).transform(X) )
         Raises:
-            ValuError : In case sample_weight != None and the Keras model's
+            ValueError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
         # dynamically build model, i.e. final_build_fn builds a Keras model
