@@ -1355,7 +1355,6 @@ class TestHistory:
 
 
 class TestNFeaturesIn:
-
     @pytest.mark.parametrize(
         "config",
         ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
@@ -1373,8 +1372,8 @@ class TestNFeaturesIn:
 
         with pytest.raises(RuntimeError):
             clf._validate_data(X=X, y=y, reset=False)
-        
+
         clf._validate_data(X=X, y=y, reset=True)  # no error
 
         with pytest.raises(ValueError):
-            clf._validate_data(X=X[:, :1], y=y, reset=False)  
+            clf._validate_data(X=X[:, :1], y=y, reset=False)
