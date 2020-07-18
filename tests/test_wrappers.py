@@ -1439,14 +1439,16 @@ class TestRandomState:
         y2 = estimator.predict(X)
         assert np.allclose(y1, y2)
 
-        # Without seed
-        if "random_state" in estimator.get_params():
-            estimator.set_params(random_state=None)
-        estimator.fit(X, y)
-        y1 = estimator.predict(X)
-        estimator.fit(X, y)
-        y2 = estimator.predict(X)
-        assert not np.allclose(y1, y2)
+        if model is FullyCompliantRegressor:
+            # Without seed, regressors should NOT
+            # give the same results
+            if "random_state" in estimator.get_params():
+                estimator.set_params(random_state=None)
+            estimator.fit(X, y)
+            y1 = estimator.predict(X)
+            estimator.fit(X, y)
+            y2 = estimator.predict(X)
+            assert not np.allclose(y1, y2)
 
         # With seed
         if "random_state" in estimator.get_params():
