@@ -1377,3 +1377,68 @@ class TestNFeaturesIn:
 
         with pytest.raises(ValueError):
             clf._validate_data(X=X[:, :1], y=y, reset=False)
+
+
+class DeterministicRegressor(KerasRegressor):
+    """Tests Functional API Regressor with fixed
+    random seed.
+    """
+
+    def __init__(self, random_state=None):
+        self.random_state = random_state
+        super().__init__()
+
+    def __call__(self):
+        model = keras.models.Sequential()
+        model.add(keras.layers.Dense(INPUT_DIM, input_shape=(INPUT_DIM,)))
+        model.add(keras.layers.Activation("relu"))
+        model.add(keras.layers.Dense(100))
+        model.add(keras.layers.Activation("relu"))
+        model.add(keras.layers.Dense(1))
+        model.add(keras.layers.Activation("linear"))
+        model.compile(
+            optimizer="sgd", loss="mean_absolute_error", metrics=["accuracy"]
+        )
+        return model
+
+
+class TestRandomState:
+
+    @pytest.mark.parametrize(
+        "random_state",
+        [0, 123, np.random.RandomState(0)],
+    )
+    def test_random_states(self, random_state):
+        (X, y), (_, _) = testing_utils.get_test_data(
+            train_samples=TRAIN_SAMPLES,
+            test_samples=TEST_SAMPLES,
+            input_shape=(INPUT_DIM,),
+            num_classes=NUM_CLASSES,
+        )
+
+        # With seed
+        reg = DeterministicRegressor(random_state=random_state)
+        reg.fit(X, y)
+        reg.fit(X, y)
+        y1 = reg.predict(X)
+        reg.fit(X, y)
+        y2 = reg.predict(X)
+        assert np.allclose(y1, y2)
+
+        # Without seed
+        reg = DeterministicRegressor(random_state=None)
+        reg.fit(X, y)
+        reg.fit(X, y)
+        y1 = reg.predict(X)
+        reg.fit(X, y)
+        y2 = reg.predict(X)
+        assert not np.allclose(y1, y2)
+
+        # With seed
+        reg = DeterministicRegressor(random_state=random_state)
+        reg.fit(X, y)
+        reg.fit(X, y)
+        y1 = reg.predict(X)
+        reg.fit(X, y)
+        y2 = reg.predict(X)
+        assert np.allclose(y1, y2)

@@ -3,6 +3,8 @@
 import inspect
 import warnings
 from collections import defaultdict
+import random
+import os
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -17,6 +19,7 @@ from sklearn.utils.validation import (
 )
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.pipeline import make_pipeline
+import tensorflow as tf
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.layers import deserialize, serialize
 from tensorflow.python.keras.losses import is_categorical_crossentropy
@@ -41,6 +44,55 @@ ARGS_KWARGS_IDENTIFIERS = (
     inspect.Parameter.VAR_KEYWORD,
     inspect.Parameter.VAR_POSITIONAL,
 )
+
+
+class TFRandomState:
+
+    def __init__(self, seed: int = 0):
+        self.seed = seed
+        self._not_found = object()
+
+    def __enter__(self):
+        warnings.warn(
+            "Setting the random state for TF involves"
+            "irreversibly re-setting the random seed. "
+            "This may have unintended side effects."
+        )
+
+        # Save values
+        self.origin_hashseed = os.environ.get(
+            "PYTHONHASHSEED", self._not_found
+        )
+        self.origin_gpu_det = os.environ.get(
+            "TF_DETERMINISTIC_OPS", self._not_found
+        )
+        self.orig_random_state = random.getstate()
+        self.orig_np_random_state = np.random.get_state()
+        self.orig_K_session = K.get_session()
+
+        # Set values
+        os.environ["PYTHONHASHSEED"] = str(self.seed)
+        os.environ["TF_DETERMINISTIC_OPS"] = "1"
+        random.seed(self.seed)
+        np.random.seed(self.seed)
+        tf.random.set_seed(self.seed)
+
+        # Clear session to ensure ops
+        # are deterministically chosen to be the same
+        tf.keras.backend.clear_session()
+
+    def __exit__(self, type, value, traceback):
+        if self.origin_hashseed is not self._not_found:
+            os.environ["PYTHONHASHSEED"] = self.origin_hashseed
+        else:
+            del os.environ["PYTHONHASHSEED"]
+        if self.origin_gpu_det is not self._not_found:
+            os.environ["TF_DETERMINISTIC_OPS"] = self.origin_gpu_det
+        else:
+            del os.environ["TF_DETERMINISTIC_OPS"]
+        random.setstate(self.orig_random_state)
+        np.random.set_state(self.orig_np_random_state)
+        K.set_session(self.orig_K_session)
 
 
 class LabelDimensionTransformer(TransformerMixin, BaseEstimator):
@@ -130,6 +182,11 @@ class BaseWrapper(BaseEstimator):
     Arguments:
         build_fn: callable function or class instance
         **sk_params: model parameters & fitting parameters
+    
+    Special parameters:
+        random_state: if random_state is a parameter of a child
+            class or if passed as part of sk_params,
+            it will be used like ScikitLearn's random_state param.
 
     The `build_fn` should construct, compile and return a Keras model, which
     will then be used to fit/predict. One of the following
@@ -385,7 +442,11 @@ class BaseWrapper(BaseEstimator):
         # order implies kwargs overwrites fit_args
         fit_args = {**fit_args, **kwargs}
 
-        hist = self.model_.fit(x=X, y=y, **fit_args)
+        if self._random_state is not None:
+            with TFRandomState(self._random_state):
+                hist = self.model_.fit(x=X, y=y, **fit_args)
+        else:
+            hist = self.model_.fit(x=X, y=y, **fit_args)
 
         if not hasattr(self, "history_"):
             self.history_ = defaultdict(list)
@@ -420,6 +481,25 @@ class BaseWrapper(BaseEstimator):
         return y
 
     def _validate_data(self, X, y=None, reset=True):
+        """Validate input data and set or check the `n_features_in_` attribute.
+        Parameters
+        ----------
+        X : {array-like, sparse matrix, dataframe} of shape \
+                (n_samples, n_features)
+            The input samples.
+        y : array-like of shape (n_samples,), default=None
+            The targets. If None, `check_array` is called on `X` and
+            `check_X_y` is called otherwise.
+        reset : bool, default=True
+            Whether to reset the `n_features_in_` attribute.
+            If False, the input will be checked for consistency with data
+            provided when reset was last True.
+
+        Returns
+        -------
+        out : {ndarray, sparse matrix} or tuple of these
+            The validated input. A tuple is returned if `y` is not None.
+        """
         if y is not None:
             X, y = check_X_y(
                 X,
@@ -532,9 +612,26 @@ class BaseWrapper(BaseEstimator):
                 (ex: instance.fit(X,y).transform(X) )
         Raises:
             ValueError : In case of invalid shape for `y` argument.
-            ValuError : In case sample_weight != None and the Keras model's
+            ValueError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
+        # Handle random state
+        if hasattr(self, "random_state"):
+            if isinstance(self.random_state, np.random.RandomState):
+                # Keras needs an integer
+                # we sample an integer and use that as a seed
+                # Given the same RandomState, the seed will always be
+                # the same, thus giving reproducible results
+                state = self.random_state.get_state()
+                self._random_state = self.random_state.randint(low=1)
+                self.random_state.set_state(state)
+            else:
+                # Assume int
+                self._random_state = self.random_state
+        else:
+            self._random_state = None
+ 
+        # Data checks
         if warm_start and not hasattr(self, "n_features_in_"):
             # Warm start requested but not fitted yet
             reset = True
