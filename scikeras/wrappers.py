@@ -47,7 +47,6 @@ ARGS_KWARGS_IDENTIFIERS = (
 
 
 class TFRandomState:
-
     def __init__(self, seed):
         self.seed = seed
         self._not_found = object()
