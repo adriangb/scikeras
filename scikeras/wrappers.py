@@ -27,7 +27,7 @@ from tensorflow.python.keras.utils.generic_utils import (
     register_keras_serializable,
 )
 
-from scikeras._utils import (
+from ._utils import (
     TFRandomState,
     LabelDimensionTransformer,
     unpack_keras_model,
