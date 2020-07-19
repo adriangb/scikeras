@@ -20,7 +20,7 @@ from sklearn.utils.validation import (
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.pipeline import make_pipeline
 import tensorflow as tf
-from tensorflow.python.keras import backend as K
+from tensorflow.python.keras import backend as k_backend
 from tensorflow.python.keras.layers import deserialize, serialize
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.models import Model, Sequential
@@ -67,7 +67,6 @@ class TFRandomState:
         )
         self.orig_random_state = random.getstate()
         self.orig_np_random_state = np.random.get_state()
-        self.orig_K_session = K.get_session()
 
         # Set values
         os.environ["PYTHONHASHSEED"] = str(self.seed)
@@ -75,10 +74,6 @@ class TFRandomState:
         random.seed(self.seed)
         np.random.seed(self.seed)
         tf.random.set_seed(self.seed)
-
-        # Clear session to ensure ops
-        # are deterministically chosen to be the same
-        tf.keras.backend.clear_session()
 
     def __exit__(self, type, value, traceback):
         if self.origin_hashseed is not self._not_found:
@@ -92,7 +87,6 @@ class TFRandomState:
         random.setstate(self.orig_random_state)
         np.random.set_state(self.orig_np_random_state)
         tf.random.set_seed(None)  # TODO: can we revert instead of unset?
-        K.set_session(self.orig_K_session)
 
 
 class LabelDimensionTransformer(TransformerMixin, BaseEstimator):
@@ -398,7 +392,7 @@ class BaseWrapper(BaseEstimator):
 
         return model
 
-    def _fit_keras_model(self, X, y, sample_weight, **kwargs):
+    def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
         """Fits the Keras model.
 
         This method will process all arguments and call the Keras
@@ -412,6 +406,9 @@ class BaseWrapper(BaseEstimator):
                 True labels for `X`.
             sample_weight : array-like of shape (n_samples,)
                 Sample weights. The Keras Model must support this.
+            warm_start : bool
+                If ``warm_start`` is True, don't don't overwrite
+                the ``history_`` attribute and append to it instead.
             **kwargs: dictionary arguments
                 Legal arguments are the arguments of the keras model's
                 `fit` method.
@@ -451,10 +448,15 @@ class BaseWrapper(BaseEstimator):
         else:
             hist = self.model_.fit(x=X, y=y, **fit_args)
 
-        if not hasattr(self, "history_"):
-            self.history_ = defaultdict(list)
-        keys = set(hist.history).union(self.history_.keys())
-        self.history_ = {k: self.history_[k] + hist.history[k] for k in keys}
+        if warm_start:
+            if not hasattr(self, "history_"):
+                self.history_ = defaultdict(list)
+            keys = set(hist.history).union(self.history_.keys())
+            self.history_ = {
+                k: self.history_[k] + hist.history[k] for k in keys
+            }
+        else:
+            self.history_ = hist.history
         self.is_fitted_ = True
 
         # return self to allow fit_transform and such to work
@@ -669,7 +671,7 @@ class BaseWrapper(BaseEstimator):
 
         # fit model
         return self._fit_keras_model(
-            X, y, sample_weight=sample_weight, **kwargs
+            X, y, sample_weight=sample_weight, warm_start=warm_start, **kwargs
         )
 
     def partial_fit(self, X, y, sample_weight=None, **kwargs):
@@ -1170,10 +1172,10 @@ class KerasRegressor(BaseWrapper):
             self.root_mean_squared_error,
         ):
             warnings.warn(
-                "R^2 is used to compute the score, it is advisable to use"
-                " a compatible loss function. This class provides an R^2"
-                " implementation in `KerasRegressor"
-                ".root_mean_squared_error`."
+                "Since ScikitLearn's `score` uses R^2 by default, it is "
+                "advisable to use the same loss/metric when optimizing the "
+                "model.This class provides an R^2 implementation in "
+                "`KerasRegressor.root_mean_squared_error`."
             )
 
         return res
@@ -1182,11 +1184,15 @@ class KerasRegressor(BaseWrapper):
     @register_keras_serializable()
     def root_mean_squared_error(y_true, y_pred):
         """A simple Keras implementation of R^2 that can be used as a Keras
-             loss function.
+        loss function.
 
-             Since `score` uses R^2, it is
-             advisable to use the same loss/metric when optimizing the model.
+        Since ScikitLearn's `score` uses R^2 by default, it is
+        advisable to use the same loss/metric when optimizing the model.
         """
-        ss_res = K.sum(K.square(y_true - y_pred), axis=0)
-        ss_tot = K.sum(K.square(y_true - K.mean(y_true, axis=0)), axis=0)
-        return K.mean(1 - ss_res / (ss_tot + K.epsilon()), axis=-1)
+        ss_res = k_backend.sum(k_backend.square(y_true - y_pred), axis=0)
+        ss_tot = k_backend.sum(
+            k_backend.square(y_true - k_backend.mean(y_true, axis=0)), axis=0
+        )
+        return k_backend.mean(
+            1 - ss_res / (ss_tot + k_backend.epsilon()), axis=-1
+        )
