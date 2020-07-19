@@ -1391,29 +1391,6 @@ class TestNFeaturesIn:
             clf._validate_data(X=X[:, :1], y=y, reset=False)
 
 
-class DeterministicRegressor(KerasRegressor):
-    """Tests Functional API Regressor with fixed
-    random seed.
-    """
-
-    def __init__(self, random_state=None):
-        self.random_state = random_state
-        super().__init__()
-
-    def __call__(self):
-        model = keras.models.Sequential()
-        model.add(keras.layers.Dense(INPUT_DIM, input_shape=(INPUT_DIM,)))
-        model.add(keras.layers.Activation("relu"))
-        model.add(keras.layers.Dense(100))
-        model.add(keras.layers.Activation("relu"))
-        model.add(keras.layers.Dense(1))
-        model.add(keras.layers.Activation("linear"))
-        model.compile(
-            optimizer="sgd", loss="mean_absolute_error", metrics=["accuracy"]
-        )
-        return model
-
-
 class TestRandomState:
     @pytest.mark.parametrize(
         "random_state", [0, 123, np.random.RandomState(0)],
