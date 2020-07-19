@@ -3,8 +3,6 @@
 import inspect
 import warnings
 from collections import defaultdict
-import random
-import os
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -30,8 +28,6 @@ from tensorflow.python.keras.utils.generic_utils import (
 from ._utils import (
     TFRandomState,
     LabelDimensionTransformer,
-    unpack_keras_model,
-    pack_keras_model,
     make_model_picklable,
 )
 
