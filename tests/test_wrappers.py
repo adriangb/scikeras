@@ -2,6 +2,7 @@
 
 
 import pickle
+import os
 
 import numpy as np
 import pytest
@@ -1473,3 +1474,61 @@ class TestRandomState:
         y1 = estimator1.predict(X)
         y2 = estimator2.predict(X)
         assert np.allclose(y1, y2)
+
+    @pytest.mark.parametrize(
+        "model", [FullyCompliantRegressor, FullyCompliantClassifier]
+    )
+    @pytest.mark.parametrize("pyhash", [None, "0", "1"])
+    @pytest.mark.parametrize("gpu", [None, "0", "1"])
+    def test_random_states_env_vars(self, model, pyhash, gpu):
+        """Tests that the random state context management correctly
+        handles TF related env variables.
+        """
+        (X, y), (_, _) = testing_utils.get_test_data(
+            train_samples=TRAIN_SAMPLES,
+            test_samples=TEST_SAMPLES,
+            input_shape=(INPUT_DIM,),
+            num_classes=NUM_CLASSES,
+        )
+
+        estimator = model()
+
+        if "random_state" in estimator.get_params():
+            estimator.set_params(random_state=None)
+        estimator1 = clone(estimator)
+        estimator2 = clone(estimator)
+        if "random_state" in estimator1.get_params():
+            estimator1.set_params(random_state=0)
+        if "random_state" in estimator2.get_params():
+            estimator2.set_params(random_state=0)
+        if gpu is not None:
+            os.environ["TF_DETERMINISTIC_OPS"] = gpu
+        else:
+            if os.environ.get("TF_DETERMINISTIC_OPS"):
+                os.environ.pop("TF_DETERMINISTIC_OPS")
+        if pyhash is not None:
+            os.environ["PYTHONHASHSEED"] = pyhash
+        else:
+            if os.environ.get("PYTHONHASHSEED"):
+                os.environ.pop("PYTHONHASHSEED")
+        estimator1.fit(X, y)
+        estimator2.fit(X, y)
+        if gpu is not None:
+            assert os.environ["TF_DETERMINISTIC_OPS"] == gpu
+        else:
+            assert "TF_DETERMINISTIC_OPS" not in os.environ
+        if pyhash is not None:
+            assert os.environ["PYTHONHASHSEED"] == pyhash
+        else:
+            assert "PYTHONHASHSEED" not in os.environ
+        y1 = estimator1.predict(X)
+        y2 = estimator2.predict(X)
+        assert np.allclose(y1, y2)
+        if gpu is not None:
+            assert os.environ["TF_DETERMINISTIC_OPS"] == gpu
+        else:
+            assert "TF_DETERMINISTIC_OPS" not in os.environ
+        if pyhash is not None:
+            assert os.environ["PYTHONHASHSEED"] == pyhash
+        else:
+            assert "PYTHONHASHSEED" not in os.environ
