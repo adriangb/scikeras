@@ -1023,7 +1023,7 @@ class TestMultiInputOutput:
         clf_keras = FunctionAPIMultiLabelClassifier()
         clf_sklearn = RandomForestClassifier()
         # taken from https://scikit-learn.org/stable/modules/multiclass.html
-        y = np.array([[2, 3, 4], [2], [0, 1, 3], [0, 1, 2, 3, 4], [0, 1, 2]])
+        y = [[2, 3, 4], [2], [0, 1, 3], [0, 1, 2, 3, 4], [0, 1, 2]]
         y = MultiLabelBinarizer().fit_transform(y)
 
         (x_train, _), (_, _) = testing_utils.get_test_data(
