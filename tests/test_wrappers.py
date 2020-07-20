@@ -1514,10 +1514,7 @@ class TestRandomState:
 
 
 class TestPackUnpack:
-
-    @pytest.mark.parametrize(
-        "obj", [None, "notamodel"]
-    )
+    @pytest.mark.parametrize("obj", [None, "notamodel"])
     def test_pack_unpack_not_model(self, obj):
         with pytest.raises(TypeError):
             pack_keras_model(obj, 0)
