@@ -42,6 +42,8 @@ from tensorflow.python.keras.utils.np_utils import to_categorical
 from scikeras import wrappers
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
+from scikeras._utils import pack_keras_model, unpack_keras_model
+
 
 # Force data conversion warnings to be come errors
 pytestmark = pytest.mark.filterwarnings(
@@ -1509,3 +1511,15 @@ class TestRandomState:
             assert os.environ["PYTHONHASHSEED"] == pyhash
         else:
             assert "PYTHONHASHSEED" not in os.environ
+
+
+class TestPackUnpack:
+
+    @pytest.mark.parametrize(
+        "obj", [None, "notamodel"]
+    )
+    def test_pack_unpack_not_model(self, obj):
+        with pytest.raises(TypeError):
+            pack_keras_model(obj, 0)
+        with pytest.raises(TypeError):
+            unpack_keras_model(obj, 0)
