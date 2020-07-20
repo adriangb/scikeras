@@ -2,9 +2,11 @@
 
 
 import pickle
+import os
 
 import numpy as np
 import pytest
+from sklearn.base import clone
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.datasets import load_boston, load_digits, load_iris
 from sklearn.ensemble import (
@@ -39,6 +41,8 @@ from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from scikeras import wrappers
 from scikeras.wrappers import KerasClassifier, KerasRegressor
+
+from scikeras._utils import pack_keras_model, unpack_keras_model
 
 
 # Force data conversion warnings to be come errors
@@ -573,11 +577,16 @@ class FullyCompliantClassifier(wrappers.KerasClassifier):
     """A classifier that sets all parameters in __init__ and nothing more."""
 
     def __init__(
-        self, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS
+        self,
+        hidden_dim=HIDDEN_DIM,
+        batch_size=BATCH_SIZE,
+        epochs=EPOCHS,
+        random_state=None,
     ):
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.epochs = epochs
+        self.random_state = random_state
         return super().__init__()
 
     def __call__(self, X, cls_type_, n_classes_, keras_expected_n_ouputs_):
@@ -590,11 +599,16 @@ class FullyCompliantRegressor(wrappers.KerasRegressor):
     """A classifier that sets all parameters in __init__ and nothing more."""
 
     def __init__(
-        self, hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS
+        self,
+        hidden_dim=HIDDEN_DIM,
+        batch_size=BATCH_SIZE,
+        epochs=EPOCHS,
+        random_state=None,
     ):
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.epochs = epochs
+        self.random_state = random_state
         return super().__init__()
 
     def __call__(self, X, n_outputs_):
@@ -1012,7 +1026,7 @@ class TestMultiInputOutput:
         clf_keras = FunctionAPIMultiLabelClassifier()
         clf_sklearn = RandomForestClassifier()
         # taken from https://scikit-learn.org/stable/modules/multiclass.html
-        y = np.array([[2, 3, 4], [2], [0, 1, 3], [0, 1, 2, 3, 4], [0, 1, 2]])
+        y = [[2, 3, 4], [2], [0, 1, 3], [0, 1, 2, 3, 4], [0, 1, 2]]
         y = MultiLabelBinarizer().fit_transform(y)
 
         (x_train, _), (_, _) = testing_utils.get_test_data(
@@ -1377,3 +1391,132 @@ class TestNFeaturesIn:
 
         with pytest.raises(ValueError):
             clf._validate_data(X=X[:, :1], y=y, reset=False)
+
+
+class TestRandomState:
+    @pytest.mark.parametrize(
+        "random_state", [0, 123, np.random.RandomState(0)],
+    )
+    @pytest.mark.parametrize(
+        "model", [FullyCompliantRegressor, FullyCompliantClassifier]
+    )
+    def test_random_states(self, random_state, model):
+        (X, y), (_, _) = testing_utils.get_test_data(
+            train_samples=TRAIN_SAMPLES,
+            test_samples=TEST_SAMPLES,
+            input_shape=(INPUT_DIM,),
+            num_classes=NUM_CLASSES,
+        )
+
+        estimator = model()
+
+        # With seed
+        if "random_state" in estimator.get_params():
+            estimator.set_params(random_state=random_state)
+        estimator.fit(X, y)
+        y1 = estimator.predict(X)
+        estimator.fit(X, y)
+        y2 = estimator.predict(X)
+        assert np.allclose(y1, y2)
+
+        if model is FullyCompliantRegressor:
+            # Without seed, regressors should NOT
+            # give the same results
+            if "random_state" in estimator.get_params():
+                estimator.set_params(random_state=None)
+            estimator.fit(X, y)
+            y1 = estimator.predict(X)
+            estimator.fit(X, y)
+            y2 = estimator.predict(X)
+            assert not np.allclose(y1, y2)
+
+        # With seed
+        if "random_state" in estimator.get_params():
+            estimator.set_params(random_state=random_state)
+        estimator.fit(X, y)
+        y1 = estimator.predict(X)
+        estimator.fit(X, y)
+        y2 = estimator.predict(X)
+        assert np.allclose(y1, y2)
+
+        # Cloned estimators
+        if "random_state" in estimator.get_params():
+            estimator.set_params(random_state=None)
+        estimator1 = clone(estimator)
+        estimator2 = clone(estimator)
+        if "random_state" in estimator1.get_params():
+            estimator1.set_params(random_state=random_state)
+        if "random_state" in estimator2.get_params():
+            estimator2.set_params(random_state=random_state)
+        estimator1.fit(X, y)
+        estimator2.fit(X, y)
+        y1 = estimator1.predict(X)
+        y2 = estimator2.predict(X)
+        assert np.allclose(y1, y2)
+
+    @pytest.mark.parametrize(
+        "model", [FullyCompliantRegressor, FullyCompliantClassifier]
+    )
+    @pytest.mark.parametrize("pyhash", [None, "0", "1"])
+    @pytest.mark.parametrize("gpu", [None, "0", "1"])
+    def test_random_states_env_vars(self, model, pyhash, gpu):
+        """Tests that the random state context management correctly
+        handles TF related env variables.
+        """
+        (X, y), (_, _) = testing_utils.get_test_data(
+            train_samples=TRAIN_SAMPLES,
+            test_samples=TEST_SAMPLES,
+            input_shape=(INPUT_DIM,),
+            num_classes=NUM_CLASSES,
+        )
+
+        estimator = model()
+
+        if "random_state" in estimator.get_params():
+            estimator.set_params(random_state=None)
+        estimator1 = clone(estimator)
+        estimator2 = clone(estimator)
+        if "random_state" in estimator1.get_params():
+            estimator1.set_params(random_state=0)
+        if "random_state" in estimator2.get_params():
+            estimator2.set_params(random_state=0)
+        if gpu is not None:
+            os.environ["TF_DETERMINISTIC_OPS"] = gpu
+        else:
+            if os.environ.get("TF_DETERMINISTIC_OPS"):
+                os.environ.pop("TF_DETERMINISTIC_OPS")
+        if pyhash is not None:
+            os.environ["PYTHONHASHSEED"] = pyhash
+        else:
+            if os.environ.get("PYTHONHASHSEED"):
+                os.environ.pop("PYTHONHASHSEED")
+        estimator1.fit(X, y)
+        estimator2.fit(X, y)
+        if gpu is not None:
+            assert os.environ["TF_DETERMINISTIC_OPS"] == gpu
+        else:
+            assert "TF_DETERMINISTIC_OPS" not in os.environ
+        if pyhash is not None:
+            assert os.environ["PYTHONHASHSEED"] == pyhash
+        else:
+            assert "PYTHONHASHSEED" not in os.environ
+        y1 = estimator1.predict(X)
+        y2 = estimator2.predict(X)
+        assert np.allclose(y1, y2)
+        if gpu is not None:
+            assert os.environ["TF_DETERMINISTIC_OPS"] == gpu
+        else:
+            assert "TF_DETERMINISTIC_OPS" not in os.environ
+        if pyhash is not None:
+            assert os.environ["PYTHONHASHSEED"] == pyhash
+        else:
+            assert "PYTHONHASHSEED" not in os.environ
+
+
+class TestPackUnpack:
+    @pytest.mark.parametrize("obj", [None, "notamodel"])
+    def test_pack_unpack_not_model(self, obj):
+        with pytest.raises(TypeError):
+            pack_keras_model(obj, 0)
+        with pytest.raises(TypeError):
+            unpack_keras_model(obj, 0)

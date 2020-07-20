@@ -5,7 +5,7 @@ import warnings
 from collections import defaultdict
 
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
@@ -17,14 +17,18 @@ from sklearn.utils.validation import (
 )
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.pipeline import make_pipeline
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.layers import deserialize, serialize
+from tensorflow.python.keras import backend as k_backend
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.models import Model, Sequential
-from tensorflow.python.keras.saving import saving_utils
 from tensorflow.python.keras.utils.generic_utils import (
     has_arg,
     register_keras_serializable,
+)
+
+from ._utils import (
+    TFRandomState,
+    LabelDimensionTransformer,
+    make_model_picklable,
 )
 
 
@@ -36,90 +40,6 @@ KNOWN_KERAS_FN_NAMES = (
     "predict",
 )
 
-# used by inspect to resolve parameters of parent classes
-ARGS_KWARGS_IDENTIFIERS = (
-    inspect.Parameter.VAR_KEYWORD,
-    inspect.Parameter.VAR_POSITIONAL,
-)
-
-
-class LabelDimensionTransformer(TransformerMixin, BaseEstimator):
-    """Transforms from 1D -> 2D and back.
-
-    Used when applying LabelTransformer -> OneHotEncoder.
-    """
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        if len(X.shape) == 1:
-            X = X.reshape(-1, 1)
-        return X
-
-    def inverse_transform(self, X):
-        if X.shape[1] == 1:
-            X = np.squeeze(X, axis=1)
-        return X
-
-
-def unpack_keras_model(model, training_config, weights):
-    """Creates a new Keras model object using the input
-    parameters.
-
-    Returns
-    -------
-    Model
-        A copy of the input Keras Model,
-        compiled if the original was compiled.
-    """
-    restored_model = deserialize(model)
-    if training_config is not None:
-        restored_model.compile(
-            **saving_utils.compile_args_from_training_config(training_config)
-        )
-    restored_model.set_weights(weights)
-    restored_model.__reduce_ex__ = pack_keras_model.__get__(restored_model)
-    return restored_model
-
-
-def pack_keras_model(model_obj, protocol):
-    """Pickle a Keras Model.
-
-    Arguments:
-        model_obj: an instance of a Keras Model.
-        protocol: pickle protocol version, ignored.
-
-    Returns
-    -------
-    Pickled model
-        A tuple following the pickle protocol.
-    """
-    if not isinstance(model_obj, Model):
-        raise TypeError("`model_obj` must be an instance of a Keras Model")
-    # pack up model
-    model_metadata = saving_utils.model_metadata(model_obj)
-    training_config = model_metadata.get("training_config", None)
-    model = serialize(model_obj)
-    weights = model_obj.get_weights()
-    return (unpack_keras_model, (model, training_config, weights))
-
-
-def make_model_picklable(model_obj):
-    """Makes a Keras Model object picklable without cloning.
-
-    Arguments:
-        model_obj: an instance of a Keras Model.
-
-    Returns
-    -------
-    Model
-        The input model, but directly picklable.
-    """
-    if not isinstance(model_obj, Model):
-        raise TypeError("`model_obj` must be an instance of a Keras Model")
-    model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
-
 
 class BaseWrapper(BaseEstimator):
     """Base class for the Keras scikit-learn wrapper.
@@ -130,6 +50,11 @@ class BaseWrapper(BaseEstimator):
     Arguments:
         build_fn: callable function or class instance
         **sk_params: model parameters & fitting parameters
+
+    Special parameters:
+        random_state: if random_state is a parameter of a child
+            class or if passed as part of sk_params,
+            it will be used like ScikitLearn's random_state param.
 
     The `build_fn` should construct, compile and return a Keras model, which
     will then be used to fit/predict. One of the following
@@ -179,7 +104,6 @@ class BaseWrapper(BaseEstimator):
     is_fitted_ = False
 
     _tags = {
-        "non_deterministic": True,  # can't easily set random_state
         "poor_score": True,
         "multioutput": True,
     }
@@ -326,7 +250,11 @@ class BaseWrapper(BaseEstimator):
         }
 
         # build model
-        model = final_build_fn(**build_args)
+        if self._random_state is not None:
+            with TFRandomState(self._random_state):
+                model = final_build_fn(**build_args)
+        else:
+            model = final_build_fn(**build_args)
 
         # append legal parameter names from model
         for known_keras_fn in KNOWN_KERAS_FN_NAMES:
@@ -338,7 +266,7 @@ class BaseWrapper(BaseEstimator):
 
         return model
 
-    def _fit_keras_model(self, X, y, sample_weight, **kwargs):
+    def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
         """Fits the Keras model.
 
         This method will process all arguments and call the Keras
@@ -352,6 +280,9 @@ class BaseWrapper(BaseEstimator):
                 True labels for `X`.
             sample_weight : array-like of shape (n_samples,)
                 Sample weights. The Keras Model must support this.
+            warm_start : bool
+                If ``warm_start`` is True, don't don't overwrite
+                the ``history_`` attribute and append to it instead.
             **kwargs: dictionary arguments
                 Legal arguments are the arguments of the keras model's
                 `fit` method.
@@ -360,7 +291,7 @@ class BaseWrapper(BaseEstimator):
                 a reference to the instance that can be chain called
                 (ex: instance.fit(X,y).transform(X) )
         Raises:
-            ValuError : In case sample_weight != None and the Keras model's
+            ValueError : In case sample_weight != None and the Keras model's
                         `fit` method does not support that parameter.
         """
         # add `sample_weight` param, required to be explicit by some sklearn
@@ -385,12 +316,21 @@ class BaseWrapper(BaseEstimator):
         # order implies kwargs overwrites fit_args
         fit_args = {**fit_args, **kwargs}
 
-        hist = self.model_.fit(x=X, y=y, **fit_args)
+        if self._random_state is not None:
+            with TFRandomState(self._random_state):
+                hist = self.model_.fit(x=X, y=y, **fit_args)
+        else:
+            hist = self.model_.fit(x=X, y=y, **fit_args)
 
-        if not hasattr(self, "history_"):
-            self.history_ = defaultdict(list)
-        keys = set(hist.history).union(self.history_.keys())
-        self.history_ = {k: self.history_[k] + hist.history[k] for k in keys}
+        if warm_start:
+            if not hasattr(self, "history_"):
+                self.history_ = defaultdict(list)
+            keys = set(hist.history).union(self.history_.keys())
+            self.history_ = {
+                k: self.history_[k] + hist.history[k] for k in keys
+            }
+        else:
+            self.history_ = hist.history
         self.is_fitted_ = True
 
         # return self to allow fit_transform and such to work
@@ -420,6 +360,25 @@ class BaseWrapper(BaseEstimator):
         return y
 
     def _validate_data(self, X, y=None, reset=True):
+        """Validate input data and set or check the `n_features_in_` attribute.
+        Parameters
+        ----------
+        X : {array-like, sparse matrix, dataframe} of shape \
+                (n_samples, n_features)
+            The input samples.
+        y : array-like of shape (n_samples,), default=None
+            The targets. If None, `check_array` is called on `X` and
+            `check_X_y` is called otherwise.
+        reset : bool, default=True
+            Whether to reset the `n_features_in_` attribute.
+            If False, the input will be checked for consistency with data
+            provided when reset was last True.
+
+        Returns
+        -------
+        out : {ndarray, sparse matrix} or tuple of these
+            The validated input. A tuple is returned if `y` is not None.
+        """
         if y is not None:
             X, y = check_X_y(
                 X,
@@ -532,9 +491,26 @@ class BaseWrapper(BaseEstimator):
                 (ex: instance.fit(X,y).transform(X) )
         Raises:
             ValueError : In case of invalid shape for `y` argument.
-            ValuError : In case sample_weight != None and the Keras model's
+            ValueError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
+        # Handle random state
+        if hasattr(self, "random_state"):
+            if isinstance(self.random_state, np.random.RandomState):
+                # Keras needs an integer
+                # we sample an integer and use that as a seed
+                # Given the same RandomState, the seed will always be
+                # the same, thus giving reproducible results
+                state = self.random_state.get_state()
+                self._random_state = self.random_state.randint(low=1)
+                self.random_state.set_state(state)
+            else:
+                # Assume int
+                self._random_state = self.random_state
+        else:
+            self._random_state = None
+
+        # Data checks
         if warm_start and not hasattr(self, "n_features_in_"):
             # Warm start requested but not fitted yet
             reset = True
@@ -569,7 +545,7 @@ class BaseWrapper(BaseEstimator):
 
         # fit model
         return self._fit_keras_model(
-            X, y, sample_weight=sample_weight, **kwargs
+            X, y, sample_weight=sample_weight, warm_start=warm_start, **kwargs
         )
 
     def partial_fit(self, X, y, sample_weight=None, **kwargs):
@@ -734,22 +710,10 @@ class KerasClassifier(BaseWrapper):
         {
             "multilabel": True,
             "_xfail_checks": {
-                "check_sample_weights_invariance": "can't easily \
-                set Keras random seed",
-                "check_classifiers_multilabel_representation_invariance": "can't \
-                easily set Keras random seed",
-                "check_estimators_data_not_an_array": "can't easily \
-                set Keras random seed",
-                "check_classifier_data_not_an_array": "can't set \
-                Keras random seed",
                 "check_classifiers_classes": "can't meet \
                 performance target",
-                "check_supervised_y_2d": "can't easily set \
-                Keras random seed",
                 "check_fit_idempotent": "tf does not use \
                 sparse tensors",
-                "check_methods_subset_invariance": "can't easily set \
-                Keras random seed",
             },
         }
     )
@@ -1020,19 +984,8 @@ class KerasRegressor(BaseWrapper):
         {
             "multilabel": True,
             "_xfail_checks": {
-                "check_sample_weights_invariance": "can't easily set \
-                Keras random seed",
-                "check_estimators_data_not_an_array": "can't easily set \
-                Keras random seed",
-                "check_regressor_data_not_an_array": "can't set Keras \
-                    random seed",
-                "check_supervised_y_2d": "can't easily set Keras random seed",
                 "check_fit_idempotent": "tf does not use sparse tensors",
-                "check_regressors_int": "can't easily set Keras \
-                random seed",
-                "poor_score": True,
-                "check_methods_subset_invariance": "can't easily set \
-                Keras random seed",
+                "check_methods_subset_invariance": "can't meet tol",
             },
         }
     )
@@ -1093,10 +1046,10 @@ class KerasRegressor(BaseWrapper):
             self.root_mean_squared_error,
         ):
             warnings.warn(
-                "R^2 is used to compute the score, it is advisable to use"
-                " a compatible loss function. This class provides an R^2"
-                " implementation in `KerasRegressor"
-                ".root_mean_squared_error`."
+                "Since ScikitLearn's `score` uses R^2 by default, it is "
+                "advisable to use the same loss/metric when optimizing the "
+                "model.This class provides an R^2 implementation in "
+                "`KerasRegressor.root_mean_squared_error`."
             )
 
         return res
@@ -1105,11 +1058,15 @@ class KerasRegressor(BaseWrapper):
     @register_keras_serializable()
     def root_mean_squared_error(y_true, y_pred):
         """A simple Keras implementation of R^2 that can be used as a Keras
-             loss function.
+        loss function.
 
-             Since `score` uses R^2, it is
-             advisable to use the same loss/metric when optimizing the model.
+        Since ScikitLearn's `score` uses R^2 by default, it is
+        advisable to use the same loss/metric when optimizing the model.
         """
-        ss_res = K.sum(K.square(y_true - y_pred), axis=0)
-        ss_tot = K.sum(K.square(y_true - K.mean(y_true, axis=0)), axis=0)
-        return K.mean(1 - ss_res / (ss_tot + K.epsilon()), axis=-1)
+        ss_res = k_backend.sum(k_backend.square(y_true - y_pred), axis=0)
+        ss_tot = k_backend.sum(
+            k_backend.square(y_true - k_backend.mean(y_true, axis=0)), axis=0
+        )
+        return k_backend.mean(
+            1 - ss_res / (ss_tot + k_backend.epsilon()), axis=-1
+        )
