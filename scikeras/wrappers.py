@@ -63,7 +63,7 @@ class BaseWrapper(BaseEstimator):
     2. An instance of a class that implements the `__call__` method
     3. An instance of a Keras Model. A copy of this instance will be made
     4. None. This means you implement a class that inherits from `BaseWrapper`,
-    `KerasClassifier` or `KerasRegressor`. The `__call__` method of the
+    `KerasClassifier` or `KerasRegressor`. The `_keras_build_fn` method of the
     present class will then be treated as the default `build_fn`.
     If `build_fn` has parameters X or y, these will be passed automatically.
 
@@ -156,21 +156,20 @@ class BaseWrapper(BaseEstimator):
         """
         if build_fn is None:
             # no build_fn, use this class' __call__method
-            if not hasattr(self, "__call__"):
+            if not hasattr(self, "_keras_build_fn"):
                 raise ValueError(
                     "If not using the `build_fn` param, "
-                    "you must implement `__call__`"
+                    "you must implement `_keras_build_fn`"
                 )
-            final_build_fn = self.__call__
+            final_build_fn = getattr(self, "_keras_build_fn")
         elif isinstance(build_fn, Model):
             # pre-built Keras Model
             def final_build_fn():
                 return build_fn
-
         elif inspect.isfunction(build_fn):
-            if hasattr(self, "__call__"):
+            if hasattr(self, "_keras_build_fn"):
                 raise ValueError(
-                    "This class cannot implement `__call__` if"
+                    "This class cannot implement `_keras_build_fn` if"
                     " using the `build_fn` parameter"
                 )
             # a callable method/function
@@ -180,9 +179,9 @@ class BaseWrapper(BaseEstimator):
             and hasattr(build_fn, "__class__")
             and hasattr(build_fn.__class__, "__call__")
         ):
-            if hasattr(self, "__call__"):
+            if hasattr(self, "_keras_build_fn"):
                 raise ValueError(
-                    "This class cannot implement `__call__` if"
+                    "This class cannot implement `_keras_build_fn` if"
                     " using the `build_fn` parameter"
                 )
             # an instance of a class implementing __call__
@@ -194,7 +193,7 @@ class BaseWrapper(BaseEstimator):
 
         return final_build_fn
 
-    def _build_keras_model(self, X, y, sample_weight, **kwargs):
+    def _fit_build_keras_model(self, X, y, sample_weight, **kwargs):
         """Build the Keras model.
 
         This method will process all arguments and call the model building
@@ -537,7 +536,7 @@ class BaseWrapper(BaseEstimator):
 
         # build model
         if (not warm_start) or (not hasattr(self, "model_")):
-            self.model_ = self._build_keras_model(
+            self.model_ = self._fit_build_keras_model(
                 X, y, sample_weight=sample_weight, **kwargs
             )
 
