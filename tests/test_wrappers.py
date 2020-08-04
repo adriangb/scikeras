@@ -589,7 +589,9 @@ class FullyCompliantClassifier(wrappers.KerasClassifier):
         self.random_state = random_state
         return super().__init__()
 
-    def _keras_build_fn(self, X, cls_type_, n_classes_, keras_expected_n_ouputs_):
+    def _keras_build_fn(
+        self, X, cls_type_, n_classes_, keras_expected_n_ouputs_
+    ):
         return dynamic_classifier(
             X, cls_type_, n_classes_, keras_expected_n_ouputs_
         )

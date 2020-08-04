@@ -166,6 +166,7 @@ class BaseWrapper(BaseEstimator):
             # pre-built Keras Model
             def final_build_fn():
                 return build_fn
+
         elif inspect.isfunction(build_fn):
             if hasattr(self, "_keras_build_fn"):
                 raise ValueError(
