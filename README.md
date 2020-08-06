@@ -56,11 +56,11 @@ estimator.score(X, y)
 ### Dynamically built models
 There are 2 ways to specify a model building function for dynamically built models:
 1. Pass a callable function or an instance of a class implementing `__call__` as the `build_fn` parameter.
-2. Subclass the wrapper and implement `__call__` in your class.
+2. Subclass the wrapper and implement `_keras_build_fn` in your class.
    
-The logic for selecting which method to use is in `BaseWrapper._check_build_fn`. For either method, the ultimate function used to build the model is stored by reference in `BaseWrapper.__call__`. From now on this will be refered to as `model building function`.
+The logic for selecting which method to use is in `BaseWrapper._check_build_fn`. From now on this will be refered to as `model building function`.
 
-The signature of the model building function will be used to dynamically determine which parameters should be passed. Parameters are chosen from the arguments of `fit` and from the public parameters of the wrapper instance (ex: `n_classes_` or `n_outputs_`). For example, to create a Multi Layer Perceptron model that is able to dynamically set the input and output sizes as well as hidden layer sizes, you would add `X` and `n_outputs_` to your model building function's signature:
+The signature of the model building function will be used to dynamically determine which parameters should be passed. Parameters are chosen from the arguments of `fit` and from the public parameters of the wrapper instance (ex: `n_classes_` or `n_outputs_`). For example, to create a Multi-Layer Perceptron model that is able to dynamically set the input and output sizes as well as hidden layer sizes, you would add `X` and `n_outputs_` to your model building function's signature:
 
 ```python3
 from scikeras.wrappers import KerasRegressor
@@ -92,7 +92,7 @@ The model parameters generated while fitting that are used by various parts of t
 * `classes_`: The classes labels (single output problem), or a list of arrays of class labels (multi-output problem).
 
 ### Subclassing wrappers
-It may be convenient to subclass a wrapper to hardcode keyword arguments and defaults. In general, this is more compatible with the `Scikit-Learn` API. If the class also implements the model building function as `__call__`, this becaome a self-contained estimator that is fully compatible with the `Scikit-Learn` API. A brief example:
+It may be convenient to subclass a wrapper to hardcode keyword arguments and defaults. In general, this is more compatible with the `Scikit-Learn` API. If the class also implements the model building function as `_keras_build_fn`, this becaome a self-contained estimator that is fully compatible with the `Scikit-Learn` API. A brief example:
 
 ```python3
 from scikeras.wrappers import KerasRegressor
@@ -102,9 +102,8 @@ class MLPRegressor(KerasRegressor):
 
     def __init__(self, hidden_layer_sizes=None):
         self.hidden_layer_sizes = hidden_layer_sizes
-        super().__init__()   # this is very important!
 
-    def __call__(self, X, n_outputs_, hidden_layer_sizes):
+    def _keras_build_fn(self, X, n_outputs_, hidden_layer_sizes):
         """Dynamically build regressor."""
         if hidden_layer_sizes is None:
             hidden_layer_sizes = (100, )
@@ -117,11 +116,11 @@ class MLPRegressor(KerasRegressor):
         return model
 ```
 
-A couple of notes:
-1. It is very important to call `super().__init__()` to properly register kwargs and the model building function.
-2. You must assign all parameters to a public attribute of the same name and should *not* change it's value. To change the value from a default you can either (1) change the value in the model building function (as above) or save the parameter under another name (ex: `_hidden_layer_sizes`, remember to also use this name in the model building function).
-3. You should set a default for all tunable arguments (in this case, `hidden_layer_sizes=None`) as this is expected by the `Scikit-Learn` API.
-4. In the example above, no kwargs are accepted, and none are passed on. You may choose to accept and pass on keyword arguments. Once the `__init__` method resolution reaches `BaseWrapper`, any keyword arguments that have not been consumed by child classes will be saved as instance attributes and will be accessible to the `Scikit-Learn` API. For example:
+The Scikit-Learn API places certain restrictions on the implemention of `__init__`:
+1. You must assign all parameters to a public attribute of the same name and should *not* change it's value. No attributes should be set in `__init__` that are not parameters in the signature of `__init__`. If you need to change or process a parameter, that should be done in `fit`.
+2. You should set a default for all parameters (in this case, `hidden_layer_sizes=None`).
+
+In the example above, no kwargs are accepted, and none are passed on. You may choose to accept and pass on keyword arguments. Once the `__init__` method resolution reaches `BaseWrapper`, any keyword arguments that have not been consumed by child classes will be saved as instance attributes and will be accessible to the `Scikit-Learn` API. For example:
 
 ```python3
 from scikeras.wrappers import KerasRegressor
@@ -164,17 +163,20 @@ estimator.hidden_layer_sizes == None  # True, the default in MLPRegressor is use
 ```
 
 As long as `super()` is called from the child classes all the way up to `BaseEstimator`, all arguments will be registered for the `Scikit-Learn` API to use.
+
 ### Passing arguments to Keras methods
 
 This section refers to passing arguments to `fit`, `predict`, `predict_proba`, and `score` methods of `Keras` models (e.g., `epochs`, `batch_size`),
 
 There are 2 ways to pass these argumements:
+
 1. Pass directly to `KerasClassifier.fit` or `KerasRegressor.fit` (or `score`, etc.).
 2. Pass as a keyword argument when initalizing `KerasClassifier` or `KerasRegressor`. This will allow the parameter to be tunable by the `Scikit-Learn` hyperparameter tuning API (`GridSearchCV` or `RandomizedSearchCV`).
 
 ## Advanced Usage
 
 ### Multi-output problems
+
 `Scikit-Learn` supports a limited number of multi-ouput problems and does not support any multi-input problems. See [`Multiclass and multilabel algorithms`](https://scikit-learn.org/stable/modules/multiclass.html) for more details.
 
 These wrappers suppport all of the multi-output types that `Scikit-Learn` supports out of the box. So for example, you can create a model that has multiple `sigmoid` output layers, resulting in a multiple binary classification problem. This type of problem is denoted `multilabel-indicator` in `Scikit-Learn`. Another example is a model with multiple `softmax` outputs, resulting in what is known as a `multiouput-multiclass` classification. There are many ways to pair up a `Keras` model with a `Scikit-Learn` output type, summarized below:
@@ -216,7 +218,7 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
     """Functional API Classifier with 2 outputs of different type.
     """
 
-    def __call__(self, X, n_classes_):
+    def _keras_build_fn(self, X, n_classes_):
         inp = Input((4,))
 
         x1 = Dense(100)(inp)
@@ -270,7 +272,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
     """Functional API Classifier with 2 inputs.
     """
 
-    def __call__(self, n_classes_):
+    def _keras_build_fn(self, n_classes_):
         inp1 = Input((1,))
         inp2 = Input((3,))
 
@@ -324,7 +326,7 @@ class SentinalCallback(keras.callbacks.Callback):
         self.called += 1
 
 
-class ClassifierWithCallback(wrappers.KerasClassifier):
+class ClassifierWithCallback(KerasClassifier):
     """Must be defined at top level to be picklable.
     """
 
@@ -333,7 +335,7 @@ class ClassifierWithCallback(wrappers.KerasClassifier):
         self.hidden_dim = hidden_dim
         super().__init__()
 
-    def __call__(self, hidden_dim):
+    def _keras_build_fn(self, hidden_dim):
         return build_fn_clf(hidden_dim)
 ```
 

@@ -59,18 +59,25 @@ class BaseWrapper(BaseEstimator):
     The `build_fn` should construct, compile and return a Keras model, which
     will then be used to fit/predict. One of the following
     three values could be passed to `build_fn`:
-    1. A function
-    2. An instance of a class that implements the `__call__` method
-    3. An instance of a Keras Model. A copy of this instance will be made
-    4. None. This means you implement a class that inherits from `BaseWrapper`,
-    `KerasClassifier` or `KerasRegressor`. The `_keras_build_fn` method of the
-    present class will then be treated as the default `build_fn`.
-    If `build_fn` has parameters X or y, these will be passed automatically.
+    1. A function that returns an instance of a Keras Model.
+    2. An instance of a class that implements the `__call__` method and
+    returns an instance of a Keras Model.
+    3. An instance of a Keras Model. A copy of this instance will be made.
+    4. None (the default value). This means you implement a class that inherits from
+    `BaseWrapper`, `KerasClassifier` or `KerasRegressor`.
+    The `_keras_build_fn` method of this class must return an instance of a Keras
+    Model.
 
-    `sk_params` takes both model parameters and fitting parameters. Legal model
-    parameters are the arguments of `build_fn`. Note that like all other
-    estimators in scikit-learn, `build_fn` or your child class should provide
-    default values for its arguments, so that you could create the estimator
+    The parameters passed to `build_fn` or `_keras_build_fn` are dynamically
+    determined based on the signature of `build_fn` or `_keras_build_fn`.
+    All public attributes as well as any `**kwargs` passed to `fit` will be
+    passed to  `build_fn` or `_keras_build_fn` if their name matches one of
+    the parameter names in `build_fn` or `_keras_build_fn`.
+
+    `sk_params` takes both model parameters and fitting parameters.
+    Note that like all other estimators in scikit-learn, `build_fn` or
+    your child class should provide default values for its arguments,
+    so that you could create the estimator
     without passing any values to `sk_params`.
 
     `sk_params` could also accept parameters for calling `fit`, `predict`,
