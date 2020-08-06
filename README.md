@@ -20,7 +20,7 @@ This package is available on PyPi:
 pip install scikeras
 ```
 
-The only dependencies are `scikit-learn>=0.21.0` (older version may work, but are untested) and `TensorFlow>=2.1.0`.
+The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.1.0`.
 
 ## Wrapper Classes
 
