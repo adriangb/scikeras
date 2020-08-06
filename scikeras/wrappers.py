@@ -17,9 +17,9 @@ from sklearn.utils.validation import (
 )
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.pipeline import make_pipeline
-from tensorflow.python.keras import backend as k_backend
+from tensorflow.keras import backend as k_backend
 from tensorflow.python.keras.losses import is_categorical_crossentropy
-from tensorflow.python.keras.models import Model, Sequential
+from tensorflow.keras.models import Model, Sequential
 from tensorflow.python.keras.utils.generic_utils import (
     has_arg,
     register_keras_serializable,
