@@ -167,7 +167,7 @@ class TestBasicAPI:
         """Tests for errors using an inherited class."""
 
         class InheritClassBuildFnClf(wrappers.KerasClassifier):
-            def __call__(self, hidden_dim):
+            def _keras_build_fn(self, hidden_dim):
                 return build_fn_clf(hidden_dim)
 
         clf = InheritClassBuildFnClf(
@@ -210,7 +210,7 @@ class TestBasicAPI:
         """Tests for errors using KerasRegressor inherited."""
 
         class InheritClassBuildFnReg(wrappers.KerasRegressor):
-            def __call__(self, hidden_dim):
+            def _keras_build_fn(self, hidden_dim):
                 return build_fn_reg(hidden_dim)
 
         reg = InheritClassBuildFnReg(
@@ -416,7 +416,7 @@ class ClassWithCallback(wrappers.KerasClassifier):
         self.callbacks = [SentinalCallback()]
         super().__init__(**sk_params)
 
-    def __call__(self, hidden_dim):
+    def _keras_build_fn(self, hidden_dim):
         return build_fn_clf(hidden_dim)
 
 
@@ -589,7 +589,9 @@ class FullyCompliantClassifier(wrappers.KerasClassifier):
         self.random_state = random_state
         return super().__init__()
 
-    def __call__(self, X, cls_type_, n_classes_, keras_expected_n_ouputs_):
+    def _keras_build_fn(
+        self, X, cls_type_, n_classes_, keras_expected_n_ouputs_
+    ):
         return dynamic_classifier(
             X, cls_type_, n_classes_, keras_expected_n_ouputs_
         )
@@ -611,7 +613,7 @@ class FullyCompliantRegressor(wrappers.KerasRegressor):
         self.random_state = random_state
         return super().__init__()
 
-    def __call__(self, X, n_outputs_):
+    def _keras_build_fn(self, X, n_outputs_):
         return dynamic_regressor(X, n_outputs_)
 
 
@@ -778,7 +780,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
     """Tests Functional API Classifier with 2 inputs.
     """
 
-    def __call__(self, X, n_classes_):
+    def _keras_build_fn(self, X, n_classes_):
         inp1 = Input((1,))
         inp2 = Input((3,))
 
@@ -806,7 +808,7 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
     """Tests Functional API Classifier with 2 outputs of different type.
     """
 
-    def __call__(self, X, n_classes_):
+    def _keras_build_fn(self, X, n_classes_):
         inp = Input((4,))
 
         x1 = Dense(100)(inp)
@@ -831,7 +833,7 @@ class FunctionAPIMultiLabelClassifier(KerasClassifier):
     """Tests Functional API Classifier with multiple binary outputs.
     """
 
-    def __call__(self, X, n_outputs_):
+    def _keras_build_fn(self, X, n_outputs_):
         inp = Input((4,))
 
         x1 = Dense(100)(inp)
@@ -853,7 +855,7 @@ class FunctionAPIMultiOutputRegressor(KerasRegressor):
     """Tests Functional API Regressor with multiple outputs.
     """
 
-    def __call__(self, X, n_outputs_):
+    def _keras_build_fn(self, X, n_outputs_):
         inp = Input((INPUT_DIM,))
 
         x1 = Dense(100)(inp)
@@ -1118,7 +1120,7 @@ class TestInvalidBuildFn:
 
     def test_call_and_build_fn_function(self):
         class Clf(wrappers.KerasClassifier):
-            def __call__(self, hidden_dim):
+            def _keras_build_fn(self, hidden_dim):
                 return build_fn_clf(hidden_dim)
 
         def dummy_func():
@@ -1131,7 +1133,7 @@ class TestInvalidBuildFn:
 
     def test_call_and_invalid_build_fn_class(self):
         class Clf(wrappers.KerasClassifier):
-            def __call__(self, hidden_dim):
+            def _keras_build_fn(self, hidden_dim):
                 return build_fn_clf(hidden_dim)
 
         class DummyBuildClass:
@@ -1203,7 +1205,7 @@ class TestUnsetParameter:
                 # does not set input_param
                 super().__init__()
 
-            def __call__(self, hidden_dim):
+            def _keras_build_fn(self, hidden_dim):
                 return build_fn_clf(hidden_dim)
 
         with pytest.raises(RuntimeError):
