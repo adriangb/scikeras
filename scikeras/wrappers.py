@@ -63,10 +63,10 @@ class BaseWrapper(BaseEstimator):
     2. An instance of a class that implements the `__call__` method and
     returns an instance of a Keras Model.
     3. An instance of a Keras Model. A copy of this instance will be made.
-    4. None (the default value). This means you implement a class that inherits from
-    `BaseWrapper`, `KerasClassifier` or `KerasRegressor`.
-    The `_keras_build_fn` method of this class must return an instance of a Keras
-    Model.
+    4. None (the default value). This means you implement a class that inherits
+    from `BaseWrapper`, `KerasClassifier` or `KerasRegressor`.
+    The `_keras_build_fn` method of this class must return an instance of a
+    Keras Model.
 
     The parameters passed to `build_fn` or `_keras_build_fn` are dynamically
     determined based on the signature of `build_fn` or `_keras_build_fn`.
