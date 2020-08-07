@@ -29,6 +29,7 @@ from ._utils import (
     TFRandomState,
     LabelDimensionTransformer,
     make_model_picklable,
+    get_loss_metric_full_name,
 )
 
 
@@ -330,12 +331,15 @@ class BaseWrapper(BaseEstimator):
             hist = self.model_.fit(x=X, y=y, **fit_args)
 
         if warm_start:
-            if not hasattr(self, "history_"):
-                self.history_ = defaultdict(list)
-            keys = set(hist.history).union(self.history_.keys())
-            self.history_ = {
-                k: self.history_[k] + hist.history[k] for k in keys
-            }
+            try:
+                if not hasattr(self, "history_"):
+                    self.history_ = defaultdict(list)
+                self.history_ = {
+                    get_loss_metric_full_name(k): self.history_[get_loss_metric_full_name(k)] + hist.history[k]
+                    for k in hist.history.keys()
+                }
+            except:
+                pass
         else:
             self.history_ = hist.history
         self.is_fitted_ = True

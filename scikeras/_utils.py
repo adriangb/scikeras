@@ -129,3 +129,33 @@ def make_model_picklable(model_obj):
     if not isinstance(model_obj, Model):
         raise TypeError("`model_obj` must be an instance of a Keras Model")
     model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
+
+
+def get_loss_metric_full_name(name: str) -> str:
+    """Aliases for Keras losses and metrics.
+
+    See:
+    https://github.com/tensorflow/tensorflow/blob/b36436b087bd8e8701ef51718179037cccdfc26e/tensorflow/python/keras/metrics.py#L3392
+    https://github.com/tensorflow/tensorflow/blob/d9ea5051104b3580fee2d49c94be2ec45012672f/tensorflow/python/keras/losses.py#L1799
+    """ # noqa
+    mapping = {
+        "acc": "accuracy",
+        "bce": "binary_crossentropy",
+        "mse": "mean_square_error",
+        "mean_squared_error": "mean_square_error",
+        "mae": "mean_absolute_error",
+        "mape": "mean_absolute_percentage_error",
+        "msle": "mean_squared_logarithmic_error",
+        "cosine_similarity": "cosine_proximity",
+        "kld": "kl_divergence",
+        "kullback_leibler_divergence": "kl_divergence",
+        "logcosh": "log_cosh",
+        "huber_loss": "huber",
+    }
+    if name.lower() in mapping.keys():
+        return mapping[name.lower()]
+    if name.lower() in mapping.values():
+        return name.lower()
+    if name == "loss":
+        return name
+    raise ValueError(f"Unknonw loss/metric '{name}'")
