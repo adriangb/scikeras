@@ -5,9 +5,13 @@ import os
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 import tensorflow as tf
-from tensorflow.python.keras.layers import deserialize, serialize
-from tensorflow.python.keras.models import Model
+from tensorflow.keras.layers import (
+    deserialize as deserialize_layer,
+    serialize as serialize_layer
+)
+from tensorflow.keras.models import Model
 from tensorflow.python.keras.saving import saving_utils
+from tensorflow.keras.metrics import deserialize as deserialize_metric
 
 
 class TFRandomState:
@@ -83,7 +87,7 @@ def unpack_keras_model(model, training_config, weights):
         A copy of the input Keras Model,
         compiled if the original was compiled.
     """
-    restored_model = deserialize(model)
+    restored_model = deserialize_layer(model)
     if training_config is not None:
         restored_model.compile(
             **saving_utils.compile_args_from_training_config(training_config)
@@ -111,7 +115,7 @@ def pack_keras_model(model_obj, protocol):
     # pack up model
     model_metadata = saving_utils.model_metadata(model_obj)
     training_config = model_metadata.get("training_config", None)
-    model = serialize(model_obj)
+    model = serialize_layer(model_obj)
     weights = model_obj.get_weights()
     return (unpack_keras_model, (model, training_config, weights))
 
@@ -133,30 +137,10 @@ def make_model_picklable(model_obj):
 
 
 def get_loss_metric_full_name(name: str) -> str:
-    """Aliases for Keras losses and metrics.
+    """Get aliases for Keras losses and metrics.
 
-    See:
-    https://github.com/tensorflow/tensorflow/blob/b36436b087bd8e8701ef51718179037cccdfc26e/tensorflow/python/keras/metrics.py#L3392
-    https://github.com/tensorflow/tensorflow/blob/d9ea5051104b3580fee2d49c94be2ec45012672f/tensorflow/python/keras/losses.py#L1799
+    See: https://github.com/tensorflow/tensorflow/pull/42097
     """  # noqa
-    mapping = {
-        "acc": "accuracy",
-        "bce": "binary_crossentropy",
-        "mse": "mean_square_error",
-        "mean_squared_error": "mean_square_error",
-        "mae": "mean_absolute_error",
-        "mape": "mean_absolute_percentage_error",
-        "msle": "mean_squared_logarithmic_error",
-        "cosine_similarity": "cosine_proximity",
-        "kld": "kl_divergence",
-        "kullback_leibler_divergence": "kl_divergence",
-        "logcosh": "log_cosh",
-        "huber_loss": "huber",
-    }
-    if name.lower() in mapping.keys():
-        return mapping[name.lower()]
-    if name.lower() in mapping.values():
-        return name.lower()
-    if name == "loss":
-        return name
-    raise ValueError(f"Unknonw loss/metric '{name}'")
+    # deserialize returns the actual function, then get it's name
+    # to keep a single consistent name for the metric
+    return getattr(deserialize_metric(name), __name__)
