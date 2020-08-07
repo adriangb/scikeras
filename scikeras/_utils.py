@@ -140,6 +140,16 @@ def get_loss_metric_full_name(name: str) -> str:
     """Get aliases for Keras losses and metrics.
 
     See: https://github.com/tensorflow/tensorflow/pull/42097
+
+    Parameters
+    ----------
+    name : str
+        Full name or shorthand for Keras metric. Ex: "mse".
+
+    Returns
+    -------
+    str
+        Full name for Keras metric. Ex: "mean_squared_error".
     """
     # deserialize returns the actual function, then get it's name
     # to keep a single consistent name for the metric
