@@ -331,18 +331,13 @@ class BaseWrapper(BaseEstimator):
             hist = self.model_.fit(x=X, y=y, **fit_args)
 
         if warm_start:
-            try:
-                if not hasattr(self, "history_"):
-                    self.history_ = defaultdict(list)
-                self.history_ = {
-                    get_metric_full_name(k): self.history_[
-                        get_metric_full_name(k)
-                    ]
-                    + hist.history[k]
-                    for k in hist.history.keys()
-                }
-            except:
-                pass
+            if not hasattr(self, "history_"):
+                self.history_ = defaultdict(list)
+            self.history_ = {
+                get_metric_full_name(k): self.history_[get_metric_full_name(k)]
+                + hist.history[k]
+                for k in hist.history.keys()
+            }
         else:
             self.history_ = hist.history
         self.is_fitted_ = True

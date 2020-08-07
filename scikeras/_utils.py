@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import tensorflow as tf
 from tensorflow.keras.layers import (
     deserialize as deserialize_layer,
-    serialize as serialize_layer
+    serialize as serialize_layer,
 )
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.saving import saving_utils
@@ -153,4 +153,7 @@ def get_metric_full_name(name: str) -> str:
     """
     # deserialize returns the actual function, then get it's name
     # to keep a single consistent name for the metric
-    return getattr(deserialize_metric(name), __name__)
+    if name == "loss":
+        # may be passed "loss" from thre training history
+        return name
+    return getattr(deserialize_metric(name), "__name__")
