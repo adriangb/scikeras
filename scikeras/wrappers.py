@@ -29,7 +29,7 @@ from ._utils import (
     TFRandomState,
     LabelDimensionTransformer,
     make_model_picklable,
-    get_loss_metric_full_name,
+    get_metric_full_name,
 )
 
 
@@ -335,8 +335,8 @@ class BaseWrapper(BaseEstimator):
                 if not hasattr(self, "history_"):
                     self.history_ = defaultdict(list)
                 self.history_ = {
-                    get_loss_metric_full_name(k): self.history_[
-                        get_loss_metric_full_name(k)
+                    get_metric_full_name(k): self.history_[
+                        get_metric_full_name(k)
                     ]
                     + hist.history[k]
                     for k in hist.history.keys()

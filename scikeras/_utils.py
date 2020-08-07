@@ -136,7 +136,7 @@ def make_model_picklable(model_obj):
     model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
 
 
-def get_loss_metric_full_name(name: str) -> str:
+def get_metric_full_name(name: str) -> str:
     """Get aliases for Keras losses and metrics.
 
     See: https://github.com/tensorflow/tensorflow/pull/42097
