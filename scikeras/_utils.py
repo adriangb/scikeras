@@ -105,6 +105,7 @@ def pack_keras_model(model_obj, protocol):
     Pickled model
         A tuple following the pickle protocol.
     """
+
     if not isinstance(model_obj, Model):
         raise TypeError("`model_obj` must be an instance of a Keras Model")
     # pack up model
@@ -137,7 +138,7 @@ def get_loss_metric_full_name(name: str) -> str:
     See:
     https://github.com/tensorflow/tensorflow/blob/b36436b087bd8e8701ef51718179037cccdfc26e/tensorflow/python/keras/metrics.py#L3392
     https://github.com/tensorflow/tensorflow/blob/d9ea5051104b3580fee2d49c94be2ec45012672f/tensorflow/python/keras/losses.py#L1799
-    """ # noqa
+    """  # noqa
     mapping = {
         "acc": "accuracy",
         "bce": "binary_crossentropy",

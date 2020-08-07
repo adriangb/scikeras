@@ -335,7 +335,10 @@ class BaseWrapper(BaseEstimator):
                 if not hasattr(self, "history_"):
                     self.history_ = defaultdict(list)
                 self.history_ = {
-                    get_loss_metric_full_name(k): self.history_[get_loss_metric_full_name(k)] + hist.history[k]
+                    get_loss_metric_full_name(k): self.history_[
+                        get_loss_metric_full_name(k)
+                    ]
+                    + hist.history[k]
                     for k in hist.history.keys()
                 }
             except:
