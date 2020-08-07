@@ -1,0 +1,20 @@
+name: Release
+on:
+  release:
+    types: [published]
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install Poetry
+      run: pip install poetry>=1.0.10
+    
+    - name: Publish to PyPi
+      run: |
+        poetry publish --username=__token__ --password=${{ secrets.PYPI_TOKEN }}

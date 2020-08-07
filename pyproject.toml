@@ -1,16 +1,52 @@
+[tool.poetry]
+name = "scikeras"
+version = "0.1.8"
+description = "Scikit-Learn API wrapper for Keras."
+authors = ["Adrian Garcia Badaracco <1755071+adriangb@users.noreply.github.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/adriangb/scikeras"
+repository = "https://github.com/adriangb/scikeras"
+keywords = ["keras", "tensorflow", "scikit-learn", "deep-learning", "python"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+]
+include = [
+    "LICENSE",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.6, <3.9"
+tensorflow = ">=2.2"
+scikit-learn = ">=0.22.0"
+
+[tool.poetry.dev-dependencies]
+pytest = ">=5.2"
+pytest-cov = ">=2.10.0"
+black = ">=19.10b0"
+flake8 = ">=3.8.3"
+pytest-xdist = ">=1.34.0"
+
+[build-system]
+requires = ["poetry>=1.0.10"]
+build-backend = "poetry.masonry.api"
+
 [tool.black]
 line-length = 79
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
+target-version = ['py36', 'py38']
+
+[tool.coverage.report]
+fail_under = 94
+show_missing = true

@@ -21,8 +21,8 @@ class TFRandomState:
 
     def __enter__(self):
         warnings.warn(
-            "Setting the random state for TF involves "
-            "irreversibly re-setting the random seed. "
+            "SciKeras: Setting the random state for TF involves"
+            " irreversibly re-setting the random seed. "
             "This may have unintended side effects."
         )
 

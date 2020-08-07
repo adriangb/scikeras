@@ -1048,9 +1048,9 @@ class KerasRegressor(BaseWrapper):
             self.root_mean_squared_error,
         ):
             warnings.warn(
-                "Since ScikitLearn's `score` uses R^2 by default, it is "
-                "advisable to use the same loss/metric when optimizing the "
-                "model.This class provides an R^2 implementation in "
+                "SciKeras: Since ScikitLearn's `score` uses R^2 by default,"
+                " it is advisable to use the same loss/metric when optimizing"
+                "  the model.This class provides an R^2 implementation in "
                 "`KerasRegressor.root_mean_squared_error`."
             )
 

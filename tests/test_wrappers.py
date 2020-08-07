@@ -50,6 +50,12 @@ from scikeras._utils import pack_keras_model, unpack_keras_model
 pytestmark = pytest.mark.filterwarnings(
     "error::sklearn.exceptions.DataConversionWarning"
 )
+# Ignore our own warnings
+pytestmark = pytest.mark.filterwarnings("ignore::SciKeras")
+# Ignore convergence warnings
+pytestmark = pytest.mark.filterwarnings(
+    "ignore::sklearn.exceptions.ConvergenceWarning"
+)
 
 INPUT_DIM = 5
 HIDDEN_DIM = 5
