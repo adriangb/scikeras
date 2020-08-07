@@ -140,7 +140,7 @@ def get_loss_metric_full_name(name: str) -> str:
     """Get aliases for Keras losses and metrics.
 
     See: https://github.com/tensorflow/tensorflow/pull/42097
-    """  # noqa
+    """
     # deserialize returns the actual function, then get it's name
     # to keep a single consistent name for the metric
     return getattr(deserialize_metric(name), __name__)
