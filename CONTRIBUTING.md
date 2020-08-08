@@ -6,7 +6,7 @@ You will first need to clone the repository using `git` and place yourself in it
 
 ```bash
 $ git clone git@github.com:adriangb/scikeras.git
-$ cd poetry
+$ cd scikeras
 ```
 
 Now, you will need to install the required dependency for Poetry and be sure that the current
