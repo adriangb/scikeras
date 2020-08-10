@@ -5,9 +5,13 @@ import os
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 import tensorflow as tf
-from tensorflow.python.keras.layers import deserialize, serialize
-from tensorflow.python.keras.models import Model
+from tensorflow.keras.layers import (
+    deserialize as deserialize_layer,
+    serialize as serialize_layer,
+)
+from tensorflow.keras.models import Model
 from tensorflow.python.keras.saving import saving_utils
+from tensorflow.keras.metrics import deserialize as deserialize_metric
 
 
 class TFRandomState:
@@ -83,7 +87,7 @@ def unpack_keras_model(model, training_config, weights):
         A copy of the input Keras Model,
         compiled if the original was compiled.
     """
-    restored_model = deserialize(model)
+    restored_model = deserialize_layer(model)
     if training_config is not None:
         restored_model.compile(
             **saving_utils.compile_args_from_training_config(training_config)
@@ -105,12 +109,13 @@ def pack_keras_model(model_obj, protocol):
     Pickled model
         A tuple following the pickle protocol.
     """
+
     if not isinstance(model_obj, Model):
         raise TypeError("`model_obj` must be an instance of a Keras Model")
     # pack up model
     model_metadata = saving_utils.model_metadata(model_obj)
     training_config = model_metadata.get("training_config", None)
-    model = serialize(model_obj)
+    model = serialize_layer(model_obj)
     weights = model_obj.get_weights()
     return (unpack_keras_model, (model, training_config, weights))
 
@@ -129,3 +134,26 @@ def make_model_picklable(model_obj):
     if not isinstance(model_obj, Model):
         raise TypeError("`model_obj` must be an instance of a Keras Model")
     model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
+
+
+def get_metric_full_name(name: str) -> str:
+    """Get aliases for Keras losses and metrics.
+
+    See: https://github.com/tensorflow/tensorflow/pull/42097
+
+    Parameters
+    ----------
+    name : str
+        Full name or shorthand for Keras metric. Ex: "mse".
+
+    Returns
+    -------
+    str
+        Full name for Keras metric. Ex: "mean_squared_error".
+    """
+    # deserialize returns the actual function, then get it's name
+    # to keep a single consistent name for the metric
+    if name == "loss":
+        # may be passed "loss" from thre training history
+        return name
+    return getattr(deserialize_metric(name), "__name__")

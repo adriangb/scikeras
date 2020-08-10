@@ -29,6 +29,7 @@ from ._utils import (
     TFRandomState,
     LabelDimensionTransformer,
     make_model_picklable,
+    get_metric_full_name,
 )
 
 
@@ -316,9 +317,10 @@ class BaseWrapper(BaseEstimator):
         if warm_start:
             if not hasattr(self, "history_"):
                 self.history_ = defaultdict(list)
-            keys = set(hist.history).union(self.history_.keys())
             self.history_ = {
-                k: self.history_[k] + hist.history[k] for k in keys
+                get_metric_full_name(k): self.history_[get_metric_full_name(k)]
+                + hist.history[k]
+                for k in hist.history.keys()
             }
         else:
             self.history_ = hist.history
