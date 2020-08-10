@@ -584,7 +584,12 @@ class FullyCompliantClassifier(wrappers.KerasClassifier):
     def __init__(
         self,
         hidden_dim=HIDDEN_DIM,
-        batch_size=BATCH_SIZE,
+        # Set batch size to a large number (larger than X.shape[0] is the goal)
+        # if batch_size < X.shape[0], results will very 
+        # slightly if X is shuffled.
+        # This is only required for this tests and is not really 
+        # applicable to real world datasets
+        batch_size=1000,
         epochs=EPOCHS,
         random_state=None,
     ):
@@ -608,7 +613,12 @@ class FullyCompliantRegressor(wrappers.KerasRegressor):
     def __init__(
         self,
         hidden_dim=HIDDEN_DIM,
-        batch_size=BATCH_SIZE,
+        # Set batch size to a large number (larger than X.shape[0] is the goal)
+        # if batch_size < X.shape[0], results will very 
+        # slightly if X is shuffled.
+        # This is only required for this tests and is not really 
+        # applicable to real world datasets
+        batch_size=1000,
         epochs=EPOCHS,
         random_state=None,
     ):
