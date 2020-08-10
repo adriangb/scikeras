@@ -10,6 +10,7 @@ __version__ = "0.1.8"
 # min supported version of tf incorporates the fix
 import tensorflow.python.keras.metrics  # noqa
 
+
 tensorflow.python.keras.metrics.log_cosh = (
     tensorflow.python.keras.metrics.logcosh
 )
