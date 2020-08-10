@@ -584,7 +584,9 @@ class FullyCompliantClassifier(wrappers.KerasClassifier):
     def __init__(
         self,
         hidden_dim=HIDDEN_DIM,
-        batch_size=BATCH_SIZE,
+        # The large batch size ensures determinism
+        # by forcing all data thought at once
+        batch_size=1000,
         epochs=EPOCHS,
         random_state=None,
     ):
@@ -608,7 +610,9 @@ class FullyCompliantRegressor(wrappers.KerasRegressor):
     def __init__(
         self,
         hidden_dim=HIDDEN_DIM,
-        batch_size=BATCH_SIZE,
+        # The large batch size ensures determinism
+        # by forcing all data thought at once
+        batch_size=1000,
         epochs=EPOCHS,
         random_state=None,
     ):
@@ -630,22 +634,21 @@ class TestFullyCompliantWrappers:
 
     @parametrize_with_checks([FullyCompliantClassifier()])
     def test_fully_compliant_classifier(self, estimator, check):
-        if sklearn_version <= LooseVersion(
-            "0.23.0"
-        ) and check.func.__name__ in (
+        check_name = check.func.__name__
+        if sklearn_version <= LooseVersion("0.23.0") and check_name in (
             "check_classifiers_predictions",
             "check_classifiers_classes",
         ):
             # These tests have issues that are fixed in 0.23.0
             pytest.skip()
-
         check(estimator)
 
     @parametrize_with_checks([FullyCompliantRegressor()])
     def test_fully_compliant_regressor(self, estimator, check):
-        if sklearn_version <= LooseVersion(
-            "0.23.0"
-        ) and check.func.__name__ in ("check_methods_subset_invariance",):
+        check_name = check.func.__name__
+        if sklearn_version <= LooseVersion("0.23.0") and check_name in (
+            "check_methods_subset_invariance",
+        ):
             # These tests have issues that are fixed in 0.23.0
             pytest.skip()
         check(estimator)
