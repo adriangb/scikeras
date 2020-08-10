@@ -626,12 +626,11 @@ class TestFullyCompliantWrappers:
 
     @parametrize_with_checks([FullyCompliantClassifier()])
     def test_fully_compliant_classifier(self, estimator, check):
-        if (
-            sklearn_version <= LooseVersion("0.23.0") and
-            check.func.__name__ in (
-                "check_classifiers_predictions",
-                "check_classifiers_classes",
-            )
+        if sklearn_version <= LooseVersion(
+            "0.23.0"
+        ) and check.func.__name__ in (
+            "check_classifiers_predictions",
+            "check_classifiers_classes",
         ):
             # These tests have issues that are fixed in 0.23.0
             pytest.skip()
@@ -640,12 +639,9 @@ class TestFullyCompliantWrappers:
 
     @parametrize_with_checks([FullyCompliantRegressor()])
     def test_fully_compliant_regressor(self, estimator, check):
-        if (
-            sklearn_version <= LooseVersion("0.23.0") and
-            check.func.__name__ in (
-                "check_methods_subset_invariance",
-            )
-        ):
+        if sklearn_version <= LooseVersion(
+            "0.23.0"
+        ) and check.func.__name__ in ("check_methods_subset_invariance",):
             # These tests have issues that are fixed in 0.23.0
             pytest.skip()
         check(estimator)
