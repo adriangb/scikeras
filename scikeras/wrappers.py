@@ -233,13 +233,6 @@ class BaseWrapper(BaseEstimator):
         # get model arguments
         model_args = self._filter_params(final_build_fn)
 
-        # add `sample_weight` param
-        # while it is not usually needed to build the model, some Keras models
-        # require knowledge of the type of sample_weight to be built.
-        sample_weight_arg = self._filter_params(
-            final_build_fn, params_to_check={"sample_weight": sample_weight}
-        )
-
         # check if the model building function requires X and/or y to be passed
         X_y_args = self._filter_params(
             final_build_fn, params_to_check={"X": X, "y": y}
@@ -252,7 +245,6 @@ class BaseWrapper(BaseEstimator):
         build_args = {
             **model_args,  # noqa: E999
             **X_y_args,  # noqa: E999
-            **sample_weight_arg,  # noqa: E999
             **kwargs,  # noqa: E999
         }
 
@@ -309,12 +301,6 @@ class BaseWrapper(BaseEstimator):
 
         # filter kwargs down to those accepted by self.model_.fit
         kwargs = self._filter_params(self.model_.fit, params_to_check=kwargs)
-
-        if sample_weight is not None and "sample_weight" not in kwargs:
-            raise ValueError(
-                "Parameter `sample_weight` is unsupported by Keras model "
-                + str(self.model_)
-            )
 
         # get model.fit's arguments (allows arbitrary model use)
         fit_args = self._filter_params(self.model_.fit)
@@ -533,6 +519,17 @@ class BaseWrapper(BaseEstimator):
             sample_weight = _check_sample_weight(
                 sample_weight, X, dtype=["float64", "int"]
             )
+            # Scikit-Learn expects a 0 in sample_weight to mean
+            # "ignore the sample", but because of how Keras applies
+            # sample_weight to the loss function, this doesn't
+            # exacly work out (as in, sklearn estimator checks fail
+            # because the predictions differ by a small margin).
+            # To get around this, we manually delete these samples here
+            zeros = sample_weight == 0
+            if np.any(zeros):
+                X = X[~zeros]
+                y = y[~zeros]
+                sample_weight = sample_weight[~zeros]
 
         # pre process X, y
         X, _ = self._pre_process_X(X)
