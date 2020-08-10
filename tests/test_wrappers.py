@@ -1,11 +1,12 @@
 """Tests for Scikit-learn API wrapper."""
 
-
+from distutils.version import LooseVersion
 import pickle
 import os
 
 import numpy as np
 import pytest
+from sklearn import __version__ as sklearn_version
 from sklearn.base import clone
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.datasets import load_boston, load_digits, load_iris
@@ -625,10 +626,28 @@ class TestFullyCompliantWrappers:
 
     @parametrize_with_checks([FullyCompliantClassifier()])
     def test_fully_compliant_classifier(self, estimator, check):
+        if (
+            sklearn_version <= LooseVersion("0.23.0") and
+            check.func.__name__ in (
+                "check_classifiers_predictions",
+                "check_classifiers_classes",
+            )
+        ):
+            # These tests have issues that are fixed in 0.23.0
+            pytest.skip()
+
         check(estimator)
 
     @parametrize_with_checks([FullyCompliantRegressor()])
     def test_fully_compliant_regressor(self, estimator, check):
+        if (
+            sklearn_version <= LooseVersion("0.23.0") and
+            check.func.__name__ in (
+                "check_methods_subset_invariance",
+            )
+        ):
+            # These tests have issues that are fixed in 0.23.0
+            pytest.skip()
         check(estimator)
 
 
