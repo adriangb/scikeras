@@ -1,4 +1,4 @@
-## Developer Setup
+# Developer Setup
 
 You will need Poetry to start contributing on the SciKeras codebase. Refer to the [documentation](https://python-poetry.org/docs/#introduction) to start using Poetry.
 
@@ -17,7 +17,8 @@ $ poetry install
 $ poetry run pytest tests/
 ```
 
-SciKeras uses the [black](https://github.com/psf/black) coding style and you must ensure that your
+SciKeras uses the [black](https://github.com/psf/black) and
+[isort](https://github.com/timothycrosley/isort) for coding style and you must ensure that your
 code follows it. If not, the CI will fail and your Pull Request will not be merged.
 
 To make sure that you don't accidentally commit code that does not follow the coding style, you can
@@ -36,6 +37,6 @@ $ poetry run pre-commit run --all-files
 Your code must always be accompanied by corresponding tests, if tests are not present your code
 will not be merged.
 
-### Deployment
+# Deployment
 
 Deployment to PyPi is done automatically by GitHub Actions for tagged commits.

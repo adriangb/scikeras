@@ -1,60 +1,58 @@
 """Tests for Scikit-learn API wrapper."""
 
-from distutils.version import LooseVersion
-import pickle
 import os
+import pickle
+
+from distutils.version import LooseVersion
 
 import numpy as np
 import pytest
+
 from sklearn import __version__ as sklearn_version
 from sklearn.base import clone
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.datasets import load_boston, load_digits, load_iris
-from sklearn.ensemble import (
-    AdaBoostClassifier,
-    AdaBoostRegressor,
-    BaggingClassifier,
-    BaggingRegressor,
-    RandomForestClassifier,
-    RandomForestRegressor,
-)
-from sklearn.exceptions import NotFittedError, DataConversionWarning
+from sklearn.datasets import load_boston
+from sklearn.datasets import load_digits
+from sklearn.datasets import load_iris
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import AdaBoostRegressor
+from sklearn.ensemble import BaggingClassifier
+from sklearn.ensemble import BaggingRegressor
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.exceptions import DataConversionWarning
+from sklearn.exceptions import NotFittedError
 from sklearn.metrics import r2_score as sklearn_r2_score
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import MultiLabelBinarizer, StandardScaler
+from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.preprocessing import StandardScaler
 from sklearn.utils.estimator_checks import parametrize_with_checks
-
 from tensorflow.python import keras
 from tensorflow.python.framework.ops import convert_to_tensor
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import testing_utils
-from tensorflow.python.keras.layers import (
-    Concatenate,
-    Conv2D,
-    Dense,
-    Flatten,
-    Input,
-)
-from tensorflow.python.keras.models import Model, Sequential
+from tensorflow.python.keras.layers import Concatenate
+from tensorflow.python.keras.layers import Conv2D
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.layers import Flatten
+from tensorflow.python.keras.layers import Input
+from tensorflow.python.keras.models import Model
+from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from scikeras import wrappers
-from scikeras.wrappers import KerasClassifier, KerasRegressor
-
-from scikeras._utils import pack_keras_model, unpack_keras_model
+from scikeras._utils import pack_keras_model
+from scikeras._utils import unpack_keras_model
+from scikeras.wrappers import KerasClassifier
+from scikeras.wrappers import KerasRegressor
 
 
 # Force data conversion warnings to be come errors
 pytestmark = pytest.mark.filterwarnings(
     "error::sklearn.exceptions.DataConversionWarning"
-)
-# Ignore our own warnings
-pytestmark = pytest.mark.filterwarnings("ignore::SciKeras")
-# Ignore convergence warnings
-pytestmark = pytest.mark.filterwarnings(
-    "ignore::sklearn.exceptions.ConvergenceWarning"
 )
 
 INPUT_DIM = 5

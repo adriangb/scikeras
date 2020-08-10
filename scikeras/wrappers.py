@@ -2,26 +2,28 @@
 """
 import inspect
 import warnings
+
 from collections import defaultdict
 
 import numpy as np
+
 from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
-from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (
-    check_X_y,
-    check_array,
-    _check_sample_weight,
-)
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils.multiclass import type_of_target
+from sklearn.utils.validation import _check_sample_weight
+from sklearn.utils.validation import check_array
+from sklearn.utils.validation import check_X_y
 from tensorflow.keras import backend as k_backend
+from tensorflow.keras.models import Model
+from tensorflow.keras.models import Sequential
 from tensorflow.python.keras.losses import is_categorical_crossentropy
-from tensorflow.keras.models import Model, Sequential
+from tensorflow.python.keras.utils.generic_utils import has_arg
 from tensorflow.python.keras.utils.generic_utils import (
-    has_arg,
     register_keras_serializable,
 )
 
@@ -1048,9 +1050,9 @@ class KerasRegressor(BaseWrapper):
             self.root_mean_squared_error,
         ):
             warnings.warn(
-                "SciKeras: Since ScikitLearn's `score` uses R^2 by default,"
-                " it is advisable to use the same loss/metric when optimizing"
-                "  the model.This class provides an R^2 implementation in "
+                "Since ScikitLearn's `score` uses R^2 by default, it is "
+                "advisable to use the same loss/metric when optimizing the "
+                "model.This class provides an R^2 implementation in "
                 "`KerasRegressor.root_mean_squared_error`."
             )
 

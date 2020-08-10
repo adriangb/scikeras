@@ -1,9 +1,8 @@
-import warnings
-import random
 import os
+import random
+import warnings
 
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
 import tensorflow as tf
 from tensorflow.keras.layers import (
     deserialize as deserialize_layer,
@@ -21,8 +20,8 @@ class TFRandomState:
 
     def __enter__(self):
         warnings.warn(
-            "SciKeras: Setting the random state for TF involves"
-            " irreversibly re-setting the random seed. "
+            "Setting the random state for TF involves "
+            "irreversibly re-setting the random seed. "
             "This may have unintended side effects."
         )
 
