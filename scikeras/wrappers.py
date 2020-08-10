@@ -201,7 +201,7 @@ class BaseWrapper(BaseEstimator):
 
         return final_build_fn
 
-    def _fit_build_keras_model(self, X, y, sample_weight, **kwargs):
+    def _fit_build_keras_model(self, X, y, **kwargs):
         """Build the Keras model.
 
         This method will process all arguments and call the model building
@@ -213,8 +213,6 @@ class BaseWrapper(BaseEstimator):
                 and `n_features` is the number of features.
             y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
                 True labels for `X`.
-            sample_weight : array-like of shape (n_samples,)
-                Sample weights. The Keras Model must support this.
             **kwargs: dictionary arguments
                 Legal arguments are the arguments `build_fn`.
         Returns:
@@ -541,9 +539,7 @@ class BaseWrapper(BaseEstimator):
 
         # build model
         if (not warm_start) or (not hasattr(self, "model_")):
-            self.model_ = self._fit_build_keras_model(
-                X, y, sample_weight=sample_weight, **kwargs
-            )
+            self.model_ = self._fit_build_keras_model(X, y, **kwargs)
 
         y = self._check_output_model_compatibility(y)
 
