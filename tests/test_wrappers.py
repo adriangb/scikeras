@@ -14,6 +14,7 @@ from sklearn.calibration import CalibratedClassifierCV
 from sklearn.datasets import load_boston
 from sklearn.datasets import load_digits
 from sklearn.datasets import load_iris
+from sklearn.datasets import make_classification
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import AdaBoostRegressor
 from sklearn.ensemble import BaggingClassifier
