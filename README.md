@@ -190,28 +190,28 @@ These wrappers suppport all of the multi-output types that `Scikit-Learn` suppor
 
 This table mirrors the [`Scikit-Learn` multi-output documentation](https://scikit-learn.org/stable/modules/multiclass.html).
 
-As noted above, `Keras` returns a list of arrays in many cases. This list is joined back into a single array by `_post_process_y`.
+As noted above, `Keras` returns a list of arrays in many cases. This list is joined back into a single array by `postprocess_y`.
 
 #### Output pre-processing
-Conversion from `Scikit-Learn` formatted `y` and `Keras` formatted `y` are done in the wrappers `_pre_process_y` and `_post_process_y` methods. The signatures are:
+Conversion from `Scikit-Learn` formatted `y` and `Keras` formatted `y` are done in the wrappers `preprocess_y` and `postprocess_y` methods. The signatures are:
 
-#### `_pre_process_y`
-Signature: `_pre_process_y(y: np.array) -> np.array, dict`
+#### `preprocess_y`
+Signature: `preprocess_y(y: np.array) -> np.array, dict`
 Inputs:
 * `y` always a single `numpy.array`
 Outputs:
 * `y`: a single `numpy.array` for a single `Keras` output or a list of `numpy.array` for a `Keras` model with multiple outputs
-*  `extra_args`: a dictionary containing extra parameters determined within `_pre_process_y` such as `classes_`. If used within `fit`, these parameters will overwrite instance parameters of the same name.
+*  `extra_args`: a dictionary containing extra parameters determined within `preprocess_y` such as `classes_`. If used within `fit`, these parameters will overwrite instance parameters of the same name.
 
-#### `_post_process_y`
-Signature: `_post_process_y(y: np.array) -> np.array, dict`
+#### `postprocess_y`
+Signature: `postprocess_y(y: np.array) -> np.array, dict`
 Inputs:
 * `y` raw output form the `Keras` model's `predict` method, can be an array or list of arrays.
 Outputs:
 * `y`: a single `numpy.array`. For classificaiton, this should contain class predictions.
 *  `extra_args`: for regression, this parameter is unused. For classification, this parameter contains prediction probabilities under the key `class_probabilities`.
 
-To support a custom mapping from `Keras` to `Scikit-Learn`, you can subclass a wrapper and modify `_pre_process_y` and `_post_process_y`. For example, to support a mixed  binary/multiclass classification as a `multioutput-multiclass` problem:
+To support a custom mapping from `Keras` to `Scikit-Learn`, you can subclass a wrapper and modify `preprocess_y` and `postprocess_y`. For example, to support a mixed  binary/multiclass classification as a `multioutput-multiclass` problem:
 
 ```python3
 class FunctionalAPIMultiOutputClassifier(KerasClassifier):
@@ -232,11 +232,11 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
 
         return model
 
-    def _post_process_y(self, y):
+    def postprocess_y(self, y):
         """To support targets of different type, we need to post-precess each one
            manually, there is no way to determine the types accurately.
 
-           Takes KerasClassifier._post_process_y as a starting point and
+           Takes KerasClassifier.postprocess_y as a starting point and
            hardcodes the post-processing.
         """
         classes_ = self.classes_
@@ -261,11 +261,11 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
         return np.mean(np.all(y == y_pred, axis=1))
 ```
 
-The default implementation of `_pre_process_y` for `KerasClassifier` attempts to automatically determine the type of problem using `sklearn.utils.multiclass.type_of_target`. You may need to override this method if it is unable to determine the correct type for your data. The default implementation is provided as a static method so that you can test it without needing to instantiate a `KerasClassifier`.
+The default implementation of `preprocess_y` for `KerasClassifier` attempts to automatically determine the type of problem using `sklearn.utils.multiclass.type_of_target`. You may need to override this method if it is unable to determine the correct type for your data. The default implementation is provided as a static method so that you can test it without needing to instantiate a `KerasClassifier`.
 
 ### Multi-input problems
 
-As mentioned above, `Scikit-Learn` does not support multi-input problems since `X` must be a sinlge `numpy.array`. However, in order to extend this functionality, the wrappers provide a `_pre_process_X` method that allows mapping a single `numpy.arary` to a list of `numpy.array` for multi-input `Keras` models. For example:
+As mentioned above, `Scikit-Learn` does not support multi-input problems since `X` must be a sinlge `numpy.array`. However, in order to extend this functionality, the wrappers provide a `preprocess_X` method that allows mapping a single `numpy.arary` to a list of `numpy.array` for multi-input `Keras` models. For example:
 
 ```python3
 class FunctionalAPIMultiInputClassifier(KerasClassifier):
@@ -289,14 +289,14 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
 
         return model
 
-    @staticmethod  # _pre_process_X does not *need* to be a static method
-    def _pre_process_X(X):
+    @staticmethod  # preprocess_X does not *need* to be a static method
+    def preprocess_X(X):
         """To support multiple inputs, a custom method must be defined.
         """
         return [X[:, 0], X[:, 1:4]], dict()
 ```
 
-Note that similar to `_pre_process_y`, `_pre_process_X` returns the modified `X` along with a dictionary of extra parameters. This dictionary is currently unused, but is kept for symmetry with `_pre_process_x` and future flexibility.
+Note that similar to `preprocess_y`, `preprocess_X` returns the modified `X` along with a dictionary of extra parameters. This dictionary is currently unused, but is kept for symmetry with `preprocess_X` and future flexibility.
 
 ### Custom scorers
 To override the function used for scoring, set the `_scorer` attribute of the wrapper to point to a scoring function with the signature `scorer(y_true: np.array, y_pred: np.array) -> float`.

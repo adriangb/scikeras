@@ -813,7 +813,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
         return model
 
     @staticmethod
-    def _pre_process_X(X):
+    def preprocess_X(X):
         """To support multiple inputs, a custom method must be defined.
         """
         return [X[:, 0], X[:, 1:4]], dict()
@@ -1201,12 +1201,12 @@ class TestBaseEstimatorInputOutputMethods:
     """Test BaseWrapper methods for pre/post processing y.
     """
 
-    def test_post_process_y(self):
-        """Quick check for BaseWrapper's _post_process_y method.
+    def testpostprocess_y(self):
+        """Quick check for BaseWrapper's postprocess_y method.
         """
         y = np.array([0])
-        np.testing.assert_equal(wrappers.BaseWrapper._post_process_y(y)[0], y)
-        assert len(wrappers.BaseWrapper._post_process_y(y)[1]) == 0
+        np.testing.assert_equal(wrappers.BaseWrapper.postprocess_y(y)[0], y)
+        assert len(wrappers.BaseWrapper.postprocess_y(y)[1]) == 0
 
 
 class TestUnsetParameter:
