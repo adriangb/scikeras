@@ -137,17 +137,12 @@ class BaseWrapper(BaseEstimator):
             self._sk_params = list(sk_params.keys())
 
         # check that all __init__ parameters were assigned (as per sklearn API)
-        try:
-            params = self.get_params(deep=False)
-            for key in params.keys():
-                try:
-                    getattr(self, key)
-                except AttributeError:
-                    raise RuntimeError(
-                        "Unasigned input parameter: {}".format(key)
-                    )
-        except AttributeError as e:
-            raise RuntimeError("Unasigned input parameter: {}".format(e))
+        params = self.get_params(deep=False)
+        for key in params.keys():
+            try:
+                getattr(self, key)
+            except AttributeError:
+                raise RuntimeError("Unasigned input parameter: {}".format(key))
 
     @property
     def __name__(self):
