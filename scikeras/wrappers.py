@@ -31,7 +31,7 @@ from ._utils import LabelDimensionTransformer
 from ._utils import TFRandomState
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
-from .utils import get_default_args
+from ._utils import get_default_args
 
 
 # known keras function names that will be added to _legal_params_fns if they
@@ -578,11 +578,7 @@ class BaseWrapper(BaseEstimator):
 
         # fit model
         return self._fit_keras_model(
-<<<<<<< HEAD
             X, y, sample_weight=sample_weight, warm_start=warm_start, **kwargs
-=======
-            X, y, sample_weight=sample_weight, **kwargs
->>>>>>> black
         )
 
     def partial_fit(self, X, y, sample_weight=None, **kwargs):
@@ -818,14 +814,10 @@ class KerasClassifier(BaseWrapper):
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
-<<<<<<< HEAD
                 encoder.fit_transform(
                     y_.reshape(-1,) if y_.shape[1] == 1 else y_
                 )
                 for encoder, y_ in zip(encoders_, y)
-=======
-                encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)
->>>>>>> black
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
         elif cls_type_ == "multiclass-multioutput":
@@ -837,14 +829,10 @@ class KerasClassifier(BaseWrapper):
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
-<<<<<<< HEAD
                 encoder.fit_transform(
                     y_.reshape(-1,) if y_.shape[1] == 1 else y_
                 )
                 for encoder, y_ in zip(encoders_, y)
-=======
-                encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)
->>>>>>> black
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
         else:
@@ -909,13 +897,7 @@ class KerasClassifier(BaseWrapper):
                         # Appease the demands of sklearn transformers
                         y_ = np.squeeze(y_, axis=1)
                     class_predictions.append(
-<<<<<<< HEAD
                         self.encoders_[i].inverse_transform(y_)
-=======
-                        self.encoders_[i].inverse_transform(
-                            y[i].round().astype(int)
-                        )
->>>>>>> black
                     )
                 if (
                     len(y[i].shape) == 1
@@ -931,12 +913,9 @@ class KerasClassifier(BaseWrapper):
                 idx = np.argmax(y[i], axis=-1)
                 y_ = np.zeros(y[i].shape, dtype=int)
                 y_[np.arange(y[i].shape[0]), idx] = 1
-<<<<<<< HEAD
                 if y_.shape[1] == 1:
                     # Appease the demands of sklearn transformers
                     y_ = np.squeeze(y_, axis=1)
-=======
->>>>>>> black
                 class_predictions.append(
                     self.encoders_[i].inverse_transform(y_)
                 )
