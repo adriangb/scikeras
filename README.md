@@ -132,7 +132,7 @@ class MLPRegressor(KerasRegressor):
         self.hidden_layer_sizes = hidden_layer_sizes
         super().__init__(**kwargs)   # this is very important!
 
-    def __call__(self, X, n_outputs_, hidden_layer_sizes):
+    def _keras_build_fn(self, X, n_outputs_, hidden_layer_sizes):
         ...
 
 estimator = MLPRegressor(hidden_layer_sizes=[200], a_kwarg="saveme")
@@ -152,7 +152,7 @@ class ChildMLPRegressor(MLPRegressor):
         self.child_argument = child_argument
         super().__init__(**kwargs)   # this is very important!
 
-    def __call__(self, X, n_outputs_, hidden_layer_sizes):
+    def _keras_build_fn(self, X, n_outputs_, hidden_layer_sizes):
         ...
 
 estimator = ChildMLPRegressor(child_argument="hello", a_kwarg="saveme")
