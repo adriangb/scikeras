@@ -401,7 +401,7 @@ class BaseWrapper(BaseEstimator):
         return X, y
 
     @staticmethod
-    def _pre_process_y(y):
+    def preprocess_y(y):
         """Handles manipulation of y inputs to fit or score.
 
         By default, this just makes sure y is 2D.
@@ -421,7 +421,7 @@ class BaseWrapper(BaseEstimator):
         return y, extra_args
 
     @staticmethod
-    def _post_process_y(y):
+    def postprocess_y(y):
         """Handles manipulation of predicted `y` values.
 
         By default, it joins lists of predictions for multi-ouput models
@@ -444,7 +444,7 @@ class BaseWrapper(BaseEstimator):
         return np.squeeze(y), extra_args
 
     @staticmethod
-    def _pre_process_X(X):
+    def preprocess_X(X):
         """Handles manipulation of X before fitting.
 
         Subclass and override this method to process X, for example
@@ -532,8 +532,8 @@ class BaseWrapper(BaseEstimator):
                 sample_weight = sample_weight[~zeros]
 
         # pre process X, y
-        X, _ = self._pre_process_X(X)
-        y, extra_args = self._pre_process_y(y)
+        X, _ = self.preprocess_X(X)
+        y, extra_args = self.preprocess_y(y)
         # update self.classes_, self.n_outputs_, self.n_classes_ and
         #  self.cls_type_
         for attr_name, attr_val in extra_args.items():
@@ -603,7 +603,7 @@ class BaseWrapper(BaseEstimator):
         X = self._validate_data(X=X, y=None, reset=False)
 
         # pre process X
-        X, _ = self._pre_process_X(X)
+        X, _ = self.preprocess_X(X)
 
         # filter kwargs and get attributes for predict
         kwargs = self._filter_params(
@@ -616,7 +616,7 @@ class BaseWrapper(BaseEstimator):
         y_pred = self.model_.predict(X, **pred_args)
 
         # post process y
-        y, _ = self._post_process_y(y_pred)
+        y, _ = self.postprocess_y(y_pred)
         return y
 
     def score(self, X, y, sample_weight=None, **kwargs):
@@ -649,7 +649,7 @@ class BaseWrapper(BaseEstimator):
             )
 
         # pre process X, y
-        _, extra_args = self._pre_process_y(y)
+        _, extra_args = self.preprocess_y(y)
 
         # compute Keras model score
         y_pred = self.predict(X, **kwargs)
@@ -721,7 +721,7 @@ class KerasClassifier(BaseWrapper):
     )
 
     @staticmethod
-    def _pre_process_y(y):
+    def preprocess_y(y):
         """Handles manipulation of y inputs to fit or score.
 
              For KerasClassifier, this handles interpreting classes from `y`.
@@ -735,7 +735,7 @@ class KerasClassifier(BaseWrapper):
             n_classes_ : number of classes.
             one_hot_encoded : True if input y was one-hot-encoded.
         """
-        y, _ = super(KerasClassifier, KerasClassifier)._pre_process_y(y)
+        y, _ = super(KerasClassifier, KerasClassifier).preprocess_y(y)
 
         cls_type_ = type_of_target(y)
 
@@ -829,7 +829,7 @@ class KerasClassifier(BaseWrapper):
 
         return y, extra_args
 
-    def _post_process_y(self, y):
+    def postprocess_y(self, y):
         """Reverts _pre_process_inputs to return predicted probabilites
              in formats sklearn likes as well as retrieving the original
              classes.
@@ -955,7 +955,7 @@ class KerasClassifier(BaseWrapper):
         X = self._validate_data(X=X, y=None, reset=False)
 
         # pre process X
-        X, _ = self._pre_process_X(X)
+        X, _ = self.preprocess_X(X)
 
         # filter kwargs and get attributes that are inputs to model.predict
         kwargs = self._filter_params(
@@ -968,7 +968,7 @@ class KerasClassifier(BaseWrapper):
         outputs = self.model_.predict(X, **predict_args)
 
         # join list of outputs into single output array
-        _, extra_args = self._post_process_y(outputs)
+        _, extra_args = self.postprocess_y(outputs)
 
         class_probabilities = extra_args["class_probabilities"]
 
@@ -998,14 +998,14 @@ class KerasRegressor(BaseWrapper):
             y = check_array(y, dtype="float64", ensure_2d=False)
         return super()._validate_data(X=X, y=y, reset=reset)
 
-    def _post_process_y(self, y):
+    def postprocess_y(self, y):
         """Ensures output is float64 and squeeze."""
         return np.squeeze(y.astype("float64")), dict()
 
-    def _pre_process_y(self, y):
+    def preprocess_y(self, y):
         """Split y for multi-output tasks.
         """
-        y, _ = super()._pre_process_y(y)
+        y, _ = super().preprocess_y(y)
 
         if len(y.shape) == 1:
             n_outputs_ = 1
