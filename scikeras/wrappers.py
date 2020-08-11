@@ -2,35 +2,35 @@
 """
 import inspect
 import warnings
+
 from collections import defaultdict
 
 import numpy as np
+
 from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
-from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (
-    check_X_y,
-    check_array,
-    _check_sample_weight,
-)
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils.multiclass import type_of_target
+from sklearn.utils.validation import _check_sample_weight
+from sklearn.utils.validation import check_array
+from sklearn.utils.validation import check_X_y
 from tensorflow.keras import backend as k_backend
+from tensorflow.keras.models import Model
+from tensorflow.keras.models import Sequential
 from tensorflow.python.keras.losses import is_categorical_crossentropy
-from tensorflow.keras.models import Model, Sequential
+from tensorflow.python.keras.utils.generic_utils import has_arg
 from tensorflow.python.keras.utils.generic_utils import (
-    has_arg,
     register_keras_serializable,
 )
 
-from ._utils import (
-    TFRandomState,
-    LabelDimensionTransformer,
-    make_model_picklable,
-    get_metric_full_name,
-)
+from ._utils import LabelDimensionTransformer
+from ._utils import TFRandomState
+from ._utils import get_metric_full_name
+from ._utils import make_model_picklable
 
 
 # known keras function names that will be added to _legal_params_fns if they

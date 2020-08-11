@@ -8,8 +8,7 @@ __version__ = "0.1.8"
 # See https://github.com/tensorflow/tensorflow/pull/42097
 # Will be removed whenever the
 # min supported version of tf incorporates the fix
-import tensorflow.python.keras.metrics  # noqa
+from tensorflow.python import keras  # noqa
 
-tensorflow.python.keras.metrics.log_cosh = (
-    tensorflow.python.keras.metrics.logcosh
-)
+
+keras.metrics.log_cosh = keras.metrics.logcosh

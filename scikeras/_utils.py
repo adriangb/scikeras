@@ -1,17 +1,17 @@
-import warnings
-import random
 import os
+import random
+import warnings
 
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
 import tensorflow as tf
-from tensorflow.keras.layers import (
-    deserialize as deserialize_layer,
-    serialize as serialize_layer,
-)
+
+from sklearn.base import BaseEstimator
+from sklearn.base import TransformerMixin
+from tensorflow.keras.layers import deserialize as deserialize_layer
+from tensorflow.keras.layers import serialize as serialize_layer
+from tensorflow.keras.metrics import deserialize as deserialize_metric
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.saving import saving_utils
-from tensorflow.keras.metrics import deserialize as deserialize_metric
 
 
 class TFRandomState:
