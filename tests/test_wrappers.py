@@ -1555,6 +1555,8 @@ class TestPackUnpack:
             pack_keras_model(obj, 0)
         with pytest.raises(TypeError):
             unpack_keras_model(obj, 0)
+
+
 def test_get_params():
     def build_fn_clf(hidden_dim=10, optimizer="sgd"):
         """Builds a Sequential based classifier."""
