@@ -469,6 +469,7 @@ class TestCallbacks:
         assert_classification_works(deserialized_estimator)
 
 
+@pytest.mark.skip(reason="Inconsistent failing, GH#43")
 class TestSampleWeights:
     """Tests involving the sample_weight parameter.
          TODO: fix warning regarding sample_weight shape coercing.
