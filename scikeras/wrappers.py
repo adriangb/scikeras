@@ -20,7 +20,6 @@ from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_X_y
 from tensorflow.keras import backend as k_backend
 from tensorflow.keras.models import Model
-from tensorflow.keras.models import Sequential
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import has_arg
 from tensorflow.python.keras.utils.generic_utils import (
@@ -32,15 +31,6 @@ from ._utils import TFRandomState
 from ._utils import _get_default_args
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
-
-
-# known keras function names that will be added to _legal_params_fns if they
-# exist in the generated model
-KNOWN_KERAS_FN_NAMES = (
-    "fit",
-    "evaluate",
-    "predict",
-)
 
 
 class BaseWrapper(BaseEstimator):
@@ -58,6 +48,7 @@ class BaseWrapper(BaseEstimator):
             Set the Tensorflow random number generators to a
             reproducible deterministic state using this seed.
             Pass an int for reproducible results across multiple function calls.
+        For all other parameters see tf.keras.Model documentation.
     """
 
     is_fitted_ = False
@@ -131,7 +122,7 @@ class BaseWrapper(BaseEstimator):
         self.initial_epoch = initial_epoch
         # Unpack kwargs
         vars(self).update(**kwargs)
-        # Restrore parameters already set before this __init__
+        # Restore parameters already set before this __init__
         vars(self).update(**existing_params)
 
     @property
