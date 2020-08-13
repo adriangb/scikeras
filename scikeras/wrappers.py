@@ -29,9 +29,9 @@ from tensorflow.python.keras.utils.generic_utils import (
 
 from ._utils import LabelDimensionTransformer
 from ._utils import TFRandomState
+from ._utils import _get_default_args
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
-from ._utils import _get_default_args
 
 
 # known keras function names that will be added to _legal_params_fns if they
