@@ -79,26 +79,16 @@ class BaseWrapper(BaseEstimator):
     ):
         # Store any parameters set by child classes
         existing_params = self.get_params()
-        # Parse hardcoded params
+
         if isinstance(build_fn, Model):
             # ensure prebuilt model can be serialized
             make_model_picklable(build_fn)
         self.build_fn = build_fn
 
+        # Get defaults from `build_fn`
         if inspect.isfunction(build_fn):
             kwargs = _get_default_args(build_fn)
             sk_params = {**kwargs, **sk_params}
-
-        if sk_params:
-            # for backwards compatibility
-
-            # the sklearn API requires that all __init__ parameters be saved
-            # as an instance attribute of the same name
-            for name, val in sk_params.items():
-                setattr(self, name, val)
-
-            # save keys so that we can count these as __init__ params
-            self._sk_params = list(sk_params.keys())
 
         # check that all __init__ parameters were assigned (as per sklearn API)
         params = self.get_params(deep=False)
@@ -108,6 +98,7 @@ class BaseWrapper(BaseEstimator):
             except AttributeError:
                 raise RuntimeError("Unasigned input parameter: {}".format(key))
 
+        # Parse hardcoded params
         self.random_state = random_state
         self.optimizer = optimizer
         self.loss = loss
@@ -120,8 +111,10 @@ class BaseWrapper(BaseEstimator):
         self.validation_split = validation_split
         self.shuffle = shuffle
         self.initial_epoch = initial_epoch
+
         # Unpack kwargs
         vars(self).update(**kwargs)
+
         # Restore parameters already set before this __init__
         vars(self).update(**existing_params)
 
