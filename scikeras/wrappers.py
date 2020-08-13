@@ -77,6 +77,10 @@ class BaseWrapper(BaseEstimator):
         initial_epoch=0,
         **kwargs,
     ):
+        # Get defaults from `build_fn`
+        if inspect.isfunction(build_fn):
+            vars(self).update(_get_default_args(build_fn))
+
         # Store any parameters set by child classes
         existing_params = self.get_params()
 
@@ -84,10 +88,6 @@ class BaseWrapper(BaseEstimator):
             # ensure prebuilt model can be serialized
             make_model_picklable(build_fn)
         self.build_fn = build_fn
-
-        # Get defaults from `build_fn`
-        if inspect.isfunction(build_fn):
-            vars(self).update(_get_default_args(build_fn))
 
         # Parse hardcoded params
         self.random_state = random_state
