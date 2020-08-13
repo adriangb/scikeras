@@ -1556,4 +1556,9 @@ class TestPackUnpack:
 
 def test_build_fn_default_params():
     est = wrappers.KerasClassifier(build_fn=build_fn_clf)
-    assert "hidden_dim" in est.get_params()
+    params = est.get_params()
+    assert params["hidden_dim"] == HIDDEN_DIM
+
+    est = wrappers.KerasClassifier(build_fn=build_fn_clf, hidden_dim=HIDDEN_DIM + 1)
+    params = est.get_params()
+    assert params["hidden_dim"] == HIDDEN_DIM + 1
