@@ -103,14 +103,6 @@ class BaseWrapper(BaseEstimator):
         # Unpack kwargs
         vars(self).update(**kwargs)
 
-        # check that all __init__ parameters were assigned (as per sklearn API)
-        params = self.get_params(deep=False)
-        for key in params.keys():
-            try:
-                getattr(self, key)
-            except AttributeError:
-                raise RuntimeError("Unasigned input parameter: {}".format(key))
-
     @property
     def __name__(self):
         return self.__class__.__name__
