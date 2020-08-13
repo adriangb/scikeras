@@ -29,6 +29,7 @@ from tensorflow.python.keras.utils.generic_utils import (
 
 from ._utils import LabelDimensionTransformer
 from ._utils import TFRandomState
+from ._utils import _get_default_args
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
 
@@ -124,8 +125,11 @@ class BaseWrapper(BaseEstimator):
 
         self.build_fn = build_fn
 
-        if sk_params:
+        if inspect.isfunction(build_fn):
+            kwargs = _get_default_args(build_fn)
+            sk_params = {**kwargs, **sk_params}
 
+        if sk_params:
             # for backwards compatibility
 
             # the sklearn API requires that all __init__ parameters be saved

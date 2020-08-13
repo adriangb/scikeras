@@ -64,7 +64,7 @@ BATCH_SIZE = 5
 EPOCHS = 1
 
 
-def build_fn_clf(hidden_dim):
+def build_fn_clf(hidden_dim=HIDDEN_DIM):
     """Builds a Sequential based classifier."""
     model = keras.models.Sequential()
     model.add(keras.layers.Dense(INPUT_DIM, input_shape=(INPUT_DIM,)))
@@ -1552,3 +1552,18 @@ class TestPackUnpack:
             pack_keras_model(obj, 0)
         with pytest.raises(TypeError):
             unpack_keras_model(obj, 0)
+
+
+def test_build_fn_default_params():
+    """Tests that default arguments arguments of 
+    `build_fn` are registered as hyperparameters.
+    """
+    est = wrappers.KerasClassifier(build_fn=build_fn_clf)
+    params = est.get_params()
+    assert params["hidden_dim"] == HIDDEN_DIM
+
+    est = wrappers.KerasClassifier(
+        build_fn=build_fn_clf, hidden_dim=HIDDEN_DIM + 1
+    )
+    params = est.get_params()
+    assert params["hidden_dim"] == HIDDEN_DIM + 1
