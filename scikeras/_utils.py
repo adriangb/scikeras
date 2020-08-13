@@ -1,3 +1,4 @@
+import inspect
 import os
 import random
 import warnings
@@ -157,3 +158,12 @@ def get_metric_full_name(name: str) -> str:
         # may be passed "loss" from thre training history
         return name
     return getattr(deserialize_metric(name), "__name__")
+
+
+def _get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
