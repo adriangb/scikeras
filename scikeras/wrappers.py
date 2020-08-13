@@ -66,15 +66,11 @@ class BaseWrapper(BaseEstimator):
         optimizer="rmsprop",
         loss=None,
         metrics=None,
-        run_eagerly=None,
         batch_size=None,
         verbose=1,
-        steps=None,
         callbacks=None,
-        epochs=1,
         validation_split=0.0,
         shuffle=True,
-        initial_epoch=0,
         **kwargs,
     ):
         # Get defaults from `build_fn`
@@ -91,14 +87,11 @@ class BaseWrapper(BaseEstimator):
         self.optimizer = optimizer
         self.loss = loss
         self.metrics = metrics
-        self.run_eagerly = run_eagerly
         self.batch_size = batch_size
         self.verbose = verbose
         self.callbacks = callbacks
-        self.epochs = epochs
         self.validation_split = validation_split
         self.shuffle = shuffle
-        self.initial_epoch = initial_epoch
 
         # Unpack kwargs
         vars(self).update(**kwargs)
