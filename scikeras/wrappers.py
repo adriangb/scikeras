@@ -125,7 +125,7 @@ class BaseWrapper(BaseEstimator):
 
         self.build_fn = build_fn
 
-       if inspect.isfunction(build_fn):
+        if inspect.isfunction(build_fn):
             kwargs = _get_default_args(build_fn)
             sk_params = {**kwargs, **sk_params}
 
