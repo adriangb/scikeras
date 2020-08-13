@@ -1555,6 +1555,9 @@ class TestPackUnpack:
 
 
 def test_build_fn_default_params():
+    """Tests that default arguments arguments of 
+    `build_fn` are registered as hyperparameters.
+    """
     est = wrappers.KerasClassifier(build_fn=build_fn_clf)
     params = est.get_params()
     assert params["hidden_dim"] == HIDDEN_DIM
