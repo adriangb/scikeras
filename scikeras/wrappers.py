@@ -90,14 +90,6 @@ class BaseWrapper(BaseEstimator):
             kwargs = _get_default_args(build_fn)
             sk_params = {**kwargs, **sk_params}
 
-        # check that all __init__ parameters were assigned (as per sklearn API)
-        params = self.get_params(deep=False)
-        for key in params.keys():
-            try:
-                getattr(self, key)
-            except AttributeError:
-                raise RuntimeError("Unasigned input parameter: {}".format(key))
-
         # Parse hardcoded params
         self.random_state = random_state
         self.optimizer = optimizer
@@ -117,6 +109,14 @@ class BaseWrapper(BaseEstimator):
 
         # Restore parameters already set before this __init__
         vars(self).update(**existing_params)
+
+        # check that all __init__ parameters were assigned (as per sklearn API)
+        params = self.get_params(deep=False)
+        for key in params.keys():
+            try:
+                getattr(self, key)
+            except AttributeError:
+                raise RuntimeError("Unasigned input parameter: {}".format(key))
 
     @property
     def __name__(self):
