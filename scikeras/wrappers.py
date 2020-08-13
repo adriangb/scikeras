@@ -87,8 +87,7 @@ class BaseWrapper(BaseEstimator):
 
         # Get defaults from `build_fn`
         if inspect.isfunction(build_fn):
-            kwargs = _get_default_args(build_fn)
-            sk_params = {**kwargs, **sk_params}
+            kwargs.upadate(_get_default_args(build_fn))
 
         # Parse hardcoded params
         self.random_state = random_state
