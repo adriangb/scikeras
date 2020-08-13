@@ -13,15 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.8
+      - uses: pre-commit/action@v2.0.0
 
-      - name: Linting
-        run: |
-          pip install pre-commit
-          pre-commit run --all-files
+      - name: Update pre-commit
+        run: pre-commit autoupdate
 
   TestStable:
     needs: Linting
