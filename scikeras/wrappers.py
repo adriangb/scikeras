@@ -81,15 +81,12 @@ class BaseWrapper(BaseEstimator):
         if inspect.isfunction(build_fn):
             vars(self).update(_get_default_args(build_fn))
 
-        # Store any parameters set by child classes
-        existing_params = self.get_params()
-
         if isinstance(build_fn, Model):
             # ensure prebuilt model can be serialized
             make_model_picklable(build_fn)
-        self.build_fn = build_fn
 
         # Parse hardcoded params
+        self.build_fn = build_fn
         self.random_state = random_state
         self.optimizer = optimizer
         self.loss = loss
@@ -105,9 +102,6 @@ class BaseWrapper(BaseEstimator):
 
         # Unpack kwargs
         vars(self).update(**kwargs)
-
-        # Restore parameters already set before this __init__
-        vars(self).update(**existing_params)
 
         # check that all __init__ parameters were assigned (as per sklearn API)
         params = self.get_params(deep=False)
