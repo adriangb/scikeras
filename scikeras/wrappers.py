@@ -20,7 +20,6 @@ from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_X_y
 from tensorflow.keras import backend as k_backend
 from tensorflow.keras.models import Model
-from tensorflow.keras.models import Sequential
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import has_arg
 from tensorflow.python.keras.utils.generic_utils import (
@@ -34,15 +33,6 @@ from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
 
 
-# known keras function names that will be added to _legal_params_fns if they
-# exist in the generated model
-KNOWN_KERAS_FN_NAMES = (
-    "fit",
-    "evaluate",
-    "predict",
-)
-
-
 class BaseWrapper(BaseEstimator):
     """Base class for the Keras scikit-learn wrapper.
 
@@ -51,65 +41,16 @@ class BaseWrapper(BaseEstimator):
 
     Arguments:
         build_fn: callable function or class instance
-        **sk_params: model parameters & fitting parameters
-
-    Special parameters:
-        random_state: if random_state is a parameter of a child
-            class or if passed as part of sk_params,
-            it will be used like ScikitLearn's random_state param.
-
-    The `build_fn` should construct, compile and return a Keras model, which
-    will then be used to fit/predict. One of the following
-    three values could be passed to `build_fn`:
-    1. A function that returns an instance of a Keras Model.
-    2. An instance of a class that implements the `__call__` method and
-    returns an instance of a Keras Model.
-    3. An instance of a Keras Model. A copy of this instance will be made.
-    4. None (the default value). This means you implement a class that inherits
-    from `BaseWrapper`, `KerasClassifier` or `KerasRegressor`.
-    The `_keras_build_fn` method of this class must return an instance of a
-    Keras Model.
-
-    The parameters passed to `build_fn` or `_keras_build_fn` are dynamically
-    determined based on the signature of `build_fn` or `_keras_build_fn`.
-    All public attributes as well as any `**kwargs` passed to `fit` will be
-    passed to  `build_fn` or `_keras_build_fn` if their name matches one of
-    the parameter names in `build_fn` or `_keras_build_fn`.
-
-    `sk_params` takes both model parameters and fitting parameters.
-    Note that like all other estimators in scikit-learn, `build_fn` or
-    your child class should provide default values for its arguments,
-    so that you could create the estimator
-    without passing any values to `sk_params`.
-
-    `sk_params` could also accept parameters for calling `fit`, `predict`,
-    `predict_proba`, and `score` methods (e.g., `epochs`, `batch_size`).
-    fitting (predicting) parameters are selected in the following order:
-
-    1. Values passed to the dictionary arguments of
-    `fit`, `predict`, `predict_proba`, and `score` methods
-    2. Values passed to `sk_params`
-    3. The default values of the `keras.models.Sequential`
-    `fit`, `predict`, `predict_proba` and `score` methods
-
-    When using scikit-learn's `grid_search` API, legal tunable parameters are
-    those you could pass to `sk_params`, including fitting parameters.
-    In other words, you could use `grid_search` to search for the best
-    `batch_size` or `epochs` as well as the model parameters.
+            Used to build the Keras Model. When called,
+            must return a compiled instance of a Keras Model
+            to be used by `fit`, `predict`, etc.
+        random_state : int, RandomState instance, default=None
+            Set the Tensorflow random number generators to a
+            reproducible deterministic state using this seed.
+            Pass an int for reproducible results across multiple function calls.
+        For all other parameters see tf.keras.Model documentation.
     """
 
-    # basic legal parameter set, based on functions that will normally be
-    # called the model building function will be dynamically added
-    _legal_params_fns = [
-        Sequential.evaluate,
-        Sequential.fit,
-        Sequential.predict,
-        Model.evaluate,
-        Model.fit,
-        Model.predict,
-    ]
-
-    _sk_params = None
     is_fitted_ = False
 
     _tags = {
@@ -117,36 +58,43 @@ class BaseWrapper(BaseEstimator):
         "multioutput": True,
     }
 
-    def __init__(self, build_fn=None, **sk_params):
+    def __init__(
+        self,
+        build_fn=None,
+        *,
+        random_state=None,
+        optimizer="rmsprop",
+        loss=None,
+        metrics=None,
+        batch_size=None,
+        verbose=1,
+        callbacks=None,
+        validation_split=0.0,
+        shuffle=True,
+        **kwargs,
+    ):
+        # Get defaults from `build_fn`
+        if inspect.isfunction(build_fn):
+            vars(self).update(_get_default_args(build_fn))
 
         if isinstance(build_fn, Model):
             # ensure prebuilt model can be serialized
             make_model_picklable(build_fn)
 
+        # Parse hardcoded params
         self.build_fn = build_fn
+        self.random_state = random_state
+        self.optimizer = optimizer
+        self.loss = loss
+        self.metrics = metrics
+        self.batch_size = batch_size
+        self.verbose = verbose
+        self.callbacks = callbacks
+        self.validation_split = validation_split
+        self.shuffle = shuffle
 
-        if inspect.isfunction(build_fn):
-            kwargs = _get_default_args(build_fn)
-            sk_params = {**kwargs, **sk_params}
-
-        if sk_params:
-            # for backwards compatibility
-
-            # the sklearn API requires that all __init__ parameters be saved
-            # as an instance attribute of the same name
-            for name, val in sk_params.items():
-                setattr(self, name, val)
-
-            # save keys so that we can count these as __init__ params
-            self._sk_params = list(sk_params.keys())
-
-        # check that all __init__ parameters were assigned (as per sklearn API)
-        params = self.get_params(deep=False)
-        for key in params.keys():
-            try:
-                getattr(self, key)
-            except AttributeError:
-                raise RuntimeError("Unasigned input parameter: {}".format(key))
+        # Unpack kwargs
+        vars(self).update(**kwargs)
 
     @property
     def __name__(self):
@@ -196,8 +144,6 @@ class BaseWrapper(BaseEstimator):
             final_build_fn = build_fn.__call__
         else:
             raise TypeError("`build_fn` must be a callable or None")
-        # append legal parameters
-        self._legal_params_fns.append(final_build_fn)
 
         return final_build_fn
 
@@ -226,7 +172,7 @@ class BaseWrapper(BaseEstimator):
         # dynamically build model, i.e. final_build_fn builds a Keras model
 
         # determine what type of build_fn to use
-        final_build_fn = self._check_build_fn(self.build_fn)
+        final_build_fn = self._check_build_fn(getattr(self, "build_fn", None))
 
         # get model arguments
         model_args = self._filter_params(final_build_fn)
@@ -252,11 +198,6 @@ class BaseWrapper(BaseEstimator):
                 model = final_build_fn(**build_args)
         else:
             model = final_build_fn(**build_args)
-
-        # append legal parameter names from model
-        for known_keras_fn in KNOWN_KERAS_FN_NAMES:
-            if hasattr(model, known_keras_fn):
-                self._legal_params_fns.append(getattr(model, known_keras_fn))
 
         # make serializable
         make_model_picklable(model)
@@ -497,7 +438,7 @@ class BaseWrapper(BaseEstimator):
                 self._random_state = self.random_state.randint(low=1)
                 self.random_state.set_state(state)
             else:
-                # Assume int
+                # int or None
                 self._random_state = self.random_state
         else:
             self._random_state = None
@@ -676,11 +617,11 @@ class BaseWrapper(BaseEstimator):
 
     def _get_param_names(self):
         """Get parameter names for the estimator"""
-        parameters = super()._get_param_names()
-        # add kwargs/sk_params if the user gave those as input
-        if self._sk_params:
-            return sorted(parameters + self._sk_params)
-        return parameters
+        return (
+            k
+            for k in self.__dict__
+            if not k.endswith("_") and not k.startswith("_")
+        )
 
     def _more_tags(self):
         """Get sklearn tags for the estimator"""

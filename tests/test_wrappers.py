@@ -417,9 +417,12 @@ class ClassWithCallback(wrappers.KerasClassifier):
     """Must be defined at top level to be picklable.
     """
 
-    def __init__(self, **sk_params):
-        self.callbacks = [SentinalCallback()]
-        super().__init__(**sk_params)
+    def __init__(self, callbacks=None, hidden_dim=(100,)):
+        if callbacks is None:
+            self.callbacks = [SentinalCallback()]
+        else:
+            self.callbacks = callbacks
+        self.hidden_dim = hidden_dim
 
     def _keras_build_fn(self, hidden_dim):
         return build_fn_clf(hidden_dim)
@@ -454,9 +457,7 @@ class TestCallbacks:
         """Test estimators that inherit from KerasClassifier and implement
         their own callbacks in their __init___.
         """
-        clf = ClassWithCallback(
-            hidden_dim=HIDDEN_DIM, batch_size=BATCH_SIZE, epochs=EPOCHS
-        )
+        clf = ClassWithCallback(hidden_dim=HIDDEN_DIM)
 
         assert_classification_works(clf)
         assert clf.callbacks[0].called != SentinalCallback.called
@@ -598,7 +599,6 @@ class FullyCompliantClassifier(wrappers.KerasClassifier):
         self.batch_size = batch_size
         self.epochs = epochs
         self.random_state = random_state
-        return super().__init__()
 
     def _keras_build_fn(
         self, X, cls_type_, n_classes_, keras_expected_n_ouputs_
@@ -627,7 +627,6 @@ class FullyCompliantRegressor(wrappers.KerasRegressor):
         self.batch_size = batch_size
         self.epochs = epochs
         self.random_state = random_state
-        return super().__init__()
 
     def _keras_build_fn(self, X, n_outputs_):
         return dynamic_regressor(X, n_outputs_)
@@ -1222,24 +1221,6 @@ class TestBaseEstimatorInputOutputMethods:
         y = np.array([0])
         np.testing.assert_equal(wrappers.BaseWrapper.postprocess_y(y)[0], y)
         assert len(wrappers.BaseWrapper.postprocess_y(y)[1]) == 0
-
-
-class TestUnsetParameter:
-    """Tests for appropriate error on unfitted models.
-    """
-
-    @pytest.mark.filterwarnings("ignore::FutureWarning")
-    def test_unset_input_parameter(self):
-        class ClassBuildFnClf(wrappers.KerasClassifier):
-            def __init__(self, input_param):
-                # does not set input_param
-                super().__init__()
-
-            def _keras_build_fn(self, hidden_dim):
-                return build_fn_clf(hidden_dim)
-
-        with pytest.raises(RuntimeError):
-            ClassBuildFnClf(input_param=10)
 
 
 class TestPrettyPrint:
