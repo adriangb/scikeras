@@ -71,6 +71,7 @@ class BaseWrapper(BaseEstimator):
         callbacks=None,
         validation_split=0.0,
         shuffle=True,
+        run_eagerly=False,
         **kwargs,
     ):
         # Get defaults from `build_fn`
@@ -92,6 +93,7 @@ class BaseWrapper(BaseEstimator):
         self.callbacks = callbacks
         self.validation_split = validation_split
         self.shuffle = shuffle
+        self.run_eagerly = run_eagerly
 
         # Unpack kwargs
         vars(self).update(**kwargs)

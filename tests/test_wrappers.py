@@ -1548,3 +1548,40 @@ def test_build_fn_default_params():
     )
     params = est.get_params()
     assert params["hidden_dim"] == HIDDEN_DIM + 1
+
+
+def build_fn_clf_tunable_compile(
+    n_classes_,
+    n_features_in_,
+    optimizer="sgd",
+    run_eagerly=False,
+    loss="categorical_crossentropy",
+    metrics=None,
+):
+    model = keras.models.Sequential()
+    model.add(
+        keras.layers.Dense(n_features_in_, input_shape=(n_features_in_,))
+    )
+    model.add(keras.layers.Activation("relu"))
+    model.add(keras.layers.Dense(10))
+    model.add(keras.layers.Activation("relu"))
+    model.add(keras.layers.Dense(n_classes_))
+    model.add(keras.layers.Activation("softmax"))
+    model.compile(
+        optimizer=optimizer,
+        loss=loss,
+        metrics=metrics,
+        run_eagerly=run_eagerly,
+    )
+    return model
+
+
+def test_run_eagerly():
+    estimator = wrappers.KerasClassifier(
+        build_fn=build_fn_clf_tunable_compile,
+        run_eagerly=True,
+        optimizer="sgd",
+        loss="categorical_crossentropy",
+    )
+    loader, _, _, _ = CONFIG["MLPClassifier"]
+    check(estimator, loader)
