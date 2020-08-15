@@ -658,6 +658,7 @@ class KerasClassifier(BaseWrapper):
                 performance target",
                 "check_fit_idempotent": "tf does not use \
                 sparse tensors",
+                "check_no_attributes_set_in_init": "can only pass if all params are hardcoded in __init__",
             },
         }
     )
@@ -692,9 +693,8 @@ class KerasClassifier(BaseWrapper):
             keras_expected_n_ouputs_ = 1  # single sigmoid output expected
             # encode
             encoder = LabelEncoder()
-            if len(y.shape) > 1 and y.shape[1] == 1:
-                # Make 1D just so LabelEncoder is happy
-                y = y.reshape(-1,)
+            # No need to reshape to 1D here,
+            # binary targets are always 1D already
             y = encoder.fit_transform(y)
             classes_ = encoder.classes_
             # make lists
@@ -930,6 +930,7 @@ class KerasRegressor(BaseWrapper):
             "_xfail_checks": {
                 "check_fit_idempotent": "tf does not use sparse tensors",
                 "check_methods_subset_invariance": "can't meet tol",
+                "check_no_attributes_set_in_init": "can only pass if all params are hardcoded in __init__",
             },
         }
     )
