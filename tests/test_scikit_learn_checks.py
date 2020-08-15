@@ -21,7 +21,8 @@ from .testing_utils import parametrize_with_checks
     estimators=[
         KerasClassifier(
             build_fn=dynamic_classifier,
-            # Set batch size to a large number (larger than X.shape[0] is the goal)
+            # Set batch size to a large number
+            # (larger than X.shape[0] is the goal)
             # if batch_size < X.shape[0], results will very
             # slightly if X is shuffled.
             # This is only required for this tests and is not really
@@ -31,7 +32,8 @@ from .testing_utils import parametrize_with_checks
         ),
         KerasRegressor(
             build_fn=dynamic_regressor,
-            # Set batch size to a large number (larger than X.shape[0] is the goal)
+            # Set batch size to a large number
+            # (larger than X.shape[0] is the goal)
             # if batch_size < X.shape[0], results will very
             # slightly if X is shuffled.
             # This is only required for this tests and is not really

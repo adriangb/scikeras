@@ -247,7 +247,7 @@ def test_BaseWrapper_postprocess_y():
     """
     y_array = np.array([0])
     y_list = [0]
-    y_postprocessed = BaseWrapper.postprocess_y(y_array)[0]
+    y_postprocessed = BaseWrapper.postprocess_y(y_list)[0]
     np.testing.assert_equal(y_postprocessed, y_array)
     extra_args = BaseWrapper.postprocess_y(y_array)[1]
     assert len(extra_args) == 0
