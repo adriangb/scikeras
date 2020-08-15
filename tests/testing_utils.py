@@ -1,13 +1,14 @@
 import pickle
 
-from itertools import chain
+from functools import partial
 
 import numpy as np
 import pytest
 
-from sklearn.utils.estimator_checks import _mark_xfail_checks
-from sklearn.utils.estimator_checks import _set_check_estimator_ids
 from sklearn.utils.estimator_checks import check_estimator
+from sklearn.utils.estimator_checks import (
+    parametrize_with_checks as _parametrize_with_checks,
+)
 
 
 def basic_checks(estimator, loader):
@@ -25,8 +26,32 @@ def basic_checks(estimator, loader):
     np.testing.assert_almost_equal(score, score_new)
 
 
+def _get_check_estimator_ids(obj, estimator_ids=None):
+    """Backport from Scikit-Learn = 0.23.0, not available in 0.22.0"""
+    if callable(obj):
+        if not isinstance(obj, partial):
+            return obj.__name__
+
+        if not obj.keywords:
+            return obj.func.__name__
+
+        kwstring = ",".join(
+            ["{}={}".format(k, v) for k, v in obj.keywords.items()]
+        )
+        return "{}({})".format(obj.func.__name__, kwstring)
+    if hasattr(obj, "get_params"):
+        # An estimator
+        if estimator_ids is None:
+            # Get id/string from parameters
+            with config_context(print_changed_only=True):
+                return re.sub(r"\s", "", str(obj))
+        else:
+            # User user supplied ID
+            return estimator_ids[obj]
+
+
 def parametrize_with_checks(estimators, ids=None):
-    """Wraps scikit-learns fixture to allow setting IDs.
+    """Wraps scikit-learn's fixture to allow setting IDs.
 
     This is done for 2 reasons:
     1)  The fixture generator calls clone() on the estimators,
@@ -37,60 +62,14 @@ def parametrize_with_checks(estimators, ids=None):
         KerasClassifier and KerasRegressor (we are only testing 1
         config for each, it is easy to track).
     """
-    checks_generator = chain.from_iterable(
-        check_estimator(estimator, generate_only=True)
-        for estimator in estimators
-    )
+    checks_generator = _parametrize_with_checks(estimators).args[1]
 
-    checks_with_marks = (
-        _mark_xfail_checks(estimator, check, pytest)
-        for estimator, check in checks_generator
-    )
-
-    if ids is None:
-        ids = _set_check_estimator_ids
-    else:
+    if ids is not None:
         estimator_ids = {
             estimator: _id for _id, estimator in zip(ids, estimators)
         }
-
-        def get_id(obj):
-            if callable(obj):
-                return _set_check_estimator_ids(obj)
-            if hasattr(obj, "get_params"):
-                # An estimator
-                # return custom id
-                return estimator_ids[obj]
-
-        ids = get_id
+        ids = partial(_get_check_estimator_ids, estimator_ids=estimator_ids)
 
     return pytest.mark.parametrize(
-        "estimator, check", checks_with_marks, ids=ids
+        "estimator, check", checks_generator, ids=ids
     )
-
-
-# from distutils.version import LooseVersion
-
-
-# from sklearn import __version__ as sklearn_version
-# from scikeras.wrappers import KerasClassifier
-# from scikeras.wrappers import KerasRegressor
-# import pytest
-
-# from tests.utils import parametrize_with_checks
-# from tests.mlp_models import dynamic_classifier, dynamic_regressor
-
-
-# parametrize_with_checks(
-#     estimators=[KerasClassifier(
-#         build_fn=dynamic_classifier,
-#         # Set batch size to a large number (larger than X.shape[0] is the goal)
-#         # if batch_size < X.shape[0], results will very
-#         # slightly if X is shuffled.
-#         # This is only required for this tests and is not really
-#         # applicable to real world datasets
-#         batch_size=1000,
-#         optimizer="adam",
-#     )],
-#     ids=["KerasClassifier"],
-# )
