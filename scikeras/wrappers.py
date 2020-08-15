@@ -693,9 +693,8 @@ class KerasClassifier(BaseWrapper):
             keras_expected_n_ouputs_ = 1  # single sigmoid output expected
             # encode
             encoder = LabelEncoder()
-            if len(y.shape) > 1 and y.shape[1] == 1:
-                # Make 1D just so LabelEncoder is happy
-                y = y.reshape(-1,)
+            # No need to reshape to 1D here,
+            # binary targets are always 1D already
             y = encoder.fit_transform(y)
             classes_ = encoder.classes_
             # make lists
