@@ -321,7 +321,7 @@ class BaseWrapper(BaseEstimator):
                 allow_nd=True,  # allow X to have more than 2 dimensions
                 multi_output=True,  # allow y to be 2D
             )
-        X = check_array(X, allow_nd=True, dtype=["float64", "int"])
+        X = check_array(X, allow_nd=True)
 
         n_features = X.shape[1]
 
@@ -938,7 +938,7 @@ class KerasRegressor(BaseWrapper):
     def _validate_data(self, X, y=None, reset=True):
         """Convert y to float, regressors cannot accept int."""
         if y is not None:
-            y = check_array(y, dtype="float64", ensure_2d=False)
+            y = check_array(y, ensure_2d=False)
         return super()._validate_data(X=X, y=y, reset=reset)
 
     def postprocess_y(self, y):
