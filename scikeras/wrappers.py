@@ -658,6 +658,7 @@ class KerasClassifier(BaseWrapper):
                 performance target",
                 "check_fit_idempotent": "tf does not use \
                 sparse tensors",
+                "check_no_attributes_set_in_init": "can only pass if all params are hardcoded in __init__",
             },
         }
     )
@@ -930,6 +931,7 @@ class KerasRegressor(BaseWrapper):
             "_xfail_checks": {
                 "check_fit_idempotent": "tf does not use sparse tensors",
                 "check_methods_subset_invariance": "can't meet tol",
+                "check_no_attributes_set_in_init": "can only pass if all params are hardcoded in __init__",
             },
         }
     )
