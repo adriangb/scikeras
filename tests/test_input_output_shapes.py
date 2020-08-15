@@ -11,6 +11,7 @@ from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.testing_utils import get_test_data
 
+from scikeras.wrappers import BaseWrapper
 from scikeras.wrappers import KerasClassifier
 from scikeras.wrappers import KerasRegressor
 
@@ -232,3 +233,21 @@ def test_incompatible_output_dimensions():
 
     with pytest.raises(RuntimeError):
         clf.fit(X, y)
+
+
+def test_BaseWrapper_postprocess_y():
+    """Checks BaseWrapper.postprocess_y.
+
+    This method is overriden in KerasRegressor and KerasClassifier
+    and so it is not tested by any other checks.
+
+    It is provided as a convenience method so that subclassed models
+    with multiple outputs don't have to implement it just to convert
+    the list output from Keras to a Numpy array (that's all it does).
+    """
+    y_array = np.array([0])
+    y_list = [0]
+    y_postprocessed = BaseWrapper.postprocess_y(y_array)[0]
+    np.testing.assert_equal(y_postprocessed, y_array)
+    extra_args = BaseWrapper.postprocess_y(y_array)[1]
+    assert len(extra_args) == 0
