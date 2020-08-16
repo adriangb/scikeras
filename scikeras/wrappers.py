@@ -257,14 +257,14 @@ class BaseWrapper(BaseEstimator):
 
         if OS_IS_WINDOWS:
             # see tensorflow/probability#886
-            if not isinstance(X, np.array):  # list, tuple, etc.
+            if not isinstance(X, np.ndarray):  # list, tuple, etc.
                 X = [
                     X_.astype(np.int64) if X_.dtype == np.int32 else X_
                     for X_ in X
                 ]
             else:
                 X = X.astype(np.int64) if X.dtype == np.int32 else X
-            if not isinstance(y, np.array):  # list, tuple, etc.
+            if not isinstance(y, np.ndarray):  # list, tuple, etc.
                 y = [
                     y_.astype(np.int64) if y_.dtype == np.int32 else y_
                     for y_ in y
