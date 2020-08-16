@@ -1,6 +1,7 @@
 """Wrapper for using the Scikit-Learn API with Keras models.
 """
 import inspect
+import os
 import warnings
 
 from collections import defaultdict
@@ -31,6 +32,9 @@ from ._utils import TFRandomState
 from ._utils import _get_default_args
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
+
+
+OS_IS_WINDOWS = os.name == "nt"  # see tensorflow/probability#886
 
 
 class BaseWrapper(BaseEstimator):
@@ -250,6 +254,19 @@ class BaseWrapper(BaseEstimator):
         # fit model and save history
         # order implies kwargs overwrites fit_args
         fit_args = {**fit_args, **kwargs}
+
+        if OS_IS_WINDOWS:
+            # see tensorflow/probability#886
+            if X.dtype == np.int32:
+                if isinstance(X, list):
+                    X = [X_.astype(np.int64) for X_ in X]
+                else:
+                    X = X.astype(np.int64)
+            if y.dtype == np.int32:
+                if isinstance(y, list):
+                    y = [y_.astype(np.int64) for y_ in y]
+                else:
+                    y = y.astype(np.int64)
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
