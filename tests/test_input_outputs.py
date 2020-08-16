@@ -255,14 +255,32 @@ def test_BaseWrapper_postprocess_y():
     assert len(extra_args) == 0
 
 
-@pytest.mark.parametrize("X_dtype", ["float32", "float64"])
+@pytest.mark.parametrize(
+    "X_dtype", ["float32", "float64", "int64", "int32", "uint8", "uint16"]
+)
 @pytest.mark.parametrize("y_dtype", ["int64", "int32", "uint8", "uint16"])
+@pytest.mark.parametrize("s_w_dtype", ["float32", "float64"])
 @pytest.mark.parametrize("run_eagerly", [True, False])
-def test_classifier_handles_types(X_dtype, y_dtype, run_eagerly):
-    clf = KerasClassifier(build_fn=dynamic_classifier, run_eagerly=run_eagerly)
+def test_classifier_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
     n, d = 100, 20
     n_classes = 10
     X = np.random.uniform(size=(n, d)).astype(X_dtype)
     y = np.random.choice(n_classes, size=n).astype(y_dtype)
-    clf.fit(X, y)
+    sample_weight = np.random.random(y.shape).astype(s_w_dtype)
+
+    input_dtypes = (X.dtype, y.dtype, sample_weight.dtype)
+
+    class StrictClassifier(KerasClassifier):
+        def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
+            assert X.dtype == input_dtypes[0]
+            assert y.dtype == input_dtypes[1]
+            assert sample_weight.dtype == input_dtypes[2]
+            return super()._fit_keras_model(
+                X, y, sample_weight, warm_start, **kwargs
+            )
+
+    clf = StrictClassifier(
+        build_fn=dynamic_classifier, run_eagerly=run_eagerly
+    )
+    clf.fit(X, y, sample_weight=sample_weight)
     assert clf.score(X, y) >= 0

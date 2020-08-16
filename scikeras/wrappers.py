@@ -693,7 +693,7 @@ class KerasClassifier(BaseWrapper):
             encoder = LabelEncoder()
             # No need to reshape to 1D here,
             # binary targets are always 1D already
-            y = encoder.fit_transform(y)
+            y = encoder.fit_transform(y).astype(y.dtype)
             classes_ = encoder.classes_
             # make lists
             encoders_ = [encoder]
@@ -707,7 +707,7 @@ class KerasClassifier(BaseWrapper):
             if len(y.shape) > 1 and y.shape[1] == 1:
                 # Make 1D just so LabelEncoder is happy
                 y = y.reshape(-1,)
-            y = encoder.fit_transform(y)
+            y = encoder.fit_transform(y).astype(y.dtype)
             classes_ = encoder.classes_
             # make lists
             encoders_ = [encoder]
@@ -725,7 +725,7 @@ class KerasClassifier(BaseWrapper):
             y = [
                 encoder.fit_transform(
                     y_.reshape(-1,) if y_.shape[1] == 1 else y_
-                )
+                ).astype(y_.dtype)
                 for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
@@ -740,7 +740,7 @@ class KerasClassifier(BaseWrapper):
             y = [
                 encoder.fit_transform(
                     y_.reshape(-1,) if y_.shape[1] == 1 else y_
-                )
+                ).astype(y_.dtype)
                 for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
@@ -860,7 +860,7 @@ class KerasClassifier(BaseWrapper):
             if is_categorical_crossentropy(loss) and (
                 y[i].ndim == 1 or y[i].shape[1] == 1
             ):
-                encoder = OneHotEncoder(sparse=False)
+                encoder = OneHotEncoder(sparse=False, dtype=y[i].dtype)
                 tf1dto2d = LabelDimensionTransformer()
                 y[i] = tf1dto2d.fit_transform(y[i])
                 y[i] = encoder.fit_transform(y[i])
