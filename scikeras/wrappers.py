@@ -33,9 +33,6 @@ from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
 
 
-TF_VALID_NP_TYPES = ("i", "u", "f", "c")  # just numeric types
-
-
 class BaseWrapper(BaseEstimator):
     """Base class for the Keras scikit-learn wrapper.
 
