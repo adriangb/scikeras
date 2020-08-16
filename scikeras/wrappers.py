@@ -257,16 +257,20 @@ class BaseWrapper(BaseEstimator):
 
         if OS_IS_WINDOWS:
             # see tensorflow/probability#886
-            if X.dtype == np.int32:
-                if isinstance(X, list):
-                    X = [X_.astype(np.int64) for X_ in X]
-                else:
-                    X = X.astype(np.int64)
-            if y.dtype == np.int32:
-                if isinstance(y, list):
-                    y = [y_.astype(np.int64) for y_ in y]
-                else:
-                    y = y.astype(np.int64)
+            if isinstance(X, list):
+                X = [
+                    X_.astype(np.int64) if X_.dtype == np.int32 else X_
+                    for X_ in X
+                ]
+            else:
+                X = X.astype(np.int64) if X.dtype == np.int32 else X
+            if isinstance(y, list):
+                y = [
+                    y_.astype(np.int64) if y_.dtype == np.int32 else y_
+                    for y_ in y
+                ]
+            else:
+                y = y.astype(np.int64) if y.dtype == np.int32 else y
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
