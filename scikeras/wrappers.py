@@ -6,6 +6,7 @@ import warnings
 from collections import defaultdict
 
 import numpy as np
+import tensorflow as tf
 
 from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
@@ -31,6 +32,9 @@ from ._utils import TFRandomState
 from ._utils import _get_default_args
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
+
+
+TF_VALID_NP_TYPES = ("i", "u", "f", "c")  # just numeric types
 
 
 class BaseWrapper(BaseEstimator):
@@ -273,6 +277,8 @@ class BaseWrapper(BaseEstimator):
 
     def _check_output_model_compatibility(self, y):
         """Checks that the model output number and y shape match, reshape as needed.
+
+        This is mainly in place to avoid cryptic TF errors.
         """
         # check if this is a multi-output model
         if self.keras_expected_n_ouputs_ != len(self.model_.outputs):
@@ -342,6 +348,43 @@ class BaseWrapper(BaseEstimator):
             return X
         return X, y
 
+    def _cast_input_array(
+        self, array: np.array, name: str, reset: bool = False
+    ):
+        """Cast input arrays to common dtype.
+
+        Parameters
+        ----------
+        array : np.array
+            Array to cast
+        name : str
+            Array name (i.e. `X`, `y` or `sample_weight`).
+        reset : bool, optional
+            If True, record input array dtype for casting back later.
+        """
+        if not hasattr(self, "input_dtypes_"):
+            self.input_dtypes_ = dict()
+        self.input_dtypes_[name] = array.dtype
+        if reset:
+            return array
+        common_dtype = np.int8
+        for dtype in self.input_dtypes_.values():
+            common_dtype = np.promote_types(dtype, common_dtype)
+        return array.astype(common_dtype)
+
+    def _cast_output_array(self, array: np.array, name: str):
+        """Return output arrays to the same type as their 
+        input.
+
+        Parameters
+        ----------
+        array : np.array
+            Array to cast
+        name : str
+            Array name (i.e. `X`, `y` or `sample_weight`).
+        """
+        return array.astype(self.input_dtypes_[name])
+
     @staticmethod
     def preprocess_y(y):
         """Handles manipulation of y inputs to fit or score.
@@ -396,6 +439,10 @@ class BaseWrapper(BaseEstimator):
             X : unchanged 2D numpy array
             extra_args : attributes of output `y`.
         """
+        if X.dtype.kind not in TF_VALID_NP_TYPES:
+            # Try to make X numeric by casting to float64
+            # that's just a best guess!
+            X = X.astype(np.float64)
         extra_args = dict()
         return X, extra_args
 
@@ -465,6 +512,16 @@ class BaseWrapper(BaseEstimator):
                 X = X[~zeros]
                 y = y[~zeros]
                 sample_weight = sample_weight[~zeros]
+
+        # Cast types
+        self._cast_input_array(X, "X", reset=True)
+        self._cast_input_array(y, "y", reset=True)
+        if sample_weight is not None:
+            sample_weight = self._cast_input_array(
+                sample_weight, "sample_weight"
+            )
+        X = self._cast_input_array(X, "X")
+        y = self._cast_input_array(y, "y")
 
         # pre process X, y
         X, _ = self.preprocess_X(X)
@@ -537,6 +594,9 @@ class BaseWrapper(BaseEstimator):
         # basic input checks
         X = self._validate_data(X=X, y=None, reset=False)
 
+        # type casting
+        X = self._cast_input_array(X, "X", reset=False)
+
         # pre process X
         X, _ = self.preprocess_X(X)
 
@@ -552,6 +612,7 @@ class BaseWrapper(BaseEstimator):
 
         # post process y
         y, _ = self.postprocess_y(y_pred)
+
         return y
 
     def score(self, X, y, sample_weight=None, **kwargs):
@@ -580,9 +641,9 @@ class BaseWrapper(BaseEstimator):
         # validate sample weights
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
-
-        # pre process X, y
-        _, extra_args = self.preprocess_y(y)
+            sample_weight = self._cast_input_array(
+                sample_weight, "sample_weight", reset=True
+            )
 
         # compute Keras model score
         y_pred = self.predict(X, **kwargs)
@@ -829,6 +890,10 @@ class KerasClassifier(BaseWrapper):
         class_probabilities = np.squeeze(np.column_stack(y))
 
         y = np.squeeze(np.column_stack(class_predictions))
+        # type casting
+        # done here because we don't want to cast outputs
+        # in regressors
+        y = self._cast_output_array(y, "y")
 
         extra_args = {"class_probabilities": class_probabilities}
 
@@ -884,6 +949,9 @@ class KerasClassifier(BaseWrapper):
 
         # basic input checks
         X = self._validate_data(X=X, y=None, reset=False)
+
+        # type casts
+        X = self._cast_input_array(X, "X")
 
         # pre process X
         X, _ = self.preprocess_X(X)
@@ -994,6 +1062,9 @@ class KerasRegressor(BaseWrapper):
         Since ScikitLearn's `score` uses R^2 by default, it is
         advisable to use the same loss/metric when optimizing the model.
         """
+        # Ensure inputs are floats
+        y_true = tf.cast(y_true, dtype=np.float64)
+        y_pred = tf.cast(y_pred, dtype=np.float64)
         ss_res = k_backend.sum(k_backend.square(y_true - y_pred), axis=0)
         ss_tot = k_backend.sum(
             k_backend.square(y_true - k_backend.mean(y_true, axis=0)), axis=0
