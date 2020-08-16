@@ -354,8 +354,6 @@ class BaseWrapper(BaseEstimator):
         Returns:
             y : numpy array of shape (n_samples, n_ouputs)
             extra_args : dictionary of output attributes, ex: n_outputs_
-                    These parameters are added to `self` by `fit` and
-                    consumed (but not reset) by `score`.
         """
 
         extra_args = dict()
@@ -377,8 +375,7 @@ class BaseWrapper(BaseEstimator):
         Returns:
             y : 2D numpy array with singular dimensions stripped
                 or 1D numpy array
-            extra_args : attributes of output `y` such as probabilites.
-                Currently unused by KerasRegressor but kept for flexibility.
+            extra_args : attributes of output `y`.
         """
         y = np.column_stack(y)
 
@@ -397,9 +394,7 @@ class BaseWrapper(BaseEstimator):
 
         Returns:
             X : unchanged 2D numpy array
-            extra_args : attributes of output `y` such as probabilites.
-                    Currently unused by KerasRegressor but kept for
-                    flexibility.
+            extra_args : attributes of output `y`.
         """
         extra_args = dict()
         return X, extra_args
@@ -573,7 +568,7 @@ class BaseWrapper(BaseEstimator):
             sample_weight : array-like of shape (n_samples,), default=None
                 Sample weights. The Keras Model must support this.
             **kwargs: dictionary arguments
-                Legal arguments are those of self.model_.evaluate.
+                Legal arguments are those of `self.model_.evaluate`.
 
         Returns:
             score: float
@@ -667,16 +662,14 @@ class KerasClassifier(BaseWrapper):
     def preprocess_y(y):
         """Handles manipulation of y inputs to fit or score.
 
-             For KerasClassifier, this handles interpreting classes from `y`.
+        For KerasClassifier, this handles interpreting classes from `y`.
 
         Arguments:
             y : 1D or 2D numpy array
 
         Returns:
             y : modified 2D numpy array with 0 indexed integer class labels.
-            classes_ : list of original class labels.
-            n_classes_ : number of classes.
-            one_hot_encoded : True if input y was one-hot-encoded.
+            extra_args : dictionary of output attributes, ex `n_outputs_`
         """
         y, _ = super(KerasClassifier, KerasClassifier).preprocess_y(y)
 
