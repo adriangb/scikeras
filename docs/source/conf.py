@@ -21,8 +21,8 @@ from scikeras import __version__
 
 
 project = "SciKeras"
-copyright = "2020, Adrian Badaracco"
-author = "Adrian Badaracco"
+copyright = "2020, SciKeras Developers"
+author = "SciKeras Developers"
 release = __version__
 
 
