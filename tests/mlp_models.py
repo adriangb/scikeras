@@ -54,7 +54,7 @@ def dynamic_classifier(
 def dynamic_regressor(
     n_features_in_,
     n_outputs_,
-    loss=KerasRegressor.root_mean_squared_error,
+    loss=KerasRegressor.r_squared,
     optimizer="adam",
     metrics=None,
     hidden_layer_sizes=(100,),
@@ -63,7 +63,7 @@ def dynamic_regressor(
     """
     if loss is None:
         # Default Model loss, not appropriate for a classifier
-        loss = KerasRegressor.root_mean_squared_error
+        loss = KerasRegressor.r_squared
 
     inp = Input(shape=(n_features_in_,))
 
@@ -77,7 +77,7 @@ def dynamic_regressor(
 
     model.compile(
         optimizer=optimizer,
-        loss=loss,  # KerasRegressor.root_mean_squared_error
+        loss=loss,  # KerasRegressor.r_squared
         metrics=metrics,
     )
     return model

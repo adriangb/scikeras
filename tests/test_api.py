@@ -370,7 +370,7 @@ def test_warm_start():
     X, y = data.data[:100], data.target[:100]
     # Initial fit
     estimator = KerasRegressor(
-        build_fn=dynamic_regressor, loss=KerasRegressor.root_mean_squared_error
+        build_fn=dynamic_regressor, loss=KerasRegressor.r_squared
     )
     estimator.fit(X, y)
     model = estimator.model_
@@ -396,8 +396,7 @@ class TestPartialFit:
         data = load_boston()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
-            build_fn=dynamic_regressor,
-            loss=KerasRegressor.root_mean_squared_error,
+            build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
         )
 
         estimator.partial_fit(X, y)
@@ -422,7 +421,7 @@ class TestPartialFit:
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
             build_fn=dynamic_regressor,
-            loss=KerasRegressor.root_mean_squared_error,
+            loss=KerasRegressor.r_squared,
             metrics="mean_squared_error",
         )
 

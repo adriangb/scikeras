@@ -979,22 +979,19 @@ class KerasRegressor(BaseWrapper):
         res = super(KerasRegressor, self).score(X, y, sample_weight, **kwargs)
 
         # check loss function and warn if it is not the same as score function
-        if self.model_.loss not in (
-            "mean_squared_error",
-            self.root_mean_squared_error,
-        ):
+        if self.model_.loss not in ("mean_squared_error", self.r_squared,):
             warnings.warn(
                 "Since ScikitLearn's `score` uses R^2 by default, it is "
                 "advisable to use the same loss/metric when optimizing the "
                 "model.This class provides an R^2 implementation in "
-                "`KerasRegressor.root_mean_squared_error`."
+                "`KerasRegressor.r_squared`."
             )
 
         return res
 
     @staticmethod
     @register_keras_serializable()
-    def root_mean_squared_error(y_true, y_pred):
+    def r_squared(y_true, y_pred):
         """A simple Keras implementation of R^2 that can be used as a Keras
         loss function.
 

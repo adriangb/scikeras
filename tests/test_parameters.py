@@ -31,8 +31,7 @@ class TestRandomState:
         "estimator",
         [
             KerasRegressor(
-                build_fn=dynamic_regressor,
-                loss=KerasRegressor.root_mean_squared_error,
+                build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
             ),
             KerasClassifier(build_fn=dynamic_classifier),
         ],
@@ -71,8 +70,7 @@ class TestRandomState:
         "estimator",
         [
             KerasRegressor(
-                build_fn=dynamic_regressor,
-                loss=KerasRegressor.root_mean_squared_error,
+                build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
             ),
             KerasClassifier(build_fn=dynamic_classifier),
         ],
