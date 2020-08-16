@@ -561,7 +561,6 @@ class BaseWrapper(BaseEstimator):
 
         # post process y
         y, _ = self.postprocess_y(y_pred)
-
         return y
 
     def score(self, X, y, sample_weight=None, **kwargs):
@@ -1007,9 +1006,13 @@ class KerasRegressor(BaseWrapper):
         Since ScikitLearn's `score` uses R^2 by default, it is
         advisable to use the same loss/metric when optimizing the model.
         """
-        # Ensure inputs are floats
-        y_true = tf.cast(y_true, dtype=np.float64)
-        y_pred = tf.cast(y_pred, dtype=np.float64)
+        # Ensure input dytpes match
+        dtype_y_true = np.dtype(y_true.dtype.as_numpy_dtype())
+        dtype_y_pred = np.dtype(y_pred.dtype.as_numpy_dtype())
+        dest_dtype = np.promote_types(dtype_y_pred, dtype_y_pred)
+        y_true = tf.cast(y_true, dtype=dest_dtype)
+        y_pred = tf.cast(y_pred, dtype=dest_dtype)
+        # Calculate R^2
         ss_res = tf.math.reduce_sum(
             tf.math.squared_difference(y_true, y_pred), axis=0
         )
