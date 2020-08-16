@@ -19,7 +19,6 @@ from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_X_y
-from tensorflow.keras import backend as k_backend
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import has_arg
@@ -1065,10 +1064,15 @@ class KerasRegressor(BaseWrapper):
         # Ensure inputs are floats
         y_true = tf.cast(y_true, dtype=np.float64)
         y_pred = tf.cast(y_pred, dtype=np.float64)
-        ss_res = k_backend.sum(k_backend.square(y_true - y_pred), axis=0)
-        ss_tot = k_backend.sum(
-            k_backend.square(y_true - k_backend.mean(y_true, axis=0)), axis=0
+        ss_res = tf.math.reduce_sum(
+            tf.math.squared_difference(y_true, y_pred), axis=0
         )
-        return k_backend.mean(
-            1 - ss_res / (ss_tot + k_backend.epsilon()), axis=-1
+        ss_tot = tf.math.reduce_sum(
+            tf.math.squared_difference(
+                y_true, tf.math.reduce_mean(y_true, axis=0)
+            ),
+            axis=0,
+        )
+        return tf.math.reduce_mean(
+            1 - ss_res / (ss_tot + tf.keras.backend.epsilon()), axis=-1
         )
