@@ -347,43 +347,6 @@ class BaseWrapper(BaseEstimator):
             return X
         return X, y
 
-    def _cast_input_array(
-        self, array: np.array, name: str, reset: bool = False
-    ):
-        """Cast input arrays to common dtype.
-
-        Parameters
-        ----------
-        array : np.array
-            Array to cast
-        name : str
-            Array name (i.e. `X`, `y` or `sample_weight`).
-        reset : bool, optional
-            If True, record input array dtype for casting back later.
-        """
-        if not hasattr(self, "input_dtypes_"):
-            self.input_dtypes_ = dict()
-        self.input_dtypes_[name] = array.dtype
-        if reset:
-            return array
-        common_dtype = np.int8
-        for dtype in self.input_dtypes_.values():
-            common_dtype = np.promote_types(dtype, common_dtype)
-        return array.astype(common_dtype)
-
-    def _cast_output_array(self, array: np.array, name: str):
-        """Return output arrays to the same type as their 
-        input.
-
-        Parameters
-        ----------
-        array : np.array
-            Array to cast
-        name : str
-            Array name (i.e. `X`, `y` or `sample_weight`).
-        """
-        return array.astype(self.input_dtypes_[name])
-
     @staticmethod
     def preprocess_y(y):
         """Handles manipulation of y inputs to fit or score.
@@ -512,16 +475,6 @@ class BaseWrapper(BaseEstimator):
                 y = y[~zeros]
                 sample_weight = sample_weight[~zeros]
 
-        # Cast types
-        self._cast_input_array(X, "X", reset=True)
-        self._cast_input_array(y, "y", reset=True)
-        if sample_weight is not None:
-            sample_weight = self._cast_input_array(
-                sample_weight, "sample_weight"
-            )
-        X = self._cast_input_array(X, "X")
-        y = self._cast_input_array(y, "y")
-
         # pre process X, y
         X, _ = self.preprocess_X(X)
         y, extra_args = self.preprocess_y(y)
@@ -593,9 +546,6 @@ class BaseWrapper(BaseEstimator):
         # basic input checks
         X = self._validate_data(X=X, y=None, reset=False)
 
-        # type casting
-        X = self._cast_input_array(X, "X", reset=False)
-
         # pre process X
         X, _ = self.preprocess_X(X)
 
@@ -640,9 +590,6 @@ class BaseWrapper(BaseEstimator):
         # validate sample weights
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
-            sample_weight = self._cast_input_array(
-                sample_weight, "sample_weight", reset=True
-            )
 
         # compute Keras model score
         y_pred = self.predict(X, **kwargs)
@@ -731,6 +678,8 @@ class KerasClassifier(BaseWrapper):
 
         cls_type_ = type_of_target(y)
 
+        input_dtype_ = y.dtype
+
         if len(y.shape) == 1:
             n_outputs_ = 1
         else:
@@ -816,6 +765,7 @@ class KerasClassifier(BaseWrapper):
             "keras_expected_n_ouputs_": keras_expected_n_ouputs_,
             "n_classes_": n_classes_,
             "cls_type_": cls_type_,
+            "input_dtype_": input_dtype_,
         }
 
         return y, extra_args
@@ -889,10 +839,9 @@ class KerasClassifier(BaseWrapper):
         class_probabilities = np.squeeze(np.column_stack(y))
 
         y = np.squeeze(np.column_stack(class_predictions))
-        # type casting
-        # done here because we don't want to cast outputs
-        # in regressors
-        y = self._cast_output_array(y, "y")
+
+        # type cast back to input dtype
+        y = y.astype(self.input_dtype_)
 
         extra_args = {"class_probabilities": class_probabilities}
 
@@ -948,9 +897,6 @@ class KerasClassifier(BaseWrapper):
 
         # basic input checks
         X = self._validate_data(X=X, y=None, reset=False)
-
-        # type casts
-        X = self._cast_input_array(X, "X")
 
         # pre process X
         X, _ = self.preprocess_X(X)

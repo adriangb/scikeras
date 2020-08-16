@@ -15,6 +15,8 @@ from scikeras.wrappers import BaseWrapper
 from scikeras.wrappers import KerasClassifier
 from scikeras.wrappers import KerasRegressor
 
+from .mlp_models import dynamic_classifier
+
 
 # Defaults
 INPUT_DIM = 5
@@ -251,3 +253,16 @@ def test_BaseWrapper_postprocess_y():
     np.testing.assert_equal(y_postprocessed, y_array)
     extra_args = BaseWrapper.postprocess_y(y_array)[1]
     assert len(extra_args) == 0
+
+
+@pytest.mark.parametrize("X_dtype", ["float32", "float64"])
+@pytest.mark.parametrize("y_dtype", ["int64", "int32", "uint8", "uint16"])
+@pytest.mark.parametrize("run_eagerly", [True, False])
+def test_classifier_handles_types(X_dtype, y_dtype, run_eagerly):
+    clf = KerasClassifier(build_fn=dynamic_classifier, run_eagerly=run_eagerly)
+    n, d = 100, 20
+    n_classes = 10
+    X = np.random.uniform(size=(n, d)).astype(X_dtype)
+    y = np.random.choice(n_classes, size=n).astype(y_dtype)
+    clf.fit(X, y)
+    assert clf.score(X, y) >= 0
