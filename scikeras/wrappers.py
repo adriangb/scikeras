@@ -33,9 +33,6 @@ from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
 
 
-TF_VALID_NP_TYPES = ("i", "u", "f", "c")  # just numeric types
-
-
 class BaseWrapper(BaseEstimator):
     """Base class for the Keras scikit-learn wrapper.
 
@@ -50,7 +47,8 @@ class BaseWrapper(BaseEstimator):
         random_state : int, RandomState instance, default=None
             Set the Tensorflow random number generators to a
             reproducible deterministic state using this seed.
-            Pass an int for reproducible results across multiple function calls.
+            Pass an int for reproducible results across multiple
+            function calls.
         For all other parameters see tf.keras.Model documentation.
     """
 
@@ -401,10 +399,6 @@ class BaseWrapper(BaseEstimator):
             X : unchanged 2D numpy array
             extra_args : attributes of output `y`.
         """
-        if X.dtype.kind not in TF_VALID_NP_TYPES:
-            # Try to make X numeric by casting to float64
-            # that's just a best guess!
-            X = X.astype(np.float64)
         extra_args = dict()
         return X, extra_args
 
@@ -655,7 +649,8 @@ class KerasClassifier(BaseWrapper):
                 performance target",
                 "check_fit_idempotent": "tf does not use \
                 sparse tensors",
-                "check_no_attributes_set_in_init": "can only pass if all params are hardcoded in __init__",
+                "check_no_attributes_set_in_init": "can only \
+                pass if all params are hardcoded in __init__",
             },
         }
     )
@@ -931,7 +926,8 @@ class KerasRegressor(BaseWrapper):
             "_xfail_checks": {
                 "check_fit_idempotent": "tf does not use sparse tensors",
                 "check_methods_subset_invariance": "can't meet tol",
-                "check_no_attributes_set_in_init": "can only pass if all params are hardcoded in __init__",
+                "check_no_attributes_set_in_init": "can only pass if all \
+                params are hardcoded in __init__",
             },
         }
     )
@@ -1009,7 +1005,7 @@ class KerasRegressor(BaseWrapper):
         # Ensure input dytpes match
         dtype_y_true = np.dtype(y_true.dtype.as_numpy_dtype())
         dtype_y_pred = np.dtype(y_pred.dtype.as_numpy_dtype())
-        dest_dtype = np.promote_types(dtype_y_pred, dtype_y_pred)
+        dest_dtype = np.promote_types(dtype_y_pred, dtype_y_true)
         y_true = tf.cast(y_true, dtype=dest_dtype)
         y_pred = tf.cast(y_pred, dtype=dest_dtype)
         # Calculate R^2
