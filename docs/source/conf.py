@@ -34,7 +34,7 @@ release = __version__
 extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.autodoc",
-    "numpydoc",
+    "sphinx.ext.napoleon",
 ]
 autosummary_generate = True
 autodoc_default_options = {
