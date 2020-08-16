@@ -458,9 +458,7 @@ class BaseWrapper(BaseEstimator):
         X, y = self._validate_data(X=X, y=y, reset=reset)
 
         if sample_weight is not None:
-            sample_weight = _check_sample_weight(
-                sample_weight, X, dtype=["float64", "int"]
-            )
+            sample_weight = _check_sample_weight(sample_weight, X)
             # Scikit-Learn expects a 0 in sample_weight to mean
             # "ignore the sample", but because of how Keras applies
             # sample_weight to the loss function, this doesn't
@@ -586,9 +584,7 @@ class BaseWrapper(BaseEstimator):
         """
         # validate sample weights
         if sample_weight is not None:
-            sample_weight = _check_sample_weight(
-                sample_weight, X, dtype=["float64", "int"]
-            )
+            sample_weight = _check_sample_weight(sample_weight, X)
 
         # pre process X, y
         _, extra_args = self.preprocess_y(y)
