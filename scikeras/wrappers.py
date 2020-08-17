@@ -344,13 +344,15 @@ class BaseWrapper(BaseEstimator):
             dtype for an input `arr`.
             """
             output_dtype = tf_backend_dtype
-            if isinstance(arr, np.ndarray) and arr.dtype.kind != "O":
-                output_dtype = arr.dtype
-            else:
-                arr_dtype = np.array(arr).dtype
-                if arr_dtype.kind != "O":
-                    # list of arrays with equal dtype
-                    output_dtype = arr_dtype
+            if isinstance(arr, np.ndarray):
+                if arr.dtype.kind != "O":
+                    return arr.dtype
+                else:
+                    return output_dtype
+            # arr is not an ndarray
+            arr_dtype = np.asarray(arr).dtype
+            if arr_dtype.kind != "O":
+                return arr_dtype
             return output_dtype
 
         if y is not None:
