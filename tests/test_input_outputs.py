@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import tensorflow as tf
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
@@ -280,7 +281,8 @@ def test_classifier_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
         def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
             assert X.dtype == np.dtype(X_dtype)
             # y is passed through encoders, it is likely not the original dtype
-            assert sample_weight.dtype == np.float32
+            # sample_weight should always be floatx
+            assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
             return super()._fit_keras_model(
                 X, y, sample_weight, warm_start, **kwargs
             )
@@ -319,8 +321,8 @@ def test_regressor_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
         def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
             assert X.dtype == np.dtype(X_dtype)
             assert y.dtype == np.dtype(y_dtype)
-            # sample weights are always float32
-            assert sample_weight.dtype == np.float32
+            # sample_weight should always be floatx
+            assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
             return super()._fit_keras_model(
                 X, y, sample_weight, warm_start, **kwargs
             )
