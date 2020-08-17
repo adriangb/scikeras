@@ -339,20 +339,21 @@ class BaseWrapper(BaseEstimator):
         # instead of always float64 (sklearns default)
         tf_backend_dtype = np.dtype(tf.keras.backend.floatx())
 
-        X_dtype = tf_backend_dtype
-        if isinstance(X, np.ndarray) and X.dtype.kind != "O":
-            X_dtype = X.dtype
-        elif np.array(X).dtype.kind != "O":
-            # list of arrays with equal dtype
-            X_dtype = np.array(X).dtype
+        def get_dtype(arr) -> np.dtype:
+            """Helper function to determine the correct
+            dtype for an input `arr`.
+            """
+            output_dtype = tf_backend_dtype
+            if isinstance(arr, np.ndarray) and arr.dtype.kind != "O":
+                output_dtype = arr.dtype
+            else:
+                arr_dtype = np.array(arr).dtype
+                if arr_dtype.kind != "O":
+                    # list of arrays with equal dtype
+                    output_dtype = arr_dtype
+            return output_dtype
 
         if y is not None:
-            y_dtype = tf_backend_dtype
-            if isinstance(y, np.ndarray) and y.dtype.kind != "O":
-                y_dtype = y.dtype
-            elif np.array(y).dtype.kind != "O":
-                # list of arrays with equal dtype
-                y_dtype = np.array(y).dtype
             X, y = check_X_y(
                 X,
                 y,
@@ -360,8 +361,10 @@ class BaseWrapper(BaseEstimator):
                 multi_output=True,  # allow y to be 2D
                 dtype=None,
             )
-            y = check_array(y, ensure_2d=False, allow_nd=False, dtype=y_dtype)
-        X = check_array(X, allow_nd=True, dtype=X_dtype)
+            y = check_array(
+                y, ensure_2d=False, allow_nd=False, dtype=get_dtype(y)
+            )
+        X = check_array(X, allow_nd=True, dtype=get_dtype(X))
 
         n_features = X.shape[1]
 
@@ -510,13 +513,12 @@ class BaseWrapper(BaseEstimator):
                 X = X[~zeros]
                 y = y[~zeros]
                 sample_weight = sample_weight[~zeros]
-                if (
-                    sample_weight.shape[0] == 0
-                ):  # could check any of the arrays
+                if sample_weight.size == 0:
+                    # could check any of the arrays here, arbitrary choice
                     # there will be no samples left! warn users
                     raise RuntimeError(
-                        "Cannot train because there are not samples"
-                        "left after deleting points with zero sample weight!"
+                        "Cannot train because there are no samples"
+                        " left after deleting points with zero sample weight!"
                     )
 
         # pre process X, y
