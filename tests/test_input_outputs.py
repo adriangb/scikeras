@@ -22,12 +22,9 @@ from .mlp_models import dynamic_regressor
 
 # Defaults
 INPUT_DIM = 5
-HIDDEN_DIM = 5
 TRAIN_SAMPLES = 10
 TEST_SAMPLES = 5
 NUM_CLASSES = 2
-BATCH_SIZE = 5
-EPOCHS = 1
 
 
 class FunctionalAPIMultiInputClassifier(KerasClassifier):
