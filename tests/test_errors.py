@@ -104,3 +104,25 @@ class TestInvalidBuildFn:
             ValueError, match="cannot implement `_keras_build_fn`"
         ):
             clf.fit(np.array([[0]]), np.array([0]))
+
+
+def test_sample_weights_all_zero():
+    """Checks for a user-friendly error when sample_weights
+    are all zero.
+    """
+    # build estimator
+    estimator = KerasClassifier(
+        build_fn=dynamic_classifier,
+        hidden_layer_sizes=(100,),
+        epochs=10,
+        random_state=0,
+    )
+
+    # we create 20 points
+    n, d = 50, 4
+    X = np.random.uniform(size=(n, d))
+    y = np.random.uniform(size=n)
+    sample_weight = np.zeros(y.shape)
+
+    with pytest.raises(RuntimeError, match="no samples left"):
+        estimator.fit(X, y, sample_weight=sample_weight)
