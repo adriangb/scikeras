@@ -258,12 +258,16 @@ class BaseWrapper(BaseEstimator):
 
         if OS_IS_WINDOWS:
             # see tensorflow/probability#886
-            X = _windows_upcast_int(X) if isinstance(X, np.ndarray) else [
-                _windows_upcast_int(x) for x in X
-            ]
-            y = _windows_upcast_int(y) if isinstance(y, np.ndarray) else [
-                _windows_upcast_int(yi) for yi in y
-            ]
+            X = (
+                _windows_upcast_ints(X)
+                if isinstance(X, np.ndarray)
+                else [_windows_upcast_ints(x) for x in X]
+            )
+            y = (
+                _windows_upcast_ints(y)
+                if isinstance(y, np.ndarray)
+                else [_windows_upcast_ints(yi) for yi in y]
+            )
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
