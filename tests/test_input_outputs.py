@@ -277,7 +277,7 @@ def test_classifier_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
     class StrictClassifier(KerasClassifier):
         def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
             assert X.dtype == input_dtypes[0]
-            assert y.dtype == input_dtypes[1]
+            # y is passed through encoders, it is likely not the original dtype
             assert sample_weight.dtype == input_dtypes[2]
             return super()._fit_keras_model(
                 X, y, sample_weight, warm_start, **kwargs

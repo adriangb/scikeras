@@ -708,7 +708,7 @@ class KerasClassifier(BaseWrapper):
             encoder = LabelEncoder()
             # No need to reshape to 1D here,
             # binary targets are always 1D already
-            y = encoder.fit_transform(y).astype(y.dtype)
+            y = encoder.fit_transform(y)
             classes_ = encoder.classes_
             # make lists
             encoders_ = [encoder]
@@ -722,7 +722,7 @@ class KerasClassifier(BaseWrapper):
             if len(y.shape) > 1 and y.shape[1] == 1:
                 # Make 1D just so LabelEncoder is happy
                 y = y.reshape(-1,)
-            y = encoder.fit_transform(y).astype(y.dtype)
+            y = encoder.fit_transform(y)
             classes_ = encoder.classes_
             # make lists
             encoders_ = [encoder]
@@ -740,7 +740,7 @@ class KerasClassifier(BaseWrapper):
             y = [
                 encoder.fit_transform(
                     y_.reshape(-1,) if y_.shape[1] == 1 else y_
-                ).astype(y_.dtype)
+                )
                 for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
@@ -755,7 +755,7 @@ class KerasClassifier(BaseWrapper):
             y = [
                 encoder.fit_transform(
                     y_.reshape(-1,) if y_.shape[1] == 1 else y_
-                ).astype(y_.dtype)
+                )
                 for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
