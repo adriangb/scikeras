@@ -445,6 +445,7 @@ class BaseWrapper(BaseEstimator):
             ValueError : In case sample_weight != None and the Keras model's
                 `fit` method does not support that parameter.
         """
+        self.input_dtype_ = y.dtype
         # Handle random state
         if hasattr(self, "random_state"):
             if isinstance(self.random_state, np.random.RandomState):
@@ -958,7 +959,7 @@ class KerasRegressor(BaseWrapper):
 
     def postprocess_y(self, y):
         """Ensures output is float64 and squeeze."""
-        return np.squeeze(y.astype("float64")), dict()
+        return np.squeeze(y.astype(self.input_dtype_, copy=False)), dict()
 
     def preprocess_y(self, y):
         """Split y for multi-output tasks.

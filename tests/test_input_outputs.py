@@ -294,7 +294,7 @@ def test_classifier_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
 @pytest.mark.parametrize(
     "X_dtype", ["float32", "float64", "int64", "int32", "uint8", "uint16"]
 )
-@pytest.mark.parametrize("y_dtype", ["int64", "int32", "uint8", "uint16"])
+@pytest.mark.parametrize("y_dtype", ["float32", "float64"])
 @pytest.mark.parametrize("s_w_dtype", ["float32", "float64"])
 @pytest.mark.parametrize("run_eagerly", [True, False])
 def test_regressor_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
@@ -302,9 +302,8 @@ def test_regressor_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
     always return float dtypes.
     """
     n, d = 100, 20
-    n_classes = 10
     X = np.random.uniform(size=(n, d)).astype(X_dtype)
-    y = np.random.choice(n_classes, size=n).astype(y_dtype)
+    y = np.random.uniform(size=n).astype(y_dtype)
     sample_weight = np.random.random(y.shape).astype(s_w_dtype)
 
     input_dtypes = (X.dtype, y.dtype, sample_weight.dtype)
@@ -320,5 +319,5 @@ def test_regressor_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
 
     clf = StrictRegressor(build_fn=dynamic_regressor, run_eagerly=run_eagerly)
     clf.fit(X, y, sample_weight=sample_weight)
-    return_dtype = clf.predict(X).dtype
-    assert return_dtype.kind in ("f", "c")
+    y_hat = clf.predict(X)
+    assert y_hat.dtype == y_dtype
