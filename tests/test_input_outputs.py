@@ -318,7 +318,7 @@ def test_regressor_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
                 X, y, sample_weight, warm_start, **kwargs
             )
 
-    clf = KerasRegressor(build_fn=dynamic_regressor, run_eagerly=run_eagerly)
+    clf = StrictRegressor(build_fn=dynamic_regressor, run_eagerly=run_eagerly)
     clf.fit(X, y, sample_weight=sample_weight)
     return_dtype = clf.predict(X).dtype
     assert return_dtype.kind in ("f", "c")
