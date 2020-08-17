@@ -259,26 +259,26 @@ def test_BaseWrapper_postprocess_y():
 @pytest.mark.parametrize(
     "X_dtype", ["float32", "float64", "int64", "int32", "uint8", "uint16"]
 )
-@pytest.mark.parametrize("y_dtype", ["int64", "int32", "uint8", "uint16"])
+@pytest.mark.parametrize(
+    "y_dtype", ["int64", "int32", "uint8", "uint16", "object"]
+)
 @pytest.mark.parametrize("s_w_dtype", ["float32", "float64"])
 @pytest.mark.parametrize("run_eagerly", [True, False])
 def test_classifier_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
     """Tests that classifiers correctly handle dtype conversions and
     return the same dtype as the inputs.
     """
-    n, d = 100, 20
-    n_classes = 10
+    n, d = 50, 4
+    n_classes = 3
     X = np.random.uniform(size=(n, d)).astype(X_dtype)
     y = np.random.choice(n_classes, size=n).astype(y_dtype)
-    sample_weight = np.random.random(y.shape).astype(s_w_dtype)
-
-    input_dtypes = (X.dtype, y.dtype, sample_weight.dtype)
+    sample_weight = np.ones(y.shape).astype(s_w_dtype)
 
     class StrictClassifier(KerasClassifier):
         def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
-            assert X.dtype == input_dtypes[0]
+            assert X.dtype == np.dtype(X_dtype)
             # y is passed through encoders, it is likely not the original dtype
-            assert sample_weight.dtype == input_dtypes[2]
+            assert sample_weight.dtype == np.float32
             return super()._fit_keras_model(
                 X, y, sample_weight, warm_start, **kwargs
             )
@@ -288,29 +288,37 @@ def test_classifier_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
     )
     clf.fit(X, y, sample_weight=sample_weight)
     assert clf.score(X, y) >= 0
-    assert clf.predict(X).dtype == y.dtype
+    if y.dtype.kind != "O":
+        assert clf.predict(X).dtype == y.dtype
+    else:
+        assert clf.predict(X).dtype == np.float32
 
 
-@pytest.mark.parametrize("X_dtype", ["float32", "int64", "uint16"])
-@pytest.mark.parametrize("y_dtype", ["float32", "float64", "int32", "uint8"])
-@pytest.mark.parametrize("s_w_dtype", ["float32", "float64"])
+@pytest.mark.parametrize(
+    "X_dtype", ["float32", "float64", "int64", "int32", "uint8", "uint16"]
+)
+@pytest.mark.parametrize(
+    "y_dtype", ["float32", "float64", "int64", "int32", "uint8", "uint16"]
+)
+@pytest.mark.parametrize(
+    "s_w_dtype", ["float32", "float64", "int64", "int32", "uint8", "uint16"]
+)
 @pytest.mark.parametrize("run_eagerly", [True, False])
 def test_regressor_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
     """Tests that regressors correctly handle dtype conversions and
     always return float dtypes.
     """
-    n, d = 100, 20
+    n, d = 50, 4
     X = np.random.uniform(size=(n, d)).astype(X_dtype)
     y = np.random.uniform(size=n).astype(y_dtype)
-    sample_weight = np.random.random(y.shape).astype(s_w_dtype)
-
-    input_dtypes = (X.dtype, y.dtype, sample_weight.dtype)
+    sample_weight = np.ones(y.shape).astype(s_w_dtype)
 
     class StrictRegressor(KerasRegressor):
         def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
-            assert X.dtype == input_dtypes[0]
-            assert y.dtype == input_dtypes[1]
-            assert sample_weight.dtype == input_dtypes[2]
+            assert X.dtype == np.dtype(X_dtype)
+            assert y.dtype == np.dtype(y_dtype)
+            # sample weights are always float32
+            assert sample_weight.dtype == np.float32
             return super()._fit_keras_model(
                 X, y, sample_weight, warm_start, **kwargs
             )

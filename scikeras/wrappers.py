@@ -335,14 +335,33 @@ class BaseWrapper(BaseEstimator):
         out : {ndarray, sparse matrix} or tuple of these
             The validated input. A tuple is returned if `y` is not None.
         """
+        # default to TFs backend float type
+        # instead of always float64 (sklearns default)
+        tf_backend_dtype = np.dtype(tf.keras.backend.floatx())
+
+        X_dtype = tf_backend_dtype
+        if isinstance(X, np.ndarray) and X.dtype.kind != "O":
+            X_dtype = X.dtype
+        elif np.array(X).dtype.kind != "O":
+            # list of arrays with equal dtype
+            X_dtype = np.array(X).dtype
+
         if y is not None:
+            y_dtype = tf_backend_dtype
+            if isinstance(y, np.ndarray) and y.dtype.kind != "O":
+                y_dtype = y.dtype
+            elif np.array(y).dtype.kind != "O":
+                # list of arrays with equal dtype
+                y_dtype = np.array(y).dtype
             X, y = check_X_y(
                 X,
                 y,
                 allow_nd=True,  # allow X to have more than 2 dimensions
                 multi_output=True,  # allow y to be 2D
+                dtype=None,
             )
-        X = check_array(X, allow_nd=True)
+            y = check_array(y, ensure_2d=False, allow_nd=False, dtype=y_dtype)
+        X = check_array(X, allow_nd=True, dtype=X_dtype)
 
         n_features = X.shape[1]
 
@@ -477,7 +496,9 @@ class BaseWrapper(BaseEstimator):
         self.input_dtype_ = y.dtype
 
         if sample_weight is not None:
-            sample_weight = _check_sample_weight(sample_weight, X)
+            sample_weight = _check_sample_weight(
+                sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
+            )
             # Scikit-Learn expects a 0 in sample_weight to mean
             # "ignore the sample", but because of how Keras applies
             # sample_weight to the loss function, this doesn't
@@ -489,6 +510,14 @@ class BaseWrapper(BaseEstimator):
                 X = X[~zeros]
                 y = y[~zeros]
                 sample_weight = sample_weight[~zeros]
+                if (
+                    sample_weight.shape[0] == 0
+                ):  # could check any of the arrays
+                    # there will be no samples left! warn users
+                    raise RuntimeError(
+                        "Cannot train because there are not samples"
+                        "left after deleting points with zero sample weight!"
+                    )
 
         # pre process X, y
         X, _ = self.preprocess_X(X)
@@ -604,6 +633,9 @@ class BaseWrapper(BaseEstimator):
         # validate sample weights
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
+
+        # validate y
+        y = check_array(y, ensure_2d=False)
 
         # compute Keras model score
         y_pred = self.predict(X, **kwargs)
@@ -960,7 +992,7 @@ class KerasRegressor(BaseWrapper):
         return super()._validate_data(X=X, y=y, reset=reset)
 
     def postprocess_y(self, y):
-        """Ensures output is float64 and squeeze."""
+        """Ensures output is floatx and squeeze."""
         if np.can_cast(self.input_dtype_, np.float32):
             return np.squeeze(y.astype(np.float32, copy=False)), dict()
         else:
