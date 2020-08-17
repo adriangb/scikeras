@@ -106,7 +106,7 @@ class TestInvalidBuildFn:
             clf.fit(np.array([[0]]), np.array([0]))
 
 
-def test_sample_all_zero():
+def test_sample_weights_all_zero():
     """Checks for a user-friendly error when sample_weights
     are all zero.
     """
