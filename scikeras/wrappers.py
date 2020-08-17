@@ -1063,11 +1063,8 @@ class KerasRegressor(BaseWrapper):
         advisable to use the same loss/metric when optimizing the model.
         """
         # Ensure input dytpes match
-        dtype_y_true = np.dtype(y_true.dtype.as_numpy_dtype())
-        dtype_y_pred = np.dtype(y_pred.dtype.as_numpy_dtype())
-        dest_dtype = np.promote_types(dtype_y_pred, dtype_y_true)
-        y_true = tf.cast(y_true, dtype=dest_dtype)
-        y_pred = tf.cast(y_pred, dtype=dest_dtype)
+        # y_pred will always be float32 so we cast y_true to float32
+        y_true = tf.cast(y_true, dtype=y_pred.dtype)
         # Calculate R^2
         ss_res = tf.math.reduce_sum(
             tf.math.squared_difference(y_true, y_pred), axis=0
