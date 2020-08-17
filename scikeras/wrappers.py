@@ -856,7 +856,7 @@ class KerasClassifier(BaseWrapper):
         y = np.squeeze(np.column_stack(class_predictions))
 
         # type cast back to input dtype
-        y = y.astype(self.input_dtype_)
+        y = y.astype(self.input_dtype_, copy=False)
 
         extra_args = {"class_probabilities": class_probabilities}
 
