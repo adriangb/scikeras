@@ -17,8 +17,7 @@ def test_validate_data():
     """
 
     estimator = KerasRegressor(
-        build_fn=dynamic_regressor,
-        loss=KerasRegressor.root_mean_squared_error,
+        build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
     )
     X = np.array([[1, 2], [3, 4]])
     y = np.array([5, 6])
@@ -38,8 +37,7 @@ def test_not_fitted_error():
     """Tests error when trying to use predict before fit.
     """
     estimator = KerasClassifier(
-        build_fn=dynamic_classifier,
-        loss=KerasRegressor.root_mean_squared_error,
+        build_fn=dynamic_classifier, loss=KerasRegressor.r_squared,
     )
     X = np.random.rand(10, 20)
     with pytest.raises(NotFittedError):

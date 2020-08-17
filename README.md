@@ -32,7 +32,7 @@ Base implementation that wraps Keras models for use with `Scikit-Learn` workflow
 Implements the `Scikit-Learn` classifier interface, akin to `sklearn.base.ClassifierMixin`. By default, scoring is done using `sklearn.metrics.accuracy_score`.
 
 ### `KerasRegressor`
-Implements the `Scikit-Learn` classifier interface, akin to `sklearn.base.RegressorMixin`. By default, scoring is done using `sklearn.metrics.r2_score`. Note that `Keras` does *not* have R2 as a built in loss function. A basic implementation of a `Keras` compatible R2 loss funciton is provided in `KerasRegressor.root_mean_squared_error`.
+Implements the `Scikit-Learn` classifier interface, akin to `sklearn.base.RegressorMixin`. By default, scoring is done using `sklearn.metrics.r2_score`. Note that `Keras` does *not* have R2 as a built in loss function. A basic implementation of a `Keras` compatible R2 loss funciton is provided in `KerasRegressor.r_squared`.
 
 ## Basic Usage
 
@@ -112,7 +112,7 @@ class MLPRegressor(KerasRegressor):
         for size in hidden_layer_sizes:
             model.add(Dense(size, activation="relu"))
         model.add(Dense(n_outputs_))
-        model.compile("adam", loss=KerasRegressor.root_mean_squared_error)
+        model.compile("adam", loss=KerasRegressor.r_squared)
         return model
 ```
 

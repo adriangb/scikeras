@@ -1,11 +1,13 @@
 """Wrapper for using the Scikit-Learn API with Keras models.
 """
 import inspect
+import os
 import warnings
 
 from collections import defaultdict
 
 import numpy as np
+import tensorflow as tf
 
 from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
@@ -18,7 +20,6 @@ from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.validation import check_array
 from sklearn.utils.validation import check_X_y
-from tensorflow.keras import backend as k_backend
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import has_arg
@@ -31,6 +32,9 @@ from ._utils import TFRandomState
 from ._utils import _get_default_args
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
+
+
+OS_IS_WINDOWS = os.name == "nt"  # see tensorflow/probability#886
 
 
 class BaseWrapper(BaseEstimator):
@@ -47,7 +51,8 @@ class BaseWrapper(BaseEstimator):
         random_state : int, RandomState instance, default=None
             Set the Tensorflow random number generators to a
             reproducible deterministic state using this seed.
-            Pass an int for reproducible results across multiple function calls.
+            Pass an int for reproducible results across multiple
+            function calls.
         For all other parameters see tf.keras.Model documentation.
     """
 
@@ -250,6 +255,23 @@ class BaseWrapper(BaseEstimator):
         # order implies kwargs overwrites fit_args
         fit_args = {**fit_args, **kwargs}
 
+        if OS_IS_WINDOWS:
+            # see tensorflow/probability#886
+            if not isinstance(X, np.ndarray):  # list, tuple, etc.
+                X = [
+                    X_.astype(np.int64) if X_.dtype == np.int32 else X_
+                    for X_ in X
+                ]
+            else:
+                X = X.astype(np.int64) if X.dtype == np.int32 else X
+            if not isinstance(y, np.ndarray):  # list, tuple, etc.
+                y = [
+                    y_.astype(np.int64) if y_.dtype == np.int32 else y_
+                    for y_ in y
+                ]
+            else:
+                y = y.astype(np.int64) if y.dtype == np.int32 else y
+
         if self._random_state is not None:
             with TFRandomState(self._random_state):
                 hist = self.model_.fit(x=X, y=y, **fit_args)
@@ -273,6 +295,8 @@ class BaseWrapper(BaseEstimator):
 
     def _check_output_model_compatibility(self, y):
         """Checks that the model output number and y shape match, reshape as needed.
+
+        This is mainly in place to avoid cryptic TF errors.
         """
         # check if this is a multi-output model
         if self.keras_expected_n_ouputs_ != len(self.model_.outputs):
@@ -354,8 +378,6 @@ class BaseWrapper(BaseEstimator):
         Returns:
             y : numpy array of shape (n_samples, n_ouputs)
             extra_args : dictionary of output attributes, ex: n_outputs_
-                    These parameters are added to `self` by `fit` and
-                    consumed (but not reset) by `score`.
         """
 
         extra_args = dict()
@@ -377,8 +399,7 @@ class BaseWrapper(BaseEstimator):
         Returns:
             y : 2D numpy array with singular dimensions stripped
                 or 1D numpy array
-            extra_args : attributes of output `y` such as probabilites.
-                Currently unused by KerasRegressor but kept for flexibility.
+            extra_args : attributes of output `y`.
         """
         y = np.column_stack(y)
 
@@ -397,9 +418,7 @@ class BaseWrapper(BaseEstimator):
 
         Returns:
             X : unchanged 2D numpy array
-            extra_args : attributes of output `y` such as probabilites.
-                    Currently unused by KerasRegressor but kept for
-                    flexibility.
+            extra_args : attributes of output `y`.
         """
         extra_args = dict()
         return X, extra_args
@@ -571,7 +590,7 @@ class BaseWrapper(BaseEstimator):
             sample_weight : array-like of shape (n_samples,), default=None
                 Sample weights. The Keras Model must support this.
             **kwargs: dictionary arguments
-                Legal arguments are those of self.model_.evaluate.
+                Legal arguments are those of `self.model_.evaluate`.
 
         Returns:
             score: float
@@ -585,9 +604,6 @@ class BaseWrapper(BaseEstimator):
         # validate sample weights
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
-
-        # pre process X, y
-        _, extra_args = self.preprocess_y(y)
 
         # compute Keras model score
         y_pred = self.predict(X, **kwargs)
@@ -654,7 +670,8 @@ class KerasClassifier(BaseWrapper):
                 performance target",
                 "check_fit_idempotent": "tf does not use \
                 sparse tensors",
-                "check_no_attributes_set_in_init": "can only pass if all params are hardcoded in __init__",
+                "check_no_attributes_set_in_init": "can only \
+                pass if all params are hardcoded in __init__",
             },
         }
     )
@@ -663,20 +680,20 @@ class KerasClassifier(BaseWrapper):
     def preprocess_y(y):
         """Handles manipulation of y inputs to fit or score.
 
-             For KerasClassifier, this handles interpreting classes from `y`.
+        For KerasClassifier, this handles interpreting classes from `y`.
 
         Arguments:
             y : 1D or 2D numpy array
 
         Returns:
             y : modified 2D numpy array with 0 indexed integer class labels.
-            classes_ : list of original class labels.
-            n_classes_ : number of classes.
-            one_hot_encoded : True if input y was one-hot-encoded.
+            extra_args : dictionary of output attributes, ex `n_outputs_`
         """
         y, _ = super(KerasClassifier, KerasClassifier).preprocess_y(y)
 
         cls_type_ = type_of_target(y)
+
+        input_dtype_ = y.dtype
 
         if len(y.shape) == 1:
             n_outputs_ = 1
@@ -691,7 +708,7 @@ class KerasClassifier(BaseWrapper):
             encoder = LabelEncoder()
             # No need to reshape to 1D here,
             # binary targets are always 1D already
-            y = encoder.fit_transform(y)
+            y = encoder.fit_transform(y).astype(y.dtype)
             classes_ = encoder.classes_
             # make lists
             encoders_ = [encoder]
@@ -705,7 +722,7 @@ class KerasClassifier(BaseWrapper):
             if len(y.shape) > 1 and y.shape[1] == 1:
                 # Make 1D just so LabelEncoder is happy
                 y = y.reshape(-1,)
-            y = encoder.fit_transform(y)
+            y = encoder.fit_transform(y).astype(y.dtype)
             classes_ = encoder.classes_
             # make lists
             encoders_ = [encoder]
@@ -723,7 +740,7 @@ class KerasClassifier(BaseWrapper):
             y = [
                 encoder.fit_transform(
                     y_.reshape(-1,) if y_.shape[1] == 1 else y_
-                )
+                ).astype(y_.dtype)
                 for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
@@ -738,7 +755,7 @@ class KerasClassifier(BaseWrapper):
             y = [
                 encoder.fit_transform(
                     y_.reshape(-1,) if y_.shape[1] == 1 else y_
-                )
+                ).astype(y_.dtype)
                 for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
@@ -763,6 +780,7 @@ class KerasClassifier(BaseWrapper):
             "keras_expected_n_ouputs_": keras_expected_n_ouputs_,
             "n_classes_": n_classes_,
             "cls_type_": cls_type_,
+            "input_dtype_": input_dtype_,
         }
 
         return y, extra_args
@@ -837,6 +855,9 @@ class KerasClassifier(BaseWrapper):
 
         y = np.squeeze(np.column_stack(class_predictions))
 
+        # type cast back to input dtype
+        y = y.astype(self.input_dtype_, copy=False)
+
         extra_args = {"class_probabilities": class_probabilities}
 
         return y, extra_args
@@ -854,7 +875,7 @@ class KerasClassifier(BaseWrapper):
             if is_categorical_crossentropy(loss) and (
                 y[i].ndim == 1 or y[i].shape[1] == 1
             ):
-                encoder = OneHotEncoder(sparse=False)
+                encoder = OneHotEncoder(sparse=False, dtype=y[i].dtype)
                 tf1dto2d = LabelDimensionTransformer()
                 y[i] = tf1dto2d.fit_transform(y[i])
                 y[i] = encoder.fit_transform(y[i])
@@ -926,7 +947,8 @@ class KerasRegressor(BaseWrapper):
             "_xfail_checks": {
                 "check_fit_idempotent": "tf does not use sparse tensors",
                 "check_methods_subset_invariance": "can't meet tol",
-                "check_no_attributes_set_in_init": "can only pass if all params are hardcoded in __init__",
+                "check_no_attributes_set_in_init": "can only pass if all \
+                params are hardcoded in __init__",
             },
         }
     )
@@ -982,32 +1004,41 @@ class KerasRegressor(BaseWrapper):
         res = super(KerasRegressor, self).score(X, y, sample_weight, **kwargs)
 
         # check loss function and warn if it is not the same as score function
-        if self.model_.loss not in (
-            "mean_squared_error",
-            self.root_mean_squared_error,
-        ):
+        if self.model_.loss not in ("mean_squared_error", self.r_squared,):
             warnings.warn(
                 "Since ScikitLearn's `score` uses R^2 by default, it is "
                 "advisable to use the same loss/metric when optimizing the "
                 "model.This class provides an R^2 implementation in "
-                "`KerasRegressor.root_mean_squared_error`."
+                "`KerasRegressor.r_squared`."
             )
 
         return res
 
     @staticmethod
     @register_keras_serializable()
-    def root_mean_squared_error(y_true, y_pred):
+    def r_squared(y_true, y_pred):
         """A simple Keras implementation of R^2 that can be used as a Keras
         loss function.
 
         Since ScikitLearn's `score` uses R^2 by default, it is
         advisable to use the same loss/metric when optimizing the model.
         """
-        ss_res = k_backend.sum(k_backend.square(y_true - y_pred), axis=0)
-        ss_tot = k_backend.sum(
-            k_backend.square(y_true - k_backend.mean(y_true, axis=0)), axis=0
+        # Ensure input dytpes match
+        dtype_y_true = np.dtype(y_true.dtype.as_numpy_dtype())
+        dtype_y_pred = np.dtype(y_pred.dtype.as_numpy_dtype())
+        dest_dtype = np.promote_types(dtype_y_pred, dtype_y_true)
+        y_true = tf.cast(y_true, dtype=dest_dtype)
+        y_pred = tf.cast(y_pred, dtype=dest_dtype)
+        # Calculate R^2
+        ss_res = tf.math.reduce_sum(
+            tf.math.squared_difference(y_true, y_pred), axis=0
         )
-        return k_backend.mean(
-            1 - ss_res / (ss_tot + k_backend.epsilon()), axis=-1
+        ss_tot = tf.math.reduce_sum(
+            tf.math.squared_difference(
+                y_true, tf.math.reduce_mean(y_true, axis=0)
+            ),
+            axis=0,
+        )
+        return tf.math.reduce_mean(
+            1 - ss_res / (ss_tot + tf.keras.backend.epsilon()), axis=-1
         )

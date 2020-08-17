@@ -104,6 +104,6 @@ def test_run_eagerly():
     estimator = KerasRegressor(
         build_fn=dynamic_regressor,
         run_eagerly=True,
-        loss=KerasRegressor.root_mean_squared_error,
+        loss=KerasRegressor.r_squared,
     )
     check_pickle(estimator, load_boston)
