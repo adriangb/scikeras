@@ -30,9 +30,9 @@ from tensorflow.python.keras.utils.generic_utils import (
 from ._utils import LabelDimensionTransformer
 from ._utils import TFRandomState
 from ._utils import _get_default_args
+from ._utils import _windows_upcast_ints
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
-from ._utils import _windows_upcast_ints
 
 
 OS_IS_WINDOWS = os.name == "nt"  # see tensorflow/probability#886
