@@ -262,7 +262,9 @@ def test_BaseWrapper_postprocess_y():
 @pytest.mark.parametrize(
     "y_dtype", ["int64", "int32", "uint8", "uint16", "object"]
 )
-@pytest.mark.parametrize("s_w_dtype", ["float32", "float64"])
+@pytest.mark.parametrize(
+    "s_w_dtype", ["float32", "float64", "int64", "int32", "uint8", "uint16"]
+)
 @pytest.mark.parametrize("run_eagerly", [True, False])
 def test_classifier_handles_types(X_dtype, y_dtype, s_w_dtype, run_eagerly):
     """Tests that classifiers correctly handle dtype conversions and
