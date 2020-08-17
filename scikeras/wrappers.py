@@ -909,7 +909,7 @@ class KerasClassifier(BaseWrapper):
             if is_categorical_crossentropy(loss) and (
                 y[i].ndim == 1 or y[i].shape[1] == 1
             ):
-                encoder = OneHotEncoder(sparse=False, dtype=y[i].dtype)
+                encoder = OneHotEncoder(sparse=False, dtype=np.uint8)
                 tf1dto2d = LabelDimensionTransformer()
                 y[i] = tf1dto2d.fit_transform(y[i])
                 y[i] = encoder.fit_transform(y[i])
