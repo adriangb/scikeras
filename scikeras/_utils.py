@@ -167,3 +167,6 @@ def _get_default_args(func):
         for k, v in signature.parameters.items()
         if v.default is not inspect.Parameter.empty
     }
+
+def _windows_upcast_ints(x: np.ndarray) -> np.ndarray:
+    return x.astype("int64") if x.dtype == np.int32 else x

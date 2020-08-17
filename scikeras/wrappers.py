@@ -32,6 +32,7 @@ from ._utils import TFRandomState
 from ._utils import _get_default_args
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
+from ._utils import _windows_upcast_ints
 
 
 OS_IS_WINDOWS = os.name == "nt"  # see tensorflow/probability#886
@@ -257,20 +258,12 @@ class BaseWrapper(BaseEstimator):
 
         if OS_IS_WINDOWS:
             # see tensorflow/probability#886
-            if not isinstance(X, np.ndarray):  # list, tuple, etc.
-                X = [
-                    X_.astype(np.int64) if X_.dtype == np.int32 else X_
-                    for X_ in X
-                ]
-            else:
-                X = X.astype(np.int64) if X.dtype == np.int32 else X
-            if not isinstance(y, np.ndarray):  # list, tuple, etc.
-                y = [
-                    y_.astype(np.int64) if y_.dtype == np.int32 else y_
-                    for y_ in y
-                ]
-            else:
-                y = y.astype(np.int64) if y.dtype == np.int32 else y
+            X = _windows_upcast_int(X) if isinstance(X, np.ndarray) else [
+                _windows_upcast_int(x) for x in X
+            ]
+            y = _windows_upcast_int(y) if isinstance(y, np.ndarray) else [
+                _windows_upcast_int(yi) for yi in y
+            ]
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
