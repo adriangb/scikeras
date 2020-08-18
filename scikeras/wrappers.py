@@ -335,23 +335,16 @@ class BaseWrapper(BaseEstimator):
         out : {ndarray, sparse matrix} or tuple of these
             The validated input. A tuple is returned if `y` is not None.
         """
-        # default to TFs backend float type
-        # instead of always float64 (sklearns default)
-        tf_backend_dtype = np.dtype(tf.keras.backend.floatx())
 
-        def get_dtype(arr) -> np.dtype:
-            """Helper function to determine the correct
-            dtype for an input `arr`.
-            """
-            output_dtype = tf_backend_dtype
-            if isinstance(arr, np.ndarray) and arr.dtype.kind != "O":
-                output_dtype = arr.dtype
+        def _check_array_dtype(arr):
+            if not isinstance(arr, np.ndarray):
+                return _check_array_dtype(np.asarray(arr))
+            elif arr.dtype.kind != "O":
+                return None  # check_array won't do any casting with dtype=None
             else:
-                arr_dtype = np.array(arr).dtype
-                if arr_dtype.kind != "O":
-                    # list of arrays with equal dtype
-                    output_dtype = arr_dtype
-            return output_dtype
+                # default to TFs backend float type
+                # instead of float64 (sklearns default)
+                return tf.keras.backend.floatx()
 
         if y is not None:
             X, y = check_X_y(
@@ -362,9 +355,9 @@ class BaseWrapper(BaseEstimator):
                 dtype=None,
             )
             y = check_array(
-                y, ensure_2d=False, allow_nd=False, dtype=get_dtype(y)
+                y, ensure_2d=False, allow_nd=False, dtype=_check_array_dtype(y)
             )
-        X = check_array(X, allow_nd=True, dtype=get_dtype(X))
+        X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
 
         n_features = X.shape[1]
 
@@ -987,12 +980,6 @@ class KerasRegressor(BaseWrapper):
         }
     )
 
-    def _validate_data(self, X, y=None, reset=True):
-        """Convert y to float, regressors cannot accept int."""
-        if y is not None:
-            y = check_array(y, ensure_2d=False)
-        return super()._validate_data(X=X, y=y, reset=reset)
-
     def postprocess_y(self, y):
         """Ensures output is floatx and squeeze."""
         if np.can_cast(self.input_dtype_, np.float32):
@@ -1061,11 +1048,8 @@ class KerasRegressor(BaseWrapper):
         advisable to use the same loss/metric when optimizing the model.
         """
         # Ensure input dytpes match
-        dtype_y_true = np.dtype(y_true.dtype.as_numpy_dtype())
-        dtype_y_pred = np.dtype(y_pred.dtype.as_numpy_dtype())
-        dest_dtype = np.promote_types(dtype_y_pred, dtype_y_true)
-        y_true = tf.cast(y_true, dtype=dest_dtype)
-        y_pred = tf.cast(y_pred, dtype=dest_dtype)
+        # y_pred will always be float32 so we cast y_true to float32
+        y_true = tf.cast(y_true, dtype=y_pred.dtype)
         # Calculate R^2
         ss_res = tf.math.reduce_sum(
             tf.math.squared_difference(y_true, y_pred), axis=0
