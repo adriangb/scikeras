@@ -256,7 +256,9 @@ class BaseWrapper(BaseEstimator):
             params, destination="compile", pass_filter=self._compile_params
         )
         meta_params = route_params(
-            self.get_meta_params(), pass_filter=self._meta_params
+            self.get_meta_params(),
+            destination=None,
+            pass_filter=self._meta_params,
         )
         meta_params.update({"X": X, "y": y})
 
