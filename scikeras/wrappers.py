@@ -38,9 +38,6 @@ from ._utils import make_model_picklable
 from ._utils import route_params
 
 
-OS_IS_WINDOWS = os.name == "nt"  # see tensorflow/probability#886
-
-
 class BaseWrapper(BaseEstimator):
     """Base class for the Keras scikit-learn wrapper.
 
@@ -68,6 +65,7 @@ class BaseWrapper(BaseEstimator):
     }
 
     _fit_params = {
+        # parameters destined to keras.Model.fit
         "callbacks",
         "batch_size",
         "epochs",
@@ -84,6 +82,7 @@ class BaseWrapper(BaseEstimator):
     }
 
     _predict_params = {
+        # parameters destined to keras.Model.predict
         "batch_size",
         "verbose",
         "callbacks",
@@ -91,12 +90,31 @@ class BaseWrapper(BaseEstimator):
     }
 
     _compile_params = {
+        # parameters destined to keras.Model.compile
         "optimizer",
         "loss",
         "metrics",
         "loss_weights",
         "weighted_metrics",
         "run_eagerly",
+    }
+
+    _wrapper_params = {
+        # parameters consumed by the wrappers themselves
+        "warm_start",
+        "random_state",
+    }
+
+    _meta_params = {
+        # parameters created by wrappers within `fit`
+        "_random_state",
+        "n_features_in_",
+        "input_dtype_",
+        "model_",
+        "history_",
+        "is_fitted_",
+        "n_outputs_",
+        "keras_expected_n_ouputs_",
     }
 
     def __init__(
@@ -144,6 +162,16 @@ class BaseWrapper(BaseEstimator):
     @property
     def __name__(self):
         return self.__class__.__name__
+
+    @property
+    def _build_params(self):
+        return (
+            set(self.get_params().keys())
+            - self._compile_params
+            - self._fit_params
+            - self._predict_params
+            - self._wrapper_params
+        )
 
     def _check_build_fn(self, build_fn):
         """Checks `build_fn`.
@@ -221,11 +249,16 @@ class BaseWrapper(BaseEstimator):
         params = self.get_params()
         if "build_fn" in params:
             params.pop("build_fn")
-        build_params = route_params(params, destination="build")
+        build_params = route_params(
+            params, destination="build", pass_filter=self._build_params
+        )
         compile_params = route_params(
             params, destination="compile", pass_filter=self._compile_params
         )
-        meta_params = {"X": X, "y": y, **self.get_meta_params()}
+        meta_params = route_params(
+            self.get_meta_params(), pass_filter=self._meta_params
+        )
+        meta_params.update({"X": X, "y": y})
 
         # build model
         if self._random_state is not None:
@@ -272,6 +305,10 @@ class BaseWrapper(BaseEstimator):
             ValueError : In case sample_weight != None and the Keras model's
                         `fit` method does not support that parameter.
         """
+        if os.name == "nt":
+            # see tensorflow/probability#886
+            X = _windows_upcast_ints(X)
+            y = _windows_upcast_ints(y)
 
         # collect parameters
         params = self.get_params()
@@ -561,19 +598,6 @@ class BaseWrapper(BaseEstimator):
 
         y = self._check_output_model_compatibility(y)
 
-        if OS_IS_WINDOWS:
-            # see tensorflow/probability#886
-            X = (
-                _windows_upcast_ints(X)
-                if isinstance(X, np.ndarray)
-                else [_windows_upcast_ints(x) for x in X]
-            )
-            y = (
-                _windows_upcast_ints(y)
-                if isinstance(y, np.ndarray)
-                else [_windows_upcast_ints(yi) for yi in y]
-            )
-
         # fit model
         return self._fit_keras_model(
             X, y, sample_weight=sample_weight, warm_start=warm_start
@@ -736,6 +760,20 @@ class KerasClassifier(BaseWrapper):
                 "check_no_attributes_set_in_init": "can only \
                 pass if all params are hardcoded in __init__",
             },
+        }
+    )
+
+    _meta_params = (
+        BaseWrapper._meta_params.copy()
+    )  # parameters created by wrappers within `fit`
+    _meta_params.update(
+        {
+            "n_classes_",
+            "cls_type_",
+            "classes_",
+            "encoders_",
+            "n_outputs_",
+            "keras_expected_n_ouputs_",
         }
     )
 

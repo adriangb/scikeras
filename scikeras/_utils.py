@@ -6,6 +6,8 @@ import warnings
 from typing import Any
 from typing import Dict
 from typing import Iterable
+from typing import List
+from typing import Union
 
 import numpy as np
 import tensorflow as tf
@@ -173,12 +175,23 @@ def _get_default_args(func):
     }
 
 
-def _windows_upcast_ints(x: np.ndarray) -> np.ndarray:
-    return x.astype("int64") if x.dtype == np.int32 else x
+def _windows_upcast_ints(
+    arr: Union[List[np.ndarray], np.ndarray]
+) -> Union[List[np.ndarray], np.ndarray]:
+    # see tensorflow/probability#886
+    def _upcast(x):
+        x.astype("int64") if x.dtype == np.int32 else x
+
+    if isinstance(arr, np.ndarray):
+        return _upcast(arr)
+    else:
+        return [_upcast(x_) for x_ in arr]
 
 
 def route_params(
-    params: Dict[str, Any], destination: str, pass_filter: Iterable[str] = None
+    params: Dict[str, Any],
+    destination: str = "any",
+    pass_filter: Union[Iterable[str], None] = None,
 ) -> Dict[str, Any]:
     """Route and trim parameter names.
 
@@ -186,9 +199,10 @@ def route_params(
     ----------
     params : Dict[str, Any]
         Parameters to route/filter.
-    destination : str
+    destination : str, default "any"
         Destination to route to, ex: `build` or `compile`.
-    pass_filter: Iterable[str]
+        If "any" all routed parameters are removed.
+    pass_filter: Union[Iterable[str], None], default None
         If None, all non-routing `params` are passed. If an iterable,
         only keys from `params` that are in the iterable are passed.
         This does not affect routed parameters.
@@ -204,6 +218,9 @@ def route_params(
         if pass_filter is None or key in pass_filter
     }
     for key, val in params.items():
-        if "__" in key and key.startswith(destination):
-            res[key.replace(destination.strip("__") + "__", "")] = val
+        if "__" in key:
+            if destination == "any":
+                params.pop(key)
+            elif key.startswith(destination):
+                res[key.replace(destination.strip("__") + "__", "")] = val
     return res
