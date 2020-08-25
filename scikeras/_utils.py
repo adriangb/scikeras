@@ -161,7 +161,7 @@ def get_metric_full_name(name: str) -> str:
     # deserialize returns the actual function, then get it's name
     # to keep a single consistent name for the metric
     if name == "loss":
-        # may be passed "loss" from thre training history
+        # may be passed "loss" from training history
         return name
     return getattr(deserialize_metric(name), "__name__")
 
