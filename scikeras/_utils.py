@@ -202,6 +202,7 @@ def route_params(
     destination : str, default "any"
         Destination to route to, ex: `build` or `compile`.
         If "any" all routed parameters are removed.
+        If None, all parameters with "__" in them are dropped.
     pass_filter: Union[Iterable[str], None], default None
         If None, all non-routing `params` are passed. If an iterable,
         only keys from `params` that are in the iterable are passed.
