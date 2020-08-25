@@ -220,7 +220,7 @@ def route_params(
     for key, val in params.items():
         if "__" in key:
             if destination == "any":
-                params.pop(key)
+                res[key] = val
             elif key.startswith(destination):
                 res[key.replace(destination.strip("__") + "__", "")] = val
     return res
