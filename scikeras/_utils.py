@@ -4,6 +4,7 @@ import random
 import warnings
 
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import Iterable
 from typing import List
@@ -192,7 +193,6 @@ def route_params(
         Parameters to route/filter.
     destination : str, default "any"
         Destination to route to, ex: `build` or `compile`.
-        If "any" all routed parameters are removed.
         If None, all parameters with "__" in them are dropped.
     pass_filter: Union[Iterable[str], None], default None
         If None, all non-routing `params` are passed. If an iterable,
@@ -204,16 +204,46 @@ def route_params(
     Dict[str, Any]
         Filtered parameters, with any routing prefixes removed.
     """
-    res = {
-        key: val
-        for key, val in params.items()
-        if pass_filter is None or key in pass_filter
-    }
+    res = dict()
     for key, val in params.items():
-        if (
-            "__" in key
-            and destination is not None
-            and key.startswith(destination)
-        ):
-            res[key.replace(destination.strip("__") + "__", "")] = val
+        if "__" in key:
+            # routed param
+            if destination is not None and key.startswith(destination):
+                new_key = key.replace(destination.strip("__") + "__", "")
+                res[new_key] = val
+        else:
+            # non routed
+            if pass_filter is None or key in pass_filter:
+                res[key] = val
+
     return res
+
+
+def has_param(func: Callable, param: str) -> bool:
+    """[summary]
+
+    Parameters
+    ----------
+    func : Callable
+        [description]
+    param : str
+        [description]
+
+    Returns
+    -------
+    bool
+        [description]
+    """
+    return any(
+        p.name == param
+        for p in inspect.signature(func).parameters.values()
+        if p.kind in (p.POSITIONAL_OR_KEYWORD, p.KEYWORD_ONLY)
+    )
+
+
+def accepts_kwargs(func: Callable) -> bool:
+    return any(
+        True
+        for param in inspect.signature(func).parameters.values()
+        if param.kind == param.VAR_KEYWORD
+    )

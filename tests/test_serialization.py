@@ -57,9 +57,7 @@ def test_custom_loss_function():
 
 
 def build_fn_custom_model_registered(
-    meta_params: Dict[str, Any],
-    build_params: Dict[str, Any],
-    compile_params: Dict[str, Any],
+    meta_params: Dict[str, Any], compile_params: Dict[str, Any],
 ) -> Model:
     """Dummy custom Model subclass that is registered to be serializable.
     """
@@ -83,16 +81,12 @@ def build_fn_custom_model_registered(
 def test_custom_model_registered():
     """Test that a registered subclassed Model can be serialized.
     """
-    estimator = KerasRegressor(
-        build_fn=build_fn_custom_model_registered, hidden_layer_sizes=(100,)
-    )
+    estimator = KerasRegressor(build_fn=build_fn_custom_model_registered)
     check_pickle(estimator, load_boston)
 
 
 def build_fn_custom_model_unregistered(
-    meta_params: Dict[str, Any],
-    build_params: Dict[str, Any],
-    compile_params: Dict[str, Any],
+    meta_params: Dict[str, Any], compile_params: Dict[str, Any],
 ) -> Model:
     """Dummy custom Model subclass that is not registed to be serializable.
     """
@@ -115,9 +109,7 @@ def build_fn_custom_model_unregistered(
 def test_custom_model_unregistered():
     """Test that an unregistered subclassed Model raises an error.
     """
-    estimator = KerasRegressor(
-        build_fn=build_fn_custom_model_unregistered, hidden_layer_sizes=(100,)
-    )
+    estimator = KerasRegressor(build_fn=build_fn_custom_model_unregistered)
     with pytest.raises(ValueError, match="Unknown layer"):
         check_pickle(estimator, load_boston)
 

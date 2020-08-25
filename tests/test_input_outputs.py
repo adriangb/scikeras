@@ -35,10 +35,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
     """
 
     def _keras_build_fn(
-        self,
-        meta_params: Dict[str, Any],
-        build_params: Dict[str, Any],
-        compile_params: Dict[str, Any],
+        self, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
     ) -> Model:
         # get params
         n_classes_ = meta_params["n_classes_"]
@@ -71,10 +68,7 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
     """
 
     def _keras_build_fn(
-        self,
-        meta_params: Dict[str, Any],
-        build_params: Dict[str, Any],
-        compile_params: Dict[str, Any],
+        self, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
     ) -> Model:
         # get params
         X = meta_params["X"]
@@ -105,10 +99,7 @@ class FunctionAPIMultiLabelClassifier(KerasClassifier):
     """
 
     def _keras_build_fn(
-        self,
-        meta_params: Dict[str, Any],
-        build_params: Dict[str, Any],
-        compile_params: Dict[str, Any],
+        self, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
     ) -> Model:
         # get params
         n_outputs_ = meta_params["n_outputs_"]
@@ -135,10 +126,7 @@ class FunctionAPIMultiOutputRegressor(KerasRegressor):
     """
 
     def _keras_build_fn(
-        self,
-        meta_params: Dict[str, Any],
-        build_params: Dict[str, Any],
-        compile_params: Dict[str, Any],
+        self, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
     ) -> Model:
         # get params
         n_outputs_ = meta_params["n_outputs_"]
@@ -255,9 +243,7 @@ def test_incompatible_output_dimensions():
 
     # create a model with 2 outputs
     def build_fn_clf(
-        meta_params: Dict[str, Any],
-        build_params: Dict[str, Any],
-        compile_params: Dict[str, Any],
+        meta_params: Dict[str, Any], compile_params: Dict[str, Any],
     ) -> Model:
         """Builds a Sequential based classifier."""
         model = Sequential()

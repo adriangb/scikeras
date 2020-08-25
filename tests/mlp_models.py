@@ -9,8 +9,8 @@ from scikeras.wrappers import KerasRegressor
 
 
 def dynamic_classifier(
+    hidden_layer_sizes,
     meta_params: Dict[str, Any],
-    build_params: Dict[str, Any],
     compile_params: Dict[str, Any],
 ) -> Model:
     """Creates a basic MLP classifier dynamically choosing binary/multiclass
@@ -24,7 +24,6 @@ def dynamic_classifier(
     metrics = compile_params["metrics"]
     loss = compile_params["loss"]
     optimizer = compile_params["optimizer"]
-    hidden_layer_sizes = build_params["hidden_layer_sizes"]
 
     inp = Input(shape=(n_features_in_,))
 
@@ -59,8 +58,8 @@ def dynamic_classifier(
 
 
 def dynamic_regressor(
+    hidden_layer_sizes,
     meta_params: Dict[str, Any],
-    build_params: Dict[str, Any],
     compile_params: Dict[str, Any],
 ) -> Model:
     """Creates a basic MLP regressor dynamically.
@@ -71,7 +70,6 @@ def dynamic_regressor(
     metrics = compile_params["metrics"]
     loss = compile_params["loss"]
     optimizer = compile_params["optimizer"]
-    hidden_layer_sizes = build_params["hidden_layer_sizes"]
 
     if loss is None:
         # Default Model loss, not appropriate for a classifier

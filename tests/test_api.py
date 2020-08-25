@@ -46,15 +46,12 @@ pytestmark = pytest.mark.filterwarnings(
 
 
 def build_fn_clf(
-    meta_params: Dict[str, Any],
-    build_params: Dict[str, Any],
-    compile_params: Dict[str, Any],
+    hidden_dim, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
 ) -> Model:
     """Builds a Sequential based classifier."""
     # extract parameters
     n_features_in_ = meta_params["n_features_in_"]
     n_classes_ = meta_params["n_classes_"]
-    hidden_dim = build_params["hidden_dim"]
 
     model = keras.models.Sequential()
     model.add(
@@ -72,14 +69,11 @@ def build_fn_clf(
 
 
 def build_fn_reg(
-    meta_params: Dict[str, Any],
-    build_params: Dict[str, Any],
-    compile_params: Dict[str, Any],
+    hidden_dim, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
 ) -> Model:
     """Builds a Sequential based regressor."""
     # extract parameters
     n_features_in_ = meta_params["n_features_in_"]
-    hidden_dim = build_params["hidden_dim"]
 
     model = keras.models.Sequential()
     model.add(
@@ -99,13 +93,13 @@ def build_fn_reg(
 class InheritClassBuildFnClf(wrappers.KerasClassifier):
     def _keras_build_fn(
         self,
+        hidden_dim,
         meta_params: Dict[str, Any],
-        build_params: Dict[str, Any],
         compile_params: Dict[str, Any],
     ) -> Model:
         return build_fn_clf(
+            hidden_dim=hidden_dim,
             meta_params=meta_params,
-            build_params=build_params,
             compile_params=compile_params,
         )
 
@@ -113,13 +107,13 @@ class InheritClassBuildFnClf(wrappers.KerasClassifier):
 class InheritClassBuildFnReg(wrappers.KerasRegressor):
     def _keras_build_fn(
         self,
+        hidden_dim,
         meta_params: Dict[str, Any],
-        build_params: Dict[str, Any],
         compile_params: Dict[str, Any],
     ) -> Model:
         return build_fn_reg(
+            hidden_dim=hidden_dim,
             meta_params=meta_params,
-            build_params=build_params,
             compile_params=compile_params,
         )
 
@@ -162,15 +156,14 @@ def load_digits8x8():
 
 
 def build_fn_regs(
+    hidden_layer_sizes,
     meta_params: Dict[str, Any],
-    build_params: Dict[str, Any],
     compile_params: Dict[str, Any],
 ) -> Model:
     """Dynamically build regressor."""
     # get params
     X = meta_params["X"]
     n_outputs_ = meta_params["n_outputs_"]
-    hidden_layer_sizes = build_params["hidden_layer_sizes"]
 
     model = Sequential()
     model.add(Dense(X.shape[1], activation="relu", input_shape=X.shape[1:]))
@@ -182,14 +175,13 @@ def build_fn_regs(
 
 
 def build_fn_clss(
+    hidden_layer_sizes,
     meta_params: Dict[str, Any],
-    build_params: Dict[str, Any],
     compile_params: Dict[str, Any],
 ) -> Model:
     """Dynamically build classifier."""
     # get params
     X = meta_params["X"]
-    hidden_layer_sizes = build_params["hidden_layer_sizes"]
 
     model = Sequential()
     model.add(Dense(X.shape[1], activation="relu", input_shape=X.shape[1:]))
@@ -201,15 +193,14 @@ def build_fn_clss(
 
 
 def build_fn_clscs(
+    hidden_layer_sizes,
     meta_params: Dict[str, Any],
-    build_params: Dict[str, Any],
     compile_params: Dict[str, Any],
 ) -> Model:
     """Dynamically build functional API regressor."""
     # get params
     X = meta_params["X"]
     n_classes_ = meta_params["n_classes_"]
-    hidden_layer_sizes = build_params["hidden_layer_sizes"]
 
     model = Sequential()
     model.add(Conv2D(3, (3, 3), input_shape=X.shape[1:]))
@@ -224,15 +215,14 @@ def build_fn_clscs(
 
 
 def build_fn_clscf(
+    hidden_layer_sizes,
     meta_params: Dict[str, Any],
-    build_params: Dict[str, Any],
     compile_params: Dict[str, Any],
 ) -> Model:
     """Dynamically build functional API classifier."""
     # get params
     X = meta_params["X"]
     n_classes_ = meta_params["n_classes_"]
-    hidden_layer_sizes = build_params["hidden_layer_sizes"]
 
     x = Input(shape=X.shape[1:])
     z = Conv2D(3, (3, 3))(x)
@@ -378,7 +368,7 @@ class TestPrebuiltModel:
             }
             keras_model = build_fn(
                 meta_params=meta_params,
-                build_params={"hidden_layer_sizes": (100,)},
+                hidden_layer_sizes=(100,),
                 compile_params={
                     "optimizer": "adam",
                     "loss": None,
@@ -392,7 +382,7 @@ class TestPrebuiltModel:
             }
             keras_model = build_fn(
                 meta_params=meta_params,
-                build_params={"hidden_layer_sizes": (100,)},
+                hidden_layer_sizes=(100,),
                 compile_params={
                     "optimizer": "adam",
                     "loss": None,
@@ -422,7 +412,7 @@ class TestPrebuiltModel:
             }
             keras_model = build_fn(
                 meta_params=meta_params,
-                build_params={"hidden_layer_sizes": (100,)},
+                hidden_layer_sizes=(100,),
                 compile_params={
                     "optimizer": "adam",
                     "loss": None,
@@ -436,7 +426,7 @@ class TestPrebuiltModel:
             }
             keras_model = build_fn(
                 meta_params=meta_params,
-                build_params={"hidden_layer_sizes": (100,)},
+                hidden_layer_sizes=(100,),
                 compile_params={
                     "optimizer": "adam",
                     "loss": None,

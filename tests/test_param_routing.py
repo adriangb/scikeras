@@ -30,8 +30,8 @@ def test_routing_basic():
     def build_fn(*args, **kwargs):
         assert len(args) == 0, "No *args should be passed to `build_fn`"
         assert tuple(kwargs.keys()) == (
+            "hidden_layer_sizes",
             "meta_params",
-            "build_params",
             "compile_params",
         ), "The number and order of **kwargs passed to `build_fn` should be fixed"
         meta = set(kwargs["meta_params"].keys()) - {"X", "y"}
@@ -41,7 +41,6 @@ def test_routing_basic():
             "is_fitted_",
         }
         assert meta == expected_meta
-        assert set(kwargs["build_params"].keys()) == {"hidden_layer_sizes"}
         assert set(kwargs["compile_params"].keys()).issubset(
             KerasClassifier._compile_params
         )
@@ -60,18 +59,17 @@ def test_routing_override():
     y = np.random.choice(n_classes, size=n).astype(int)
 
     def build_fn(
+        hidden_layer_sizes,
         meta_params: Dict[str, Any],
-        build_params: Dict[str, Any],
         compile_params: Dict[str, Any],
     ) -> Model:
-        assert build_params["hidden_layer_sizes"] == (200,)
+        assert hidden_layer_sizes == (200,)
         assert compile_params["optimizer"] == "adam"
         assert "compile__optimizer" not in compile_params
         assert "compile_optimizer" not in compile_params
-        assert build_params["compile_optimizer"] == "test"
         return dynamic_classifier(
+            hidden_layer_sizes,
             meta_params=meta_params,
-            build_params=build_params,
             compile_params=compile_params,
         )
 
@@ -79,7 +77,6 @@ def test_routing_override():
         build_fn=build_fn,
         hidden_layer_sizes=(100,),
         build__hidden_layer_sizes=(200,),  # override build params
-        compile_optimizer="test",  # missing an underscore, should not over write!
         compile__optimizer="adam",  # overwrites `optimizer` param
     )
     clf.fit(X, y)

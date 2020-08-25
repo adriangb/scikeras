@@ -32,7 +32,9 @@ from tensorflow.python.keras.utils.generic_utils import (
 from ._utils import LabelDimensionTransformer
 from ._utils import TFRandomState
 from ._utils import _windows_upcast_ints
+from ._utils import accepts_kwargs
 from ._utils import get_metric_full_name
+from ._utils import has_param
 from ._utils import make_model_picklable
 from ._utils import route_params
 
@@ -190,7 +192,7 @@ class BaseWrapper(BaseEstimator):
             final_build_fn = getattr(self, "_keras_build_fn")
         elif isinstance(build_fn, Model):
             # pre-built Keras Model
-            def final_build_fn(meta_params, build_params, compile_params):
+            def final_build_fn():
                 return build_fn
 
         elif inspect.isfunction(build_fn):
@@ -243,37 +245,39 @@ class BaseWrapper(BaseEstimator):
         # determine what type of build_fn to use
         final_build_fn = self._check_build_fn(getattr(self, "build_fn", None))
 
-        # collect arguments
+        # collect parameters
         params = self.get_params()
         if "build_fn" in params:
             params.pop("build_fn")
         build_params = route_params(
             params, destination="build", pass_filter=self._build_params
         )
-        compile_params = route_params(
-            params, destination="compile", pass_filter=self._compile_params
-        )
-        meta_params = route_params(
-            self.get_meta_params(),
-            destination=None,
-            pass_filter=self._meta_params,
-        )
-        meta_params.update({"X": X, "y": y})
+        if has_param(final_build_fn, "meta_params") or accepts_kwargs(
+            final_build_fn
+        ):
+            # build_fn accepts `meta_params`, add it
+            meta_params = route_params(
+                self.get_meta_params(),
+                destination=None,
+                pass_filter=self._meta_params,
+            )
+            meta_params.update({"X": X, "y": y})
+            build_params["meta_params"] = meta_params
+        if has_param(final_build_fn, "compile_params") or accepts_kwargs(
+            final_build_fn
+        ):
+            # build_fn accepts `compile_params`, add it
+            compile_params = route_params(
+                params, destination="compile", pass_filter=self._compile_params
+            )
+            build_params["compile_params"] = compile_params
 
         # build model
         if self._random_state is not None:
             with TFRandomState(self._random_state):
-                model = final_build_fn(
-                    meta_params=meta_params,
-                    build_params=build_params,
-                    compile_params=compile_params,
-                )
+                model = final_build_fn(**build_params)
         else:
-            model = final_build_fn(
-                meta_params=meta_params,
-                build_params=build_params,
-                compile_params=compile_params,
-            )
+            model = final_build_fn(**build_params)
 
         # make serializable
         make_model_picklable(model)
