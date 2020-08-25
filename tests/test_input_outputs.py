@@ -1,3 +1,6 @@
+from typing import Any
+from typing import Dict
+
 import numpy as np
 import pytest
 import tensorflow as tf
@@ -31,7 +34,15 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
     """Tests Functional API Classifier with 2 inputs.
     """
 
-    def _keras_build_fn(self, X, n_classes_):
+    def _keras_build_fn(
+        self,
+        meta_params: Dict[str, Any],
+        build_params: Dict[str, Any],
+        compile_params: Dict[str, Any],
+    ) -> Model:
+        # get params
+        n_classes_ = meta_params["n_classes_"]
+
         inp1 = Input((1,))
         inp2 = Input((3,))
 
@@ -59,7 +70,16 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
     """Tests Functional API Classifier with 2 outputs of different type.
     """
 
-    def _keras_build_fn(self, X, n_classes_):
+    def _keras_build_fn(
+        self,
+        meta_params: Dict[str, Any],
+        build_params: Dict[str, Any],
+        compile_params: Dict[str, Any],
+    ) -> Model:
+        # get params
+        X = meta_params["X"]
+        n_classes_ = meta_params["n_classes_"]
+
         inp = Input((4,))
 
         x1 = Dense(100)(inp)
@@ -84,7 +104,15 @@ class FunctionAPIMultiLabelClassifier(KerasClassifier):
     """Tests Functional API Classifier with multiple binary outputs.
     """
 
-    def _keras_build_fn(self, X, n_outputs_):
+    def _keras_build_fn(
+        self,
+        meta_params: Dict[str, Any],
+        build_params: Dict[str, Any],
+        compile_params: Dict[str, Any],
+    ) -> Model:
+        # get params
+        n_outputs_ = meta_params["n_outputs_"]
+
         inp = Input((4,))
 
         x1 = Dense(100)(inp)
@@ -106,7 +134,15 @@ class FunctionAPIMultiOutputRegressor(KerasRegressor):
     """Tests Functional API Regressor with multiple outputs.
     """
 
-    def _keras_build_fn(self, X, n_outputs_):
+    def _keras_build_fn(
+        self,
+        meta_params: Dict[str, Any],
+        build_params: Dict[str, Any],
+        compile_params: Dict[str, Any],
+    ) -> Model:
+        # get params
+        n_outputs_ = meta_params["n_outputs_"]
+
         inp = Input((INPUT_DIM,))
 
         x1 = Dense(100)(inp)
@@ -218,7 +254,11 @@ def test_incompatible_output_dimensions():
     y = np.random.randint(low=0, high=3, size=(10, 4))
 
     # create a model with 2 outputs
-    def build_fn_clf():
+    def build_fn_clf(
+        meta_params: Dict[str, Any],
+        build_params: Dict[str, Any],
+        compile_params: Dict[str, Any],
+    ) -> Model:
         """Builds a Sequential based classifier."""
         model = Sequential()
         model.add(Dense(20, input_shape=(20,), activation="relu"))
@@ -269,7 +309,7 @@ def test_classifier_handles_dtypes(dtype):
     sample_weight = np.ones(y.shape).astype(dtype)
 
     class StrictClassifier(KerasClassifier):
-        def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
+        def _fit_keras_model(self, X, y, sample_weight, warm_start):
             if dtype == "object":
                 assert X.dtype == np.dtype(tf.keras.backend.floatx())
             else:
@@ -277,11 +317,11 @@ def test_classifier_handles_dtypes(dtype):
             # y is passed through encoders, it is likely not the original dtype
             # sample_weight should always be floatx
             assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
-            return super()._fit_keras_model(
-                X, y, sample_weight, warm_start, **kwargs
-            )
+            return super()._fit_keras_model(X, y, sample_weight, warm_start)
 
-    clf = StrictClassifier(build_fn=dynamic_classifier)
+    clf = StrictClassifier(
+        build_fn=dynamic_classifier, hidden_layer_sizes=(100,)
+    )
     clf.fit(X, y, sample_weight=sample_weight)
     assert clf.score(X, y) >= 0
     if y.dtype.kind != "O":
@@ -304,7 +344,7 @@ def test_regressor_handles_dtypes(dtype):
     sample_weight = np.ones(y.shape).astype(dtype)
 
     class StrictRegressor(KerasRegressor):
-        def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
+        def _fit_keras_model(self, X, y, sample_weight, warm_start):
             if dtype == "object":
                 assert X.dtype == np.dtype(tf.keras.backend.floatx())
                 assert y.dtype == np.dtype(tf.keras.backend.floatx())
@@ -313,11 +353,11 @@ def test_regressor_handles_dtypes(dtype):
                 assert y.dtype == np.dtype(dtype)
             # sample_weight should always be floatx
             assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
-            return super()._fit_keras_model(
-                X, y, sample_weight, warm_start, **kwargs
-            )
+            return super()._fit_keras_model(X, y, sample_weight, warm_start)
 
-    reg = StrictRegressor(build_fn=dynamic_regressor)
+    reg = StrictRegressor(
+        build_fn=dynamic_regressor, hidden_layer_sizes=(100,)
+    )
     reg.fit(X, y, sample_weight=sample_weight)
     y_hat = reg.predict(X)
     if y.dtype.kind == "f":
@@ -338,7 +378,7 @@ def test_mixed_dtypes(y_dtype, X_dtype, run_eagerly):
     y = np.random.choice(n_classes, size=n).astype(y_dtype)
 
     class StrictRegressor(KerasRegressor):
-        def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
+        def _fit_keras_model(self, X, y, sample_weight, warm_start):
             if X_dtype == "object":
                 assert X.dtype == np.dtype(tf.keras.backend.floatx())
             else:
@@ -347,11 +387,13 @@ def test_mixed_dtypes(y_dtype, X_dtype, run_eagerly):
                 assert y.dtype == np.dtype(tf.keras.backend.floatx())
             else:
                 assert y.dtype == np.dtype(y_dtype)
-            return super()._fit_keras_model(
-                X, y, sample_weight, warm_start, **kwargs
-            )
+            return super()._fit_keras_model(X, y, sample_weight, warm_start)
 
-    reg = StrictRegressor(build_fn=dynamic_regressor, run_eagerly=run_eagerly)
+    reg = StrictRegressor(
+        build_fn=dynamic_regressor,
+        run_eagerly=run_eagerly,
+        hidden_layer_sizes=(100,),
+    )
     reg.fit(X, y)
     y_hat = reg.predict(X)
     if y.dtype.kind == "f":

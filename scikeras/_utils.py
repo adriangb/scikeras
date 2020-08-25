@@ -3,6 +3,10 @@ import os
 import random
 import warnings
 
+from typing import Any
+from typing import Dict
+from typing import Iterable
+
 import numpy as np
 import tensorflow as tf
 
@@ -171,3 +175,35 @@ def _get_default_args(func):
 
 def _windows_upcast_ints(x: np.ndarray) -> np.ndarray:
     return x.astype("int64") if x.dtype == np.int32 else x
+
+
+def route_params(
+    params: Dict[str, Any], destination: str, pass_filter: Iterable[str] = None
+) -> Dict[str, Any]:
+    """Route and trim parameter names.
+
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        Parameters to route/filter.
+    destination : str
+        Destination to route to, ex: `build` or `compile`.
+    pass_filter: Iterable[str]
+        If None, all non-routing `params` are passed. If an iterable,
+        only keys from `params` that are in the iterable are passed.
+        This does not affect routed parameters.
+
+    Returns
+    -------
+    Dict[str, Any]
+        Filtered parameters, with any routing prefixes removed.
+    """
+    res = {
+        key: val
+        for key, val in params.items()
+        if pass_filter is None or key in pass_filter
+    }
+    for key, val in params.items():
+        if "__" in key and key.startswith(destination):
+            res[key.replace(destination.strip("__") + "__", "")] = val
+    return res

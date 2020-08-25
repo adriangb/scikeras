@@ -1,23 +1,30 @@
-from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras.layers import Input
-from tensorflow.python.keras.models import Model
+from typing import Any
+from typing import Dict
+
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Input
+from tensorflow.keras.models import Model
 
 from scikeras.wrappers import KerasRegressor
 
 
 def dynamic_classifier(
-    n_features_in_,
-    cls_type_,
-    n_classes_,
-    metrics=None,
-    keras_expected_n_ouputs_=1,
-    loss=None,
-    optimizer="sgd",
-    hidden_layer_sizes=(100,),
-):
+    meta_params: Dict[str, Any],
+    build_params: Dict[str, Any],
+    compile_params: Dict[str, Any],
+) -> Model:
     """Creates a basic MLP classifier dynamically choosing binary/multiclass
     classification loss and ouput activations.
     """
+    # get parameters
+    n_features_in_ = meta_params["n_features_in_"]
+    cls_type_ = meta_params["cls_type_"]
+    n_classes_ = meta_params["n_classes_"]
+    keras_expected_n_ouputs_ = meta_params["keras_expected_n_ouputs_"]
+    metrics = compile_params["metrics"]
+    loss = compile_params["loss"]
+    optimizer = compile_params["optimizer"]
+    hidden_layer_sizes = build_params["hidden_layer_sizes"]
 
     inp = Input(shape=(n_features_in_,))
 
@@ -52,15 +59,20 @@ def dynamic_classifier(
 
 
 def dynamic_regressor(
-    n_features_in_,
-    n_outputs_,
-    loss=KerasRegressor.r_squared,
-    optimizer="adam",
-    metrics=None,
-    hidden_layer_sizes=(100,),
-):
+    meta_params: Dict[str, Any],
+    build_params: Dict[str, Any],
+    compile_params: Dict[str, Any],
+) -> Model:
     """Creates a basic MLP regressor dynamically.
     """
+    # get parameters
+    n_features_in_ = meta_params["n_features_in_"]
+    n_outputs_ = meta_params["n_outputs_"]
+    metrics = compile_params["metrics"]
+    loss = compile_params["loss"]
+    optimizer = compile_params["optimizer"]
+    hidden_layer_sizes = build_params["hidden_layer_sizes"]
+
     if loss is None:
         # Default Model loss, not appropriate for a classifier
         loss = KerasRegressor.r_squared

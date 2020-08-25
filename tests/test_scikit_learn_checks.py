@@ -1,12 +1,15 @@
 """Tests using Scikit-Learn's bundled estimator_checks."""
 
 from distutils.version import LooseVersion
+from typing import Any
+from typing import Dict
 
 import pytest
 
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import load_iris
 from sklearn.utils.estimator_checks import check_no_attributes_set_in_init
+from tensorflow.keras import Model
 
 from scikeras.wrappers import KerasClassifier
 from scikeras.wrappers import KerasRegressor
@@ -29,6 +32,7 @@ from .testing_utils import parametrize_with_checks
             # applicable to real world datasets
             batch_size=1000,
             optimizer="adam",
+            hidden_layer_sizes=(100,),
         ),
         KerasRegressor(
             build_fn=dynamic_regressor,
@@ -41,6 +45,7 @@ from .testing_utils import parametrize_with_checks
             batch_size=1000,
             optimizer="adam",
             loss=KerasRegressor.r_squared,
+            hidden_layer_sizes=(100,),
         ),
     ],
     ids=["KerasClassifier", "KerasRegressor"],
@@ -59,16 +64,27 @@ def test_fully_compliant_estimators(estimator, check):
 
 class SubclassedClassifier(KerasClassifier):
     def __init__(
-        self, hidden_layer_sizes=(100,),
+        self,
+        hidden_layer_sizes=(100,),
+        metrics=None,
+        loss=None,
+        optimizer=None,
     ):
         self.hidden_layer_sizes = hidden_layer_sizes
+        self.metrics = metrics
+        self.loss = loss
+        self.optimizer = "sgd"
 
-    def _keras_build_fn(self, hidden_layer_sizes):
+    def _keras_build_fn(
+        self,
+        meta_params: Dict[str, Any],
+        build_params: Dict[str, Any],
+        compile_params: Dict[str, Any],
+    ) -> Model:
         return dynamic_classifier(
-            n_features_in_=self.n_features_in_,
-            cls_type_=self.cls_type_,
-            n_classes_=self.n_classes_,
-            hidden_layer_sizes=hidden_layer_sizes,
+            meta_params=meta_params,
+            build_params=build_params,
+            compile_params=compile_params,
         )
 
 

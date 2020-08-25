@@ -5,6 +5,8 @@ import os
 import warnings
 
 from collections import defaultdict
+from typing import Any
+from typing import Dict
 
 import numpy as np
 import tensorflow as tf
@@ -33,6 +35,7 @@ from ._utils import _get_default_args
 from ._utils import _windows_upcast_ints
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
+from ._utils import route_params
 
 
 OS_IS_WINDOWS = os.name == "nt"  # see tensorflow/probability#886
@@ -64,10 +67,43 @@ class BaseWrapper(BaseEstimator):
         "multioutput": True,
     }
 
+    _fit_params = {
+        "callbacks",
+        "batch_size",
+        "epochs",
+        "verbose",
+        "callbacks",
+        "validation_split",
+        "shuffle",
+        "class_weight",
+        "sample_weight",
+        "initial_epoch",
+        "validation_steps",
+        "validation_batch_size",
+        "validation_freq",
+    }
+
+    _predict_params = {
+        "batch_size",
+        "verbose",
+        "callbacks",
+        "steps",
+    }
+
+    _compile_params = {
+        "optimizer",
+        "loss",
+        "metrics",
+        "loss_weights",
+        "weighted_metrics",
+        "run_eagerly",
+    }
+
     def __init__(
         self,
         build_fn=None,
         *,
+        warm_start=False,
         random_state=None,
         optimizer="rmsprop",
         loss=None,
@@ -90,6 +126,7 @@ class BaseWrapper(BaseEstimator):
 
         # Parse hardcoded params
         self.build_fn = build_fn
+        self.warm_start = warm_start
         self.random_state = random_state
         self.optimizer = optimizer
         self.loss = loss
@@ -127,7 +164,7 @@ class BaseWrapper(BaseEstimator):
             final_build_fn = getattr(self, "_keras_build_fn")
         elif isinstance(build_fn, Model):
             # pre-built Keras Model
-            def final_build_fn():
+            def final_build_fn(meta_params, build_params, compile_params):
                 return build_fn
 
         elif inspect.isfunction(build_fn):
@@ -155,7 +192,7 @@ class BaseWrapper(BaseEstimator):
 
         return final_build_fn
 
-    def _fit_build_keras_model(self, X, y, **kwargs):
+    def _build_keras_model(self, X, y):
         """Build the Keras model.
 
         This method will process all arguments and call the model building
@@ -167,8 +204,6 @@ class BaseWrapper(BaseEstimator):
                 and `n_features` is the number of features.
             y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
                 True labels for `X`.
-            **kwargs: dictionary arguments
-                Legal arguments are the arguments `build_fn`.
         Returns:
             self : object
                 a reference to the instance that can be chain called
@@ -182,37 +217,37 @@ class BaseWrapper(BaseEstimator):
         # determine what type of build_fn to use
         final_build_fn = self._check_build_fn(getattr(self, "build_fn", None))
 
-        # get model arguments
-        model_args = self._filter_params(final_build_fn)
-
-        # check if the model building function requires X and/or y to be passed
-        X_y_args = self._filter_params(
-            final_build_fn, params_to_check={"X": X, "y": y}
+        # collect arguments
+        params = self.get_params()
+        if "build_fn" in params:
+            params.pop("build_fn")
+        build_params = route_params(params, destination="build")
+        compile_params = route_params(
+            params, destination="compile", pass_filter=self._compile_params
         )
-
-        # filter kwargs
-        kwargs = self._filter_params(final_build_fn, params_to_check=kwargs)
-
-        # combine all arguments
-        build_args = {
-            **model_args,  # noqa: E999
-            **X_y_args,  # noqa: E999
-            **kwargs,  # noqa: E999
-        }
+        meta_params = {"X": X, "y": y, **self.get_meta_params()}
 
         # build model
         if self._random_state is not None:
             with TFRandomState(self._random_state):
-                model = final_build_fn(**build_args)
+                model = final_build_fn(
+                    meta_params=meta_params,
+                    build_params=build_params,
+                    compile_params=compile_params,
+                )
         else:
-            model = final_build_fn(**build_args)
+            model = final_build_fn(
+                meta_params=meta_params,
+                build_params=build_params,
+                compile_params=compile_params,
+            )
 
         # make serializable
         make_model_picklable(model)
 
         return model
 
-    def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
+    def _fit_keras_model(self, X, y, sample_weight, warm_start):
         """Fits the Keras model.
 
         This method will process all arguments and call the Keras
@@ -229,9 +264,6 @@ class BaseWrapper(BaseEstimator):
             warm_start : bool
                 If ``warm_start`` is True, don't don't overwrite
                 the ``history_`` attribute and append to it instead.
-            **kwargs: dictionary arguments
-                Legal arguments are the arguments of the keras model's
-                `fit` method.
         Returns:
             self : object
                 a reference to the instance that can be chain called
@@ -240,34 +272,15 @@ class BaseWrapper(BaseEstimator):
             ValueError : In case sample_weight != None and the Keras model's
                         `fit` method does not support that parameter.
         """
-        # add `sample_weight` param, required to be explicit by some sklearn
-        # functions that use inspect.signature on the `score` method
-        if sample_weight is not None:
-            # avoid pesky Keras warnings if sample_weight is not used
-            kwargs.update({"sample_weight": sample_weight})
 
-        # filter kwargs down to those accepted by self.model_.fit
-        kwargs = self._filter_params(self.model_.fit, params_to_check=kwargs)
-
-        # get model.fit's arguments (allows arbitrary model use)
-        fit_args = self._filter_params(self.model_.fit)
-
-        # fit model and save history
-        # order implies kwargs overwrites fit_args
-        fit_args = {**fit_args, **kwargs}
-
-        if OS_IS_WINDOWS:
-            # see tensorflow/probability#886
-            X = (
-                _windows_upcast_ints(X)
-                if isinstance(X, np.ndarray)
-                else [_windows_upcast_ints(x) for x in X]
-            )
-            y = (
-                _windows_upcast_ints(y)
-                if isinstance(y, np.ndarray)
-                else [_windows_upcast_ints(yi) for yi in y]
-            )
+        # collect parameters
+        params = self.get_params()
+        if "build_fn" in params:
+            params.pop("build_fn")
+        fit_args = route_params(
+            params, destination="fit", pass_filter=self._fit_params
+        )
+        fit_args["sample_weight"] = sample_weight
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
@@ -435,7 +448,32 @@ class BaseWrapper(BaseEstimator):
         extra_args = dict()
         return X, extra_args
 
-    def fit(self, X, y, sample_weight=None, warm_start=False, **kwargs):
+    def fit(self, X, y, sample_weight=None):
+        """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
+
+        Arguments:
+            X : array-like, shape `(n_samples, n_features)`
+                Training samples where `n_samples` is the number of samples
+                and `n_features` is the number of features.
+            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
+                True labels for `X`.
+            sample_weight : array-like of shape (n_samples,), default=None
+                Sample weights. The Keras Model must support this.
+        Returns:
+            self : object
+                a reference to the instance that can be chain called
+                (ex: instance.fit(X,y).transform(X) )
+        Raises:
+            ValueError : In case of invalid shape for `y` argument.
+        """
+        return self._fit(
+            X=X,
+            y=y,
+            sample_weight=sample_weight,
+            warm_start=getattr(self, "warm_start", False),
+        )
+
+    def _fit(self, X, y, sample_weight=None, warm_start=False):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
 
         Arguments:
@@ -448,17 +486,12 @@ class BaseWrapper(BaseEstimator):
                 Sample weights. The Keras Model must support this.
             warm_start : bool, default False
                 If ``warm_start`` is True, don't rebuild the model.
-            **kwargs: dictionary arguments
-                Legal arguments are the arguments of the keras model's `fit`
-                method.
         Returns:
             self : object
                 a reference to the instance that can be chain called
                 (ex: instance.fit(X,y).transform(X) )
         Raises:
             ValueError : In case of invalid shape for `y` argument.
-            ValueError : In case sample_weight != None and the Keras model's
-                `fit` method does not support that parameter.
         """
         # Handle random state
         if hasattr(self, "random_state"):
@@ -498,7 +531,7 @@ class BaseWrapper(BaseEstimator):
             # Scikit-Learn expects a 0 in sample_weight to mean
             # "ignore the sample", but because of how Keras applies
             # sample_weight to the loss function, this doesn't
-            # exacly work out (as in, sklearn estimator checks fail
+            # exactly work out (as in, sklearn estimator checks fail
             # because the predictions differ by a small margin).
             # To get around this, we manually delete these samples here
             zeros = sample_weight == 0
@@ -524,16 +557,29 @@ class BaseWrapper(BaseEstimator):
 
         # build model
         if (not warm_start) or (not hasattr(self, "model_")):
-            self.model_ = self._fit_build_keras_model(X, y, **kwargs)
+            self.model_ = self._build_keras_model(X, y)
 
         y = self._check_output_model_compatibility(y)
 
+        if OS_IS_WINDOWS:
+            # see tensorflow/probability#886
+            X = (
+                _windows_upcast_ints(X)
+                if isinstance(X, np.ndarray)
+                else [_windows_upcast_ints(x) for x in X]
+            )
+            y = (
+                _windows_upcast_ints(y)
+                if isinstance(y, np.ndarray)
+                else [_windows_upcast_ints(yi) for yi in y]
+            )
+
         # fit model
         return self._fit_keras_model(
-            X, y, sample_weight=sample_weight, warm_start=warm_start, **kwargs
+            X, y, sample_weight=sample_weight, warm_start=warm_start
         )
 
-    def partial_fit(self, X, y, sample_weight=None, **kwargs):
+    def partial_fit(self, X, y, sample_weight=None):
         """
         Partially fit a model.
 
@@ -545,9 +591,6 @@ class BaseWrapper(BaseEstimator):
                 True labels for `X`.
             sample_weight : array-like of shape (n_samples,), default=None
                 Sample weights. The Keras Model must support this.
-            **kwargs: dictionary arguments
-                Legal arguments are the arguments of the keras model's `fit`
-                method.
 
         Returns:
             self : object
@@ -555,22 +598,16 @@ class BaseWrapper(BaseEstimator):
                 (ex: instance.partial_fit(X, y).transform(X) )
         Raises:
             ValueError : In case of invalid shape for `y` argument.
-            ValuError : In case sample_weight != None and the Keras model's
-                `fit` method does not support that parameter.
         """
-        return self.fit(
-            X, y, sample_weight=sample_weight, warm_start=True, **kwargs
-        )
+        return self._fit(X, y, sample_weight=sample_weight, warm_start=True)
 
-    def predict(self, X, **kwargs):
+    def predict(self, X):
         """Returns predictions for the given test data.
 
         Arguments:
             X: array-like, shape `(n_samples, n_features)`
                 Test samples where `n_samples` is the number of samples
                 and `n_features` is the number of features.
-            **kwargs: dictionary arguments
-                Legal arguments are the arguments of `self.model_.predict`.
 
         Returns:
             preds: array-like, shape `(n_samples,)`
@@ -589,20 +626,21 @@ class BaseWrapper(BaseEstimator):
         X, _ = self.preprocess_X(X)
 
         # filter kwargs and get attributes for predict
-        kwargs = self._filter_params(
-            self.model_.predict, params_to_check=kwargs
+        params = self.get_params()
+        if "build_fn" in params:
+            params.pop("build_fn")
+        pred_args = route_params(
+            params, destination="predict", pass_filter=self._predict_params
         )
-        predict_args = self._filter_params(self.model_.predict)
 
         # predict with Keras model
-        pred_args = {**predict_args, **kwargs}
         y_pred = self.model_.predict(X, **pred_args)
 
         # post process y
         y, _ = self.postprocess_y(y_pred)
         return y
 
-    def score(self, X, y, sample_weight=None, **kwargs):
+    def score(self, X, y, sample_weight=None):
         """Returns the mean accuracy on the given test data and labels.
 
         Arguments:
@@ -613,8 +651,6 @@ class BaseWrapper(BaseEstimator):
                 True labels for `X`.
             sample_weight : array-like of shape (n_samples,), default=None
                 Sample weights. The Keras Model must support this.
-            **kwargs: dictionary arguments
-                Legal arguments are those of `self.model_.evaluate`.
 
         Returns:
             score: float
@@ -633,28 +669,28 @@ class BaseWrapper(BaseEstimator):
         y = check_array(y, ensure_2d=False)
 
         # compute Keras model score
-        y_pred = self.predict(X, **kwargs)
+        y_pred = self.predict(X)
 
         return self._scorer(y, y_pred, sample_weight=sample_weight)
 
-    def _filter_params(self, fn, params_to_check=None):
-        """Filters all instance attributes (parameters) and
-             returns those in `fn`'s arguments.
+    def get_meta_params(self) -> Dict[str, Any]:
+        """Get meta parameters (parameters created by fit, like
+        n_features_in_ or cls_type_).
 
-        Arguments:
-            fn : arbitrary function
-            params_to_check : dictionary, parameters to check.
-                Defaults to checking all attributes of this estimator.
-
-        Returns:
-            res : dictionary containing variables
-                in both self and `fn`'s arguments.
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of meta parameters
         """
-        res = {}
-        for name, value in (params_to_check or self.__dict__).items():
-            if has_arg(fn, name):
-                res.update({name: value})
-        return res
+        return {
+            k: v
+            for k, v in self.__dict__.items()
+            if (
+                k not in type(self)().__dict__
+                and k not in self.get_params()
+                and (k.startswith("_") or k.endswith("_"))
+            )
+        }
 
     def _get_param_names(self):
         """Get parameter names for the estimator"""
@@ -912,16 +948,42 @@ class KerasClassifier(BaseWrapper):
 
         return super()._check_output_model_compatibility(y)
 
-    def predict_proba(self, X, **kwargs):
+    def partial_fit(self, X, y, classes=None, sample_weight=None):
+        """
+        Partially fit a model.
+
+        Arguments:
+            X : array-like, shape `(n_samples, n_features)`
+                Training samples where `n_samples` is the number of samples
+                and `n_features` is the number of features.
+            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
+                True labels for `X`.
+            classes: ndarray of shape (n_classes,), default=None
+                Classes across all calls to partial_fit. Can be obtained by via
+                np.unique(y_all), where y_all is the target vector of the entire dataset.
+                This argument is required for the first call to partial_fit and can be
+                omitted in the subsequent calls. Note that y doesn’t need to contain
+                all labels in classes.
+            sample_weight : array-like of shape (n_samples,), default=None
+                Sample weights. The Keras Model must support this.
+
+        Returns:
+            self : object
+                a reference to the instance that can be chain called
+                (ex: instance.partial_fit(X, y).transform(X) )
+        Raises:
+            ValueError : In case of invalid shape for `y` argument.
+        """
+        self.classes_ = classes  # TODO: don't swallow this param
+        return super().partial_fit(X, y, sample_weight=sample_weight)
+
+    def predict_proba(self, X):
         """Returns class probability estimates for the given test data.
 
         Arguments:
             X: array-like, shape `(n_samples, n_features)`
                 Test samples where `n_samples` is the number of samples
                 and `n_features` is the number of features.
-            **kwargs: dictionary arguments
-                Legal arguments are the arguments
-                of `Sequential.predict_classes`.
 
         Returns:
             proba: array-like, shape `(n_samples, n_outputs)`
@@ -943,19 +1005,20 @@ class KerasClassifier(BaseWrapper):
         # pre process X
         X, _ = self.preprocess_X(X)
 
-        # filter kwargs and get attributes that are inputs to model.predict
-        kwargs = self._filter_params(
-            self.model_.predict, params_to_check=kwargs
+        # collect arguments
+        predict_args = route_params(
+            self.get_params(),
+            destination="predict",
+            pass_filter=self._predict_params,
         )
-        predict_args = self._filter_params(self.model_.predict)
 
-        # call the Keras model
-        predict_args = {**predict_args, **kwargs}
+        # call the Keras model's predict
         outputs = self.model_.predict(X, **predict_args)
 
         # join list of outputs into single output array
         _, extra_args = self.postprocess_y(outputs)
 
+        # get class probabilities from postprocess_y's output
         class_probabilities = extra_args["class_probabilities"]
 
         return class_probabilities

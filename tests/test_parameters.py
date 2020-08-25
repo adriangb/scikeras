@@ -31,9 +31,13 @@ class TestRandomState:
         "estimator",
         [
             KerasRegressor(
-                build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
+                build_fn=dynamic_regressor,
+                loss=KerasRegressor.r_squared,
+                hidden_layer_sizes=(100,),
             ),
-            KerasClassifier(build_fn=dynamic_classifier),
+            KerasClassifier(
+                build_fn=dynamic_classifier, hidden_layer_sizes=(100,)
+            ),
         ],
     )
     def test_random_states(self, random_state, estimator):
@@ -70,9 +74,13 @@ class TestRandomState:
         "estimator",
         [
             KerasRegressor(
-                build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
+                build_fn=dynamic_regressor,
+                loss=KerasRegressor.r_squared,
+                hidden_layer_sizes=(100,),
             ),
-            KerasClassifier(build_fn=dynamic_classifier),
+            KerasClassifier(
+                build_fn=dynamic_classifier, hidden_layer_sizes=(100,)
+            ),
         ],
     )
     @pytest.mark.parametrize("pyhash", [None, "0", "1"])
@@ -211,7 +219,9 @@ def test_build_fn_default_params():
     """Tests that default arguments arguments of
     `build_fn` are registered as hyperparameters.
     """
-    est = KerasClassifier(build_fn=dynamic_classifier)
+    est = KerasClassifier(
+        build_fn=dynamic_classifier, hidden_layer_sizes=(100,)
+    )
     params = est.get_params()
     # (100, ) is the default for dynamic_classifier
     assert params["hidden_layer_sizes"] == (100,)

@@ -1,5 +1,8 @@
 import pickle
 
+from typing import Any
+from typing import Dict
+
 import numpy as np
 import pytest
 
@@ -42,20 +45,32 @@ class CustomLoss(keras.losses.MeanSquaredError):
 def test_custom_loss_function():
     """Test that a custom loss function can be serialized.
     """
-    estimator = KerasRegressor(build_fn=dynamic_regressor, loss=CustomLoss(),)
+    estimator = KerasRegressor(
+        build_fn=dynamic_regressor,
+        loss=CustomLoss(),
+        hidden_layer_sizes=(100,),
+    )
     check_pickle(estimator, load_boston)
 
 
 # ---------------------- Subclassed Model Tests ------------------
 
 
-def build_fn_custom_model_registered(n_features_in_, n_outputs_):
+def build_fn_custom_model_registered(
+    meta_params: Dict[str, Any],
+    build_params: Dict[str, Any],
+    compile_params: Dict[str, Any],
+) -> Model:
     """Dummy custom Model subclass that is registered to be serializable.
     """
 
     @keras.utils.generic_utils.register_keras_serializable()
     class CustomModelRegistered(Model):
         pass
+
+    # get parameters
+    n_features_in_ = meta_params["n_features_in_"]
+    n_outputs_ = meta_params["n_outputs_"]
 
     inp = Input(shape=n_features_in_)
     x1 = Dense(n_features_in_, activation="relu")(inp)
@@ -68,16 +83,26 @@ def build_fn_custom_model_registered(n_features_in_, n_outputs_):
 def test_custom_model_registered():
     """Test that a registered subclassed Model can be serialized.
     """
-    estimator = KerasRegressor(build_fn=build_fn_custom_model_registered)
+    estimator = KerasRegressor(
+        build_fn=build_fn_custom_model_registered, hidden_layer_sizes=(100,)
+    )
     check_pickle(estimator, load_boston)
 
 
-def build_fn_custom_model_unregistered(n_features_in_, n_outputs_):
+def build_fn_custom_model_unregistered(
+    meta_params: Dict[str, Any],
+    build_params: Dict[str, Any],
+    compile_params: Dict[str, Any],
+) -> Model:
     """Dummy custom Model subclass that is not registed to be serializable.
     """
 
     class CustomModelUnregistered(Model):
         pass
+
+    # get parameters
+    n_features_in_ = meta_params["n_features_in_"]
+    n_outputs_ = meta_params["n_outputs_"]
 
     inp = Input(shape=n_features_in_)
     x1 = Dense(n_features_in_, activation="relu")(inp)
@@ -90,7 +115,9 @@ def build_fn_custom_model_unregistered(n_features_in_, n_outputs_):
 def test_custom_model_unregistered():
     """Test that an unregistered subclassed Model raises an error.
     """
-    estimator = KerasRegressor(build_fn=build_fn_custom_model_unregistered)
+    estimator = KerasRegressor(
+        build_fn=build_fn_custom_model_unregistered, hidden_layer_sizes=(100,)
+    )
     with pytest.raises(ValueError, match="Unknown layer"):
         check_pickle(estimator, load_boston)
 
@@ -105,5 +132,6 @@ def test_run_eagerly():
         build_fn=dynamic_regressor,
         run_eagerly=True,
         loss=KerasRegressor.r_squared,
+        hidden_layer_sizes=(100,),
     )
     check_pickle(estimator, load_boston)
