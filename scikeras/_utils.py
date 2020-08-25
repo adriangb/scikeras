@@ -166,15 +166,6 @@ def get_metric_full_name(name: str) -> str:
     return getattr(deserialize_metric(name), "__name__")
 
 
-def _get_default_args(func):
-    signature = inspect.signature(func)
-    return {
-        k: v.default
-        for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }
-
-
 def _windows_upcast_ints(
     arr: Union[List[np.ndarray], np.ndarray]
 ) -> Union[List[np.ndarray], np.ndarray]:

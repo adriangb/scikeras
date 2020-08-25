@@ -31,7 +31,6 @@ from tensorflow.python.keras.utils.generic_utils import (
 
 from ._utils import LabelDimensionTransformer
 from ._utils import TFRandomState
-from ._utils import _get_default_args
 from ._utils import _windows_upcast_ints
 from ._utils import get_metric_full_name
 from ._utils import make_model_picklable
@@ -134,9 +133,6 @@ class BaseWrapper(BaseEstimator):
         run_eagerly=False,
         **kwargs,
     ):
-        # Get defaults from `build_fn`
-        if inspect.isfunction(build_fn):
-            vars(self).update(_get_default_args(build_fn))
 
         if isinstance(build_fn, Model):
             # ensure prebuilt model can be serialized
