@@ -316,6 +316,24 @@ class TestAdvancedAPIFuncs:
             loader,
         )
 
+    @pytest.mark.parametrize(
+        "config", ["MLPClassifier"],
+    )
+    def test_searchcv_routed_params(self, config):
+        """Tests compatibility with Scikit-learn's hyperparameter search CV."""
+        loader, model, build_fn, _ = CONFIG[config]
+        estimator = model(build_fn, epochs=1, hidden_layer_sizes=[])
+        params = {
+            "build__hidden_layer_sizes": [[], [5]],
+            "compile__optimizer": ["sgd", "adam"],
+        }
+        search = GridSearchCV(estimator, params)
+        basic_checks(search, loader)
+        assert search.best_estimator_.model_.optimizer._name.lower() in (
+            "sgd",
+            "adam",
+        )
+
     @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
     def test_ensemble(self, config):
         """Tests compatibility with Scikit-learn's ensembles."""

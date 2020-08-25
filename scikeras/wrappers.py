@@ -116,6 +116,8 @@ class BaseWrapper(BaseEstimator):
         "keras_expected_n_ouputs_",
     }
 
+    _routing_prefixes = {"build", "fit", "compile", "predict"}
+
     def __init__(
         self,
         build_fn=None,
@@ -714,6 +716,21 @@ class BaseWrapper(BaseEstimator):
             )
         }
 
+    def set_params(self, **params) -> "BaseWrapper":
+        """Override BaseEstimator.set_params to allow setting of routed params.
+        """
+        passthrough = dict()
+        for param, value in params.items():
+            if any(
+                param.startswith(prefix + "__")
+                for prefix in self._routing_prefixes
+            ):
+                # routed param
+                setattr(self, param, value)
+            else:
+                passthrough[param] = value
+        return super().set_params(**passthrough)
+
     def _get_param_names(self):
         """Get parameter names for the estimator"""
         return (
@@ -1108,7 +1125,7 @@ class KerasRegressor(BaseWrapper):
 
         return y, extra_args
 
-    def score(self, X, y, sample_weight=None, **kwargs):
+    def score(self, X, y, sample_weight=None):
         """Returns the mean loss on the given test data and labels.
 
         Arguments:
@@ -1117,15 +1134,11 @@ class KerasRegressor(BaseWrapper):
                 and `n_features` is the number of features.
             y: array-like, shape `(n_samples,)`
                 True labels for `X`.
-            **kwargs: dictionary arguments
-                Legal arguments are the arguments of `Sequential.evaluate`.
 
         Returns:
             score: float
                 Mean accuracy of predictions on `X` wrt. `y`.
         """
-        res = super(KerasRegressor, self).score(X, y, sample_weight, **kwargs)
-
         # check loss function and warn if it is not the same as score function
         if self.model_.loss not in ("mean_squared_error", self.r_squared,):
             warnings.warn(
@@ -1135,7 +1148,7 @@ class KerasRegressor(BaseWrapper):
                 "`KerasRegressor.r_squared`."
             )
 
-        return res
+        return super().score(X, y, sample_weight=sample_weight)
 
     @staticmethod
     @register_keras_serializable()
