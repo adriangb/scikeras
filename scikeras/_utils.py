@@ -180,7 +180,7 @@ def _windows_upcast_ints(
 ) -> Union[List[np.ndarray], np.ndarray]:
     # see tensorflow/probability#886
     def _upcast(x):
-        x.astype("int64") if x.dtype == np.int32 else x
+        return x.astype("int64") if x.dtype == np.int32 else x
 
     if isinstance(arr, np.ndarray):
         return _upcast(arr)
