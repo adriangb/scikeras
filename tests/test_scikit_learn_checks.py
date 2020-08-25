@@ -40,7 +40,7 @@ from .testing_utils import parametrize_with_checks
             # applicable to real world datasets
             batch_size=1000,
             optimizer="adam",
-            loss=KerasRegressor.root_mean_squared_error,
+            loss=KerasRegressor.r_squared,
         ),
     ],
     ids=["KerasClassifier", "KerasRegressor"],

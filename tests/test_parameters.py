@@ -31,8 +31,7 @@ class TestRandomState:
         "estimator",
         [
             KerasRegressor(
-                build_fn=dynamic_regressor,
-                loss=KerasRegressor.root_mean_squared_error,
+                build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
             ),
             KerasClassifier(build_fn=dynamic_classifier),
         ],
@@ -71,8 +70,7 @@ class TestRandomState:
         "estimator",
         [
             KerasRegressor(
-                build_fn=dynamic_regressor,
-                loss=KerasRegressor.root_mean_squared_error,
+                build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
             ),
             KerasClassifier(build_fn=dynamic_classifier),
         ],
@@ -131,10 +129,10 @@ class TestRandomState:
             assert "PYTHONHASHSEED" not in os.environ
 
 
-def test_sample_weights():
-    """Checks that the sample_weight parameter has the intended effect.
+def test_sample_weights_fit():
+    """Checks that the `sample_weight` parameter when passed to `fit`
+    has the intended effect.
     """
-
     # build estimator
     estimator = KerasClassifier(
         build_fn=dynamic_classifier,
@@ -175,6 +173,38 @@ def test_sample_weights():
     np.testing.assert_allclose(
         actual=estimator1.predict_proba(X), desired=estimator2.predict_proba(X)
     )
+
+
+def test_sample_weights_score():
+    """Checks that the `sample_weight` parameter when passed to
+    `score` has the intended effect.
+    """
+    # build estimator
+    estimator = KerasRegressor(
+        build_fn=dynamic_regressor,
+        hidden_layer_sizes=(100,),
+        epochs=10,
+        random_state=0,
+    )
+    estimator1 = clone(estimator)
+    estimator2 = clone(estimator)
+
+    # we create 20 points
+    X = np.array([1] * 10000).reshape(-1, 1)
+    y = [1] * 5000 + [-1] * 5000
+
+    # train
+    estimator1.fit(X, y)
+    estimator2.fit(X, y)
+
+    # heavily weight towards y=1 points
+    bad_sw = [0.999] * 5000 + [0.001] * 5000
+
+    # score with weights, estimator2 should
+    # score higher since the weights "unbalance"
+    score1 = estimator1.score(X, y, sample_weight=bad_sw)
+    score2 = estimator2.score(X, y)
+    assert score2 > score1
 
 
 def test_build_fn_default_params():

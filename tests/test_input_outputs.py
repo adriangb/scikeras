@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import tensorflow as tf
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
@@ -15,15 +16,15 @@ from scikeras.wrappers import BaseWrapper
 from scikeras.wrappers import KerasClassifier
 from scikeras.wrappers import KerasRegressor
 
+from .mlp_models import dynamic_classifier
+from .mlp_models import dynamic_regressor
+
 
 # Defaults
 INPUT_DIM = 5
-HIDDEN_DIM = 5
 TRAIN_SAMPLES = 10
 TEST_SAMPLES = 5
 NUM_CLASSES = 2
-BATCH_SIZE = 5
-EPOCHS = 1
 
 
 class FunctionalAPIMultiInputClassifier(KerasClassifier):
@@ -251,3 +252,109 @@ def test_BaseWrapper_postprocess_y():
     np.testing.assert_equal(y_postprocessed, y_array)
     extra_args = BaseWrapper.postprocess_y(y_array)[1]
     assert len(extra_args) == 0
+
+
+@pytest.mark.parametrize(
+    "dtype",
+    ["float32", "float64", "int64", "int32", "uint8", "uint16", "object"],
+)
+def test_classifier_handles_dtypes(dtype):
+    """Tests that classifiers correctly handle dtype conversions and
+    return the same dtype as the inputs.
+    """
+    n, d = 20, 3
+    n_classes = 3
+    X = np.random.uniform(size=(n, d)).astype(dtype)
+    y = np.random.choice(n_classes, size=n).astype(dtype)
+    sample_weight = np.ones(y.shape).astype(dtype)
+
+    class StrictClassifier(KerasClassifier):
+        def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
+            if dtype == "object":
+                assert X.dtype == np.dtype(tf.keras.backend.floatx())
+            else:
+                assert X.dtype == np.dtype(dtype)
+            # y is passed through encoders, it is likely not the original dtype
+            # sample_weight should always be floatx
+            assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
+            return super()._fit_keras_model(
+                X, y, sample_weight, warm_start, **kwargs
+            )
+
+    clf = StrictClassifier(build_fn=dynamic_classifier)
+    clf.fit(X, y, sample_weight=sample_weight)
+    assert clf.score(X, y) >= 0
+    if y.dtype.kind != "O":
+        assert clf.predict(X).dtype == np.dtype(dtype)
+    else:
+        assert clf.predict(X).dtype == np.float32
+
+
+@pytest.mark.parametrize(
+    "dtype",
+    ["float32", "float64", "int64", "int32", "uint8", "uint16", "object"],
+)
+def test_regressor_handles_dtypes(dtype):
+    """Tests that regressors correctly handle dtype conversions and
+    always return float dtypes.
+    """
+    n, d = 20, 3
+    X = np.random.uniform(size=(n, d)).astype(dtype)
+    y = np.random.uniform(size=n).astype(dtype)
+    sample_weight = np.ones(y.shape).astype(dtype)
+
+    class StrictRegressor(KerasRegressor):
+        def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
+            if dtype == "object":
+                assert X.dtype == np.dtype(tf.keras.backend.floatx())
+                assert y.dtype == np.dtype(tf.keras.backend.floatx())
+            else:
+                assert X.dtype == np.dtype(dtype)
+                assert y.dtype == np.dtype(dtype)
+            # sample_weight should always be floatx
+            assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
+            return super()._fit_keras_model(
+                X, y, sample_weight, warm_start, **kwargs
+            )
+
+    reg = StrictRegressor(build_fn=dynamic_regressor)
+    reg.fit(X, y, sample_weight=sample_weight)
+    y_hat = reg.predict(X)
+    if y.dtype.kind == "f":
+        assert y_hat.dtype == np.dtype(dtype)
+    else:
+        assert y_hat.dtype.kind == "f"
+
+
+@pytest.mark.parametrize("X_dtype", ["float32", "int64"])
+@pytest.mark.parametrize(
+    "y_dtype,", ["float32", "float64", "uint8", "int16", "object"]
+)
+@pytest.mark.parametrize("run_eagerly", [True, False])
+def test_mixed_dtypes(y_dtype, X_dtype, run_eagerly):
+    n, d = 20, 3
+    n_classes = 3
+    X = np.random.uniform(size=(n, d)).astype(X_dtype)
+    y = np.random.choice(n_classes, size=n).astype(y_dtype)
+
+    class StrictRegressor(KerasRegressor):
+        def _fit_keras_model(self, X, y, sample_weight, warm_start, **kwargs):
+            if X_dtype == "object":
+                assert X.dtype == np.dtype(tf.keras.backend.floatx())
+            else:
+                assert X.dtype == np.dtype(X_dtype)
+            if y_dtype == "object":
+                assert y.dtype == np.dtype(tf.keras.backend.floatx())
+            else:
+                assert y.dtype == np.dtype(y_dtype)
+            return super()._fit_keras_model(
+                X, y, sample_weight, warm_start, **kwargs
+            )
+
+    reg = StrictRegressor(build_fn=dynamic_regressor, run_eagerly=run_eagerly)
+    reg.fit(X, y)
+    y_hat = reg.predict(X)
+    if y.dtype.kind == "f":
+        assert y_hat.dtype == np.dtype(y_dtype)
+    else:
+        assert y_hat.dtype.kind == "f"
