@@ -294,7 +294,7 @@ class TestAdvancedAPIFuncs:
         basic_checks(
             RandomizedSearchCV(
                 estimator,
-                {"epochs": [1, 2, 3], "optimizer": ["rmsprop", Adam()]},
+                {"epochs": [1, 2, 3], "optimizer": ["rmsprop", "sgd"]},
                 n_iter=2,
             ),
             loader,
