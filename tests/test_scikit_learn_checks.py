@@ -1,8 +1,7 @@
 """Tests using Scikit-Learn's bundled estimator_checks."""
 
 from distutils.version import LooseVersion
-from typing import Any
-from typing import Dict
+from typing import Any, Dict
 
 import pytest
 
@@ -11,13 +10,10 @@ from sklearn.datasets import load_iris
 from sklearn.utils.estimator_checks import check_no_attributes_set_in_init
 from tensorflow.keras import Model
 
-from scikeras.wrappers import KerasClassifier
-from scikeras.wrappers import KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
-from .mlp_models import dynamic_classifier
-from .mlp_models import dynamic_regressor
-from .testing_utils import basic_checks
-from .testing_utils import parametrize_with_checks
+from .mlp_models import dynamic_classifier, dynamic_regressor
+from .testing_utils import basic_checks, parametrize_with_checks
 
 
 @parametrize_with_checks(

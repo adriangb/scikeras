@@ -3,18 +3,12 @@ import os
 import random
 import warnings
 
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Union
+from typing import Any, Callable, Dict, Iterable, List, Union
 
 import numpy as np
 import tensorflow as tf
 
-from sklearn.base import BaseEstimator
-from sklearn.base import TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin
 from tensorflow.keras.layers import deserialize as deserialize_layer
 from tensorflow.keras.layers import serialize as serialize_layer
 from tensorflow.keras.metrics import deserialize as deserialize_metric

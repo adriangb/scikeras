@@ -5,11 +5,9 @@ import pytest
 
 from sklearn.exceptions import NotFittedError
 
-from scikeras.wrappers import KerasClassifier
-from scikeras.wrappers import KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
-from .mlp_models import dynamic_classifier
-from .mlp_models import dynamic_regressor
+from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
 def test_validate_data():

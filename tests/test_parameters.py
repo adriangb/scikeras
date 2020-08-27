@@ -6,11 +6,9 @@ import pytest
 from sklearn.base import clone
 from tensorflow.python.keras.testing_utils import get_test_data
 
-from scikeras.wrappers import KerasClassifier
-from scikeras.wrappers import KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
-from .mlp_models import dynamic_classifier
-from .mlp_models import dynamic_regressor
+from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
 # Defaults

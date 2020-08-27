@@ -1,41 +1,34 @@
 """Tests for Scikit-learn API wrapper."""
 import pickle
 
-from typing import Any
-from typing import Dict
+from typing import Any, Dict
 
 import numpy as np
 import pytest
 
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.datasets import load_boston
-from sklearn.datasets import load_digits
-from sklearn.datasets import load_iris
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.ensemble import AdaBoostRegressor
-from sklearn.ensemble import BaggingClassifier
-from sklearn.ensemble import BaggingRegressor
+from sklearn.datasets import load_boston, load_digits, load_iris
+from sklearn.ensemble import (
+    AdaBoostClassifier,
+    AdaBoostRegressor,
+    BaggingClassifier,
+    BaggingRegressor,
+)
 from sklearn.exceptions import DataConversionWarning  # noqa
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.optimizers import Adam
 from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.layers import Conv2D
-from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras.layers import Flatten
-from tensorflow.python.keras.layers import Input
-from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from scikeras import wrappers
-from scikeras.wrappers import KerasClassifier
-from scikeras.wrappers import KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
-from .mlp_models import dynamic_classifier
-from .mlp_models import dynamic_regressor
+from .mlp_models import dynamic_classifier, dynamic_regressor
 from .testing_utils import basic_checks
 
 
@@ -51,12 +44,11 @@ def build_fn_clf(
     """Builds a Sequential based classifier."""
     # extract parameters
     n_features_in_ = meta_params["n_features_in_"]
+    X_shape_ = meta_params["X_shape_"]
     n_classes_ = meta_params["n_classes_"]
 
     model = keras.models.Sequential()
-    model.add(
-        keras.layers.Dense(n_features_in_, input_shape=(n_features_in_,))
-    )
+    model.add(keras.layers.Dense(n_features_in_, input_shape=X_shape_[1:]))
     model.add(keras.layers.Activation("relu"))
     model.add(keras.layers.Dense(hidden_dim))
     model.add(keras.layers.Activation("relu"))
@@ -162,11 +154,11 @@ def build_fn_regs(
 ) -> Model:
     """Dynamically build regressor."""
     # get params
-    X = meta_params["X"]
+    X_shape_ = meta_params["X_shape_"]
     n_outputs_ = meta_params["n_outputs_"]
 
     model = Sequential()
-    model.add(Dense(X.shape[1], activation="relu", input_shape=X.shape[1:]))
+    model.add(Dense(X_shape_[1], activation="relu", input_shape=X_shape_[1:]))
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(n_outputs_))
@@ -181,10 +173,10 @@ def build_fn_clss(
 ) -> Model:
     """Dynamically build classifier."""
     # get params
-    X = meta_params["X"]
+    X_shape_ = meta_params["X_shape_"]
 
     model = Sequential()
-    model.add(Dense(X.shape[1], activation="relu", input_shape=X.shape[1:]))
+    model.add(Dense(X.shape[1], activation="relu", input_shape=X_shape_[1:]))
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(1, activation="softmax"))
@@ -199,11 +191,11 @@ def build_fn_clscs(
 ) -> Model:
     """Dynamically build functional API regressor."""
     # get params
-    X = meta_params["X"]
+    X_shape_ = meta_params["X_shape_"]
     n_classes_ = meta_params["n_classes_"]
 
     model = Sequential()
-    model.add(Conv2D(3, (3, 3), input_shape=X.shape[1:]))
+    model.add(Conv2D(3, (3, 3), input_shape=X_shape_[1:]))
     model.add(Flatten())
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
@@ -221,10 +213,10 @@ def build_fn_clscf(
 ) -> Model:
     """Dynamically build functional API classifier."""
     # get params
-    X = meta_params["X"]
+    X_shape_ = meta_params["X_shape_"]
     n_classes_ = meta_params["n_classes_"]
 
-    x = Input(shape=X.shape[1:])
+    x = Input(shape=X_shape_[1:])
     z = Conv2D(3, (3, 3))(x)
     z = Flatten()(z)
     for size in hidden_layer_sizes:
@@ -301,7 +293,9 @@ class TestAdvancedAPIFuncs:
         )
         basic_checks(
             RandomizedSearchCV(
-                estimator, {"epochs": np.random.randint(1, 5, 2)}, n_iter=2,
+                estimator,
+                {"epochs": [1, 2, 3], "optimizer": ["rmsprop", Adam()]},
+                n_iter=2,
             ),
             loader,
         )
@@ -314,7 +308,7 @@ class TestAdvancedAPIFuncs:
         loader, model, build_fn, _ = CONFIG[config]
         estimator = model(build_fn, epochs=1, hidden_layer_sizes=[])
         params = {
-            "build__hidden_layer_sizes": [[], [5]],
+            "model__hidden_layer_sizes": [[], [5]],
             "compile__optimizer": ["sgd", "adam"],
         }
         search = GridSearchCV(estimator, params)
@@ -362,7 +356,7 @@ class TestPrebuiltModel:
             y_train = to_categorical(y_train)
             meta_params = {
                 "n_classes_": n_classes_,
-                "cls_type_": "multiclass",
+                "target_type_": "multiclass",
                 "n_features_in_": x_train.shape[1],
                 "keras_expected_n_ouputs_": 1,
             }
@@ -406,7 +400,7 @@ class TestPrebuiltModel:
             y_train = to_categorical(y_train)
             meta_params = {
                 "n_classes_": n_classes_,
-                "cls_type_": "multiclass",
+                "target_type_": "multiclass",
                 "n_features_in_": x_train.shape[1],
                 "keras_expected_n_ouputs_": 1,
             }

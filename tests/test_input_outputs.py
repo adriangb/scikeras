@@ -1,26 +1,18 @@
-from typing import Any
-from typing import Dict
+from typing import Any, Dict
 
 import numpy as np
 import pytest
 import tensorflow as tf
 
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import MultiLabelBinarizer
-from tensorflow.python.keras.layers import Concatenate
-from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras.layers import Input
-from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.models import Sequential
+from tensorflow.python.keras.layers import Concatenate, Dense, Input
+from tensorflow.python.keras.models import Model, Sequential
 from tensorflow.python.keras.testing_utils import get_test_data
 
-from scikeras.wrappers import BaseWrapper
-from scikeras.wrappers import KerasClassifier
-from scikeras.wrappers import KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
-from .mlp_models import dynamic_classifier
-from .mlp_models import dynamic_regressor
+from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
 # Defaults
@@ -71,10 +63,10 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
         self, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
     ) -> Model:
         # get params
-        X = meta_params["X"]
+        n_features_in_ = meta_params["n_features_in_"]
         n_classes_ = meta_params["n_classes_"]
 
-        inp = Input((4,))
+        inp = Input((n_features_in_,))
 
         x1 = Dense(100)(inp)
 

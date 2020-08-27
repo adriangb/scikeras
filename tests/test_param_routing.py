@@ -1,8 +1,7 @@
 import inspect
 
 from distutils.version import LooseVersion
-from typing import Any
-from typing import Dict
+from typing import Any, Dict
 
 import numpy as np
 import pytest
@@ -10,12 +9,9 @@ import tensorflow as tf
 
 from tensorflow.keras import Model
 
-from scikeras.wrappers import BaseWrapper
-from scikeras.wrappers import KerasClassifier
-from scikeras.wrappers import KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
-from .mlp_models import dynamic_classifier
-from .mlp_models import dynamic_regressor
+from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
 def test_routing_basic():
@@ -34,7 +30,7 @@ def test_routing_basic():
             "meta_params",
             "compile_params",
         ), "The number and order of **kwargs passed to `build_fn` should be fixed"
-        meta = set(kwargs["meta_params"].keys()) - {"X", "y"}
+        meta = set(kwargs["meta_params"].keys())
         expected_meta = KerasClassifier._meta_params - {
             "model_",
             "history_",
@@ -76,7 +72,7 @@ def test_routing_override():
     clf = KerasClassifier(
         build_fn=build_fn,
         hidden_layer_sizes=(100,),
-        build__hidden_layer_sizes=(200,),  # override build params
+        model__hidden_layer_sizes=(200,),  # override build params
         compile__optimizer="adam",  # overwrites `optimizer` param
     )
     clf.fit(X, y)

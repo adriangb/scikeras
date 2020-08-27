@@ -5,8 +5,7 @@ import os
 import warnings
 
 from collections import defaultdict
-from typing import Any
-from typing import Dict
+from typing import Any, Dict
 
 import numpy as np
 import tensorflow as tf
@@ -16,27 +15,30 @@ from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import _check_sample_weight
-from sklearn.utils.validation import check_array
-from sklearn.utils.validation import check_X_y
+from sklearn.utils.validation import (
+    _check_sample_weight,
+    check_array,
+    check_X_y,
+)
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import is_categorical_crossentropy
-from tensorflow.python.keras.utils.generic_utils import has_arg
 from tensorflow.python.keras.utils.generic_utils import (
+    has_arg,
     register_keras_serializable,
 )
 
-from ._utils import LabelDimensionTransformer
-from ._utils import TFRandomState
-from ._utils import _windows_upcast_ints
-from ._utils import accepts_kwargs
-from ._utils import get_metric_full_name
-from ._utils import has_param
-from ._utils import make_model_picklable
-from ._utils import route_params
+from ._utils import (
+    LabelDimensionTransformer,
+    TFRandomState,
+    _windows_upcast_ints,
+    accepts_kwargs,
+    get_metric_full_name,
+    has_param,
+    make_model_picklable,
+    route_params,
+)
 
 
 class BaseWrapper(BaseEstimator):
@@ -110,7 +112,10 @@ class BaseWrapper(BaseEstimator):
         # parameters created by wrappers within `fit`
         "_random_state",
         "n_features_in_",
-        "input_dtype_",
+        "X_dtype_",
+        "y_dtype_",
+        "X_shape_",
+        "y_shape_",
         "model_",
         "history_",
         "is_fitted_",
@@ -118,7 +123,7 @@ class BaseWrapper(BaseEstimator):
         "keras_expected_n_ouputs_",
     }
 
-    _routing_prefixes = {"build", "fit", "compile", "predict"}
+    _routing_prefixes = {"model", "fit", "compile", "predict"}
 
     def __init__(
         self,
@@ -164,7 +169,7 @@ class BaseWrapper(BaseEstimator):
         return self.__class__.__name__
 
     @property
-    def _build_params(self):
+    def _model_params(self):
         return (
             set(self.get_params().keys())
             - self._compile_params
@@ -250,7 +255,7 @@ class BaseWrapper(BaseEstimator):
         if "build_fn" in params:
             params.pop("build_fn")
         build_params = route_params(
-            params, destination="build", pass_filter=self._build_params
+            params, destination="model", pass_filter=self._model_params
         )
         if has_param(final_build_fn, "meta_params") or accepts_kwargs(
             final_build_fn
@@ -261,7 +266,6 @@ class BaseWrapper(BaseEstimator):
                 destination=None,
                 pass_filter=self._meta_params,
             )
-            meta_params.update({"X": X, "y": y})
             build_params["meta_params"] = meta_params
         if has_param(final_build_fn, "compile_params") or accepts_kwargs(
             final_build_fn
@@ -446,7 +450,10 @@ class BaseWrapper(BaseEstimator):
             extra_args : dictionary of output attributes, ex: n_outputs_
         """
 
-        extra_args = dict()
+        extra_args = {
+            "y_dtype_": y.dtype,
+            "y_shape_": y.shape,
+        }
 
         return y, extra_args
 
@@ -486,7 +493,10 @@ class BaseWrapper(BaseEstimator):
             X : unchanged 2D numpy array
             extra_args : attributes of output `y`.
         """
-        extra_args = dict()
+        extra_args = {
+            "X_dtype_": X.dtype,
+            "X_shape_": X.shape,
+        }
         return X, extra_args
 
     def fit(self, X, y, sample_weight=None):
@@ -563,7 +573,7 @@ class BaseWrapper(BaseEstimator):
         X, y = self._validate_data(X=X, y=y, reset=reset)
 
         # Save input dtype
-        self.input_dtype_ = y.dtype
+        self.y_dtype_ = y.dtype
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
@@ -589,10 +599,13 @@ class BaseWrapper(BaseEstimator):
                     )
 
         # pre process X, y
-        X, _ = self.preprocess_X(X)
+        X, extra_args = self.preprocess_X(X)
+        # update self.X_dtype_, self.X_shape_
+        for attr_name, attr_val in extra_args.items():
+            setattr(self, attr_name, attr_val)
         y, extra_args = self.preprocess_y(y)
         # update self.classes_, self.n_outputs_, self.n_classes_ and
-        #  self.cls_type_
+        #  self.target_type_
         for attr_name, attr_val in extra_args.items():
             setattr(self, attr_name, attr_val)
 
@@ -703,7 +716,7 @@ class BaseWrapper(BaseEstimator):
 
     def get_meta_params(self) -> Dict[str, Any]:
         """Get meta parameters (parameters created by fit, like
-        n_features_in_ or cls_type_).
+        n_features_in_ or target_type_).
 
         Returns
         -------
@@ -788,7 +801,7 @@ class KerasClassifier(BaseWrapper):
     _meta_params.update(
         {
             "n_classes_",
-            "cls_type_",
+            "target_type_",
             "classes_",
             "encoders_",
             "n_outputs_",
@@ -809,18 +822,16 @@ class KerasClassifier(BaseWrapper):
             y : modified 2D numpy array with 0 indexed integer class labels.
             extra_args : dictionary of output attributes, ex `n_outputs_`
         """
-        y, _ = super(KerasClassifier, KerasClassifier).preprocess_y(y)
+        y, extra_args = super(KerasClassifier, KerasClassifier).preprocess_y(y)
 
-        cls_type_ = type_of_target(y)
-
-        input_dtype_ = y.dtype
+        target_type_ = type_of_target(y)
 
         if len(y.shape) == 1:
             n_outputs_ = 1
         else:
             n_outputs_ = y.shape[1]
 
-        if cls_type_ == "binary":
+        if target_type_ == "binary":
             # y = array([1, 0, 1, 0])
             # single task, single label, binary classification
             keras_expected_n_ouputs_ = 1  # single sigmoid output expected
@@ -834,7 +845,7 @@ class KerasClassifier(BaseWrapper):
             encoders_ = [encoder]
             classes_ = [classes_]
             y = [y]
-        elif cls_type_ == "multiclass":
+        elif target_type_ == "multiclass":
             # y = array([1, 5, 2])
             keras_expected_n_ouputs_ = 1  # single softmax output expected
             # encode
@@ -848,7 +859,7 @@ class KerasClassifier(BaseWrapper):
             encoders_ = [encoder]
             classes_ = [classes_]
             y = [y]
-        elif cls_type_ == "multilabel-indicator":
+        elif target_type_ == "multilabel-indicator":
             # y = array([1, 1, 1, 0], [0, 0, 1, 1])
             # split into lists for multi-output Keras
             # will be processed as multiple binary classifications
@@ -864,7 +875,7 @@ class KerasClassifier(BaseWrapper):
                 for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
-        elif cls_type_ == "multiclass-multioutput":
+        elif target_type_ == "multiclass-multioutput":
             # y = array([1, 0, 5], [2, 1, 3])
             # split into lists for multi-output Keras
             # each will be processesed as a seperate multiclass problem
@@ -880,7 +891,7 @@ class KerasClassifier(BaseWrapper):
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
         else:
-            raise ValueError("Unknown label type: {}".format(cls_type_))
+            raise ValueError("Unknown label type: {}".format(target_type_))
 
         # self.classes_ is kept as an array when n_outputs>1 for compatibility
         # with ensembles and other meta estimators
@@ -893,15 +904,16 @@ class KerasClassifier(BaseWrapper):
             n_classes_ = [class_.shape[0] for class_ in classes_]
             n_outputs_ = len(n_classes_)
 
-        extra_args = {
-            "classes_": classes_,
-            "encoders_": encoders_,
-            "n_outputs_": n_outputs_,
-            "keras_expected_n_ouputs_": keras_expected_n_ouputs_,
-            "n_classes_": n_classes_,
-            "cls_type_": cls_type_,
-            "input_dtype_": input_dtype_,
-        }
+        extra_args.update(
+            {
+                "classes_": classes_,
+                "encoders_": encoders_,
+                "n_outputs_": n_outputs_,
+                "keras_expected_n_ouputs_": keras_expected_n_ouputs_,
+                "n_classes_": n_classes_,
+                "target_type_": target_type_,
+            }
+        )
 
         return y, extra_args
 
@@ -914,13 +926,13 @@ class KerasClassifier(BaseWrapper):
             # convert single-target y to a list for easier processing
             y = [y]
 
-        cls_type_ = self.cls_type_
+        target_type_ = self.target_type_
 
         class_predictions = []
 
         for i in range(self.n_outputs_):
 
-            if cls_type_ == "binary":
+            if target_type_ == "binary":
                 # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
                 if (
                     isinstance(self.encoders_[i], LabelEncoder)
@@ -952,7 +964,7 @@ class KerasClassifier(BaseWrapper):
                     # result from a single sigmoid output
                     # reformat so that we have 2 columns
                     y[i] = np.column_stack([1 - y[i], y[i]])
-            elif cls_type_ in ("multiclass", "multiclass-multioutput"):
+            elif target_type_ in ("multiclass", "multiclass-multioutput"):
                 # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
                 # array(['apple', 'orange'])
                 idx = np.argmax(y[i], axis=-1)
@@ -964,7 +976,7 @@ class KerasClassifier(BaseWrapper):
                 class_predictions.append(
                     self.encoders_[i].inverse_transform(y_)
                 )
-            elif cls_type_ == "multilabel-indicator":
+            elif target_type_ == "multilabel-indicator":
                 class_predictions.append(
                     self.encoders_[i].inverse_transform(
                         np.argmax(y[i], axis=1)
@@ -976,7 +988,7 @@ class KerasClassifier(BaseWrapper):
         y = np.squeeze(np.column_stack(class_predictions))
 
         # type cast back to input dtype
-        y = y.astype(self.input_dtype_, copy=False)
+        y = y.astype(self.y_dtype_, copy=False)
 
         extra_args = {"class_probabilities": class_probabilities}
 
@@ -1102,7 +1114,7 @@ class KerasRegressor(BaseWrapper):
 
     def postprocess_y(self, y):
         """Ensures output is floatx and squeeze."""
-        if np.can_cast(self.input_dtype_, np.float32):
+        if np.can_cast(self.y_dtype_, np.float32):
             return np.squeeze(y.astype(np.float32, copy=False)), dict()
         else:
             return np.squeeze(y.astype(np.float64, copy=False)), dict()
@@ -1110,7 +1122,7 @@ class KerasRegressor(BaseWrapper):
     def preprocess_y(self, y):
         """Split y for multi-output tasks.
         """
-        y, _ = super().preprocess_y(y)
+        y, extra_args = super().preprocess_y(y)
 
         if len(y.shape) == 1:
             n_outputs_ = 1
@@ -1120,10 +1132,12 @@ class KerasRegressor(BaseWrapper):
         # for regression, multi-output is handled by single Keras output
         keras_expected_n_ouputs_ = 1
 
-        extra_args = {
-            "n_outputs_": n_outputs_,
-            "keras_expected_n_ouputs_": keras_expected_n_ouputs_,
-        }
+        extra_args.update(
+            {
+                "n_outputs_": n_outputs_,
+                "keras_expected_n_ouputs_": keras_expected_n_ouputs_,
+            }
+        )
 
         y = [y]  # pack into single output list
 

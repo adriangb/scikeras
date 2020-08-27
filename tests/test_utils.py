@@ -1,7 +1,6 @@
 import pytest
 
-from scikeras._utils import pack_keras_model
-from scikeras._utils import unpack_keras_model
+from scikeras._utils import pack_keras_model, unpack_keras_model
 
 
 @pytest.mark.parametrize("obj", [None, "notamodel"])

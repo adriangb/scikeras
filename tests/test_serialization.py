@@ -1,15 +1,13 @@
 import pickle
 
-from typing import Any
-from typing import Dict
+from typing import Any, Dict
 
 import numpy as np
 import pytest
 
 from sklearn.datasets import load_boston
 from tensorflow.python import keras
-from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras.layers import Input
+from tensorflow.python.keras.layers import Dense, Input
 from tensorflow.python.keras.models import Model
 
 from scikeras.wrappers import KerasRegressor
