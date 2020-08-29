@@ -176,7 +176,7 @@ def build_fn_clss(
     X_shape_ = meta_params["X_shape_"]
 
     model = Sequential()
-    model.add(Dense(X.shape[1], activation="relu", input_shape=X_shape_[1:]))
+    model.add(Dense(X_shape_[1], activation="relu", input_shape=X_shape_[1:]))
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(1, activation="softmax"))
@@ -294,7 +294,7 @@ class TestAdvancedAPIFuncs:
         basic_checks(
             RandomizedSearchCV(
                 estimator,
-                {"epochs": [1, 2, 3], "optimizer": ["rmsprop", "sgd"]},
+                {"epochs": [1, 2, 3], "optimizer": ["rmsprop", Adam()]},
                 n_iter=2,
             ),
             loader,
