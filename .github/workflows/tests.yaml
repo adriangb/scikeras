@@ -96,9 +96,9 @@ jobs:
         id: cache
         with:
           path: .venv
-          key: poetry-${{ hashFiles('**/pyproject.toml') }}-nightly-${{ matrix.python-version }}-${{ matrix.os }}
+          key: poetry-${{ hashFiles('**/pyproject.toml') }}-nightly-${{ matrix.python-version }}
           restore-keys: |
-            poetry-${{ hashFiles('**/pyproject.toml') }}-nightly-${{ matrix.python-version }}-${{ matrix.os }}
+            poetry-${{ hashFiles('**/pyproject.toml') }}-nightly-${{ matrix.python-version }}
 
       - name: Install Dependencies
         run: |
@@ -159,9 +159,9 @@ jobs:
         id: cache
         with:
           path: .venv
-          key: poetry-${{ hashFiles('**/pyproject.toml') }}-${{matrix.tf-version}}-${{ matrix.python-version }}-${{ matrix.os }}
+          key: poetry-${{ hashFiles('**/pyproject.toml') }}-oldest-${{ matrix.python-version }}
           restore-keys: |
-            poetry-${{ hashFiles('**/pyproject.toml') }}-${{matrix.tf-version}}-${{ matrix.python-version }}-${{ matrix.os }}
+            poetry-${{ hashFiles('**/pyproject.toml') }}-oldest-${{ matrix.python-version }}
 
       - name: Install Dependencies
         run: |
@@ -208,9 +208,9 @@ jobs:
         id: cache
         with:
           path: .venv
-          key: poetry-${{ hashFiles('**/pyproject.toml') }}-${{ matrix.python-version }}-${{ matrix.os }}
+          key: poetry-${{ hashFiles('**/pyproject.toml') }}-os-${{ matrix.python-version }}-${{ matrix.os }}
           restore-keys: |
-            poetry-${{ hashFiles('**/pyproject.toml') }}-${{ matrix.python-version }}-${{ matrix.os }}
+            poetry-${{ hashFiles('**/pyproject.toml') }}-os-${{ matrix.python-version }}-${{ matrix.os }}
 
       - name: Install Dependencies
         run: |
