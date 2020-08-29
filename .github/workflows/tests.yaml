@@ -109,10 +109,6 @@ jobs:
 
       - name: Update Packages
         run: |
-          # Avoid updating nightly -> stable
-          poetry run python -m pip uninstall -y tf-nightly
-          poetry run python -m pip uninstall -y tensorflow
-          poetry run python -m pip uninstall -y scikit-learn
           poetry update
 
       - name: Install Nightly Versions
