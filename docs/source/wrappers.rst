@@ -76,10 +76,12 @@ Compilation of ``Model``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 You have two options to compile your model:
+
 1. Compile your model within ``model_build_fn`` and return this
 compiled model. In this case, SciKeras will not re-compile your model
 and all compilation parameters (such as ``optimizer``) given to
 :py:func:`scikeras.wrappers.BaseWrapper.__init__` will be ignored.
+
 2. Return an uncompiled model from ``model_build_fn`` and let
 SciKeras handle the compilation. In this case, SciKeras will
 apply all of the compilation parameters, including instantiating
@@ -437,7 +439,7 @@ different parameters for each.
 
     clf = KerasClassifier(
         model=model_build_fn,
-        loss="binary_crossentropy", "categorical_crossentropy",
+        loss="binary_crossentropy",
         optimizer="sgd",
         metrics="accuracy",
         callbacks=[BaseLogger, EarlyStopping]
@@ -455,7 +457,7 @@ postfix, which tells SciKeras to expand the list in order:
 
     clf = KerasClassifier(
         model=model_build_fn,
-        loss="binary_crossentropy", "categorical_crossentropy",
+        loss="binary_crossentropy",
         optimizer="sgd",
         metrics="accuracy",
         callbacks=[BaseLogger, EarlyStopping]
