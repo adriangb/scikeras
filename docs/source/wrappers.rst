@@ -446,10 +446,7 @@ of :py:class:`scikeras.wrappers.BaseWrappers`. Currently, they are:
 
 - ``model__``: passed to ``model_build_fn`` (or whatever function is passed to the ``model`` param of :class:`scikeras.wrappers.BaseWrapper`).
 - ``fit__``: passed to :func:`tensorflow.keras.Model.fit`
-- ``predict__``: passed to :func:`tensorflow.keras.Model.predict`.
-    Note that internally SciKeras also uses :func:`tensorflow.keras.Model.predict`
-    within :func:`scikeras.wrappers.BaseWrapper.score` and so this prefix applies
-    to both.
+- ``predict__``: passed to :func:`tensorflow.keras.Model.predict`. Note that internally SciKeras also uses :func:`tensorflow.keras.Model.predict` within :func:`scikeras.wrappers.BaseWrapper.score` and so this prefix applies to both.
 - ``callbacks__``: used to instantiate callbacks.
 - ``optimizer__``: used to instantiate optimizers.
 - ``loss__``: used to instantiate losses.
@@ -499,7 +496,7 @@ Keras allows using multiple losses for multi-output models.
     clf.fit(X, y)
 
 SciKeras also supports output-name based routing.
-See ` Keras docs <https://keras.io/guides/functional_api/#multi-input-and-multi-output-models>`__
+See `Keras docs <https://keras.io/guides/functional_api/#models-with-multiple-inputs-and-outputs>`_
 for more background.
 
 .. code:: python
