@@ -123,7 +123,14 @@ offer an easy way to compile and tune compilation parameters. Examples:
     y_pred = clf.predict(X_valid)
 
 
-Arguments to ``model``/``model_build_fn``
+Note that SciKeras automatically interprets the type of classification
+task when using ``KerasClassifier``, as determined by
+:py:func:`~sklearn..utils.multiclass.type_of_target`. This means that if you
+pass a binary target, you need to define a your ``Model``'s output layer
+to apply a ``sigmoid`` nonlinearity to get good results.
+
+
+Arguments to ``model_build_fn``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You probably wish to pass parameters from :py:class:`~scikeras.wrappers.BaseWrapper`
@@ -153,11 +160,10 @@ instance. Parameters available via this dictionary are:
 * ``callbacks``
 * Any other parameters with the prefix ``optimizer__``, ``loss__`` or ``callbacks__``
 
-Keyword arguments to :py:func:`scikeras.wrappers.BaseWrapper.__init__`
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Any **other** keyword arguments passed to :py:func:`scikeras.wrappers.BaseWrapper.__init__` when
-the wrapper is instantiated will also be passed to ``model_build_fn`` as keyword
-arguments. For example, calling ``KerasClassifier(myparam=10)`` will result in a
+Keyword arguments with ``model__`` prefix
++++++++++++++++++++++++++++++++++++++++++
+Keyword arguments with the ``model__`` prefix will be passed to ``model_build_fn`` directly as keyword
+arguments, after dropping the prefix. For example, calling ``KerasClassifier(model__myparam=10)`` will result in a
 ``model_build_fn(my_param=10)`` call.
 
 
@@ -171,14 +177,13 @@ focus on the main ones.
 model
 ^^^^^
 
-This is where you pass your Keras ``Model``.
-Ideally, it should not be instantiated, although instantiated models
-are accepted. Instead, the init arguments
-for your model should be passed to :py:class:`.BaseWrapper` either as
-bare keyword arguments (if their name does not conflict with any of
-the existing keyword arguments) or with the ``model__`` prefix,
-which will override any arguments of the same name only when passed to
-``model``. E.g., if your module takes the arguments
+This is where you pass your Keras :class:``tensorflow.keras.Model``
+building function (``model_build_fn``), or ``Model`` instance.
+Unless you are using a pre-instantiated ``Model``, the arguments
+for your model should be passed to :py:class:`.BaseWrapper`
+with the ``model__`` prefix. These will then be passed to
+``model_build_fn`` so that you can use them to build your ``Model``.
+For example, if your module takes the arguments
 ``hidden_layer_sizes`` and ``lr``, the code would look like this:
 
 .. code:: python
@@ -190,15 +195,9 @@ which will override any arguments of the same name only when passed to
 
     clf = KerasClassifier(
         model=model_build_fn,
-        hidden_layer_sizes=(100,),
-        model__lr=0.5,  # also equivalent to just lr=0.5 in this case
+        model__hidden_layer_sizes=(100,),
+        model__lr=0.5,
     )
-
-Note that SciKeras automatically interprets the type of classification
-task when using ``KerasClassifier``, as determined by
-:py:func:`~sklearn..utils.multiclass.type_of_target`. This means that if you
-pass a binary target, you need to define a your ``Model``'s output layer
-to apply a ``sigmoid`` nonlinearity to get good results.
 
 random_state
 ^^^^^^^^^^^^
@@ -308,6 +307,10 @@ task does not have an actual ``y``, you may pass ``y=None``.
 ``X`` and ``y`` are expected to be array-like. SciKeras does not
 currently support :py:class:`tensorflow.data.Dataset` inputs.
 
+
+partial_fit(X, y, sample_weights=None)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 In addition to :py:func:`scikeras.wrapper.BaseWrapper.fit`, there is also the
 :py:func:`scikeras.wrapper.BaseWrapper.partial_fit` method, known from some
 sklearn estimators. :py:func:`scikeras.wrapper.BaseWrapper.partial_fit` allows
@@ -315,6 +318,14 @@ you to continue training from your current status, even if you set
 ``warm_start=False``. A further use case for
 :py:func:`scikeras.wrapper.BaseWrapper.partial_fit` is when your data does not
 fit into memory and you thus need to have several training steps.
+
+For :class:`scikeras.wrappers.KerasClassifier`,
+there is an extra ``classes`` parameter available: 
+``partial_fit(X, y, sample_weights=None, classes=None)``
+The `classes` param is expected to be a list or 1D numpy
+array containing all of the classes that will be seen for all `partial_fit`
+calls, allowing you to make ``partial_fit`` calls with targets
+that only contain a subset of all classes.
 
 
 predict(X) and predict_proba(X)
@@ -472,12 +483,16 @@ postfix, which tells SciKeras to expand the list in order:
 All special prefixes are stored in the ``prefixes_`` class attribute
 of :py:class:`scikeras.wrappers.BaseWrappers`. Currently, they are:
 
-- ``model``
-- ``fit``
-- ``predict``
-- ``callbacks``
-- ``optimizer``
-- ``loss``
+- ``model__``: passed to ``model_build_fn`` (or whatever function is passed to the ``model`` param of :class:`scikeras.wrappers.BaseWrapper`).
+- ``fit__``: passed to :func:`tensorflow.keras.Model.fit`
+- ``predict__``: passed to :func:`tensorflow.keras.Model.predict`.
+    Note that internally SciKeras also uses :func:`tensorflow.keras.Model.predict`
+    within :func:`scikeras.wrappers.BaseWrapper.score` and so this prefix applies
+    to both.
+- ``callbacks__``: used to instantiate callbacks.
+- ``optimizer__``: used to instantiate optimizers.
+- ``loss__``: used to instantiate losses.
+- ``score__``: passed to the scoring function, i.e. :func:`scikeras.wrappers.BaseWrapper.scorer`.
 
 All routed parameters will be available for hyperparameter tuning.
 
