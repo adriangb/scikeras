@@ -441,45 +441,6 @@ For more advanced used cases, SciKeras supports
 Scikit-Learn style parameter routing to override parameters
 for individual consumers (methods or class initializers).
 
-For example, you may want to have multiple callbacks with
-different parameters for each.
-
-.. code:: python
-
-    from tensorflow.keras.callbacks import BaseLogger, EarlyStopping
-
-    clf = KerasClassifier(
-        model=model_build_fn,
-        loss="binary_crossentropy",
-        optimizer="sgd",
-        metrics="accuracy",
-        callbacks=[BaseLogger, EarlyStopping]
-        callbacks__0__stateful_metrics="accuracy",
-        callbacks__1__patience=2,
-    )
-    clf.fit(X, y)
-
-The same can be achieved with the special ``param_groups``
-postfix, which tells SciKeras to expand the list in order:
-
-.. code:: python
-
-    from tensorflow.keras.callbacks import BaseLogger, EarlyStopping
-
-    clf = KerasClassifier(
-        model=model_build_fn,
-        loss="binary_crossentropy",
-        optimizer="sgd",
-        metrics="accuracy",
-        callbacks=[BaseLogger, EarlyStopping]
-        callbacks__param_groups==[
-            {"stateful_metrics": "accuracy"},
-            {"patience": 2}
-        ]
-    )
-    clf.fit(X, y)
-
-
 All special prefixes are stored in the ``prefixes_`` class attribute
 of :py:class:`scikeras.wrappers.BaseWrappers`. Currently, they are:
 
@@ -495,6 +456,66 @@ of :py:class:`scikeras.wrappers.BaseWrappers`. Currently, they are:
 - ``score__``: passed to the scoring function, i.e. :func:`scikeras.wrappers.BaseWrapper.scorer`.
 
 All routed parameters will be available for hyperparameter tuning.
+
+Below are some example use cases.
+
+Multiple callbacks with multiple parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code:: python
+
+    from tensorflow.keras.callbacks import BaseLogger, EarlyStopping
+
+    clf = KerasClassifier(
+        model=model_build_fn,
+        loss="binary_crossentropy",
+        optimizer="sgd",
+        callbacks=[BaseLogger, EarlyStopping]
+        callbacks__param_groups==[
+            {"stateful_metrics": "accuracy"},  # results in BaseLogger(stateful_metrics=accuracy)
+            {"patience": 2},  # results in EarlyStopping(patience=2)
+        ]
+    )
+    clf.fit(X, y)
+
+
+Multi-output model with multiple losses
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Keras allows using multiple losses for multi-output models.
+
+.. code:: python
+
+    clf = KerasClassifier(
+        model=model_build_fn,
+        loss=["binary_crossentropy", "categorical_crossentropy"],
+        compile__loss_weights=[0.6, 0.4],
+        optimizer="sgd",
+        loss__param_groups==[
+            {"label_smoothing": 0.1},  # results in BinaryCrossentropy(label_smoothing=0.1)
+            {"label_smoothing": 0.2},  # results in CategoricalCrossentropy(label_smoothing=0.2)
+        ]
+    )
+    clf.fit(X, y)
+
+SciKeras also supports output-name based routing.
+See ` Keras docs <https://keras.io/guides/functional_api/#multi-input-and-multi-output-models>`__
+for more background.
+
+.. code:: python
+
+    clf = KerasClassifier(
+        model=model_build_fn,
+        loss={"out1": "binary_crossentropy", "out2": "categorical_crossentropy"},
+        compile__loss_weights=[0.6, 0.4],
+        optimizer="sgd",
+        loss__param_groups=={
+            "out1": {"label_smoothing": 0.1},  # results in BinaryCrossentropy(label_smoothing=0.1)
+            "out2": {"label_smoothing": 0.2},  # results in CategoricalCrossentropy(label_smoothing=0.2)
+        }
+    )
+    clf.fit(X, y)
+
 
 
 .. _Keras Model docs: https://www.tensorflow.org/api_docs/python/tf/keras/Model
