@@ -163,7 +163,7 @@ Arguments to :py:class:`scikeras.wrappers.BaseWrapper`
 ------------------------------------------------------
 
 A complete explanation of all arguments and methods of
-:py:class:`.BaseWrapper` are found in the SciKeras API documentation. Here we
+:py:class:`.BaseWrapper` are found in the :ref:`scikeras-api` documentation. Here we
 focus on the main ones.
 
 model
