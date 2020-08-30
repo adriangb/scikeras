@@ -13,6 +13,7 @@ SciKeras provides a Scikit-Learn style API for Keras.
    :caption: Contents:
 
    wrappers
+   api
 
 
 Indices and tables

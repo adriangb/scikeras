@@ -5,17 +5,26 @@ Wrappers
 Using SciKeras Wrappers
 -----------------------
 
-:class:`.KerasClassifier` and :class:`.KerasRegressor` are the main touch point
-for the user. They wrap the Keras :class:`~tensorflow.keras.Model` while
-providing an interface that should be familiar for sklearn users. Both of these
-wrapper are based on :class:`.BaseWrapper`, which defines the main functionality
-of the SciKeras wrappers.
+The main entry points for SciKeras 
+users are :py:class:`scikeras.wrappers.KerasClassifier`,
+:py:class:`scikeras.wrappers.KerasRegressor` and
+:py:class:`scikeras.wrappers.BaseWrapper`. ``BaseWrapper`` provides general ``Keras`` wrapping functionality and
+``KerasClassifier`` and ``KerasRegressor`` extend this with functionality
+specific to classifiers and regressors respectively. This document focuses
+on the overall functionality of the wrappers and hence will refer to 
+:py:class:`scikeras.wrappers.BaseWrapper` as a proxy for all of the wrapper classes.
+Detailed information on usage of specific classes is available in the
+:ref:`scikeras-api` documentation.
 
-Define your :class:`~tensorflow.keras.Model` architecture like you always do,
-but within a callable top-level function.
-Then pass this function to :class:`.BaseWrapper` in the ``model`` parameter.
-Finally, you can call :func:`~scikeras.wrappers.BaseWrapper.fit`
-and :func:`~scikeras.wrappers.BaseWrapper.predict`, as with an sklearn
+The SciKeras wraps the Keras :py:class:`~tensorflow.keras.Model` while
+providing an interface that should be familiar for sklearn users.
+
+To get started, define your :py:class:`~tensorflow.keras.Model` architecture like you always do,
+but within a callable top-level function (we will call this function ``model_build_fn`` for
+the remained of these docs, but you are free to name it as you wish).
+Then pass this function to :py:class:`.BaseWrapper` in the ``model`` parameter.
+Finally, you can call :py:func:`~scikeras.wrappers.BaseWrapper.fit`
+and :py:func:`~scikeras.wrappers.BaseWrapper.predict`, as with an sklearn
 estimator. The finished code could look something like this:
 
 .. code:: python
@@ -33,8 +42,8 @@ Let's see what SciKeras did:
 
 - wraps ``tensorflow.keras.Model`` in an sklearn interface
 - handles encoding and decoding of the target ``y``
-- compiles the :class:`~tensorflow.keras.Model` (unless you do it yourself in ``model_build_fn``)
-- makes all ``Keras`` objects serializable.
+- compiles the :py:class:`~tensorflow.keras.Model` (unless you do it yourself in ``model_build_fn``)
+- makes all ``Keras`` objects serializable so that they can be used with :py:mod:`~sklearn.model_selection`.
 
 SciKeras abstracts away the incompatibilities and data conversions,
 letting you focus on defining your architecture and
@@ -45,15 +54,15 @@ extended with ease, getting out of your way as much as possible.
 Initialization
 ^^^^^^^^^^^^^^
 
-When you instantiate the :class:`.KerasClassifier` or
-:class:`.KerasRegressor` instance, only the given arguments are stored.
+When you instantiate the :py:class:`.KerasClassifier` or
+:py:class:`.KerasRegressor` instance, only the given arguments are stored.
 These arguments are stored unmodified. For instance, the ``model`` will
 remain uninstantiated. This is to make sure that the arguments you
 pass are not touched afterwards, which makes it possible to clone the
-wrapper instance, for example in a :class:`~sklearn.model_selection.GridSearchCV`.
+wrapper instance, for example in a :py:class:`~sklearn.model_selection.GridSearchCV`.
 
-Only when the :func:`~scikeras.wrappers.KerasClassifier.fit` or
-:func:`~scikeras.wrappers.KerasRegressor.fit` method are called, are the
+Only when the :py:func:`~scikeras.wrappers.KerasClassifier.fit` or
+:py:func:`~scikeras.wrappers.KerasRegressor.fit` method are called, are the
 different attributes of the wrapper, such as the ``model``, initialized.
 An initialized attribute's name always ends on an underscore; e.g., the
 initialized ``module`` is called ``model_``. (This is the same
@@ -61,15 +70,20 @@ nomenclature as sklearn uses.) Therefore, you always know which
 attributes you set and which ones were created by the wrappers.
 
 Once initialized by calling ``fit``, the wrappers create several attributes,
-documented in the SciKeras API docs.
+documented in the :ref:`scikeras-api` documentation.
 
 Compilation of ``Model``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-SciKeras allows you to compile your own model within your ``model`` building
-function, or you can choose to return an uncompiled model from ``model``,
-in which case SciKeras will compile it for you using the parameters passed
-at initialization (``optimizer``, ``loss`` and ``metrics``).
+You have two options to compile your model:
+1. Compile your model within ``model_build_fn`` and return this
+compiled model. In this case, SciKeras will not re-compile your model
+and all compilation parameters (such as ``optimizer``) given to
+:py:func:`scikeras.wrappers.BaseWrapper.__init__` will be ignored.
+2. Return an uncompiled model from ``model_build_fn`` and let
+SciKeras handle the compilation. In this case, SciKeras will
+apply all of the compilation parameters, including instantiating
+losses, metrics and optimizers.
 
 The first route will be more flexible if you wish to determine how to compile
 your ``Model`` within the same function in which you define it. The latter will
@@ -77,8 +91,12 @@ offer an easy way to compile and tune compilation parameters. Examples:
 
 .. code:: python
 
-    def model_build_fn(compile_params):
-        optimizer = compile_params["compile_params"]
+    def model_build_fn(compile_kwargs):
+        # you can access the ``optimizer`` param here
+        optimizer = compile_kwargs["optimizer"]
+        if optimizer is None:
+            # and apply any custom logic you wish
+            ...
         model = Model(...)
         ...
         model.compile(optimizer=optimizer)
@@ -90,23 +108,25 @@ offer an easy way to compile and tune compilation parameters. Examples:
 
 .. code:: python
 
+    from tensorflow.keras.optimizers import Adam
+
     def model_build_fn():
         model = Model(...)
         ...
         # Do not call model.compile
         return model  # That's it, SciKeras will compile your model for you
 
-    clf = KerasClassifier(model=model_build_fn)
+    clf = KerasClassifier(model=model_build_fn, optimizer=Adam)
     clf.fit(X, y)
     y_pred = clf.predict(X_valid)
 
 
-Arguments to ``model``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Arguments to ``model``/``model_build_fn``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You probably wish to pass parameters from :class:`~scikeras.wrappers.BaseWrapper`
+You probably wish to pass parameters from :py:class:`~scikeras.wrappers.BaseWrapper`
 to ``model``, or you may want to use attributes from
-:class:`~scikeras.wrappers.BaseWrapper` such as ``n_features_in_`` while building
+:py:class:`~scikeras.wrappers.BaseWrapper` such as ``n_features_in_`` while building
 your model. SciKeras allows you to do both.
 
 To enable this, SciKeras uses two special arguments to ``model`` that will only
@@ -116,32 +136,34 @@ with the same name in ``model``'s signature):
 ``meta_params``
 +++++++++++++++
 This is a dictionary containing all of the attributes that
-:class:`~scikeras.wrappers.BaseWrapper` creates when it is initialized
+:py:class:`~scikeras.wrappers.BaseWrapper` creates when it is initialized
 These include ``n_features_in_``, ``y_dtype_``, etc. For a full list,
-see the SciKeras API docs.
+see the :ref:`scikeras-api` documentation.
 
-``compile_params``
+``compile_kwargs``
 ++++++++++++++++++
-This is a dictionary of parameters destined for :func:`tensorflow.Keras.Model.compile`.
+This is a dictionary of parameters destined for :py:func:`tensorflow.Keras.Model.compile`.
 You will want to accept this parameter unless you are returning an un-compiled ``Model``
 instance. Parameters available via this dictionary are:
 
 * ``optimizer``
 * ``loss``
 * ``callbacks``
-* Any other parameters with the prefix ``compile__``
+* Any other parameters with the prefix ``optimizer__``, ``loss__`` or ``callbacks__``
 
-Arguments originally passed to :func:`scikeras.wrappers.BaseWrapper.__init__`
+Keyword arguments to :py:func:`scikeras.wrappers.BaseWrapper.__init__`
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Any **other** arguments passed to :func:`scikeras.wrappers.BaseWrapper.__init__` when
-the wrapper is instantiated will also be passed to ``model`` as keyword
-arguments.
+Any **other** keyword arguments passed to :py:func:`scikeras.wrappers.BaseWrapper.__init__` when
+the wrapper is instantiated will also be passed to ``model_build_fn`` as keyword
+arguments. For example, calling ``KerasClassifier(myparam=10)`` will result in a
+``model_build_fn(my_param=10)`` call.
 
-Most important arguments and methods
-------------------------------------
+
+Arguments to :py:class:`scikeras.wrappers.BaseWrapper`
+------------------------------------------------------
 
 A complete explanation of all arguments and methods of
-:class:`.BaseWrapper` are found in the SciKeras API documentation. Here we
+:py:class:`.BaseWrapper` are found in the SciKeras API documentation. Here we
 focus on the main ones.
 
 model
@@ -150,7 +172,7 @@ model
 This is where you pass your Keras ``Model``.
 Ideally, it should not be instantiated, although instantiated models
 are accepted. Instead, the init arguments
-for your model should be passed to :class:`.BaseWrapper` either as
+for your model should be passed to :py:class:`.BaseWrapper` either as
 bare keyword arguments (if their name does not conflict with any of
 the existing keyword arguments) or with the ``model__`` prefix,
 which will override any arguments of the same name only when passed to
@@ -172,7 +194,7 @@ which will override any arguments of the same name only when passed to
 
 Note that SciKeras automatically interprets the type of classification
 task when using ``KerasClassifier``, as determined by
-:func:`~sklearn..utils.multiclass.type_of_target`. This means that if you
+:py:func:`~sklearn..utils.multiclass.type_of_target`. This means that if you
 pass a binary target, you need to define a your ``Model``'s output layer
 to apply a ``sigmoid`` nonlinearity to get good results.
 
@@ -180,7 +202,7 @@ random_state
 ^^^^^^^^^^^^
 
 This behaves similar to the same parameter in ``sklearn`` estimators.
-If set to an integer or a :class:`~numpy.random.RandomState` instance,
+If set to an integer or a :py:class:`~numpy.random.RandomState` instance,
 it will be used to seed the random number generators used to initialize
 the graph and optimizers. Note that use of this parameter may have
 unforeseen consequences since ``TensorFlow`` only has a *global* random
@@ -189,309 +211,151 @@ state.
 optimizer
 ^^^^^^^^^
 
-If this is an instantiated class from :module:`~tensorflow.keras.optimizers`
-it will be passed directly to ``Model`` during compilation or to ``model``
-via the ``compile_params`` argument.
-After initializing the :class:`.NeuralNet`, the initialized optimizer
-will stored in the ``optimizer_`` attribute.  During initialization
-you can define param groups, for example to set different learning
-rates for certain parameters. The parameters are selected by name with
-support for wildcards (globbing):
-
-.. code:: python
-
-    optimizer__param_groups=[
-        ('embedding.*', {'lr': 0.0}),
-        ('linear0.bias', {'lr': 1}),
-    ]
-
-lr
-^^^
-
-The learning rate. This argument exists for convenience, since it
-could also be set by ``optimizer__lr`` instead. However, it is used so
-often that we provided this shortcut. If you set both ``lr`` and
-``optimizer__lr``, the latter have precedence.
-
-max_epochs
-^^^^^^^^^^
-
-The maximum number of epochs to train with each
-:func:`~skorch.net.NeuralNet.fit` call. When you call
-:func:`~skorch.net.NeuralNet.fit`, the net will train for this many
-epochs, except if you interrupt training before the end (e.g. by using
-an early stopping callback or interrupt manually with *ctrl+c*).
-
-If you want to change the number of epochs to train, you can either
-set a different value for ``max_epochs``, or you call
-:func:`~skorch.net.NeuralNet.fit_loop` instead of
-:func:`~skorch.net.NeuralNet.fit` and pass the desired number of
-epochs explicitly:
-
-.. code:: python
-
-    net.fit_loop(X, y, epochs=20)
-
+Like :py:class:`~tensorflow.keras.Model`, this can be a string or
+a class from :py:mod:`~tensorflow.keras.optimizers`. Unlike
+:py:class:`~tensorflow.keras.Model`, if you pass a class it is preferable
+that you pass an un-instantiated class and pass it's arguments using
+:ref:`param-routing`.
 
 batch_size
 ^^^^^^^^^^
 
-This argument controls the batch size for ``iterator_train`` and
-``iterator_valid`` at the same time. ``batch_size=128`` is thus a
-convenient shortcut for explicitly typing
-``iterator_train__batch_size=128`` and
-``iterator_valid__batch_size=128``. If you set all three arguments,
-the latter two will have precedence.
+This argument is passed to :py:func:`~tensorflow.keras.Model.fit`. See the the 
+`Keras Model docs`_ for more details.
 
-train_split
-^^^^^^^^^^^
+validation_split
+^^^^^^^^^^^^^^^^
 
-This determines the :class:`.NeuralNet`\'s internal train/validation
-split. By default, 20% of the incoming data is reserved for
-validation. If you set this value to ``None``, all the data is used
-for training.
-
-For more details, please look at :ref:`dataset <dataset>`.
+This argument is passed to :py:func:`~tensorflow.keras.Model.fit`. See the the 
+`Keras Model docs`_ for more details.
 
 callbacks
 ^^^^^^^^^
 
-For more details on the callback classes, please look at
-:ref:`callbacks <skorch.callbacks>`.
+A single instantiated or uninstantiated callback, a list of instantiated
+or uninstantiated callbacks (can be mixed). If using instantiated callbacks,
+SciKeras will pass them directly to ``Model.compile``. If using a list
+or dict of uninstantiated callbacks, SciKeras will instantiate them
+using any parameters routed like ``callbacks__n__param_name=2``
+where this will result in ``callbacks[n](param_name=2)`` being called
+from :py:func:`~scikeras.wrappers.BaseWrapper.compile_model`.
+For a single callback, you would use ``callbacks__param_name=2``.
+For more information on Keras callbacks, see the the 
+`Keras Callbacks docs`_ for more details. These callbacks are
+only used if an uncompiled ``Model`` is returned from ``model_build_fn``.
 
-By default, :class:`.NeuralNet` and its subclasses start with a couple
-of useful callbacks. Those are defined in the
-:func:`~skorch.net.NeuralNet.get_default_callbacks` method and
-include, for instance, callbacks for measuring and printing model
-performance.
+metrics
+^^^^^^^
 
-In addition to the default callbacks, you may provide your own
-callbacks. There are a couple of ways to pass callbacks to the
-:class:`.NeuralNet` instance. The easiest way is to pass a list of all
-your callbacks to the ``callbacks`` argument:
+Similar to optimizers, this can be a single instantiated or uninstantiated
+Keras metric or a list of instantiated or uninstantiated metrics.
+Uninstantiated metrics can be refer to by class or string shorthand.
+Similar parameter routing rules to :ref:`callbacks` apply. See the the 
+`Keras Metrics docs`_ for more details on using metrics.
 
-.. code:: python
-
-    net = NeuralNet(
-        module=MyModule,
-        callbacks=[
-            MyCallback1(...),
-            MyCallback2(...),
-        ],
-    )
-
-Inside the :class:`.NeuralNet` instance, each callback will receive a
-separate name. Since we provide no name in the example above, the
-class name will taken, which will lead to a name collision in case of
-two or more callbacks of the same class. This is why it is better to
-initialize the callbacks with a list of tuples of *name* and *callback
-instance*, like this:
-
-.. code:: python
-
-    net = NeuralNet(
-        module=MyModule,
-        callbacks=[
-            ('cb1', MyCallback1(...)),
-            ('cb2', MyCallback2(...)),
-        ],
-    )
-
-This approach of passing a list of *name*, *instance* tuples should be
-familiar to users of sklearn\ :class:`~sklearn.pipeline.Pipeline`\s
-and :class:`~sklearn.pipeline.FeatureUnion`\s.
-
-An additonal advantage of this way of passing callbacks is that it
-allows to pass arguments to the callbacks by name (using the
-double-underscore notation):
-
-.. code:: python
-
-    net.set_params(callbacks__cb1__foo=123, callbacks__cb2__bar=456)
-
-Use this, for instance, when trying out different callback parameters
-in a grid search.
-
-*Note*: The user-defined callbacks are always called in the same order
-as they appeared in the list. If there are dependencies between the
-callbacks, the user has to make sure that the order respects them.
-Also note that the user-defined callbacks will be called *after* the
-default callbacks so that they can make use of the things provided by
-the default callbacks. The only exception is the default callback
-:class:`~skorch.callbacks.PrintLog`, which is always called last.
 
 warm_start
 ^^^^^^^^^^
 
 This argument determines whether each
-:func:`~skorch.net.NeuralNet.fit` call leads to a re-initialization of
-the :class:`.NeuralNet` or not. By default, when calling
-:func:`~skorch.net.NeuralNet.fit`, the parameters of the net are
+:py:func:`~scikeras.wrappers.BaseWrapper.fit` call leads to a re-initialization of
+the :py:class:`~scikeras.wrappers.BaseWrapper` or not. By default, when calling
+:py:func:`~scikeras.wrappers.BaseWrapper.fit`, the parameters of the net are
 initialized, so your previous training progress is lost (consistent
 with the sklearn ``fit()`` calls). In contrast, with
-``warm_start=True``, each :func:`~skorch.net.NeuralNet.fit` call will
+``warm_start=True``, each :py:func:`~scikeras.wrappers.BaseWrapper.fit` call will
 continue from the most recent state.
 
-device
-^^^^^^
+verbose
+^^^^^^^
 
-As the name suggests, this determines which computation device should
-be used. If set to ``cuda``, the incoming data will be transferred to
-CUDA before being passed to the PyTorch :class:`~torch.nn.Module`. The
-device parameter adheres to the general syntax of the PyTorch device
-parameter.
+``False`` disables the progress bar and other logging
+while ``True`` enables it.
+This argument is passed to multiple methods of :py:class:`~tensorflow.keras.Model`.
+To set different values for ``fit`` and ``predict`` for example, you can use
+``fit__verbose=True`` and ``predict__verbose=False`` or
+``verbose=True`` and ``predict__verbose=False`` which would have the same effect
+since the non routed value from ``verbose=True`` would be passed to ``fit``.
 
-initialize()
-^^^^^^^^^^^^
+shuffle
+^^^^^^^
 
-As mentioned earlier, upon instantiating the :class:`.NeuralNet`
-instance, the net's components are not yet initialized. That means,
-e.g., that the weights and biases of the layers are not yet set. This
-only happens after the :func:`~skorch.net.NeuralNet.initialize` call.
-However, when you call :func:`~skorch.net.NeuralNet.fit` and the net
-is not yet initialized, :func:`~skorch.net.NeuralNet.initialize` is
-called automatically. You thus rarely need to call it manually.
+This argument is passed to :py:func:`~tensorflow.keras.Model.fit`. See the the 
+`Keras Model docs`_ for more details.
 
-The :func:`~skorch.net.NeuralNet.initialize` method itself calls a
-couple of other initialization methods that are specific to each
-component. E.g., :func:`~skorch.net.NeuralNet.initialize_module` is
-responsible for initializing the PyTorch module. Therefore, if you
-have special needs for initializing the module, it is enough to
-override :func:`~skorch.net.NeuralNet.initialize_module`, you don't
-need to override the whole :func:`~skorch.net.NeuralNet.initialize`
-method.
+run_eagerly
+^^^^^^^^^^^
 
-fit(X, y)
-^^^^^^^^^
+This argument is passed to :py:func:`~tensorflow.keras.Model.fit`. See the the 
+`Keras Model docs`_ for more details.
+
+
+Methods of :py:class:`scikeras.wrappers.BaseWrapper`
+----------------------------------------------------
+
+fit(X, y, sample_weights=None)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is one of the main methods you will use. It contains everything
 required to train the model, be it batching of the data, triggering
 the callbacks, or handling the internal validation set.
 
-In general, we assume there to be an ``X`` and a ``y``. If you have
-more input data than just one array, it is possible for ``X`` to be a
-list or dictionary of data (see :ref:`dataset <dataset>`). And if your
+In general, we assume there to be an ``X`` and a ``y``. And if your
 task does not have an actual ``y``, you may pass ``y=None``.
 
-If you fit with a PyTorch :class:`~torch.utils.data.Dataset` and don't
-explicitly pass ``y``, several components down the line might not work
-anymore, since sklearn sometimes requires an explicit ``y`` (e.g. for
-scoring). In general, PyTorch :class:`~torch.utils.data.Dataset`\s
-should work, though.
+``X`` and ``y`` are expected to be array-like. SciKeras does not
+currently support :py:class:`tensorflow.data.Dataset` inputs.
 
-In addition to :func:`~skorch.net.NeuralNet.fit`, there is also the
-:func:`~skorch.net.NeuralNet.partial_fit` method, known from some
-sklearn estimators. :func:`~skorch.net.NeuralNet.partial_fit` allows
+In addition to :py:func:`scikeras.wrapper.BaseWrapper.fit`, there is also the
+:py:func:`scikeras.wrapper.BaseWrapper.partial_fit` method, known from some
+sklearn estimators. :py:func:`scikeras.wrapper.BaseWrapper.partial_fit` allows
 you to continue training from your current status, even if you set
 ``warm_start=False``. A further use case for
-:func:`~skorch.net.NeuralNet.partial_fit` is when your data does not
+:py:func:`scikeras.wrapper.BaseWrapper.partial_fit` is when your data does not
 fit into memory and you thus need to have several training steps.
 
-*Tip* :
-skorch gracefully catches the ``KeyboardInterrupt``
-exception. Therefore, during a training run, you can send a
-``KeyboardInterrupt`` signal without the Python process exiting
-(typically, ``KeyboardInterrupt`` can be triggered by *ctrl+c* or, in
-a Jupyter notebook, by clicking *Kernel* -> *Interrupt*). This way, when
-your model has reached a good score before ``max_epochs`` have been
-reached, you can dynamically stop training.
 
 predict(X) and predict_proba(X)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These methods perform an inference step on the input data and return
-:class:`numpy.ndarray`\s. By default,
-:func:`~skorch.net.NeuralNet.predict_proba` will return whatever it is
-that the ``module``\'s :func:`~torch.nn.Module.forward` method
-returns, cast to a :class:`numpy.ndarray`. If
-:func:`~torch.nn.Module.forward` returns multiple outputs as a tuple,
-only the first output is used, the rest is discarded.
+These methods use :py:func:`tensorflow.keras.Model.predict` to predict
+``y`` or ``y``'s probabilities based on ``X``. Outputs are cast to
+numpy arrays of the same dtype and shape as the input. If
+:py:func:`tensorflow.keras.Model.predict` returns multiple outputs as a list,
+these are column-stacked into a single array.
+This allows the use of simple multi-output models
+without any custom logic or intervention. For more complex cases,
+you will need to subclass :py:class:`scikeras.wrappers.BaseWrapper`
+and override the :py:func:`scikeras.wrappers.BaseWrapper.postprocess_y`
+method.
 
-If the :func:`~torch.nn.Module.forward`\-output can not be cast to a
-:class:`numpy.ndarray`, or if you need access to all outputs in the
-multiple-outputs case, consider using either of
-:func:`~skorch.net.NeuralNet.forward` or
-:func:`~skorch.net.NeuralNet.forward_iter` methods to generate outputs
-from the ``module``. Alternatively, you may directly call
-``net.module_(X)``.
-
-In case of :class:`.NeuralNetClassifier`, the
-:func:`~skorch.classifier.NeuralNetClassifier.predict` method tries to
-return the class labels by applying the argmax over the last axis of
-the result of
-:func:`~skorch.classifier.NeuralNetClassifier.predict_proba`.
-Obviously, this only makes sense if
-:func:`~skorch.classifier.NeuralNetClassifier.predict_proba` returns
-class probabilities. If this is not true, you should just use
-:func:`~skorch.classifier.NeuralNetClassifier.predict_proba`.
+In case of :py:class:`scikeras.wrappers.KerasClassifier`, 
+when :py:func:`scikeras.wrappers.KerasClassifier.fit` is called
+SciKeras uses the target type (as determined by
+:py:func:`~sklearn..utils.multiclass.type_of_target`), the loss function
+used to compile :py:class:`tensorflow.keras.Model` and the number of
+outputs from :py:class:`tensorflow.keras.Model` to automatically determine
+what encodings and transformations are necessary.
+:py:func:`scikeras.wrappers.KerasClassifier.predict` also reverses
+this encoding to return class labels. On the other hand,
+:py:func:`scikeras.wrappers.KerasClassifier.predict_proba` returns
+the raw class probabilities.
 
 score(X, y)
 ^^^^^^^^^^^
 
 This method returns the mean accuracy on the given data and labels for
 classifiers and the coefficient of determination R^2 of the prediction for
-regressors. :class:`.NeuralNet` still has no score method. If you need it,
-you have to implement it yourself.
+regressors. All wrappers rely on the abstract method
+:py:func:`scikeras.wrappers.BaseWrapper._scorer`
+with the signature ``_scorer(y_true, y_pred, sample_weights)``
+to do the scoring. If you want to swap in an alternative scorer (or implement
+a scorer in the case of :py:class:`scikeras.wrappers.BaseWrapper`) all you have
+to do is implement this method.
 
-model persistence
-^^^^^^^^^^^^^^^^^
 
-In general there are different ways of saving and loading models, each
-with their own advantages and disadvantages. More details and usage
-examples can be found here: :ref:`save_load`.
-
-If you would like to use pickle (the default way when using
-scikit-learn models), this is possible with skorch nets. This saves
-the whole net including hyperparameters etc. The advantage is that you
-can restore everything to exactly the state it was before. The
-disadvantage is it's easier for code changes to break your old saves.
-
-Additionally, it is possible to save and load specific attributes of
-the net, such as the ``module``, ``optimizer``, or ``history``, by
-calling :func:`~skorch.net.NeuralNet.save_params` and
-:func:`~skorch.net.NeuralNet.load_params`. This is useful if you're
-only interested in saving a particular part of your model, and is more
-robust to code changes.
-
-Finally, it is also possible to use callbacks to save and load models,
-e.g. :class:`.Checkpoint`. Those should be used if you need to have
-your model saved or loaded at specific times, e.g. at the start or end
-of the training process.
-
-Input data
-----------
-
-Regular data
-^^^^^^^^^^^^
-
-skorch supports numerous input types for data. Regular input types
-that should just work are numpy arrays, torch tensors, scipy sparse
-CSR matrices, and pandas DataFrames (see also
-:class:`~skorch.helper.DataFrameTransformer`).
-
-Typically, your task should involve an ``X`` and a ``y``. If you're
-dealing with a task that doesn't require a target (say, training an
-autoencoder), you can just pass ``y=None``. Make sure your loss
-function deals with this appropriately.
-
-Datasets
-^^^^^^^^
-
-:class:`~torch.utils.data.Dataset`\s are also supported, with the
-requirement that they should return exactly two items (``X`` and
-``y``). For more information on that, take a look at the
-:ref:`Dataset` documentation.
-
-Many PyTorch libraries, like torchvision, implement their own
-``Dataset``\s. These usually work seamlessly with skorch, as long as
-their ``__getitem__`` methods return two outputs. In case they don't,
-consider overriding the ``__getitem__`` class and re-arranging the
-ouputs so that ``__getitem__`` returns exactly two elements. If the
-original implementation returns more than two elements, take a look at
-the next section to get an idea how to deal with that.
-
-Multiple input arguments
-^^^^^^^^^^^^^^^^^^^^^^^^
+Multiple inputs or outputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In some cases, the input actually consists of multiple inputs. E.g.,
 in a text classification task, you might have an array that contains
@@ -499,196 +363,125 @@ the integers representing the tokens for each sample, and another
 array containing the number of tokens of each sample. skorch has you
 covered here as well.
 
-You could supply a list or tuple with all your inputs (``net.fit([tokens,
-num_tokens], y)``), but we actually recommend another approach. The best
-way is to pass the different arguments as a dictionary. Then the keys
-of that dictionary have to correspond to the argument names of your
-module's ``forward`` method. Below is an example:
+Scikit-Learn natively supports multiple outputs, although it technically
+requires them to be arrays of equal length
+(see docs for Scikit-Learn's :py:class:`~sklearn.multioutput.MultiOutputClassifier`).
+Scikit-Learn has no support for multiple inputs.
+To work around this issue, SciKeras implements a data conversion
+abstraction in the form of ``preprocess_{X,y}`` and ``postprocess_{X, y}``.
+Within these methods, you may split a single input ``X`` into multiple inputs
+for :py:class:`tensorflow.keras.Model` or perform any other manipulation you need.
+
+This said, note that if you are trying to use outputs of uneven length or
+other more complex scenarios, SciKeras may be able to handle them but the rest
+of the Scikit-Learn ecosystem likely will not.
+
+
+Below is an example:
 
 .. code:: python
 
-    X_dict = {'tokens': tokens, 'num_tokens': num_tokens}
+    X = [[1, 2], ["a", "b", "c"]]  # multiple inputs of different lengths
+    y = np.array([[1, 0, 1], ["apple", "orange", "apple"]]  # a mix of output types
 
-    class MyModule(nn.Module):
-        def forward(self, tokens, num_tokens):  # <- same names as in your dict
-            ...
+    def model_build_fn(meta_params):
+        my_n_classes_ = meta_params["my_n_classes_"]
+        inp1 = Input((1,))
+        inp2 = Input((3,))
+        x3 = Concatenate(axis=-1)([x1, x2])
+        binary_out = Dense(1, activation="sigmoid")(x3)
+        cat_out = Dense(my_n_classes_[1], activation="softmax")(x3)
+        model = Model([inp], [binary_out, cat_out])
+        return model
 
-    net = NeuralNet(MyModule, ...)
-    net.fit(X_dict, y)
+    class MyWrapper(KerasClassifier):
+            
+            def preprocess_y(self, y):
+                extra_args = dict()  # this will be used like self.__dict__.update(extra_args)
+                my_n_classes_ = [2, np.unique(y[:, 1]).size]
+                extra_args["my_n_classes_"] = my_n_classes_
+                # split up the targets
+                y = [y[:, 0], y[:, 1]]
+                return y, extra_args
+            
+            def preprocess_X(self, X):
+                extra_args = dict()  # this will be used like self.__dict__.update(extra_args)
+                # perform some transformation on only one part of the input
+                self.input_encoder = OneHotEncoder()
+                X[1] = self.input_encoder.fit_transform(X[1])
+                return X, extra_args
 
-As you can see, the ``forward`` method takes arguments with exactly
-the same name as the keys in the dictionary. This is how the different
-inputs are matched. To make this work with
-:class:`~sklearn.model_selection.GridSearchCV`, please use
-:class:`~skorch.helper.SliceDict`.
+    clf = MyWrapper(
+        model=model_build_fn,
+        loss=["binary_crossentropy", "categorical_crossentropy"],
+        optimizer="adam"
+    )
+    clf.fit(X, y)
 
-Using a dict should cover most use cases that involve multiple
-inputs. However, it will fail if your inputs have different
-sizes. E.g., if your array of tokens has 1000 elements but your array
-of number of tokens has 2000 elements, this would fail. The main
-reason for this is batching: How can we know which elements of the two
-arrays belong in the same batch?
 
-If your input consists of multiple inputs with different sizes, your
-best bet is to implement your own dataset class. That class should
-know how it deals with the different inputs, i.e. which elements
-belong to the same sample. Again, please refer to the :ref:`Dataset`
-section for more details.
+.. _param-routing:
 
-Special arguments
+Routed parameters
 -----------------
 
-In addition to the arguments explicitly listed for
-:class:`.NeuralNet`, there are some arguments with special prefixes,
-as shown below:
+For more advanced used cases, SciKeras supports
+Scikit-Learn style parameter routing to override parameters
+for individual consumers (methods or class initializers).
+
+For example, you may want to have multiple callbacks with
+different parameters for each.
 
 .. code:: python
 
-    class MyModule(torch.nn.Module):
-        def __init__(self, num_units, dropout):
-            ...
+    from tensorflow.keras.callbacks import BaseLogger, EarlyStopping
 
-    net = NeuralNet(
-        module=MyModule,
-        module__num_units=100,
-        module__dropout=0.5,
-        criterion=torch.nn.NLLLoss,
-        criterion__weight=weight,
-        optimizer=torch.optim.SGD,
-        optimizer__momentum=0.9,
+    clf = KerasClassifier(
+        model=model_build_fn,
+        loss="binary_crossentropy", "categorical_crossentropy",
+        optimizer="sgd",
+        metrics="accuracy",
+        callbacks=[BaseLogger, EarlyStopping]
+        callbacks__0__stateful_metrics="accuracy",
+        callbacks__1__patience=2,
     )
+    clf.fit(X, y)
 
-Those arguments are used to initialize your ``module``, ``criterion``,
-etc. They are not fixed because we cannot know them in advance; in
-fact, you can define any parameter for your ``module`` or other
-components.
+The same can be achieved with the special ``param_groups``
+postfix, which tells SciKeras to expand the list in order:
+
+.. code:: python
+
+    from tensorflow.keras.callbacks import BaseLogger, EarlyStopping
+
+    clf = KerasClassifier(
+        model=model_build_fn,
+        loss="binary_crossentropy", "categorical_crossentropy",
+        optimizer="sgd",
+        metrics="accuracy",
+        callbacks=[BaseLogger, EarlyStopping]
+        callbacks__param_groups==[
+            {"stateful_metrics": "accuracy"},
+            {"patience": 2}
+        ]
+    )
+    clf.fit(X, y)
+
 
 All special prefixes are stored in the ``prefixes_`` class attribute
-of :class:`.NeuralNet`. Currently, they are:
+of :py:class:`scikeras.wrappers.BaseWrappers`. Currently, they are:
 
-- ``module``
-- ``iterator_train``
-- ``iterator_valid``
-- ``optimizer``
-- ``criterion``
+- ``model``
+- ``fit``
+- ``predict``
 - ``callbacks``
-- ``dataset``
+- ``optimizer``
+- ``loss``
 
-Subclassing NeuralNet
----------------------
-
-Apart from the :class:`.NeuralNet` base class, we provide
-:class:`.NeuralNetClassifier`, :class:`.NeuralNetBinaryClassifier`,
-and :class:`.NeuralNetRegressor` for typical classification, binary
-classification, and regressions tasks. They should work as drop-in
-replacements for sklearn classifiers and regressors.
-
-The :class:`.NeuralNet` class is a little less opinionated about the
-incoming data, e.g. it does not determine a loss function by default.
-Therefore, if you want to write your own subclass for a special use
-case, you would typically subclass from :class:`.NeuralNet`.
-
-skorch aims at making subclassing as easy as possible, so that it
-doesn't stand in your way. For instance, all components (``module``,
-``optimizer``, etc.) have their own initialization method
-(:meth:`.initialize_module`, :meth:`.initialize_optimizer`,
-etc.). That way, if you want to modify the initialization of a
-component, you can easily do so.
-
-Additonally, :class:`.NeuralNet` has a couple of ``get_*`` methods for
-when a component is retrieved repeatedly. E.g.,
-:func:`~skorch.net.NeuralNet.get_loss` is called when the loss is
-determined. Below we show an example of overriding
-:func:`~skorch.net.NeuralNet.get_loss` to add L1 regularization to our
-total loss:
-
-.. code:: python
-
-    class RegularizedNet(NeuralNet):
-        def __init__(self, *args, lambda1=0.01, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.lambda1 = lambda1
-
-        def get_loss(self, y_pred, y_true, X=None, training=False):
-            loss = super().get_loss(y_pred, y_true, X=X, training=training)
-            loss += self.lambda1 * sum([w.abs().sum() for w in self.module_.parameters()])
-            return loss
-
-.. note:: This example also regularizes the biases, which you typically
-    don't need to do.
-
-It is possible to add your own criterion, module, or optimizer to your
-customized neural net class. You should follow a few rules when you do
-so:
-
-1. Set this attribute inside the corresponding method. E.g., when
-   setting an optimizer, use :meth:`.initialize_optimizer` for that.
-2. Inside the initialization method, use :meth:`.get_params_for` (or,
-   if dealing with an optimizer, :meth:`.get_params_for_optimizer`) to
-   retrieve the arguments for the constructor.
-3. The attribute name should contain the substring ``"module"`` if
-   it's a module, ``"criterion"`` if a criterion, and ``"optimizer"``
-   if an optimizer. This way, skorch knows if a change in
-   parameters (say, because :meth:`.set_params` was called) should
-   trigger re-initialization.
-
-When you follow these rules, you will make sure that your added
-components are amenable to :meth:`.set_params` and hence to things
-like grid search.
-
-Here is an example of how this could look like in practice:
-
-.. code:: python
-
-    class MyNet(NeuralNet):
-        def initialize_criterion(self, *args, **kwargs):
-            super().initialize_criterion(*args, **kwargs)
-
-            # add an additional criterion
-            params = self.get_params_for('other_criterion')
-            self.other_criterion_ = nn.BCELoss(**params)
-            return self
-
-        def initialize_module(self, *args, **kwargs):
-            super().initialize_module(*args, **kwargs)
-
-            # add an additional module called 'mymodule'
-            params = self.get_params_for('mymodule')
-            self.mymodule_ = MyModule(**params)
-            return self
-
-        def initialize_optimizer(self, *args, **kwargs):
-            super().initialize_optimizer(*args, **kwargs)
-
-            # add an additional optimizer called 'optimizer2' that is
-            # responsible for 'mymodule'
-            named_params = self.mymodule_.named_parameters()
-            pgroups, params = self.get_params_for_optimizer('optimizer2', named_params)
-            self.optimizer2_ = torch.optim.SGD(*pgroups, **params)
-            return self
-
-        ...  # additional changes
+All routed parameters will be available for hyperparameter tuning.
 
 
-    net = MyNet(
-        ...,
-        other_criterion__reduction='sum',
-        mymodule__num_units=123,
-        optimizer2__lr=0.1,
-    )
-    net.fit(X, y)
+.. _Keras Model docs: https://www.tensorflow.org/api_docs/python/tf/keras/Model
 
-    # set_params works
-    net.set_params(optimizer2__lr=0.05)
-    net.partial_fit(X, y)
+.. _Keras Callbacks docs: https://www.tensorflow.org/api_docs/python/tf/keras/callbacks
 
-    # grid search et al. works
-    search = GridSearchCV(net, {'mymodule__num_units': [10, 50, 100]}, ...)
-    search.fit(X, y)
-
-In this example, a new criterion, a new module, and a new optimizer
-were added. Of course, additional changes should be made to the net so
-that those new components are actually being used for something, but
-this example should illustrate how to start. Since the rules outlined
-above are being followed, we can use grid search on our customly
-defined components.
+.. _Keras Metrics docs: https://www.tensorflow.org/api_docs/python/tf/keras/metrics

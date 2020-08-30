@@ -1,6 +1,9 @@
+.. _scikeras-api:
+
 ============
 SciKeras API
 ============
+
 
 .. autosummary::
    :template: class.rst
