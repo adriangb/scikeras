@@ -42,39 +42,7 @@ def test_routing_basic():
         )
         return dynamic_classifier(*args, **kwargs)
 
-    clf = KerasClassifier(build_fn=build_fn, hidden_layer_sizes=(100,))
-    clf.fit(X, y)
-
-
-def test_routing_override():
-    """Tests that routed parameters override default parameters.
-    """
-    n, d = 20, 3
-    n_classes = 3
-    X = np.random.uniform(size=(n, d)).astype(float)
-    y = np.random.choice(n_classes, size=n).astype(int)
-
-    def build_fn(
-        hidden_layer_sizes,
-        meta_params: Dict[str, Any],
-        compile_params: Dict[str, Any],
-    ) -> Model:
-        assert hidden_layer_sizes == (200,)
-        assert compile_params["optimizer"] == "adam"
-        assert "compile__optimizer" not in compile_params
-        assert "compile_optimizer" not in compile_params
-        return dynamic_classifier(
-            hidden_layer_sizes,
-            meta_params=meta_params,
-            compile_params=compile_params,
-        )
-
-    clf = KerasClassifier(
-        build_fn=build_fn,
-        hidden_layer_sizes=(100,),
-        model__hidden_layer_sizes=(200,),  # override build params
-        compile__optimizer="adam",  # overwrites `optimizer` param
-    )
+    clf = KerasClassifier(build_fn=build_fn, model__hidden_layer_sizes=(100,))
     clf.fit(X, y)
 
 
@@ -93,9 +61,16 @@ def test_no_extra_meta_params(wrapper_class, build_fn):
     X = np.random.uniform(size=(n, d)).astype(float)
     y = np.random.choice(n_classes, size=n).astype(int)
 
-    clf = wrapper_class(build_fn=build_fn, hidden_layer_sizes=(100,))
+    clf = wrapper_class(build_fn=build_fn, model__hidden_layer_sizes=(100,))
     clf.fit(X, y)
     assert set(clf.get_meta_params().keys()) == wrapper_class._meta_params
+
+
+def test_model_params_property():
+    """Check that the `_model_params` property works as expected.
+    """
+    clf = KerasRegressor(model="test", model__hidden_layer_sizes=(100,))
+    assert clf._model_params == {"hidden_layer_sizes"}
 
 
 @pytest.mark.parametrize("dest", ["fit", "compile", "predict"])

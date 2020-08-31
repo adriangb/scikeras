@@ -111,10 +111,6 @@ def pack_keras_model(model_obj, protocol):
     Pickled model
         A tuple following the pickle protocol.
     """
-
-    if not isinstance(model_obj, Model):
-        raise TypeError("`model_obj` must be an instance of a Keras Model")
-    # pack up model
     model_metadata = saving_utils.model_metadata(model_obj)
     training_config = model_metadata.get("training_config", None)
     model = serialize_layer(model_obj)
@@ -176,7 +172,7 @@ def _windows_upcast_ints(
 
 def route_params(
     params: Dict[str, Any],
-    destination: Union[str, None],
+    destination: str,
     pass_filter: Union[Iterable[str], None] = None,
 ) -> Dict[str, Any]:
     """Route and trim parameter names.
@@ -185,9 +181,8 @@ def route_params(
     ----------
     params : Dict[str, Any]
         Parameters to route/filter.
-    destination : str, default "any"
+    destination : str
         Destination to route to, ex: `build` or `compile`.
-        If None, all parameters with "__" in them are dropped.
     pass_filter: Union[Iterable[str], None], default None
         If None, all non-routing `params` are passed. If an iterable,
         only keys from `params` that are in the iterable are passed.
@@ -202,14 +197,13 @@ def route_params(
     for key, val in params.items():
         if "__" in key:
             # routed param
-            if destination is not None and key.startswith(destination):
+            if key.startswith(destination):
                 new_key = key.replace(destination.strip("__") + "__", "")
                 res[new_key] = val
         else:
             # non routed
             if pass_filter is None or key in pass_filter:
                 res[key] = val
-
     return res
 
 

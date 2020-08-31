@@ -31,10 +31,10 @@ class TestRandomState:
             KerasRegressor(
                 build_fn=dynamic_regressor,
                 loss=KerasRegressor.r_squared,
-                hidden_layer_sizes=(100,),
+                model__hidden_layer_sizes=(100,),
             ),
             KerasClassifier(
-                build_fn=dynamic_classifier, hidden_layer_sizes=(100,)
+                build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
             ),
         ],
     )
@@ -74,10 +74,10 @@ class TestRandomState:
             KerasRegressor(
                 build_fn=dynamic_regressor,
                 loss=KerasRegressor.r_squared,
-                hidden_layer_sizes=(100,),
+                model__hidden_layer_sizes=(100,),
             ),
             KerasClassifier(
-                build_fn=dynamic_classifier, hidden_layer_sizes=(100,)
+                build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
             ),
         ],
     )
@@ -142,7 +142,7 @@ def test_sample_weights_fit():
     # build estimator
     estimator = KerasClassifier(
         build_fn=dynamic_classifier,
-        hidden_layer_sizes=(100,),
+        model__hidden_layer_sizes=(100,),
         epochs=10,
         random_state=0,
     )
@@ -188,7 +188,7 @@ def test_sample_weights_score():
     # build estimator
     estimator = KerasRegressor(
         build_fn=dynamic_regressor,
-        hidden_layer_sizes=(100,),
+        model__hidden_layer_sizes=(100,),
         epochs=10,
         random_state=0,
     )
@@ -218,14 +218,14 @@ def test_build_fn_default_params():
     `build_fn` are registered as hyperparameters.
     """
     est = KerasClassifier(
-        build_fn=dynamic_classifier, hidden_layer_sizes=(100,)
+        build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
     )
     params = est.get_params()
     # (100, ) is the default for dynamic_classifier
-    assert params["hidden_layer_sizes"] == (100,)
+    assert params["model__hidden_layer_sizes"] == (100,)
 
     est = KerasClassifier(
-        build_fn=dynamic_classifier, hidden_layer_sizes=(200,)
+        build_fn=dynamic_classifier, model__hidden_layer_sizes=(200,)
     )
     params = est.get_params()
-    assert params["hidden_layer_sizes"] == (200,)
+    assert params["model__hidden_layer_sizes"] == (200,)

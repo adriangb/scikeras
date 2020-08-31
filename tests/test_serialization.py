@@ -46,7 +46,7 @@ def test_custom_loss_function():
     estimator = KerasRegressor(
         build_fn=dynamic_regressor,
         loss=CustomLoss(),
-        hidden_layer_sizes=(100,),
+        model__hidden_layer_sizes=(100,),
     )
     check_pickle(estimator, load_boston)
 
@@ -122,6 +122,6 @@ def test_run_eagerly():
         build_fn=dynamic_regressor,
         run_eagerly=True,
         loss=KerasRegressor.r_squared,
-        hidden_layer_sizes=(100,),
+        model__hidden_layer_sizes=(100,),
     )
     check_pickle(estimator, load_boston)

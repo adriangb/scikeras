@@ -51,8 +51,10 @@ class TestInvalidBuildFn:
     """
 
     def test_invalid_build_fn(self):
-        clf = KerasClassifier(build_fn="invalid")
-        with pytest.raises(TypeError, match="build_fn"):
+        clf = KerasClassifier(model="invalid")
+        with pytest.raises(
+            TypeError, match="`model` must be a callable or None"
+        ):
             clf.fit(np.array([[0]]), np.array([0]))
 
     def test_no_build_fn(self):
@@ -83,26 +85,6 @@ class TestInvalidBuildFn:
         ):
             clf.fit(np.array([[0]]), np.array([0]))
 
-    def test_call_and_invalid_build_fn_class(self):
-        class Clf(KerasClassifier):
-            def _keras_build_fn(self, hidden_layer_sizes):
-                return dynamic_classifier(
-                    hidden_layer_sizes=hidden_layer_sizes
-                )
-
-        class DummyBuildClass:
-            def __call__(self, hidden_layer_sizes):
-                return dynamic_classifier(
-                    hidden_layer_sizes=hidden_layer_sizes
-                )
-
-        clf = Clf(build_fn=DummyBuildClass(),)
-
-        with pytest.raises(
-            ValueError, match="cannot implement `_keras_build_fn`"
-        ):
-            clf.fit(np.array([[0]]), np.array([0]))
-
 
 def test_sample_weights_all_zero():
     """Checks for a user-friendly error when sample_weights
@@ -111,7 +93,7 @@ def test_sample_weights_all_zero():
     # build estimator
     estimator = KerasClassifier(
         build_fn=dynamic_classifier,
-        hidden_layer_sizes=(100,),
+        model__hidden_layer_sizes=(100,),
         epochs=10,
         random_state=0,
     )
@@ -124,3 +106,21 @@ def test_sample_weights_all_zero():
 
     with pytest.raises(RuntimeError, match="no samples left"):
         estimator.fit(X, y, sample_weight=sample_weight)
+
+
+def test_build_fn_deprecation():
+    """An approrpiate warning is raised when using the `build_fn`
+    parameter instead of `model`.
+    """
+    with pytest.warns(match="`build_fn` will be renamed to `model`"):
+        KerasClassifier(build_fn="test")
+
+
+def test_error_non_routed_kwargs():
+    """Test that passing non-routed kwargs to
+    BaseWrapper.__init__ raises an error.
+    """
+    with pytest.raises(
+        ValueError, match="All kwargs must be routed parameters"
+    ):
+        KerasClassifier(build_fn="test", nonrouted_param="test1")

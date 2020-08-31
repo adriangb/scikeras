@@ -298,7 +298,7 @@ def test_classifier_handles_dtypes(dtype):
             return super()._fit_keras_model(X, y, sample_weight, warm_start)
 
     clf = StrictClassifier(
-        build_fn=dynamic_classifier, hidden_layer_sizes=(100,)
+        build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
     )
     clf.fit(X, y, sample_weight=sample_weight)
     assert clf.score(X, y) >= 0
@@ -334,7 +334,7 @@ def test_regressor_handles_dtypes(dtype):
             return super()._fit_keras_model(X, y, sample_weight, warm_start)
 
     reg = StrictRegressor(
-        build_fn=dynamic_regressor, hidden_layer_sizes=(100,)
+        build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,)
     )
     reg.fit(X, y, sample_weight=sample_weight)
     y_hat = reg.predict(X)
@@ -370,7 +370,7 @@ def test_mixed_dtypes(y_dtype, X_dtype, run_eagerly):
     reg = StrictRegressor(
         build_fn=dynamic_regressor,
         run_eagerly=run_eagerly,
-        hidden_layer_sizes=(100,),
+        model__hidden_layer_sizes=(100,),
     )
     reg.fit(X, y)
     y_hat = reg.predict(X)

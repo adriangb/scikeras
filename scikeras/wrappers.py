@@ -129,6 +129,7 @@ class BaseWrapper(BaseEstimator):
         self,
         build_fn=None,
         *,
+        model=None,  # replaces build_fn
         warm_start=False,
         random_state=None,
         optimizer="rmsprop",
@@ -140,6 +141,7 @@ class BaseWrapper(BaseEstimator):
         validation_split=0.0,
         shuffle=True,
         run_eagerly=False,
+        epochs=1,
         **kwargs,
     ):
 
@@ -148,7 +150,7 @@ class BaseWrapper(BaseEstimator):
             make_model_picklable(build_fn)
 
         # Parse hardcoded params
-        self.build_fn = build_fn
+        self.model = model
         self.warm_start = warm_start
         self.random_state = random_state
         self.optimizer = optimizer
@@ -160,9 +162,24 @@ class BaseWrapper(BaseEstimator):
         self.validation_split = validation_split
         self.shuffle = shuffle
         self.run_eagerly = run_eagerly
+        self.epochs = epochs
 
         # Unpack kwargs
         vars(self).update(**kwargs)
+
+        # Check for deprecated APIs
+        if self.model is None and build_fn is not None:
+            self.model = build_fn
+            warnings.warn(
+                "`build_fn` will be renamed to `model` in a future release,"
+                " at which point use of `build_fn` will raise an Error instead."
+            )
+        for kwd in kwargs.keys():
+            if "__" not in kwd:
+                raise ValueError(
+                    "All kwargs must be routed parameters (ex: `model__hidden_layer_sizes`)"
+                    f" but {kwd} is not a routed parameter!"
+                )
 
     @property
     def __name__(self):
@@ -170,58 +187,44 @@ class BaseWrapper(BaseEstimator):
 
     @property
     def _model_params(self):
-        return (
-            set(self.get_params().keys())
-            - self._compile_params
-            - self._fit_params
-            - self._predict_params
-            - self._wrapper_params
-        )
+        return {
+            p.strip("model__")
+            for p in self.get_params().keys()
+            if p.startswith("model__")
+        }
 
-    def _check_build_fn(self, build_fn):
-        """Checks `build_fn`.
+    def _check_model_param(self, model):
+        """Checks `model`.
 
         Arguments:
-            build_fn : method or callable class as defined in __init__
+            model : model param from __init__
 
         Raises:
             ValueError: if `build_fn` is not valid.
         """
-        if build_fn is None:
-            # no build_fn, use this class' __call__method
+        if model is None:
+            # no model, use this class' _keras_build_fn
             if not hasattr(self, "_keras_build_fn"):
                 raise ValueError(
                     "If not using the `build_fn` param, "
                     "you must implement `_keras_build_fn`"
                 )
             final_build_fn = getattr(self, "_keras_build_fn")
-        elif isinstance(build_fn, Model):
+        elif isinstance(model, Model):
             # pre-built Keras Model
             def final_build_fn():
-                return build_fn
+                return model
 
-        elif inspect.isfunction(build_fn):
+        elif inspect.isfunction(model):
             if hasattr(self, "_keras_build_fn"):
                 raise ValueError(
                     "This class cannot implement `_keras_build_fn` if"
-                    " using the `build_fn` parameter"
+                    " using the `model` parameter"
                 )
             # a callable method/function
-            final_build_fn = build_fn
-        elif (
-            callable(build_fn)
-            and hasattr(build_fn, "__class__")
-            and hasattr(build_fn.__class__, "__call__")
-        ):
-            if hasattr(self, "_keras_build_fn"):
-                raise ValueError(
-                    "This class cannot implement `_keras_build_fn` if"
-                    " using the `build_fn` parameter"
-                )
-            # an instance of a class implementing __call__
-            final_build_fn = build_fn.__call__
+            final_build_fn = model
         else:
-            raise TypeError("`build_fn` must be a callable or None")
+            raise TypeError("`model` must be a callable or None")
 
         return final_build_fn
 
@@ -248,14 +251,12 @@ class BaseWrapper(BaseEstimator):
         # dynamically build model, i.e. final_build_fn builds a Keras model
 
         # determine what type of build_fn to use
-        final_build_fn = self._check_build_fn(getattr(self, "build_fn", None))
+        final_build_fn = self._check_model_param(getattr(self, "model", None))
 
         # collect parameters
         params = self.get_params()
-        if "build_fn" in params:
-            params.pop("build_fn")
         build_params = route_params(
-            params, destination="model", pass_filter=self._model_params
+            params, destination="model__", pass_filter=set()
         )
         if has_param(final_build_fn, "meta_params") or accepts_kwargs(
             final_build_fn
@@ -320,8 +321,6 @@ class BaseWrapper(BaseEstimator):
 
         # collect parameters
         params = self.get_params()
-        if "build_fn" in params:
-            params.pop("build_fn")
         fit_args = route_params(
             params, destination="fit", pass_filter=self._fit_params
         )
@@ -668,8 +667,6 @@ class BaseWrapper(BaseEstimator):
 
         # filter kwargs and get attributes for predict
         params = self.get_params()
-        if "build_fn" in params:
-            params.pop("build_fn")
         pred_args = route_params(
             params, destination="predict", pass_filter=self._predict_params
         )
@@ -712,7 +709,13 @@ class BaseWrapper(BaseEstimator):
         # compute Keras model score
         y_pred = self.predict(X)
 
-        return self._scorer(y, y_pred, sample_weight=sample_weight)
+        # filter kwargs and get attributes for score
+        params = self.get_params()
+        pred_args = route_params(
+            params, destination="score", pass_filter=set()
+        )
+
+        return self.scorer(y, y_pred, sample_weight=sample_weight)
 
     def get_meta_params(self) -> Dict[str, Any]:
         """Get meta parameters (parameters created by fit, like
@@ -779,7 +782,6 @@ class KerasClassifier(BaseWrapper):
     """
 
     _estimator_type = "classifier"
-    _scorer = staticmethod(sklearn_accuracy_score)
     _tags = BaseWrapper._tags.copy()
     _tags.update(
         {
@@ -808,6 +810,24 @@ class KerasClassifier(BaseWrapper):
             "keras_expected_n_ouputs_",
         }
     )
+
+    @staticmethod
+    def scorer(y_true, y_pred, **kwargs) -> float:
+        """Accuracy score based on true and predicted target values.
+
+        Parameters
+        ----------
+        y_true : array-like
+            True labels.
+        y_pred : array-like
+            Predicted labels.
+
+        Returns
+        -------
+        score
+            float
+        """
+        return sklearn_accuracy_score(y_true, y_pred, **kwargs)
 
     @staticmethod
     def preprocess_y(y):
@@ -1098,7 +1118,6 @@ class KerasRegressor(BaseWrapper):
     """
 
     _estimator_type = "regressor"
-    _scorer = staticmethod(sklearn_r2_score)
     _tags = BaseWrapper._tags.copy()
     _tags.update(
         {
@@ -1111,6 +1130,24 @@ class KerasRegressor(BaseWrapper):
             },
         }
     )
+
+    @staticmethod
+    def scorer(y_true, y_pred, **kwargs) -> float:
+        """R^2 score based on true and predicted target values.
+
+        Parameters
+        ----------
+        y_true : array-like
+            True labels.
+        y_pred : array-like
+            Predicted labels.
+
+        Returns
+        -------
+        score
+            float
+        """
+        return sklearn_r2_score(y_true, y_pred, **kwargs)
 
     def postprocess_y(self, y):
         """Ensures output is floatx and squeeze."""

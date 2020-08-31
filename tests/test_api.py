@@ -115,24 +115,28 @@ class TestBasicAPI:
 
     def test_classify_build_fn(self):
         """Tests a classification task for errors."""
-        clf = wrappers.KerasClassifier(build_fn=build_fn_clf, hidden_dim=5)
+        clf = wrappers.KerasClassifier(
+            build_fn=build_fn_clf, model__hidden_dim=5
+        )
         basic_checks(clf, load_iris)
 
     def test_classify_inherit_class_build_fn(self):
         """Tests for errors using an inherited class."""
 
-        clf = InheritClassBuildFnClf(build_fn=None, hidden_dim=5)
+        clf = InheritClassBuildFnClf(build_fn=None, model__hidden_dim=5)
         basic_checks(clf, load_iris)
 
     def test_regression_build_fn(self):
         """Tests for errors using KerasRegressor."""
-        reg = wrappers.KerasRegressor(build_fn=build_fn_reg, hidden_dim=5)
+        reg = wrappers.KerasRegressor(
+            build_fn=build_fn_reg, model__hidden_dim=5
+        )
         basic_checks(reg, load_boston)
 
     def test_regression_inherit_class_build_fn(self):
         """Tests for errors using KerasRegressor inherited."""
 
-        reg = InheritClassBuildFnReg(build_fn=None, hidden_dim=5,)
+        reg = InheritClassBuildFnReg(build_fn=None, model__hidden_dim=5,)
         basic_checks(reg, load_boston)
 
 
@@ -267,14 +271,14 @@ class TestAdvancedAPIFuncs:
     def test_standalone(self, config):
         """Tests standalone estimator."""
         loader, model, build_fn, _ = CONFIG[config]
-        estimator = model(build_fn, epochs=1, hidden_layer_sizes=[])
+        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         basic_checks(estimator, loader)
 
     @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
     def test_pipeline(self, config):
         """Tests compatibility with Scikit-learn's pipeline."""
         loader, model, build_fn, _ = CONFIG[config]
-        estimator = model(build_fn, epochs=1, hidden_layer_sizes=[])
+        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         estimator = Pipeline([("s", StandardScaler()), ("e", estimator)])
         basic_checks(estimator, loader)
 
@@ -286,10 +290,14 @@ class TestAdvancedAPIFuncs:
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         loader, model, build_fn, _ = CONFIG[config]
         estimator = model(
-            build_fn, epochs=1, validation_split=0.1, hidden_layer_sizes=[]
+            build_fn,
+            epochs=1,
+            validation_split=0.1,
+            model__hidden_layer_sizes=[],
         )
         basic_checks(
-            GridSearchCV(estimator, {"hidden_layer_sizes": [[], [5]]}), loader,
+            GridSearchCV(estimator, {"model__hidden_layer_sizes": [[], [5]]}),
+            loader,
         )
         basic_checks(
             RandomizedSearchCV(
@@ -306,7 +314,7 @@ class TestAdvancedAPIFuncs:
     def test_searchcv_routed_params(self, config):
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         loader, model, build_fn, _ = CONFIG[config]
-        estimator = model(build_fn, epochs=1, hidden_layer_sizes=[])
+        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         params = {
             "model__hidden_layer_sizes": [[], [5]],
             "compile__optimizer": ["sgd", "adam"],
@@ -322,7 +330,9 @@ class TestAdvancedAPIFuncs:
     def test_ensemble(self, config):
         """Tests compatibility with Scikit-learn's ensembles."""
         loader, model, build_fn, ensembles = CONFIG[config]
-        base_estimator = model(build_fn, epochs=1, hidden_layer_sizes=[])
+        base_estimator = model(
+            build_fn, epochs=1, model__hidden_layer_sizes=[]
+        )
         for ensemble in ensembles:
             estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
@@ -332,7 +342,7 @@ class TestAdvancedAPIFuncs:
         """Tests compatibility with Scikit-learn's calibrated classifier CV."""
         loader, _, build_fn, _ = CONFIG[config]
         base_estimator = KerasClassifier(
-            build_fn, epochs=1, hidden_layer_sizes=[]
+            build_fn, epochs=1, model__hidden_layer_sizes=[]
         )
         estimator = CalibratedClassifierCV(base_estimator=base_estimator, cv=5)
         basic_checks(estimator, loader)
@@ -443,7 +453,7 @@ def test_warm_start():
     estimator = KerasRegressor(
         build_fn=dynamic_regressor,
         loss=KerasRegressor.r_squared,
-        hidden_layer_sizes=(100,),
+        model__hidden_layer_sizes=(100,),
     )
     estimator.fit(X, y)
     model = estimator.model_
@@ -470,7 +480,7 @@ class TestPartialFit:
         estimator = KerasRegressor(
             build_fn=dynamic_regressor,
             loss=KerasRegressor.r_squared,
-            hidden_layer_sizes=[100,],
+            model__hidden_layer_sizes=[100,],
         )
 
         estimator.partial_fit(X, y)
@@ -497,7 +507,7 @@ class TestPartialFit:
             build_fn=dynamic_regressor,
             loss=KerasRegressor.r_squared,
             metrics="mean_squared_error",
-            hidden_layer_sizes=[100,],
+            model__hidden_layer_sizes=[100,],
         )
 
         for k in range(10):
@@ -513,7 +523,7 @@ class TestPartialFit:
     )
     def test_pf_pickle_pf(self, config):
         loader, model, build_fn, _ = CONFIG[config]
-        clf = model(build_fn, epochs=1, hidden_layer_sizes=[])
+        clf = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         data = loader()
 
         X, y = data.data[:100], data.target[:100]
@@ -541,7 +551,7 @@ class TestPartialFit:
         # Make sure there's a decent number of weights
         # Also make sure that this network is "over-parameterized" (more
         # weights than examples)
-        # (these numbers are empirical and depend on hidden_layer_sizes=[])
+        # (these numbers are empirical and depend on model__hidden_layer_sizes=[])
         assert 1000 <= sum(n_weights) <= 2000
         assert 200 <= np.mean(n_weights) <= 300
         assert max(n_weights) >= 1000
@@ -567,7 +577,7 @@ def test_history():
     data = load_boston()
     X, y = data.data[:100], data.target[:100]
     estimator = KerasRegressor(
-        build_fn=dynamic_regressor, hidden_layer_sizes=[]
+        build_fn=dynamic_regressor, model__hidden_layer_sizes=[]
     )
 
     estimator.partial_fit(X, y)
