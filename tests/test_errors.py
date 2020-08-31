@@ -112,7 +112,9 @@ def test_build_fn_deprecation():
     """An approrpiate warning is raised when using the `build_fn`
     parameter instead of `model`.
     """
-    with pytest.warns(match="`build_fn` will be renamed to `model`"):
+    with pytest.warns(
+        UserWarning, match="`build_fn` will be renamed to `model`"
+    ):
         KerasClassifier(build_fn="test")
 
 
