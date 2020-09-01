@@ -109,20 +109,28 @@ def test_sample_weights_all_zero():
 
 
 def test_build_fn_deprecation():
-    """An approrpiate warning is raised when using the `build_fn`
+    """An appropriate warning is raised when using the `build_fn`
     parameter instead of `model`.
     """
+    clf = KerasClassifier(
+        build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,)
+    )
     with pytest.warns(
         UserWarning, match="`build_fn` will be renamed to `model`"
     ):
-        KerasClassifier(build_fn="test")
+        clf.fit([[1]], [1])
 
 
 def test_error_non_routed_kwargs():
     """Test that passing non-routed kwargs to
     BaseWrapper.__init__ raises an error.
     """
+    clf = KerasClassifier(
+        build_fn=dynamic_classifier,
+        nonrouted_param="test1",
+        model__hidden_layer_sizes=(100,),
+    )
     with pytest.raises(
         ValueError, match="All kwargs must be routed parameters"
     ):
-        KerasClassifier(build_fn="test", nonrouted_param="test1")
+        clf.fit([[1]], [1])

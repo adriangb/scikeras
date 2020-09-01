@@ -121,15 +121,16 @@ class BaseWrapper(BaseEstimator):
         "is_fitted_",
         "n_outputs_",
         "keras_expected_n_ouputs_",
+        "_user_params",
     }
 
     _routing_prefixes = {"model", "fit", "compile", "predict"}
 
     def __init__(
         self,
-        build_fn=None,
+        model=None,
         *,
-        model=None,  # replaces build_fn
+        build_fn=None,  # for backwards compatibility
         warm_start=False,
         random_state=None,
         optimizer="rmsprop",
@@ -151,6 +152,7 @@ class BaseWrapper(BaseEstimator):
 
         # Parse hardcoded params
         self.model = model
+        self.build_fn = build_fn
         self.warm_start = warm_start
         self.random_state = random_state
         self.optimizer = optimizer
@@ -167,19 +169,9 @@ class BaseWrapper(BaseEstimator):
         # Unpack kwargs
         vars(self).update(**kwargs)
 
-        # Check for deprecated APIs
-        if self.model is None and build_fn is not None:
-            self.model = build_fn
-            warnings.warn(
-                "`build_fn` will be renamed to `model` in a future release,"
-                " at which point use of `build_fn` will raise an Error instead."
-            )
-        for kwd in kwargs.keys():
-            if "__" not in kwd:
-                raise ValueError(
-                    "All kwargs must be routed parameters (ex: `model__hidden_layer_sizes`)"
-                    f" but {kwd} is not a routed parameter!"
-                )
+        # Save names of kwargs into set
+        if kwargs:
+            self._user_params = set(kwargs)
 
     @property
     def __name__(self):
@@ -188,20 +180,27 @@ class BaseWrapper(BaseEstimator):
     @property
     def _model_params(self):
         return {
-            p.strip("model__")
-            for p in self.get_params().keys()
-            if p.startswith("model__")
+            k[len("model__") :]
+            for k in self.get_params()
+            if "model__" == k[: len("model__")]
+            or k in getattr(self, "_init_kwargs", set())
         }
 
-    def _check_model_param(self, model):
-        """Checks `model`.
-
-        Arguments:
-            model : model param from __init__
+    def _check_model_param(self):
+        """Checks `model` and returns model building
+        function to use.
 
         Raises:
-            ValueError: if `build_fn` is not valid.
+            ValueError: if `self.model` is not valid.
         """
+        model = getattr(self, "model", None)
+        build_fn = getattr(self, "build_fn", None)
+        if model is None and build_fn is not None:
+            model = build_fn
+            warnings.warn(
+                "`build_fn` will be renamed to `model` in a future release,"
+                " at which point use of `build_fn` will raise an Error instead."
+            )
         if model is None:
             # no model, use this class' _keras_build_fn
             if not hasattr(self, "_keras_build_fn"):
@@ -251,13 +250,21 @@ class BaseWrapper(BaseEstimator):
         # dynamically build model, i.e. final_build_fn builds a Keras model
 
         # determine what type of build_fn to use
-        final_build_fn = self._check_model_param(getattr(self, "model", None))
+        final_build_fn = self._check_model_param()
 
         # collect parameters
         params = self.get_params()
         build_params = route_params(
-            params, destination="model__", pass_filter=set()
+            params,
+            destination="model",
+            pass_filter=getattr(self, "_user_params", set()),
         )
+        if not accepts_kwargs(final_build_fn):
+            build_params = {
+                k: v
+                for k, v in build_params.items()
+                if has_arg(final_build_fn, k)
+            }
         if has_param(final_build_fn, "meta_params") or accepts_kwargs(
             final_build_fn
         ):
@@ -753,6 +760,14 @@ class BaseWrapper(BaseEstimator):
 
     def _get_param_names(self):
         """Get parameter names for the estimator"""
+        # Check for deprecated APIs
+        for kwd in getattr(self, "_user_params", set()):
+            if "__" not in kwd:
+                warnings.warn(
+                    "In a future version of SciKeras, all kwargs MAY be required to be"
+                    "routed parameters (ex: `model__hidden_layer_sizes`)"
+                    f" (`{kwd}` is not a routed parameter)"
+                )
         return (
             k
             for k in self.__dict__

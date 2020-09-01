@@ -61,9 +61,23 @@ def test_no_extra_meta_params(wrapper_class, build_fn):
     X = np.random.uniform(size=(n, d)).astype(float)
     y = np.random.choice(n_classes, size=n).astype(int)
 
+    # with user kwargs
     clf = wrapper_class(build_fn=build_fn, model__hidden_layer_sizes=(100,))
     clf.fit(X, y)
     assert set(clf.get_meta_params().keys()) == wrapper_class._meta_params
+    # without user kwargs
+    def build_fn_no_args(meta_params, compile_params):
+        return build_fn(
+            hidden_layer_sizes=(100,),
+            meta_params=meta_params,
+            compile_params=compile_params,
+        )
+
+    clf = wrapper_class(build_fn=build_fn_no_args)
+    clf.fit(X, y)
+    assert set(clf.get_meta_params().keys()) == wrapper_class._meta_params - {
+        "_user_params"
+    }
 
 
 def test_model_params_property():
@@ -84,3 +98,26 @@ def test_routing_sets(dest):
         # it will still work in practice, but breaks this test
         known_params = known_params - {"run_eagerly"}
     assert known_params.issubset(accepted_params)
+
+
+def test_routed_unrouted_equivalence():
+    """Test that `hidden_layer_sizes` and `model__hidden_layer_sizes`
+    both work.
+    """
+    n, d = 20, 3
+    n_classes = 3
+    X = np.random.uniform(size=(n, d)).astype(float)
+    y = np.random.choice(n_classes, size=n).astype(int)
+
+    clf = KerasClassifier(
+        build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
+    )
+    clf.fit(X, y)
+
+    clf = KerasClassifier(
+        build_fn=dynamic_classifier, hidden_layer_sizes=(100,)
+    )
+    with pytest.warns(
+        UserWarning, match="(`hidden_layer_sizes` is not a routed parameter)"
+    ):
+        clf.fit(X, y)

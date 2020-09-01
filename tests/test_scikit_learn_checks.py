@@ -3,12 +3,13 @@
 from distutils.version import LooseVersion
 from typing import Any, Dict
 
+import numpy as np
 import pytest
 
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import load_iris
 from sklearn.utils.estimator_checks import check_no_attributes_set_in_init
-from tensorflow.keras import Model
+from tensorflow.keras import Model, Sequential, layers
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
@@ -84,10 +85,27 @@ class SubclassedClassifier(KerasClassifier):
         )
 
 
-def test_no_attributes_set_init():
+def test_no_attributes_set_init_sublcassed():
     """Tests that subclassed models can be made that
     set all parameters in a single __init__
     """
     estimator = SubclassedClassifier()
     check_no_attributes_set_in_init(estimator.__name__, estimator)
     basic_checks(estimator, load_iris)
+
+
+def test_no_attributes_set_init_no_args():
+    """Tests that models with no build arguments
+    set all parameters in a single __init__
+    """
+
+    def build_fn():
+        model = Sequential()
+        model.add(layers.Dense(1, input_dim=1, activation="relu"))
+        model.add(layers.Dense(1))
+        model.compile(loss="mse")
+        return model
+
+    estimator = KerasRegressor(model=build_fn)
+    check_no_attributes_set_in_init(estimator.__name__, estimator)
+    estimator.fit([[1]], [1])

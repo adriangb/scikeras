@@ -115,28 +115,24 @@ class TestBasicAPI:
 
     def test_classify_build_fn(self):
         """Tests a classification task for errors."""
-        clf = wrappers.KerasClassifier(
-            build_fn=build_fn_clf, model__hidden_dim=5
-        )
+        clf = wrappers.KerasClassifier(build_fn=build_fn_clf, hidden_dim=5)
         basic_checks(clf, load_iris)
 
     def test_classify_inherit_class_build_fn(self):
         """Tests for errors using an inherited class."""
 
-        clf = InheritClassBuildFnClf(build_fn=None, model__hidden_dim=5)
+        clf = InheritClassBuildFnClf(build_fn=None, hidden_dim=5)
         basic_checks(clf, load_iris)
 
     def test_regression_build_fn(self):
         """Tests for errors using KerasRegressor."""
-        reg = wrappers.KerasRegressor(
-            build_fn=build_fn_reg, model__hidden_dim=5
-        )
+        reg = wrappers.KerasRegressor(build_fn=build_fn_reg, hidden_dim=5)
         basic_checks(reg, load_boston)
 
     def test_regression_inherit_class_build_fn(self):
         """Tests for errors using KerasRegressor inherited."""
 
-        reg = InheritClassBuildFnReg(build_fn=None, model__hidden_dim=5,)
+        reg = InheritClassBuildFnReg(build_fn=None, hidden_dim=5,)
         basic_checks(reg, load_boston)
 
 

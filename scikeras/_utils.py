@@ -175,9 +175,7 @@ def _windows_upcast_ints(
 
 
 def route_params(
-    params: Dict[str, Any],
-    destination: str,
-    pass_filter: Union[Iterable[str], None] = None,
+    params: Dict[str, Any], destination: str, pass_filter: Iterable[str],
 ) -> Dict[str, Any]:
     """Route and trim parameter names.
 
@@ -187,9 +185,8 @@ def route_params(
         Parameters to route/filter.
     destination : str
         Destination to route to, ex: `build` or `compile`.
-    pass_filter: Union[Iterable[str], None], default None
-        If None, all non-routing `params` are passed. If an iterable,
-        only keys from `params` that are in the iterable are passed.
+    pass_filter: Iterable[str]
+        Only keys from `params` that are in the iterable are passed.
         This does not affect routed parameters.
 
     Returns
@@ -202,7 +199,7 @@ def route_params(
         if "__" in key:
             # routed param
             if key.startswith(destination):
-                new_key = key.replace(destination.strip("__") + "__", "")
+                new_key = key[len(destination + "__") :]
                 res[new_key] = val
         else:
             # non routed
