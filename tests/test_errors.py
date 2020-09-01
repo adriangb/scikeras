@@ -119,18 +119,3 @@ def test_build_fn_deprecation():
         UserWarning, match="`build_fn` will be renamed to `model`"
     ):
         clf.fit([[1]], [1])
-
-
-def test_error_non_routed_kwargs():
-    """Test that passing non-routed kwargs to
-    BaseWrapper.__init__ raises an error.
-    """
-    clf = KerasClassifier(
-        build_fn=dynamic_classifier,
-        nonrouted_param="test1",
-        model__hidden_layer_sizes=(100,),
-    )
-    with pytest.raises(
-        ValueError, match="All kwargs must be routed parameters"
-    ):
-        clf.fit([[1]], [1])
