@@ -65,6 +65,7 @@ jobs:
 
       - name: Update Packages
         run: |
+          poetry run python -m pip -U pip
           poetry update
 
       - name: Test with pytest 
@@ -119,6 +120,7 @@ jobs:
 
       - name: Update Packages
         run: |
+          poetry run python -m pip -U pip
           poetry update
 
       - name: Install Nightly Versions
@@ -233,6 +235,11 @@ jobs:
         run: |
           poetry install
         if: contains(env.rebuild, 'true') || steps.cache.outputs.cache-hit != 'true'
+
+      - name: Update Packages
+        run: |
+          poetry run python -m pip -U pip
+          poetry update
 
       - name: Test with pytest
         run: |
