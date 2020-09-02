@@ -5,7 +5,7 @@ import pytest
 
 from sklearn.exceptions import NotFittedError
 
-from scikeras.wrappers import KerasClassifier, KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
@@ -119,3 +119,27 @@ def test_build_fn_deprecation():
         UserWarning, match="`build_fn` will be renamed to `model`"
     ):
         clf.fit([[1]], [1])
+
+
+@pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
+def test_build_fn_and_init_signature_do_not_agree(wrapper):
+    """Test that passing a kwarg not present in the model
+    building function's signature raises a TypeError.
+    """
+
+    def no_bar(foo=42):
+        pass
+
+    # all attempts to pass `bar` should fail
+    est = wrapper(model=no_bar, model__bar=42)
+    with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+        est.fit([[1]], [1])
+    est = wrapper(model=no_bar, bar=42)
+    with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+        est.fit([[1]], [1])
+    est = wrapper(model=no_bar, model__bar=42, foo=43)
+    with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+        est.fit([[1]], [1])
+    est = wrapper(model=no_bar, bar=42, foo=43)
+    with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+        est.fit([[1]], [1])

@@ -27,18 +27,18 @@ def test_routing_basic():
         assert len(args) == 0, "No *args should be passed to `build_fn`"
         assert tuple(kwargs.keys()) == (
             "hidden_layer_sizes",
-            "meta_params",
-            "compile_params",
+            "meta",
+            "compile_kwargs",
         ), "The number and order of **kwargs passed to `build_fn` should be fixed"
-        meta = set(kwargs["meta_params"].keys())
-        expected_meta = KerasClassifier._meta_params - {
+        meta = set(kwargs["meta"].keys())
+        expected_meta = KerasClassifier._meta - {
             "model_",
             "history_",
             "is_fitted_",
         }
         assert meta == expected_meta
-        assert set(kwargs["compile_params"].keys()).issubset(
-            KerasClassifier._compile_params
+        assert set(kwargs["compile_kwargs"].keys()).issubset(
+            KerasClassifier._compile_kwargs
         )
         return dynamic_classifier(*args, **kwargs)
 
@@ -53,7 +53,7 @@ def test_routing_basic():
         (KerasRegressor, dynamic_regressor),
     ],
 )
-def test_no_extra_meta_params(wrapper_class, build_fn):
+def test_no_extra_meta(wrapper_class, build_fn):
     """Check that wrappers do not create any unexpected meta parameters.
     """
     n, d = 20, 3
@@ -64,20 +64,18 @@ def test_no_extra_meta_params(wrapper_class, build_fn):
     # with user kwargs
     clf = wrapper_class(build_fn=build_fn, model__hidden_layer_sizes=(100,))
     clf.fit(X, y)
-    assert set(clf.get_meta_params().keys()) == wrapper_class._meta_params
+    assert set(clf.get_meta().keys()) == wrapper_class._meta
     # without user kwargs
-    def build_fn_no_args(meta_params, compile_params):
+    def build_fn_no_args(meta, compile_kwargs):
         return build_fn(
             hidden_layer_sizes=(100,),
-            meta_params=meta_params,
-            compile_params=compile_params,
+            meta=meta,
+            compile_kwargs=compile_kwargs,
         )
 
     clf = wrapper_class(build_fn=build_fn_no_args)
     clf.fit(X, y)
-    assert set(clf.get_meta_params().keys()) == wrapper_class._meta_params - {
-        "_user_params"
-    }
+    assert set(clf.get_meta().keys()) == wrapper_class._meta - {"_user_params"}
 
 
 def test_model_params_property():
@@ -92,7 +90,7 @@ def test_routing_sets(dest):
     accepted_params = set(
         inspect.signature(getattr(Model, dest)).parameters.keys()
     ) - {"self", "kwargs"}
-    known_params = getattr(BaseWrapper, f"_{dest}_params")
+    known_params = getattr(BaseWrapper, f"_{dest}_kwargs")
     if LooseVersion(tf.__version__) <= "2.2.0":
         # this parameter is a kwarg in TF 2.2.0
         # it will still work in practice, but breaks this test
@@ -117,7 +115,4 @@ def test_routed_unrouted_equivalence():
     clf = KerasClassifier(
         build_fn=dynamic_classifier, hidden_layer_sizes=(100,)
     )
-    with pytest.warns(
-        UserWarning, match="(`hidden_layer_sizes` is not a routed parameter)"
-    ):
-        clf.fit(X, y)
+    clf.fit(X, y)

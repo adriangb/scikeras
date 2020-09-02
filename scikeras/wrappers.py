@@ -67,7 +67,7 @@ class BaseWrapper(BaseEstimator):
         "multioutput": True,
     }
 
-    _fit_params = {
+    _fit_kwargs = {
         # parameters destined to keras.Model.fit
         "callbacks",
         "batch_size",
@@ -84,7 +84,7 @@ class BaseWrapper(BaseEstimator):
         "validation_freq",
     }
 
-    _predict_params = {
+    _predict_kwargs = {
         # parameters destined to keras.Model.predict
         "batch_size",
         "verbose",
@@ -92,7 +92,7 @@ class BaseWrapper(BaseEstimator):
         "steps",
     }
 
-    _compile_params = {
+    _compile_kwargs = {
         # parameters destined to keras.Model.compile
         "optimizer",
         "loss",
@@ -108,7 +108,7 @@ class BaseWrapper(BaseEstimator):
         "random_state",
     }
 
-    _meta_params = {
+    _meta = {
         # parameters created by wrappers within `fit`
         "_random_state",
         "n_features_in_",
@@ -227,25 +227,15 @@ class BaseWrapper(BaseEstimator):
 
         return final_build_fn
 
-    def _build_keras_model(self, X, y):
+    def _build_keras_model(self):
         """Build the Keras model.
 
         This method will process all arguments and call the model building
         function with appropriate arguments.
 
-        Arguments:
-            X : array-like, shape `(n_samples, n_features)`
-                Training samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
-            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
-                True labels for `X`.
         Returns:
-            self : object
-                a reference to the instance that can be chain called
-                (ex: instance.fit(X,y).transform(X) )
-        Raises:
-            ValueError : In case sample_weight != None and the Keras model's
-                `fit` method does not support that parameter.
+            model : tensorflow.keras.Model
+                Instantiated and compiled keras Model.
         """
         # dynamically build model, i.e. final_build_fn builds a Keras model
 
@@ -259,30 +249,20 @@ class BaseWrapper(BaseEstimator):
             destination="model",
             pass_filter=getattr(self, "_user_params", set()),
         )
-        if not accepts_kwargs(final_build_fn):
-            build_params = {
-                k: v
-                for k, v in build_params.items()
-                if has_arg(final_build_fn, k)
-            }
-        if has_param(final_build_fn, "meta_params") or accepts_kwargs(
+        if has_param(final_build_fn, "meta") or accepts_kwargs(final_build_fn):
+            # build_fn accepts `meta`, add it
+            meta = route_params(
+                self.get_meta(), destination=None, pass_filter=self._meta,
+            )
+            build_params["meta"] = meta
+        if has_param(final_build_fn, "compile_kwargs") or accepts_kwargs(
             final_build_fn
         ):
-            # build_fn accepts `meta_params`, add it
-            meta_params = route_params(
-                self.get_meta_params(),
-                destination=None,
-                pass_filter=self._meta_params,
+            # build_fn accepts `compile_kwargs`, add it
+            compile_kwargs = route_params(
+                params, destination="compile", pass_filter=self._compile_kwargs
             )
-            build_params["meta_params"] = meta_params
-        if has_param(final_build_fn, "compile_params") or accepts_kwargs(
-            final_build_fn
-        ):
-            # build_fn accepts `compile_params`, add it
-            compile_params = route_params(
-                params, destination="compile", pass_filter=self._compile_params
-            )
-            build_params["compile_params"] = compile_params
+            build_params["compile_kwargs"] = compile_kwargs
 
         # build model
         if self._random_state is not None:
@@ -329,7 +309,7 @@ class BaseWrapper(BaseEstimator):
         # collect parameters
         params = self.get_params()
         fit_args = route_params(
-            params, destination="fit", pass_filter=self._fit_params
+            params, destination="fit", pass_filter=self._fit_kwargs
         )
         fit_args["sample_weight"] = sample_weight
 
@@ -617,7 +597,7 @@ class BaseWrapper(BaseEstimator):
 
         # build model
         if (not warm_start) or (not hasattr(self, "model_")):
-            self.model_ = self._build_keras_model(X, y)
+            self.model_ = self._build_keras_model()
 
         y = self._check_output_model_compatibility(y)
 
@@ -675,7 +655,7 @@ class BaseWrapper(BaseEstimator):
         # filter kwargs and get attributes for predict
         params = self.get_params()
         pred_args = route_params(
-            params, destination="predict", pass_filter=self._predict_params
+            params, destination="predict", pass_filter=self._predict_kwargs
         )
 
         # predict with Keras model
@@ -724,7 +704,7 @@ class BaseWrapper(BaseEstimator):
 
         return self.scorer(y, y_pred, sample_weight=sample_weight)
 
-    def get_meta_params(self) -> Dict[str, Any]:
+    def get_meta(self) -> Dict[str, Any]:
         """Get meta parameters (parameters created by fit, like
         n_features_in_ or target_type_).
 
@@ -760,14 +740,6 @@ class BaseWrapper(BaseEstimator):
 
     def _get_param_names(self):
         """Get parameter names for the estimator"""
-        # Check for deprecated APIs
-        for kwd in getattr(self, "_user_params", set()):
-            if "__" not in kwd:
-                warnings.warn(
-                    "In a future version of SciKeras, all kwargs MAY be required to be"
-                    "routed parameters (ex: `model__hidden_layer_sizes`)"
-                    f" (`{kwd}` is not a routed parameter)"
-                )
         return (
             k
             for k in self.__dict__
@@ -797,34 +769,28 @@ class KerasClassifier(BaseWrapper):
     """
 
     _estimator_type = "classifier"
-    _tags = BaseWrapper._tags.copy()
-    _tags.update(
-        {
-            "multilabel": True,
-            "_xfail_checks": {
-                "check_classifiers_classes": "can't meet \
-                performance target",
-                "check_fit_idempotent": "tf does not use \
-                sparse tensors",
-                "check_no_attributes_set_in_init": "can only \
-                pass if all params are hardcoded in __init__",
-            },
-        }
-    )
+    _tags = {
+        "multilabel": True,
+        "_xfail_checks": {
+            "check_classifiers_classes": "can't meet \
+            performance target",
+            "check_fit_idempotent": "tf does not use \
+            sparse tensors",
+            "check_no_attributes_set_in_init": "can only \
+            pass if all params are hardcoded in __init__",
+        },
+        **BaseWrapper._tags,
+    }
 
-    _meta_params = (
-        BaseWrapper._meta_params.copy()
-    )  # parameters created by wrappers within `fit`
-    _meta_params.update(
-        {
-            "n_classes_",
-            "target_type_",
-            "classes_",
-            "encoders_",
-            "n_outputs_",
-            "keras_expected_n_ouputs_",
-        }
-    )
+    _meta = {
+        "n_classes_",
+        "target_type_",
+        "classes_",
+        "encoders_",
+        "n_outputs_",
+        "keras_expected_n_ouputs_",
+        *BaseWrapper._meta,
+    }
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
@@ -1113,7 +1079,7 @@ class KerasClassifier(BaseWrapper):
         predict_args = route_params(
             self.get_params(),
             destination="predict",
-            pass_filter=self._predict_params,
+            pass_filter=self._predict_kwargs,
         )
 
         # call the Keras model's predict
@@ -1133,18 +1099,16 @@ class KerasRegressor(BaseWrapper):
     """
 
     _estimator_type = "regressor"
-    _tags = BaseWrapper._tags.copy()
-    _tags.update(
-        {
-            "multilabel": True,
-            "_xfail_checks": {
-                "check_fit_idempotent": "tf does not use sparse tensors",
-                "check_methods_subset_invariance": "can't meet tol",
-                "check_no_attributes_set_in_init": "can only pass if all \
-                params are hardcoded in __init__",
-            },
-        }
-    )
+    _tags = {
+        "multilabel": True,
+        "_xfail_checks": {
+            "check_fit_idempotent": "tf does not use sparse tensors",
+            "check_methods_subset_invariance": "can't meet tol",
+            "check_no_attributes_set_in_init": "can only pass if all \
+            params are hardcoded in __init__",
+        },
+        **BaseWrapper._tags,
+    }
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:

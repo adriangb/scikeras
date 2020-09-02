@@ -27,10 +27,10 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
     """
 
     def _keras_build_fn(
-        self, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
+        self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
         # get params
-        n_classes_ = meta_params["n_classes_"]
+        n_classes_ = meta["n_classes_"]
 
         inp1 = Input((1,))
         inp2 = Input((3,))
@@ -60,11 +60,11 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
     """
 
     def _keras_build_fn(
-        self, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
+        self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
         # get params
-        n_features_in_ = meta_params["n_features_in_"]
-        n_classes_ = meta_params["n_classes_"]
+        n_features_in_ = meta["n_features_in_"]
+        n_classes_ = meta["n_classes_"]
 
         inp = Input((n_features_in_,))
 
@@ -91,10 +91,10 @@ class FunctionAPIMultiLabelClassifier(KerasClassifier):
     """
 
     def _keras_build_fn(
-        self, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
+        self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
         # get params
-        n_outputs_ = meta_params["n_outputs_"]
+        n_outputs_ = meta["n_outputs_"]
 
         inp = Input((4,))
 
@@ -118,10 +118,10 @@ class FunctionAPIMultiOutputRegressor(KerasRegressor):
     """
 
     def _keras_build_fn(
-        self, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
+        self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
         # get params
-        n_outputs_ = meta_params["n_outputs_"]
+        n_outputs_ = meta["n_outputs_"]
 
         inp = Input((INPUT_DIM,))
 
@@ -235,7 +235,7 @@ def test_incompatible_output_dimensions():
 
     # create a model with 2 outputs
     def build_fn_clf(
-        meta_params: Dict[str, Any], compile_params: Dict[str, Any],
+        meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
         """Builds a Sequential based classifier."""
         model = Sequential()

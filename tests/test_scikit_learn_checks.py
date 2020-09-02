@@ -75,13 +75,13 @@ class SubclassedClassifier(KerasClassifier):
     def _keras_build_fn(
         self,
         hidden_layer_sizes,
-        meta_params: Dict[str, Any],
-        compile_params: Dict[str, Any],
+        meta: Dict[str, Any],
+        compile_kwargs: Dict[str, Any],
     ) -> Model:
         return dynamic_classifier(
             hidden_layer_sizes=hidden_layer_sizes,
-            meta_params=meta_params,
-            compile_params=compile_params,
+            meta=meta,
+            compile_kwargs=compile_kwargs,
         )
 
 

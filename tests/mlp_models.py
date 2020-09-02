@@ -7,21 +7,19 @@ from scikeras.wrappers import KerasRegressor
 
 
 def dynamic_classifier(
-    hidden_layer_sizes,
-    meta_params: Dict[str, Any],
-    compile_params: Dict[str, Any],
+    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Creates a basic MLP classifier dynamically choosing binary/multiclass
     classification loss and ouput activations.
     """
     # get parameters
-    n_features_in_ = meta_params["n_features_in_"]
-    target_type_ = meta_params["target_type_"]
-    n_classes_ = meta_params["n_classes_"]
-    keras_expected_n_ouputs_ = meta_params["keras_expected_n_ouputs_"]
-    metrics = compile_params["metrics"]
-    loss = compile_params["loss"]
-    optimizer = compile_params["optimizer"]
+    n_features_in_ = meta["n_features_in_"]
+    target_type_ = meta["target_type_"]
+    n_classes_ = meta["n_classes_"]
+    keras_expected_n_ouputs_ = meta["keras_expected_n_ouputs_"]
+    metrics = compile_kwargs["metrics"]
+    loss = compile_kwargs["loss"]
+    optimizer = compile_kwargs["optimizer"]
 
     inp = Input(shape=(n_features_in_,))
 
@@ -56,18 +54,16 @@ def dynamic_classifier(
 
 
 def dynamic_regressor(
-    hidden_layer_sizes,
-    meta_params: Dict[str, Any],
-    compile_params: Dict[str, Any],
+    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Creates a basic MLP regressor dynamically.
     """
     # get parameters
-    n_features_in_ = meta_params["n_features_in_"]
-    n_outputs_ = meta_params["n_outputs_"]
-    metrics = compile_params["metrics"]
-    loss = compile_params["loss"]
-    optimizer = compile_params["optimizer"]
+    n_features_in_ = meta["n_features_in_"]
+    n_outputs_ = meta["n_outputs_"]
+    metrics = compile_kwargs["metrics"]
+    loss = compile_kwargs["loss"]
+    optimizer = compile_kwargs["optimizer"]
 
     if loss is None:
         # Default Model loss, not appropriate for a classifier

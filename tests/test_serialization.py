@@ -55,7 +55,7 @@ def test_custom_loss_function():
 
 
 def build_fn_custom_model_registered(
-    meta_params: Dict[str, Any], compile_params: Dict[str, Any],
+    meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Dummy custom Model subclass that is registered to be serializable.
     """
@@ -65,8 +65,8 @@ def build_fn_custom_model_registered(
         pass
 
     # get parameters
-    n_features_in_ = meta_params["n_features_in_"]
-    n_outputs_ = meta_params["n_outputs_"]
+    n_features_in_ = meta["n_features_in_"]
+    n_outputs_ = meta["n_outputs_"]
 
     inp = Input(shape=n_features_in_)
     x1 = Dense(n_features_in_, activation="relu")(inp)
@@ -84,7 +84,7 @@ def test_custom_model_registered():
 
 
 def build_fn_custom_model_unregistered(
-    meta_params: Dict[str, Any], compile_params: Dict[str, Any],
+    meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Dummy custom Model subclass that is not registed to be serializable.
     """
@@ -93,8 +93,8 @@ def build_fn_custom_model_unregistered(
         pass
 
     # get parameters
-    n_features_in_ = meta_params["n_features_in_"]
-    n_outputs_ = meta_params["n_outputs_"]
+    n_features_in_ = meta["n_features_in_"]
+    n_outputs_ = meta["n_outputs_"]
 
     inp = Input(shape=n_features_in_)
     x1 = Dense(n_features_in_, activation="relu")(inp)

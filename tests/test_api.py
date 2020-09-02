@@ -39,13 +39,13 @@ pytestmark = pytest.mark.filterwarnings(
 
 
 def build_fn_clf(
-    hidden_dim, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
+    hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Builds a Sequential based classifier."""
     # extract parameters
-    n_features_in_ = meta_params["n_features_in_"]
-    X_shape_ = meta_params["X_shape_"]
-    n_classes_ = meta_params["n_classes_"]
+    n_features_in_ = meta["n_features_in_"]
+    X_shape_ = meta["X_shape_"]
+    n_classes_ = meta["n_classes_"]
 
     model = keras.models.Sequential()
     model.add(keras.layers.Dense(n_features_in_, input_shape=X_shape_[1:]))
@@ -61,11 +61,11 @@ def build_fn_clf(
 
 
 def build_fn_reg(
-    hidden_dim, meta_params: Dict[str, Any], compile_params: Dict[str, Any],
+    hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Builds a Sequential based regressor."""
     # extract parameters
-    n_features_in_ = meta_params["n_features_in_"]
+    n_features_in_ = meta["n_features_in_"]
 
     model = keras.models.Sequential()
     model.add(
@@ -84,29 +84,19 @@ def build_fn_reg(
 
 class InheritClassBuildFnClf(wrappers.KerasClassifier):
     def _keras_build_fn(
-        self,
-        hidden_dim,
-        meta_params: Dict[str, Any],
-        compile_params: Dict[str, Any],
+        self, hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
         return build_fn_clf(
-            hidden_dim=hidden_dim,
-            meta_params=meta_params,
-            compile_params=compile_params,
+            hidden_dim=hidden_dim, meta=meta, compile_kwargs=compile_kwargs,
         )
 
 
 class InheritClassBuildFnReg(wrappers.KerasRegressor):
     def _keras_build_fn(
-        self,
-        hidden_dim,
-        meta_params: Dict[str, Any],
-        compile_params: Dict[str, Any],
+        self, hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
         return build_fn_reg(
-            hidden_dim=hidden_dim,
-            meta_params=meta_params,
-            compile_params=compile_params,
+            hidden_dim=hidden_dim, meta=meta, compile_kwargs=compile_kwargs,
         )
 
 
@@ -148,14 +138,12 @@ def load_digits8x8():
 
 
 def build_fn_regs(
-    hidden_layer_sizes,
-    meta_params: Dict[str, Any],
-    compile_params: Dict[str, Any],
+    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Dynamically build regressor."""
     # get params
-    X_shape_ = meta_params["X_shape_"]
-    n_outputs_ = meta_params["n_outputs_"]
+    X_shape_ = meta["X_shape_"]
+    n_outputs_ = meta["n_outputs_"]
 
     model = Sequential()
     model.add(Dense(X_shape_[1], activation="relu", input_shape=X_shape_[1:]))
@@ -167,13 +155,11 @@ def build_fn_regs(
 
 
 def build_fn_clss(
-    hidden_layer_sizes,
-    meta_params: Dict[str, Any],
-    compile_params: Dict[str, Any],
+    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Dynamically build classifier."""
     # get params
-    X_shape_ = meta_params["X_shape_"]
+    X_shape_ = meta["X_shape_"]
 
     model = Sequential()
     model.add(Dense(X_shape_[1], activation="relu", input_shape=X_shape_[1:]))
@@ -185,14 +171,12 @@ def build_fn_clss(
 
 
 def build_fn_clscs(
-    hidden_layer_sizes,
-    meta_params: Dict[str, Any],
-    compile_params: Dict[str, Any],
+    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Dynamically build functional API regressor."""
     # get params
-    X_shape_ = meta_params["X_shape_"]
-    n_classes_ = meta_params["n_classes_"]
+    X_shape_ = meta["X_shape_"]
+    n_classes_ = meta["n_classes_"]
 
     model = Sequential()
     model.add(Conv2D(3, (3, 3), input_shape=X_shape_[1:]))
@@ -207,14 +191,12 @@ def build_fn_clscs(
 
 
 def build_fn_clscf(
-    hidden_layer_sizes,
-    meta_params: Dict[str, Any],
-    compile_params: Dict[str, Any],
+    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Dynamically build functional API classifier."""
     # get params
-    X_shape_ = meta_params["X_shape_"]
-    n_classes_ = meta_params["n_classes_"]
+    X_shape_ = meta["X_shape_"]
+    n_classes_ = meta["n_classes_"]
 
     x = Input(shape=X_shape_[1:])
     z = Conv2D(3, (3, 3))(x)
@@ -360,30 +342,30 @@ class TestPrebuiltModel:
         # make y the same shape as will be used by .fit
         if config != "MLPRegressor":
             y_train = to_categorical(y_train)
-            meta_params = {
+            meta = {
                 "n_classes_": n_classes_,
                 "target_type_": "multiclass",
                 "n_features_in_": x_train.shape[1],
                 "keras_expected_n_ouputs_": 1,
             }
             keras_model = build_fn(
-                meta_params=meta_params,
+                meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_params={
+                compile_kwargs={
                     "optimizer": "adam",
                     "loss": None,
                     "metrics": None,
                 },
             )
         else:
-            meta_params = {
+            meta = {
                 "n_outputs_": 1,
                 "n_features_in_": x_train.shape[1],
             }
             keras_model = build_fn(
-                meta_params=meta_params,
+                meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_params={
+                compile_kwargs={
                     "optimizer": "adam",
                     "loss": None,
                     "metrics": None,
@@ -404,30 +386,30 @@ class TestPrebuiltModel:
         # make y the same shape as will be used by .fit
         if config != "MLPRegressor":
             y_train = to_categorical(y_train)
-            meta_params = {
+            meta = {
                 "n_classes_": n_classes_,
                 "target_type_": "multiclass",
                 "n_features_in_": x_train.shape[1],
                 "keras_expected_n_ouputs_": 1,
             }
             keras_model = build_fn(
-                meta_params=meta_params,
+                meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_params={
+                compile_kwargs={
                     "optimizer": "adam",
                     "loss": None,
                     "metrics": None,
                 },
             )
         else:
-            meta_params = {
+            meta = {
                 "n_outputs_": 1,
                 "n_features_in_": x_train.shape[1],
             }
             keras_model = build_fn(
-                meta_params=meta_params,
+                meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_params={
+                compile_kwargs={
                     "optimizer": "adam",
                     "loss": None,
                     "metrics": None,
