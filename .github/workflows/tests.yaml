@@ -223,10 +223,16 @@ jobs:
           restore-keys: |
             poetry-${{ hashFiles('**/pyproject.toml') }}-os-${{ matrix.python-version }}-${{ matrix.os }}
 
+     - name: Ensure cache is healthy
+        if: steps.cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: poetry run pip --version >/dev/null 2>&1 || echo "::set-env name=rebuild::true" && rm -rf .venv
+
+
       - name: Install Dependencies
         run: |
           poetry install
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: contains(env.rebuild, 'true') || steps.cache.outputs.cache-hit != 'true'
 
       - name: Test with pytest
         run: |
