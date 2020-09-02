@@ -53,10 +53,15 @@ jobs:
           restore-keys: |
             poetry-${{ hashFiles('**/pyproject.toml') }}-stable-${{ matrix.python-version }}
 
+      - name: Ensure cache is healthy
+        if: steps.cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: poetry run pip --version >/dev/null 2>&1 || echo "::set-env name=rebuild::true" && rm -rf .venv
+
       - name: Install Dependencies
         run: |
           poetry install
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: contains(env.rebuild, 'true') || steps.cache.outputs.cache-hit != 'true'
 
       - name: Update Packages
         run: |
@@ -100,12 +105,17 @@ jobs:
           restore-keys: |
             poetry-${{ hashFiles('**/pyproject.toml') }}-nightly-${{ matrix.python-version }}
 
+      - name: Ensure cache is healthy
+        if: steps.cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: poetry run pip --version >/dev/null 2>&1 || echo "::set-env name=rebuild::true" && rm -rf .venv
+
       - name: Install Dependencies
         run: |
           poetry remove tensorflow
           poetry remove scikit-learn
           poetry install
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: contains(env.rebuild, 'true') || steps.cache.outputs.cache-hit != 'true'
 
       - name: Update Packages
         run: |
@@ -159,14 +169,19 @@ jobs:
           restore-keys: |
             poetry-${{ hashFiles('**/pyproject.toml') }}-oldest-${{ matrix.python-version }}
 
+      - name: Ensure cache is healthy
+        if: steps.cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: poetry run pip --version >/dev/null 2>&1 || echo "::set-env name=rebuild::true" && rm -rf .venv
+
       - name: Install Dependencies
         run: |
+          poetry remove tensorflow
+          poetry remove scikit-learn
+          poetry add "tensorflow==${{matrix.tf-version}}"
+          poetry add "scikit-learn==${{matrix.sklearn-version}}"
           poetry install
-          poetry run python -m pip uninstall -y tensorflow
-          poetry run python -m pip install tensorflow==${{matrix.tf-version}}
-          poetry run python -m pip uninstall -y scikit-learn
-          poetry run python -m pip install scikit-learn==${{matrix.sklearn-version}}
-        if: steps.cache.outputs.cache-hit != 'true'      
+        if: contains(env.rebuild, 'true') || steps.cache.outputs.cache-hit != 'true'      
 
       - name: Test with pytest 
         run: |
