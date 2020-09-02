@@ -65,8 +65,9 @@ class SubclassedClassifier(KerasClassifier):
         model__hidden_layer_sizes=(100,),
         metrics=None,
         loss=None,
-        optimizer=None,
+        **kwargs,
     ):
+        super().__init__(**kwargs)
         self.model__hidden_layer_sizes = model__hidden_layer_sizes
         self.metrics = metrics
         self.loss = loss

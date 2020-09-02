@@ -331,9 +331,10 @@ class ClassifierWithCallback(KerasClassifier):
     """
 
     def __init__(self, tolerance, hidden_dim=None):
+        super().__init__()
         self.callbacks = [SentinalCallback(tolerance)]
         self.hidden_dim = hidden_dim
-        super().__init__()
+
 
     def _keras_build_fn(self, hidden_dim):
         return build_fn_clf(hidden_dim)

@@ -120,7 +120,7 @@ class BaseWrapper(BaseEstimator):
         "history_",
         "is_fitted_",
         "n_outputs_",
-        "keras_expected_n_ouputs_",
+        "model_n_outputs_",
         "_user_params",
     }
 
@@ -183,7 +183,7 @@ class BaseWrapper(BaseEstimator):
             k[len("model__") :]
             for k in self.get_params()
             if "model__" == k[: len("model__")]
-            or k in getattr(self, "_init_kwargs", set())
+            or k in getattr(self, "_user_params", set())
         }
 
     def _check_model_param(self):
@@ -193,8 +193,8 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError: if `self.model` is not valid.
         """
-        model = getattr(self, "model", None)
-        build_fn = getattr(self, "build_fn", None)
+        model = self.model
+        build_fn = self.build_fn
         if model is None and build_fn is not None:
             model = build_fn
             warnings.warn(
@@ -208,7 +208,7 @@ class BaseWrapper(BaseEstimator):
                     "If not using the `build_fn` param, "
                     "you must implement `_keras_build_fn`"
                 )
-            final_build_fn = getattr(self, "_keras_build_fn")
+            final_build_fn = self._keras_build_fn
         elif isinstance(model, Model):
             # pre-built Keras Model
             def final_build_fn():
@@ -345,7 +345,7 @@ class BaseWrapper(BaseEstimator):
         This is mainly in place to avoid cryptic TF errors.
         """
         # check if this is a multi-output model
-        if self.keras_expected_n_ouputs_ != len(self.model_.outputs):
+        if self.model_n_outputs_ != len(self.model_.outputs):
             raise RuntimeError(
                 "Detected an input of size "
                 "{}, but {} has {} outputs".format(
@@ -509,10 +509,7 @@ class BaseWrapper(BaseEstimator):
             ValueError : In case of invalid shape for `y` argument.
         """
         return self._fit(
-            X=X,
-            y=y,
-            sample_weight=sample_weight,
-            warm_start=getattr(self, "warm_start", False),
+            X=X, y=y, sample_weight=sample_weight, warm_start=self.warm_start
         )
 
     def _fit(self, X, y, sample_weight=None, warm_start=False):
@@ -795,7 +792,7 @@ class KerasClassifier(BaseWrapper):
         "classes_",
         "encoders_",
         "n_outputs_",
-        "keras_expected_n_ouputs_",
+        "model_n_outputs_",
         *BaseWrapper._meta,
     }
 
@@ -842,7 +839,7 @@ class KerasClassifier(BaseWrapper):
         if target_type_ == "binary":
             # y = array([1, 0, 1, 0])
             # single task, single label, binary classification
-            keras_expected_n_ouputs_ = 1  # single sigmoid output expected
+            model_n_outputs_ = 1  # single sigmoid output expected
             # encode
             encoder = LabelEncoder()
             # No need to reshape to 1D here,
@@ -855,7 +852,7 @@ class KerasClassifier(BaseWrapper):
             y = [y]
         elif target_type_ == "multiclass":
             # y = array([1, 5, 2])
-            keras_expected_n_ouputs_ = 1  # single softmax output expected
+            model_n_outputs_ = 1  # single softmax output expected
             # encode
             encoder = LabelEncoder()
             if len(y.shape) > 1 and y.shape[1] == 1:
@@ -873,7 +870,7 @@ class KerasClassifier(BaseWrapper):
             # will be processed as multiple binary classifications
             classes_ = [np.array([0, 1])] * y.shape[1]
             y = np.split(y, y.shape[1], axis=1)
-            keras_expected_n_ouputs_ = len(y)
+            model_n_outputs_ = len(y)
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
@@ -888,7 +885,7 @@ class KerasClassifier(BaseWrapper):
             # split into lists for multi-output Keras
             # each will be processesed as a seperate multiclass problem
             y = np.split(y, y.shape[1], axis=1)
-            keras_expected_n_ouputs_ = len(y)
+            model_n_outputs_ = len(y)
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
@@ -917,7 +914,7 @@ class KerasClassifier(BaseWrapper):
                 "classes_": classes_,
                 "encoders_": encoders_,
                 "n_outputs_": n_outputs_,
-                "keras_expected_n_ouputs_": keras_expected_n_ouputs_,
+                "model_n_outputs_": model_n_outputs_,
                 "n_classes_": n_classes_,
                 "target_type_": target_type_,
             }
@@ -1153,13 +1150,10 @@ class KerasRegressor(BaseWrapper):
             n_outputs_ = y.shape[1]
 
         # for regression, multi-output is handled by single Keras output
-        keras_expected_n_ouputs_ = 1
+        model_n_outputs_ = 1
 
         extra_args.update(
-            {
-                "n_outputs_": n_outputs_,
-                "keras_expected_n_ouputs_": keras_expected_n_ouputs_,
-            }
+            {"n_outputs_": n_outputs_, "model_n_outputs_": model_n_outputs_,}
         )
 
         y = [y]  # pack into single output list

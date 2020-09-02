@@ -16,7 +16,7 @@ def dynamic_classifier(
     n_features_in_ = meta["n_features_in_"]
     target_type_ = meta["target_type_"]
     n_classes_ = meta["n_classes_"]
-    keras_expected_n_ouputs_ = meta["keras_expected_n_ouputs_"]
+    model_n_outputs_ = meta["model_n_outputs_"]
     metrics = compile_kwargs["metrics"]
     loss = compile_kwargs["loss"]
     optimizer = compile_kwargs["optimizer"]
@@ -34,7 +34,7 @@ def dynamic_classifier(
         loss = loss or "binary_crossentropy"
         out = [
             Dense(1, activation="sigmoid")(hidden)
-            for _ in range(keras_expected_n_ouputs_)
+            for _ in range(model_n_outputs_)
         ]
     elif target_type_ == "multiclass-multioutput":
         loss = loss or "binary_crossentropy"
