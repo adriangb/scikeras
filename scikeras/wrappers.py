@@ -263,6 +263,11 @@ class BaseWrapper(BaseEstimator):
                 params, destination="compile", pass_filter=self._compile_kwargs
             )
             build_params["compile_kwargs"] = compile_kwargs
+        if has_param(final_build_fn, "params") or accepts_kwargs(
+            final_build_fn
+        ):
+            # build_fn accepts `params`, i.e. all of get_params()
+            build_params["params"] = self.get_params()
 
         # build model
         if self._random_state is not None:
@@ -698,11 +703,13 @@ class BaseWrapper(BaseEstimator):
 
         # filter kwargs and get attributes for score
         params = self.get_params()
-        pred_args = route_params(
+        score_args = route_params(
             params, destination="score", pass_filter=set()
         )
 
-        return self.scorer(y, y_pred, sample_weight=sample_weight)
+        return self.scorer(
+            y, y_pred, sample_weight=sample_weight, **score_args
+        )
 
     def get_meta(self) -> Dict[str, Any]:
         """Get meta parameters (parameters created by fit, like
