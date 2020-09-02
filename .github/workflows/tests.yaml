@@ -50,7 +50,9 @@ jobs:
         env:
           cachev: 0
         with:
-          path: .venv
+          path: |
+            .venv
+            poetry.lock
           key: poetry-${{ hashFiles('**/pyproject.toml') }}-stable-${{ matrix.python-version }}-${{ env.cachev }}
           restore-keys: |
             poetry-${{ hashFiles('**/pyproject.toml') }}-stable-${{ matrix.python-version }}-${{ env.cachev }}
@@ -105,7 +107,9 @@ jobs:
         env:
           cachev: 0
         with:
-          path: .venv
+          path: |
+            .venv
+            poetry.lock
           key: poetry-${{ hashFiles('**/pyproject.toml') }}-nightly-${{ matrix.python-version }}-${{ env.cachev }}
           restore-keys: |
             poetry-${{ hashFiles('**/pyproject.toml') }}-nightly-${{ matrix.python-version }}-${{ env.cachev }}
@@ -172,7 +176,9 @@ jobs:
         env:
           cachev: 1
         with:
-          path: .venv
+          path: |
+            .venv
+            poetry.lock
           key: poetry-${{ hashFiles('**/pyproject.toml') }}-oldest-${{ matrix.python-version }}-${{ env.cachev }}
           restore-keys: |
             poetry-${{ hashFiles('**/pyproject.toml') }}-oldest-${{ matrix.python-version }}-${{ env.cachev }}
@@ -226,7 +232,9 @@ jobs:
         env:
           cachev: 0
         with:
-          path: .venv
+          path: |
+            .venv
+            poetry.lock
           key: poetry-${{ hashFiles('**/pyproject.toml') }}-os-${{ matrix.python-version }}-${{ matrix.os }}-${{ env.cachev }}
           restore-keys: |
             poetry-${{ hashFiles('**/pyproject.toml') }}-os-${{ matrix.python-version }}-${{ matrix.os }}-${{ env.cachev }}
