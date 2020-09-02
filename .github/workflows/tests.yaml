@@ -102,11 +102,13 @@ jobs:
       - name: Cache Poetry virtualenv
         uses: actions/cache@v2
         id: cache
+        env:
+          cachev: 0
         with:
           path: .venv
-          key: poetry-${{ hashFiles('**/pyproject.toml') }}-nightly-${{ matrix.python-version }}
+          key: poetry-${{ hashFiles('**/pyproject.toml') }}-nightly-${{ matrix.python-version }}-${{ env.cachev }}
           restore-keys: |
-            poetry-${{ hashFiles('**/pyproject.toml') }}-nightly-${{ matrix.python-version }}
+            poetry-${{ hashFiles('**/pyproject.toml') }}-nightly-${{ matrix.python-version }}-${{ env.cachev }}
 
       - name: Ensure cache is healthy
         if: steps.cache.outputs.cache-hit == 'true'
@@ -223,11 +225,13 @@ jobs:
       - name: Cache Poetry virtualenv
         uses: actions/cache@v2
         id: cache
+        env:
+          cachev: 0
         with:
           path: .venv
-          key: poetry-${{ hashFiles('**/pyproject.toml') }}-os-${{ matrix.python-version }}-${{ matrix.os }}
+          key: poetry-${{ hashFiles('**/pyproject.toml') }}-os-${{ matrix.python-version }}-${{ matrix.os }}-${{ env.cachev }}
           restore-keys: |
-            poetry-${{ hashFiles('**/pyproject.toml') }}-os-${{ matrix.python-version }}-${{ matrix.os }}
+            poetry-${{ hashFiles('**/pyproject.toml') }}-os-${{ matrix.python-version }}-${{ matrix.os }}-${{ env.cachev }}
 
       - name: Ensure cache is healthy
         if: steps.cache.outputs.cache-hit == 'true'
