@@ -1,20 +1,20 @@
 """Tests using Scikit-Learn's bundled estimator_checks."""
 
 from distutils.version import LooseVersion
+from typing import Any, Dict
 
+import numpy as np
 import pytest
 
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import load_iris
 from sklearn.utils.estimator_checks import check_no_attributes_set_in_init
+from tensorflow.keras import Model, Sequential, layers
 
-from scikeras.wrappers import KerasClassifier
-from scikeras.wrappers import KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
-from .mlp_models import dynamic_classifier
-from .mlp_models import dynamic_regressor
-from .testing_utils import basic_checks
-from .testing_utils import parametrize_with_checks
+from .mlp_models import dynamic_classifier, dynamic_regressor
+from .testing_utils import basic_checks, parametrize_with_checks
 
 
 @parametrize_with_checks(
@@ -29,6 +29,7 @@ from .testing_utils import parametrize_with_checks
             # applicable to real world datasets
             batch_size=1000,
             optimizer="adam",
+            model__hidden_layer_sizes=(100,),
         ),
         KerasRegressor(
             build_fn=dynamic_regressor,
@@ -41,6 +42,7 @@ from .testing_utils import parametrize_with_checks
             batch_size=1000,
             optimizer="adam",
             loss=KerasRegressor.r_squared,
+            model__hidden_layer_sizes=(100,),
         ),
     ],
     ids=["KerasClassifier", "KerasRegressor"],
@@ -59,23 +61,52 @@ def test_fully_compliant_estimators(estimator, check):
 
 class SubclassedClassifier(KerasClassifier):
     def __init__(
-        self, hidden_layer_sizes=(100,),
+        self,
+        model__hidden_layer_sizes=(100,),
+        metrics=None,
+        loss=None,
+        **kwargs,
     ):
-        self.hidden_layer_sizes = hidden_layer_sizes
+        super().__init__(**kwargs)
+        self.model__hidden_layer_sizes = model__hidden_layer_sizes
+        self.metrics = metrics
+        self.loss = loss
+        self.optimizer = "sgd"
 
-    def _keras_build_fn(self, hidden_layer_sizes):
+    def _keras_build_fn(
+        self,
+        hidden_layer_sizes,
+        meta: Dict[str, Any],
+        compile_kwargs: Dict[str, Any],
+    ) -> Model:
         return dynamic_classifier(
-            n_features_in_=self.n_features_in_,
-            cls_type_=self.cls_type_,
-            n_classes_=self.n_classes_,
             hidden_layer_sizes=hidden_layer_sizes,
+            meta=meta,
+            compile_kwargs=compile_kwargs,
         )
 
 
-def test_no_attributes_set_init():
+def test_no_attributes_set_init_sublcassed():
     """Tests that subclassed models can be made that
     set all parameters in a single __init__
     """
     estimator = SubclassedClassifier()
     check_no_attributes_set_in_init(estimator.__name__, estimator)
     basic_checks(estimator, load_iris)
+
+
+def test_no_attributes_set_init_no_args():
+    """Tests that models with no build arguments
+    set all parameters in a single __init__
+    """
+
+    def build_fn():
+        model = Sequential()
+        model.add(layers.Dense(1, input_dim=1, activation="relu"))
+        model.add(layers.Dense(1))
+        model.compile(loss="mse")
+        return model
+
+    estimator = KerasRegressor(model=build_fn)
+    check_no_attributes_set_in_init(estimator.__name__, estimator)
+    estimator.fit([[1]], [1])

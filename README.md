@@ -66,13 +66,13 @@ The signature of the model building function will be used to dynamically determi
 from scikeras.wrappers import KerasRegressor
 
 
-def model_building_function(X, n_outputs_, hidden_layer_sizes):
+def model_building_function(meta, hidden_layer_sizes):
     """Dynamically build regressor."""
     model = Sequential()
-    model.add(Dense(X.shape[1], activation="relu", input_shape=X.shape[1:]))
+    model.add(Dense(meta["X_shape_"][1], activation="relu", input_shape=meta["X_shape_"][1:]))
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
-    model.add(Dense(n_outputs_))
+    model.add(Dense(meta["n_outputs_"]))
     model.compile("adam", loss="mean_squared_error")
     return model
 
@@ -103,15 +103,15 @@ class MLPRegressor(KerasRegressor):
     def __init__(self, hidden_layer_sizes=None):
         self.hidden_layer_sizes = hidden_layer_sizes
 
-    def _keras_build_fn(self, X, n_outputs_, hidden_layer_sizes):
+    def _keras_build_fn(self, meta, hidden_layer_sizes):
         """Dynamically build regressor."""
         if hidden_layer_sizes is None:
             hidden_layer_sizes = (100, )
         model = Sequential()
-        model.add(Dense(X.shape[1], activation="relu", input_shape=X.shape[1:]))
+        model.add(Dense(meta["X_shape_"][1], activation="relu", input_shape=meta["X_shape_"][1:]))
         for size in hidden_layer_sizes:
             model.add(Dense(size, activation="relu"))
-        model.add(Dense(n_outputs_))
+        model.add(Dense(meta["n_outputs_"]))
         model.compile("adam", loss=KerasRegressor.r_squared)
         return model
 ```
@@ -132,7 +132,7 @@ class MLPRegressor(KerasRegressor):
         self.hidden_layer_sizes = hidden_layer_sizes
         super().__init__(**kwargs)   # this is very important!
 
-    def _keras_build_fn(self, X, n_outputs_, hidden_layer_sizes):
+    def _keras_build_fn(self, meta, hidden_layer_sizes):
         ...
 
 estimator = MLPRegressor(hidden_layer_sizes=[200], a_kwarg="saveme")
@@ -152,7 +152,7 @@ class ChildMLPRegressor(MLPRegressor):
         self.child_argument = child_argument
         super().__init__(**kwargs)   # this is very important!
 
-    def _keras_build_fn(self, X, n_outputs_, hidden_layer_sizes):
+    def _keras_build_fn(self, meta, hidden_layer_sizes):
         ...
 
 estimator = ChildMLPRegressor(child_argument="hello", a_kwarg="saveme")
@@ -218,13 +218,13 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
     """Functional API Classifier with 2 outputs of different type.
     """
 
-    def _keras_build_fn(self, X, n_classes_):
+    def _keras_build_fn(self, meta):
         inp = Input((4,))
 
         x1 = Dense(100)(inp)
 
         binary_out = Dense(1, activation="sigmoid")(x1)
-        cat_out = Dense(n_classes_[1], activation="softmax")(x1)
+        cat_out = Dense(meta["n_classes_"][1], activation="softmax")(x1)
 
         model = Model([inp], [binary_out, cat_out])
         losses = ["binary_crossentropy", "categorical_crossentropy"]
@@ -272,7 +272,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
     """Functional API Classifier with 2 inputs.
     """
 
-    def _keras_build_fn(self, n_classes_):
+    def _keras_build_fn(self, meta):
         inp1 = Input((1,))
         inp2 = Input((3,))
 
@@ -281,7 +281,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
 
         x3 = Concatenate(axis=-1)([x1, x2])
 
-        cat_out = Dense(n_classes_, activation="softmax")(x3)
+        cat_out = Dense(meta["n_classes_"], activation="softmax")(x3)
 
         model = Model([inp1, inp2], [cat_out])
         losses = ["categorical_crossentropy"]
@@ -331,9 +331,10 @@ class ClassifierWithCallback(KerasClassifier):
     """
 
     def __init__(self, tolerance, hidden_dim=None):
+        super().__init__()
         self.callbacks = [SentinalCallback(tolerance)]
         self.hidden_dim = hidden_dim
-        super().__init__()
+
 
     def _keras_build_fn(self, hidden_dim):
         return build_fn_clf(hidden_dim)
