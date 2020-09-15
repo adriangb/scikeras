@@ -27,7 +27,7 @@ def check_pickle(estimator, loader):
     deserialized_estimator = pickle.loads(serialized_estimator)
     deserialized_estimator.predict(X)
     score_new = deserialized_estimator.score(X, y)
-    np.testing.assert_almost_equal(score, score_new)
+    np.testing.assert_almost_equal(score, score_new, decimal=2)
 
 
 # ---------------------- Custom Loss Test ----------------------
