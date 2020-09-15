@@ -17,9 +17,6 @@ def dynamic_classifier(
     target_type_ = meta["target_type_"]
     n_classes_ = meta["n_classes_"]
     model_n_outputs_ = meta["model_n_outputs_"]
-    metrics = compile_kwargs["metrics"]
-    loss = compile_kwargs["loss"]
-    optimizer = compile_kwargs["optimizer"]
 
     inp = Input(shape=(n_features_in_,))
 
@@ -28,27 +25,33 @@ def dynamic_classifier(
         hidden = Dense(layer_size, activation="relu")(hidden)
 
     if target_type_ == "binary":
-        loss = loss or "binary_crossentropy"
+        compile_kwargs["loss"] = (
+            compile_kwargs["loss"] or "binary_crossentropy"
+        )
         out = [Dense(1, activation="sigmoid")(hidden)]
     elif target_type_ == "multilabel-indicator":
-        loss = loss or "binary_crossentropy"
+        compile_kwargs["loss"] = (
+            compile_kwargs["loss"] or "binary_crossentropy"
+        )
         out = [
             Dense(1, activation="sigmoid")(hidden)
             for _ in range(model_n_outputs_)
         ]
     elif target_type_ == "multiclass-multioutput":
-        loss = loss or "binary_crossentropy"
+        compile_kwargs["loss"] = (
+            compile_kwargs["loss"] or "binary_crossentropy"
+        )
         out = [Dense(n, activation="softmax")(hidden) for n in n_classes_]
     else:
         # multiclass
-        loss = loss or "categorical_crossentropy"
+        compile_kwargs["loss"] = (
+            compile_kwargs["loss"] or "categorical_crossentropy"
+        )
         out = [Dense(n_classes_, activation="softmax")(hidden)]
 
     model = Model(inp, out)
 
-    model.compile(
-        loss=loss, optimizer=optimizer, metrics=metrics,
-    )
+    model.compile(**compile_kwargs)
 
     return model
 
@@ -61,13 +64,8 @@ def dynamic_regressor(
     # get parameters
     n_features_in_ = meta["n_features_in_"]
     n_outputs_ = meta["n_outputs_"]
-    metrics = compile_kwargs["metrics"]
-    loss = compile_kwargs["loss"]
-    optimizer = compile_kwargs["optimizer"]
 
-    if loss is None:
-        # Default Model loss, not appropriate for a classifier
-        loss = KerasRegressor.r_squared
+    compile_kwargs["loss"] = compile_kwargs["loss"] or KerasRegressor.r_squared
 
     inp = Input(shape=(n_features_in_,))
 
@@ -79,9 +77,5 @@ def dynamic_regressor(
 
     model = Model(inp, out)
 
-    model.compile(
-        optimizer=optimizer,
-        loss=loss,  # KerasRegressor.r_squared
-        metrics=metrics,
-    )
+    model.compile(**compile_kwargs)
     return model
