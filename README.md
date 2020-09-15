@@ -66,10 +66,10 @@ The signature of the model building function will be used to dynamically determi
 from scikeras.wrappers import KerasRegressor
 
 
-def model_building_function(X, n_outputs_, hidden_layer_sizes):
+def model_building_function(meta, n_outputs_, hidden_layer_sizes):
     """Dynamically build regressor."""
     model = Sequential()
-    model.add(Dense(X.shape[1], activation="relu", input_shape=X.shape[1:]))
+    model.add(Dense(X.shape[1], activation="relu", input_shape=meta["X_shape_"][1:]))
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(n_outputs_))
