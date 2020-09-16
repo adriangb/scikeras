@@ -227,6 +227,26 @@ class BaseWrapper(BaseEstimator):
 
         return final_build_fn
 
+    def _get_compile_kwargs(self):
+        """Convert all __init__ params destined to
+        `compile` into valid kwargs for `Model.compile` by parsing
+        routed parameters and compiling optimizers, losses and metrics
+        as needed.
+
+        Returns
+        -------
+        dict
+            Dictionary of kwargs for `Model.compile`.
+        """
+        params = self.get_params()
+        params = route_params(
+            params, destination="compile", pass_filter=self._compile_kwargs
+        )
+        # TODO: get class from string names
+        # compile class with options
+        # parse routed options that use list or dict indexing
+        return params
+
     def _build_keras_model(self):
         """Build the Keras model.
 
@@ -244,6 +264,7 @@ class BaseWrapper(BaseEstimator):
 
         # collect parameters
         params = self.get_params()
+        compile_kwargs = self._get_compile_kwargs()
         build_params = route_params(
             params,
             destination="model",
@@ -259,9 +280,6 @@ class BaseWrapper(BaseEstimator):
             final_build_fn
         ):
             # build_fn accepts `compile_kwargs`, add it
-            compile_kwargs = route_params(
-                params, destination="compile", pass_filter=self._compile_kwargs
-            )
             build_params["compile_kwargs"] = compile_kwargs
         if has_param(final_build_fn, "params") or accepts_kwargs(
             final_build_fn
@@ -278,6 +296,10 @@ class BaseWrapper(BaseEstimator):
 
         # make serializable
         make_model_picklable(model)
+
+        # compile model if user gave us an un-compiled model
+        if not (hasattr(model, "loss") and hasattr(model, "optimizer")):
+            model.compile(**compile_kwargs)
 
         return model
 

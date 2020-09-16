@@ -563,3 +563,41 @@ def test_history():
     assert isinstance(estimator.history_, dict)
     assert all(isinstance(k, str) for k in estimator.history_.keys())
     assert all(isinstance(v, list) for v in estimator.history_.values())
+
+
+def test_compile_model_from_params():
+    """Tests that if build_fn returns an un-compiled model,
+    the __init__ parameters will be used to compile it.
+    """
+    # Load data
+    data = load_boston()
+    X, y = data.data[:100], data.target[:100]
+
+    # build_fn that does not compile
+    def build_fn_uncompiled():
+        model = Sequential()
+        model.add(keras.layers.Dense(X.shape[1], input_shape=(X.shape[1],)))
+        model.add(keras.layers.Activation("relu"))
+        model.add(keras.layers.Dense(1))
+        model.add(keras.layers.Activation("linear"))
+        return model
+
+    # and one that does
+    def build_fn_compiled(myloss):
+        model = build_fn_uncompiled()
+        model.compile(loss=myloss,)  # nondefault
+        return model
+
+    # create an estimator that compiles with __init__ args
+    # because build_fn_uncompiled returns an un-compiled model
+    for myloss in ("mse", "mae"):
+        estimator = KerasRegressor(build_fn=build_fn_uncompiled, loss=myloss)
+        estimator.fit(X, y)
+        assert estimator.model_.loss == myloss
+
+    # and one that overrides them in build_fn_uncompiled
+    estimator = KerasRegressor(build_fn=build_fn_compiled, loss="mse")
+    for myloss in ("mse", "mae"):
+        estimator = KerasRegressor(build_fn=build_fn_compiled, myloss=myloss)
+        estimator.fit(X, y)
+        assert estimator.model_.loss == myloss
