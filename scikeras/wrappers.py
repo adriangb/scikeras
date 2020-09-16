@@ -353,140 +353,140 @@ class BaseWrapper(BaseEstimator):
                         **loss_kwargs
                     )
         # ------------------------------------------ METRICS ----------------------------------------------------
-        if "metrics" in compile_kwargs and compile_kwargs["metrics"]:
-            metrics_kwargs = route_params(
-                params, destination="metrics", pass_filter=set(), strict=True,
-            )
-            metrics_kwargs.update(
-                route_params(
-                    params,
-                    destination="compile__metrics",
-                    pass_filter=set(),
-                    strict=True,
-                )
-            )
-            if "" in metrics_kwargs:
-                # compile__metrics was in params
-                compile_kwargs["metrics"] = metrics_kwargs.pop("")
-            if (
-                isinstance(compile_kwargs["metrics"], (list, tuple))
-                and all(
-                    isinstance(el, tuple) for el in compile_kwargs["metrics"]
-                )
-                and all(
-                    len(el) == 3 and isinstance(el, tuple)
-                    for el in compile_kwargs["metrics"]
-                )
-                and all(
-                    isinstance(el[0], str) or isinstance(el[0], None)
-                    for el in compile_kwargs["metrics"]
-                )
-                and (
-                    all(
-                        isinstance(el[2], str)
-                        for el in compile_kwargs["metrics"]
-                    )
-                    or all(
-                        isinstance(el[2], None)
-                        for el in compile_kwargs["metrics"]
-                    )
-                )
-            ):
-                out = dict()
-                # Special format
-                for output_num, (name, metrics, output_name) in enumerate(
-                    compile_kwargs["metrics"]
-                ):
-                    output_name = output_name or output_num
-                    if isinstance(metrics, str):
-                        metrics = metrics_module.get(metrics)
-                    if isclass(metrics):
-                        this_output_kwargs = metrics_kwargs.copy()
-                        this_output_kwargs["name"] = name
-                        this_output_kwargs.update(
-                            route_params(
-                                params,
-                                destination=f"metrics__{name}",
-                                pass_filter=set(),
-                                strict=True,
-                            )
-                        )
-                        this_output_kwargs.update(
-                            route_params(
-                                params,
-                                destination=f"compile__metrics__{name}",
-                                pass_filter=set(),
-                                strict=True,
-                            )
-                        )
-                        out[output_name] = metrics(**this_output_kwargs)
-                    elif isinstance(metrics, list):
-                        out_list = list()
-                        # resolve one more level of nesting
-                        for idx, metric in enumerate(metrics):
-                            if isinstance(metric, str):
-                                metric = metrics_module.get(metric)
-                            this_output_this_metric_kwargs = (
-                                metrics_kwargs.copy()
-                            )
-                            if name is not None:
-                                this_output_this_metric_kwargs[
-                                    "name"
-                                ] = f"{name}_{idx}"
-                                this_output_this_metric_kwargs.update(
-                                    route_params(
-                                        params,
-                                        destination=f"metrics__{name}",
-                                        pass_filter=set(),
-                                        strict=True,
-                                    )
-                                )
-                                this_output_this_metric_kwargs.update(
-                                    route_params(
-                                        params,
-                                        destination=f"compile__metrics__{name}",
-                                        pass_filter=set(),
-                                        strict=True,
-                                    )
-                                )
-                                this_output_this_metric_kwargs.update(
-                                    route_params(
-                                        params,
-                                        destination=f"metrics__{name}",
-                                        pass_filter=set(),
-                                        strict=True,
-                                    )
-                                )
-                                this_output_this_metric_kwargs.update(
-                                    route_params(
-                                        params,
-                                        destination=f"compile__metrics__{name}",
-                                        pass_filter=set(),
-                                        strict=True,
-                                    )
-                                )
-                            out_list.append(
-                                metric(**this_output_this_metric_kwargs)
-                            )
-                        out[output_name] = out_list
-                    else:
-                        out[output_name] = metrics
-                if all(isinstance(key, int) for key in out.keys()):
-                    # Convert to list
-                    out = list(out.values())
-                compile_kwargs["loss"] = out
-            elif isclass(compile_kwargs["metrics"]):
-                compile_kwargs["metrics"] = compile_kwargs["metrics"](
-                    **metrics_kwargs
-                )
-            elif isinstance(compile_kwargs["metrics"], str):
-                compile_kwargs["metrics"] = metrics_module.get(
-                    compile_kwargs["metrics"]
-                )
-                if isclass(compile_kwargs["metrics"]):
-                    compile_kwargs["metrics"] = compile_kwargs["metrics"](
-                        **metrics_kwargs
-                    )
+        # if "metrics" in compile_kwargs and compile_kwargs["metrics"]:
+        #     metrics_kwargs = route_params(
+        #         params, destination="metrics", pass_filter=set(), strict=True,
+        #     )
+        #     metrics_kwargs.update(
+        #         route_params(
+        #             params,
+        #             destination="compile__metrics",
+        #             pass_filter=set(),
+        #             strict=True,
+        #         )
+        #     )
+        #     if "" in metrics_kwargs:
+        #         # compile__metrics was in params
+        #         compile_kwargs["metrics"] = metrics_kwargs.pop("")
+        #     if (
+        #         isinstance(compile_kwargs["metrics"], (list, tuple))
+        #         and all(
+        #             isinstance(el, tuple) for el in compile_kwargs["metrics"]
+        #         )
+        #         and all(
+        #             len(el) == 3 and isinstance(el, tuple)
+        #             for el in compile_kwargs["metrics"]
+        #         )
+        #         and all(
+        #             isinstance(el[0], str) or isinstance(el[0], None)
+        #             for el in compile_kwargs["metrics"]
+        #         )
+        #         and (
+        #             all(
+        #                 isinstance(el[2], str)
+        #                 for el in compile_kwargs["metrics"]
+        #             )
+        #             or all(
+        #                 isinstance(el[2], None)
+        #                 for el in compile_kwargs["metrics"]
+        #             )
+        #         )
+        #     ):
+        #         out = dict()
+        #         # Special format
+        #         for output_num, (name, metrics, output_name) in enumerate(
+        #             compile_kwargs["metrics"]
+        #         ):
+        #             output_name = output_name or output_num
+        #             if isinstance(metrics, str):
+        #                 metrics = metrics_module.get(metrics)
+        #             if isclass(metrics):
+        #                 this_output_kwargs = metrics_kwargs.copy()
+        #                 this_output_kwargs["name"] = name
+        #                 this_output_kwargs.update(
+        #                     route_params(
+        #                         params,
+        #                         destination=f"metrics__{name}",
+        #                         pass_filter=set(),
+        #                         strict=True,
+        #                     )
+        #                 )
+        #                 this_output_kwargs.update(
+        #                     route_params(
+        #                         params,
+        #                         destination=f"compile__metrics__{name}",
+        #                         pass_filter=set(),
+        #                         strict=True,
+        #                     )
+        #                 )
+        #                 out[output_name] = metrics(**this_output_kwargs)
+        #             elif isinstance(metrics, list):
+        #                 out_list = list()
+        #                 # resolve one more level of nesting
+        #                 for idx, metric in enumerate(metrics):
+        #                     if isinstance(metric, str):
+        #                         metric = metrics_module.get(metric)
+        #                     this_output_this_metric_kwargs = (
+        #                         metrics_kwargs.copy()
+        #                     )
+        #                     if name is not None:
+        #                         this_output_this_metric_kwargs[
+        #                             "name"
+        #                         ] = f"{name}_{idx}"
+        #                         this_output_this_metric_kwargs.update(
+        #                             route_params(
+        #                                 params,
+        #                                 destination=f"metrics__{name}",
+        #                                 pass_filter=set(),
+        #                                 strict=True,
+        #                             )
+        #                         )
+        #                         this_output_this_metric_kwargs.update(
+        #                             route_params(
+        #                                 params,
+        #                                 destination=f"compile__metrics__{name}",
+        #                                 pass_filter=set(),
+        #                                 strict=True,
+        #                             )
+        #                         )
+        #                         this_output_this_metric_kwargs.update(
+        #                             route_params(
+        #                                 params,
+        #                                 destination=f"metrics__{name}",
+        #                                 pass_filter=set(),
+        #                                 strict=True,
+        #                             )
+        #                         )
+        #                         this_output_this_metric_kwargs.update(
+        #                             route_params(
+        #                                 params,
+        #                                 destination=f"compile__metrics__{name}",
+        #                                 pass_filter=set(),
+        #                                 strict=True,
+        #                             )
+        #                         )
+        #                     out_list.append(
+        #                         metric(**this_output_this_metric_kwargs)
+        #                     )
+        #                 out[output_name] = out_list
+        #             else:
+        #                 out[output_name] = metrics
+        #         if all(isinstance(key, int) for key in out.keys()):
+        #             # Convert to list
+        #             out = list(out.values())
+        #         compile_kwargs["loss"] = out
+        #     elif isclass(compile_kwargs["metrics"]):
+        #         compile_kwargs["metrics"] = compile_kwargs["metrics"](
+        #             **metrics_kwargs
+        #         )
+        #     elif isinstance(compile_kwargs["metrics"], str):
+        #         compile_kwargs["metrics"] = metrics_module.get(
+        #             compile_kwargs["metrics"]
+        #         )
+        #         if isclass(compile_kwargs["metrics"]):
+        #             compile_kwargs["metrics"] = compile_kwargs["metrics"](
+        #                 **metrics_kwargs
+        #             )
 
         return compile_kwargs
 
