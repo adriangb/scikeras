@@ -175,7 +175,10 @@ def _windows_upcast_ints(
 
 
 def route_params(
-    params: Dict[str, Any], destination: str, pass_filter: Iterable[str],
+    params: Dict[str, Any],
+    destination: str,
+    pass_filter: Union[None, Iterable[str]],
+    strict: bool = False,
 ) -> Dict[str, Any]:
     """Route and trim parameter names.
 
@@ -205,6 +208,8 @@ def route_params(
             # non routed
             if pass_filter is None or key in pass_filter:
                 res[key] = val
+    if strict:
+        res = {k: v for k, v in res.items() if "__" not in k}
     return res
 
 

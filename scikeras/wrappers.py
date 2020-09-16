@@ -5,6 +5,7 @@ import os
 import warnings
 
 from collections import defaultdict
+from inspect import isclass
 from typing import Any, Dict
 
 import numpy as np
@@ -22,6 +23,9 @@ from sklearn.utils.validation import (
     check_array,
     check_X_y,
 )
+from tensorflow.keras import losses as losses_module
+from tensorflow.keras import metrics as metrics_module
+from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import (
@@ -239,13 +243,252 @@ class BaseWrapper(BaseEstimator):
             Dictionary of kwargs for `Model.compile`.
         """
         params = self.get_params()
-        params = route_params(
+        compile_kwargs = route_params(
             params, destination="compile", pass_filter=self._compile_kwargs
         )
-        # TODO: get class from string names
-        # compile class with options
-        # parse routed options that use list or dict indexing
-        return params
+        # ------------------------------------------ OPTIMIZER ----------------------------------------------------
+        if "optimizer" in compile_kwargs and compile_kwargs["optimizer"]:
+            optimizer_kwargs = route_params(
+                params, destination="optimizer", pass_filter=set()
+            )
+            optimizer_kwargs.update(
+                route_params(
+                    params, destination="compile__optimizer", pass_filter=set()
+                )
+            )
+            if "" in optimizer_kwargs:
+                # compile__optimizer was in params
+                compile_kwargs["optimizer"] = optimizer_kwargs.pop("")
+            if optimizer_kwargs and isclass(compile_kwargs["optimizer"]):
+                compile_kwargs["optimizer"] = compile_kwargs["optimizer"](
+                    **optimizer_kwargs
+                )
+            elif optimizer_kwargs and isinstance(
+                compile_kwargs["optimizer"], str
+            ):
+                # get returns an instance, but we want a class, so call __class__ on it
+                compile_kwargs["optimizer"] = optimizers_module.get(
+                    compile_kwargs["optimizer"]
+                ).__class__
+                compile_kwargs["optimizer"] = compile_kwargs["optimizer"](
+                    **optimizer_kwargs
+                )
+        # ------------------------------------------ LOSS ----------------------------------------------------
+        if "loss" in compile_kwargs and compile_kwargs["loss"]:
+            loss_kwargs = route_params(
+                params, destination="loss", pass_filter=set(), strict=True,
+            )
+            loss_kwargs.update(
+                route_params(
+                    params,
+                    destination="compile__loss",
+                    pass_filter=set(),
+                    strict=True,
+                )
+            )
+            if "" in loss_kwargs:
+                # compile__loss was in params
+                compile_kwargs["loss"] = loss_kwargs.pop("")
+            if (
+                isinstance(compile_kwargs["loss"], (list, tuple))
+                and all(isinstance(el, tuple) for el in compile_kwargs["loss"])
+                and all(
+                    isinstance(el[0], str) or isinstance(el[0], None)
+                    for el in compile_kwargs["loss"]
+                )
+                and (
+                    all(
+                        isinstance(el[2], str) for el in compile_kwargs["loss"]
+                    )
+                    or all(
+                        isinstance(el[2], None)
+                        for el in compile_kwargs["loss"]
+                    )
+                )
+            ):
+                out = dict()
+                # Special format
+                for output_num, (name, loss, output_name) in enumerate(
+                    compile_kwargs["loss"]
+                ):
+                    output_name = output_name or output_num
+                    if isinstance(loss, str):
+                        loss = losses_module.get(loss)
+                    if isclass(loss):
+                        this_output_kwargs = loss_kwargs.copy()
+                        if name is not None:
+                            this_output_kwargs["name"] = name
+                            this_output_kwargs.update(
+                                route_params(
+                                    params,
+                                    destination=f"loss__{name}",
+                                    pass_filter=set(),
+                                    strict=True,
+                                )
+                            )
+                            this_output_kwargs.update(
+                                route_params(
+                                    params,
+                                    destination=f"compile__loss__{name}",
+                                    pass_filter=set(),
+                                    strict=True,
+                                )
+                            )
+                        out[output_name] = loss(**this_output_kwargs)
+                    else:
+                        out[output_name] = loss
+                if all(isinstance(key, int) for key in out.keys()):
+                    # Convert to list
+                    out = list(out.values())
+                compile_kwargs["loss"] = out
+            elif loss_kwargs and isclass(compile_kwargs["loss"]):
+                compile_kwargs["loss"] = compile_kwargs["loss"](**loss_kwargs)
+            elif loss_kwargs and isinstance(compile_kwargs["loss"], str):
+                compile_kwargs["loss"] = losses_module.get(
+                    compile_kwargs["loss"]
+                )
+                if hasattr(compile_kwargs["loss"], "name"):
+                    # got a class instance, get the class and re-compile it
+                    compile_kwargs["loss"] = compile_kwargs["loss"].__class__(
+                        **loss_kwargs
+                    )
+        # ------------------------------------------ METRICS ----------------------------------------------------
+        if "metrics" in compile_kwargs and compile_kwargs["metrics"]:
+            metrics_kwargs = route_params(
+                params, destination="metrics", pass_filter=set(), strict=True,
+            )
+            metrics_kwargs.update(
+                route_params(
+                    params,
+                    destination="compile__metrics",
+                    pass_filter=set(),
+                    strict=True,
+                )
+            )
+            if "" in metrics_kwargs:
+                # compile__metrics was in params
+                compile_kwargs["metrics"] = metrics_kwargs.pop("")
+            if (
+                isinstance(compile_kwargs["metrics"], (list, tuple))
+                and all(
+                    isinstance(el, tuple) for el in compile_kwargs["metrics"]
+                )
+                and all(
+                    len(el) == 3 and isinstance(el, tuple)
+                    for el in compile_kwargs["metrics"]
+                )
+                and all(
+                    isinstance(el[0], str) or isinstance(el[0], None)
+                    for el in compile_kwargs["metrics"]
+                )
+                and (
+                    all(
+                        isinstance(el[2], str)
+                        for el in compile_kwargs["metrics"]
+                    )
+                    or all(
+                        isinstance(el[2], None)
+                        for el in compile_kwargs["metrics"]
+                    )
+                )
+            ):
+                out = dict()
+                # Special format
+                for output_num, (name, metrics, output_name) in enumerate(
+                    compile_kwargs["metrics"]
+                ):
+                    output_name = output_name or output_num
+                    if isinstance(metrics, str):
+                        metrics = metrics_module.get(metrics)
+                    if isclass(metrics):
+                        this_output_kwargs = metrics_kwargs.copy()
+                        this_output_kwargs["name"] = name
+                        this_output_kwargs.update(
+                            route_params(
+                                params,
+                                destination=f"metrics__{name}",
+                                pass_filter=set(),
+                                strict=True,
+                            )
+                        )
+                        this_output_kwargs.update(
+                            route_params(
+                                params,
+                                destination=f"compile__metrics__{name}",
+                                pass_filter=set(),
+                                strict=True,
+                            )
+                        )
+                        out[output_name] = metrics(**this_output_kwargs)
+                    elif isinstance(metrics, list):
+                        out_list = list()
+                        # resolve one more level of nesting
+                        for idx, metric in enumerate(metrics):
+                            if isinstance(metric, str):
+                                metric = metrics_module.get(metric)
+                            this_output_this_metric_kwargs = (
+                                metrics_kwargs.copy()
+                            )
+                            if name is not None:
+                                this_output_this_metric_kwargs[
+                                    "name"
+                                ] = f"{name}_{idx}"
+                                this_output_this_metric_kwargs.update(
+                                    route_params(
+                                        params,
+                                        destination=f"metrics__{name}",
+                                        pass_filter=set(),
+                                        strict=True,
+                                    )
+                                )
+                                this_output_this_metric_kwargs.update(
+                                    route_params(
+                                        params,
+                                        destination=f"compile__metrics__{name}",
+                                        pass_filter=set(),
+                                        strict=True,
+                                    )
+                                )
+                                this_output_this_metric_kwargs.update(
+                                    route_params(
+                                        params,
+                                        destination=f"metrics__{name}",
+                                        pass_filter=set(),
+                                        strict=True,
+                                    )
+                                )
+                                this_output_this_metric_kwargs.update(
+                                    route_params(
+                                        params,
+                                        destination=f"compile__metrics__{name}",
+                                        pass_filter=set(),
+                                        strict=True,
+                                    )
+                                )
+                            out_list.append(
+                                metric(**this_output_this_metric_kwargs)
+                            )
+                        out[output_name] = out_list
+                    else:
+                        out[output_name] = metrics
+                if all(isinstance(key, int) for key in out.keys()):
+                    # Convert to list
+                    out = list(out.values())
+                compile_kwargs["loss"] = out
+            elif isclass(compile_kwargs["metrics"]):
+                compile_kwargs["metrics"] = compile_kwargs["metrics"](
+                    **metrics_kwargs
+                )
+            elif isinstance(compile_kwargs["metrics"], str):
+                compile_kwargs["metrics"] = metrics_module.get(
+                    compile_kwargs["metrics"]
+                )
+                if isclass(compile_kwargs["metrics"]):
+                    compile_kwargs["metrics"] = compile_kwargs["metrics"](
+                        **metrics_kwargs
+                    )
+
+        return compile_kwargs
 
     def _build_keras_model(self):
         """Build the Keras model.
@@ -264,12 +507,12 @@ class BaseWrapper(BaseEstimator):
 
         # collect parameters
         params = self.get_params()
-        compile_kwargs = self._get_compile_kwargs()
         build_params = route_params(
             params,
             destination="model",
             pass_filter=getattr(self, "_user_params", set()),
         )
+        compile_kwargs = None
         if has_param(final_build_fn, "meta") or accepts_kwargs(final_build_fn):
             # build_fn accepts `meta`, add it
             meta = route_params(
@@ -280,6 +523,7 @@ class BaseWrapper(BaseEstimator):
             final_build_fn
         ):
             # build_fn accepts `compile_kwargs`, add it
+            compile_kwargs = self._get_compile_kwargs()
             build_params["compile_kwargs"] = compile_kwargs
         if has_param(final_build_fn, "params") or accepts_kwargs(
             final_build_fn
@@ -299,6 +543,8 @@ class BaseWrapper(BaseEstimator):
 
         # compile model if user gave us an un-compiled model
         if not (hasattr(model, "loss") and hasattr(model, "optimizer")):
+            if compile_kwargs is None:
+                compile_kwargs = self._get_compile_kwargs()
             model.compile(**compile_kwargs)
 
         return model

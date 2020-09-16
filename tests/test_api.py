@@ -14,13 +14,11 @@ from sklearn.ensemble import (
     BaggingClassifier,
     BaggingRegressor,
 )
-from sklearn.exceptions import DataConversionWarning  # noqa
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
 from tensorflow.keras.models import Model, Sequential
-from tensorflow.keras.optimizers import Adam
 from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.utils.np_utils import to_categorical
@@ -30,12 +28,6 @@ from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .testing_utils import basic_checks
-
-
-# Force data conversion warnings to be come errors
-pytestmark = pytest.mark.filterwarnings(
-    "error::sklearn.exceptions.DataConversionWarning"
-)
 
 
 def build_fn_clf(
@@ -595,8 +587,7 @@ def test_compile_model_from_params():
         estimator.fit(X, y)
         assert estimator.model_.loss == myloss
 
-    # and one that overrides them in build_fn_uncompiled
-    estimator = KerasRegressor(build_fn=build_fn_compiled, loss="mse")
+    # and one that overrides them in build_fn_compiled
     for myloss in ("mse", "mae"):
         estimator = KerasRegressor(build_fn=build_fn_compiled, myloss=myloss)
         estimator.fit(X, y)
