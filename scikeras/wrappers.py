@@ -23,9 +23,6 @@ from sklearn.utils.validation import (
     check_array,
     check_X_y,
 )
-from tensorflow.keras import losses as losses_module
-from tensorflow.keras import metrics as metrics_module
-from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import (
@@ -233,14 +230,10 @@ class BaseWrapper(BaseEstimator):
 
     def _get_compile_optimizer(self, init_params: Dict[str, Any]) -> None:
         optimizer = init_params.get("optimizer", None)
-        optimizer_kwargs = route_params(
-            init_params, destination="optimizer", pass_filter=set()
-        )
-        if optimizer_kwargs and isclass(optimizer):
-            return optimizer(**optimizer_kwargs)
-        if optimizer_kwargs and isinstance(optimizer, str):
-            # optimizers_module.get returns an instance, but we want a class, so call __class__ on it
-            optimizer = optimizers_module.get(optimizer).__class__
+        if isclass(optimizer):
+            optimizer_kwargs = route_params(
+                init_params, destination="optimizer", pass_filter=set()
+            )
             return optimizer(**optimizer_kwargs)
         return optimizer
 
@@ -252,42 +245,36 @@ class BaseWrapper(BaseEstimator):
         if (
             isinstance(loss, (list, tuple))
             and all(isinstance(el, tuple) for el in loss)
-            and all(
-                isinstance(el[0], str) or isinstance(el[0], None)
-                for el in loss
-            )
-            and (
-                all(isinstance(el[2], str) for el in loss)
-                or all(isinstance(el[2], None) for el in loss)
-            )
+            and all(len(el) == 3 for el in loss)
+            and all(isinstance(el[0], str) for el in loss)
         ):
+            if not (
+                all(isinstance(el[2], (str, int)) for el in loss)
+                or all(el[2] is None for el in loss)
+            ):
+                raise ValueError("Cannot mixed named and un-named outputs")
             out = dict()
-            # Special format
-            for output_num, (name, loss_, output_name) in enumerate(loss):
+            for output_num, (name, loss_, output_name) in enumerate(loss, 1):
                 output_name = output_name or output_num
-                if isinstance(loss_, str):
-                    loss_ = losses_module.get(loss_)
                 if isclass(loss_):
                     this_output_kwargs = loss_kwargs.copy()
-                    if name is not None:
+                    if "name" not in this_output_kwargs:
                         this_output_kwargs["name"] = name
-                        this_output_kwargs.update(
-                            route_params(
-                                init_params,
-                                destination=f"loss__{name}",
-                                pass_filter=set(),
-                                strict=True,
-                            )
+                    this_output_kwargs.update(
+                        route_params(
+                            init_params,
+                            destination=f"loss__{name}",
+                            pass_filter=set(),
+                            strict=True,
                         )
+                    )
                     out[output_name] = loss_(**this_output_kwargs)
                 else:
                     out[output_name] = loss_
             if all(isinstance(key, int) for key in out.keys()):
                 # Convert to list
-                out = list(out.values())
+                out = [out[k] for k in sorted(out.keys())]
             return out
-        if isinstance(loss, str):
-            loss = losses_module.get(loss)
         if isclass(loss):
             return loss(**loss_kwargs)
         return loss
@@ -300,68 +287,71 @@ class BaseWrapper(BaseEstimator):
         if (
             isinstance(metrics, (list, tuple))
             and all(isinstance(el, tuple) for el in metrics)
-            and all(len(el) == 3 and isinstance(el, tuple) for el in metrics)
-            and all(
-                isinstance(el[0], str) or isinstance(el[0], None)
-                for el in metrics
-            )
-            and (
-                all(isinstance(el[2], str) for el in metrics)
-                or all(isinstance(el[2], None) for el in metrics)
-            )
+            and all(len(el) == 3 for el in metrics)
+            and all(isinstance(el[0], str) for el in metrics)
         ):
+            if not (
+                all(isinstance(el[2], (str, int)) for el in metrics)
+                or all(el[2] is None for el in metrics)
+            ):
+                raise ValueError("Cannot mixed named and un-named outputs")
             out = dict()
-            # for output_num, (name, metrics_, output_name) in enumerate(
-            #     metrics
-            # ):
-            #     output_name = output_name or output_num
-            #     if isinstance(metrics_, str):
-            #         metrics_ = metrics_module.get(metrics_)
-            #     if isclass(metrics_):
-            #         this_output_kwargs = metrics_kwargs.copy()
-            #         if name is not None:
-            #             this_output_kwargs["name"] = name
-            #             this_output_kwargs.update(
-            #                 route_params(
-            #                     init_params,
-            #                     destination=f"metrics__{name}",
-            #                     pass_filter=set(),
-            #                     strict=True,
-            #                 )
-            #             )
-            #         out[output_name] = metrics_(**this_output_kwargs)
-            #     elif isinstance(metrics_, list):
-            #         out_list = list()
-            #         # output is getting a list of metrics
-            #         for idx, metric in enumerate(metrics_):
-            #             if isinstance(metric, str):
-            #                 metrics_ = metrics_module.get(metrics_)
-            #             this_output_this_metric_kwargs = (
-            #                 metrics_kwargs.copy()
-            #             )
-            #             if name is not None:
-            #                 this_output_this_metric_kwargs[
-            #                     "name"
-            #                 ] = f"{name}_{idx}"
-            #                 this_output_this_metric_kwargs.update(
-            #                     route_params(
-            #                         init_params,
-            #                         destination=f"metrics__{name}__{idx}",
-            #                         pass_filter=set(),
-            #                         strict=True,
-            #                     )
-            #                 )
-            #             out_list.append(
-            #                 metric(**this_output_this_metric_kwargs)
-            #             )
-            #         out[output_name] = out_list
-            #     else:
-            #         # instance or function
-            #         out[output_name] = metrics_
-            # if all(isinstance(key, int) for key in out.keys()):
-            #     # Convert to list
-            #     out = list(out.values())
-            # metrics = out
+            for output_num, (name, metrics_, output_name) in enumerate(
+                metrics, 1
+            ):
+                output_name = output_name or output_num
+                this_output_kwargs = metrics_kwargs.copy()
+                if "name" not in this_output_kwargs:
+                    this_output_kwargs["name"] = name
+                this_output_kwargs.update(
+                    route_params(
+                        init_params,
+                        destination=f"metrics__{name}",
+                        pass_filter=set(),
+                        strict=True,
+                    )
+                )
+                if isclass(metrics_):
+                    out[output_name] = metrics_(**this_output_kwargs)
+                elif isinstance(metrics_, list):
+                    out_list = list()
+                    # output is getting a list of metrics
+                    for idx, metric in enumerate(metrics_, 1):
+                        if isclass(metric):
+                            this_output_this_metric_kwargs = (
+                                this_output_kwargs.copy()
+                            )
+                            if "name" not in this_output_this_metric_kwargs:
+                                this_output_this_metric_kwargs[
+                                    "name"
+                                ] = f"{name}_{idx}"
+                            else:
+                                this_output_this_metric_kwargs["name"] = (
+                                    this_output_this_metric_kwargs["name"]
+                                    + f"_{idx}"
+                                )
+                            this_output_this_metric_kwargs.update(
+                                route_params(
+                                    init_params,
+                                    destination=f"metrics__{name}__{idx}",
+                                    pass_filter=set(),
+                                    strict=True,
+                                )
+                            )
+                            out_list.append(
+                                metric(**this_output_this_metric_kwargs)
+                            )
+                        else:
+                            # instance/function/string
+                            out_list.append(metric)
+                    out[output_name] = out_list
+                else:
+                    # instance/function/string
+                    out[output_name] = metrics_
+            if all(isinstance(key, int) for key in out.keys()):
+                # Convert to list
+                out = [out[k] for k in sorted(out.keys())]
+            return out
         else:
             # No passing of arguments is supported for metric lists
             return metrics
@@ -705,20 +695,17 @@ class BaseWrapper(BaseEstimator):
             ValueError : In case of invalid shape for `y` argument.
         """
         # Handle random state
-        if hasattr(self, "random_state"):
-            if isinstance(self.random_state, np.random.RandomState):
-                # Keras needs an integer
-                # we sample an integer and use that as a seed
-                # Given the same RandomState, the seed will always be
-                # the same, thus giving reproducible results
-                state = self.random_state.get_state()
-                self._random_state = self.random_state.randint(low=1)
-                self.random_state.set_state(state)
-            else:
-                # int or None
-                self._random_state = self.random_state
+        if isinstance(self.random_state, np.random.RandomState):
+            # Keras needs an integer
+            # we sample an integer and use that as a seed
+            # Given the same RandomState, the seed will always be
+            # the same, thus giving reproducible results
+            state = self.random_state.get_state()
+            self._random_state = self.random_state.randint(low=1)
+            self.random_state.set_state(state)
         else:
-            self._random_state = None
+            # int or None
+            self._random_state = self.random_state
 
         # Data checks
         if warm_start and not hasattr(self, "n_features_in_"):
