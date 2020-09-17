@@ -287,7 +287,7 @@ class TestAdvancedAPIFuncs:
         estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         params = {
             "model__hidden_layer_sizes": [[], [5]],
-            "compile__optimizer": ["sgd", "adam"],
+            "optimizer": ["sgd", "adam"],
         }
         search = GridSearchCV(estimator, params)
         basic_checks(search, loader)
@@ -582,13 +582,16 @@ def test_compile_model_from_params():
 
     # create an estimator that compiles with __init__ args
     # because build_fn_uncompiled returns an un-compiled model
-    for myloss in ("mse", "mae"):
+    # this should be converted to a function since SciKeras will
+    # automatically "compile" the loss with it's parameters
+    for myloss in ("mean_squared_error", "mean_absolute_error"):
         estimator = KerasRegressor(build_fn=build_fn_uncompiled, loss=myloss)
         estimator.fit(X, y)
-        assert estimator.model_.loss == myloss
+        assert estimator.model_.loss.__name__ == myloss
 
     # and one that overrides them in build_fn_compiled
-    for myloss in ("mse", "mae"):
+    # this should remain a string since SciKeras does not compile it
+    for myloss in ("mean_squared_error", "mean_absolute_error"):
         estimator = KerasRegressor(build_fn=build_fn_compiled, myloss=myloss)
         estimator.fit(X, y)
         assert estimator.model_.loss == myloss
