@@ -337,8 +337,8 @@ def test_metrics_two_metric_per_output(n_outputs_):
         loss="binary_crossentropy",
         metrics=metrics_,
         metrics__name="custom_name",  # should be ignored
-        metrics__0__name="custom_name",  # should be ignored
-        metrics__0__0__name="custom_name",  # should be ignored
+        metrics__1__name="custom_name",  # should be ignored
+        metrics__1__1__name="custom_name",  # should be ignored
     )
     est.fit(X, y)
     if n_outputs_ == 1:
