@@ -131,40 +131,49 @@ to apply a ``sigmoid`` nonlinearity to get good results.
 
 
 Arguments to ``model_build_fn``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You probably wish to pass parameters from :py:class:`~scikeras.wrappers.BaseWrapper`
-to ``model``, or you may want to use attributes from
+All user-defined keyword arguments passed to :py:func:`~scikeras.wrappers.BaseWrapper.__init__`
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+All keyword arguments that were given to :py:func:`~scikeras.wrappers.BaseWrapper.__init__`
+will be passed to ``model_build_fn`` directly.
+For example, calling ``KerasClassifier(myparam=10)`` will result in a
+``model_build_fn(my_param=10)`` call.
+Note however that ``KerasClassifier(optimizer="sgd")`` will **not** result in
+``model_build_fn(optimizer="sgd")``. Instead, you must access ``optimizer`` either
+via ``compile_kwargs`` if you want a compiled optimizer
+or ``init_params`` if you want the raw input.
+
+Optional arguments
+++++++++++++++++++
+
+You may want to use attributes from
 :py:class:`~scikeras.wrappers.BaseWrapper` such as ``n_features_in_`` while building
-your model. SciKeras allows you to do both.
+your model, or you may wish to let SciKeras compile your optimizers and losses
+but apply some custom logic on top of that compilation.
 
-To enable this, SciKeras uses two special arguments to ``model`` that will only
+To enable this, SciKeras uses three special arguments to ``model`` that will only
 be passed if they are present in ``model``'s signature (i.e. there is an argument
 with the same name in ``model``'s signature):
 
-``meta_params``
-+++++++++++++++
+``meta``
+********
 This is a dictionary containing all of the attributes that
 :py:class:`~scikeras.wrappers.BaseWrapper` creates when it is initialized
 These include ``n_features_in_``, ``y_dtype_``, etc. For a full list,
 see the :ref:`scikeras-api` documentation.
 
 ``compile_kwargs``
-++++++++++++++++++
+************************
 This is a dictionary of parameters destined for :py:func:`tensorflow.Keras.Model.compile`.
-You will want to accept this parameter unless you are returning an un-compiled ``Model``
-instance. Parameters available via this dictionary are:
+This dictionary can be used like ``model.compile(**compile_kwargs)``.
+All optimizers, losses and metrics will be compiled if classes with routed parameters
+were passed (see :ref:`param-routing`).
 
-* ``optimizer``
-* ``loss``
-* ``callbacks``
-* Any other parameters with the prefix ``optimizer__``, ``loss__`` or ``callbacks__``
-
-Keyword arguments with ``model__`` prefix
-+++++++++++++++++++++++++++++++++++++++++
-Keyword arguments with the ``model__`` prefix will be passed to ``model_build_fn`` directly as keyword
-arguments, after dropping the prefix. For example, calling ``KerasClassifier(model__myparam=10)`` will result in a
-``model_build_fn(my_param=10)`` call.
+``init_params``
+**************************
+Raw dictionary of parameters passed to :py:func:`~scikeras.wrappers.BaseWrapper.__init__`.
+This is basically the same as calling :py:func:`~scikeras.wrappers.BaseWrapper.get_params`.
 
 
 Arguments to :py:class:`scikeras.wrappers.BaseWrapper`
@@ -180,23 +189,22 @@ model
 This is where you pass your Keras :class:``tensorflow.keras.Model``
 building function (``model_build_fn``), or ``Model`` instance.
 Unless you are using a pre-instantiated ``Model``, the arguments
-for your model should be passed to :py:class:`.BaseWrapper`
-with the ``model__`` prefix. These will then be passed to
+for your model should be passed to :py:func:`.BaseWrapper.__init__`
+as keyword arguments. These will then be passed to
 ``model_build_fn`` so that you can use them to build your ``Model``.
-For example, if your module takes the arguments
-``hidden_layer_sizes`` and ``lr``, the code would look like this:
+For example, if your model takes the argument
+``hidden_layer_sizes``, the code would look like this:
 
 .. code:: python
 
-    def model_build_fn(hidden_layer_sizes, lr):
+    def model_build_fn(hidden_layer_sizes):
         model = Model(...)
         ...
         return model
 
     clf = KerasClassifier(
         model=model_build_fn,
-        model__hidden_layer_sizes=(100,),
-        model__lr=0.5,
+        hidden_layer_sizes=(100,),
     )
 
 random_state
@@ -212,11 +220,10 @@ state.
 optimizer
 ^^^^^^^^^
 
-Like :py:class:`~tensorflow.keras.Model`, this can be a string or
-a class from :py:mod:`~tensorflow.keras.optimizers`. Unlike
-:py:class:`~tensorflow.keras.Model`, if you pass a class it is preferable
-that you pass an un-instantiated class and pass it's arguments using
-:ref:`param-routing`.
+Like :py:class:`~tensorflow.keras.Model`, this can be a string,
+optimizer instance or optimizer class. If you pass a class,
+you will be able to specify it's arguments via parameter routing (see
+:ref:`param-routing`).
 
 batch_size
 ^^^^^^^^^^
@@ -233,27 +240,20 @@ This argument is passed to :py:func:`~tensorflow.keras.Model.fit`. See the the
 callbacks
 ^^^^^^^^^
 
-A single instantiated or uninstantiated callback, a list of instantiated
-or uninstantiated callbacks (can be mixed). If using instantiated callbacks,
-SciKeras will pass them directly to ``Model.compile``. If using a list
-or dict of uninstantiated callbacks, SciKeras will instantiate them
-using any parameters routed like ``callbacks__n__param_name=2``
-where this will result in ``callbacks[n](param_name=2)`` being called
-from :py:func:`~scikeras.wrappers.BaseWrapper.compile_model`.
-For a single callback, you would use ``callbacks__param_name=2``.
-For more information on Keras callbacks, see the the 
-`Keras Callbacks docs`_ for more details. These callbacks are
-only used if an uncompiled ``Model`` is returned from ``model_build_fn``.
+Single or list of callback instances or classes. Using classes will allow
+you to pass their parameters via parameter routing (see
+:ref:`param-routing`).
+For more information on Keras callbacks, see 
+`Keras Callbacks docs`_.
 
 metrics
 ^^^^^^^
 
-Similar to optimizers, this can be a single instantiated or uninstantiated
-Keras metric or a list of instantiated or uninstantiated metrics.
-Uninstantiated metrics can be refer to by class or string shorthand.
-Similar parameter routing rules to :ref:`callbacks` apply. See the the 
+List or dict of metrics. See the the 
 `Keras Metrics docs`_ for more details on using metrics.
-
+If you pass classes instead of string names or instances, 
+you will be able to pass their parameters via parameter routing (see
+:ref:`param-routing`).
 
 warm_start
 ^^^^^^^^^^
@@ -397,8 +397,8 @@ Below is an example:
     X = [[1, 2], ["a", "b", "c"]]  # multiple inputs of different lengths
     y = np.array([[1, 0, 1], ["apple", "orange", "apple"]]  # a mix of output types
 
-    def model_build_fn(meta_params):
-        my_n_classes_ = meta_params["my_n_classes_"]
+    def model_build_fn(meta):
+        my_n_classes_ = meta["my_n_classes_"]
         inp1 = Input((1,))
         inp2 = Input((3,))
         x3 = Concatenate(axis=-1)([x1, x2])
@@ -461,58 +461,39 @@ Multiple callbacks with multiple parameters
 
 .. code:: python
 
-    from tensorflow.keras.callbacks import BaseLogger, EarlyStopping
+    from tensorflow.keras.losses import BinaryCrossentropy, CategoricalCrossentropy
 
     clf = KerasClassifier(
         model=model_build_fn,
-        loss="binary_crossentropy",
+        loss=[BinaryCrossentropy, CategoricalCrossentropy],
         optimizer="sgd",
-        callbacks=[BaseLogger, EarlyStopping]
-        callbacks__param_groups==[
-            {"stateful_metrics": "accuracy"},  # results in BaseLogger(stateful_metrics=accuracy)
-            {"patience": 2},  # results in EarlyStopping(patience=2)
-        ]
+        loss__from_logits=True,  # BinaryCrossentropy(from_logits=True) & CategoricalCrossentropy(from_logits=True)
+        loss__0__label_smoothing=0.1,  # BinaryCrossentropy(label_smoothing=0.1)
+        loss__1__label_smoothing=2,  # CategoricalCrossentropy(label_smoothing=0.1)
     )
-    clf.fit(X, y)
 
-
-Multi-output model with multiple losses
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Keras allows using multiple losses for multi-output models.
+To use this syntax, you must pass classes instead of strings or instances.
+For even more complex use cases, you can use the special suffix `__param_groups`
+and pass a list of ``("destination", param_dict)`` instead of individual parameters. This also allows use of
+regex-based keys.
 
 .. code:: python
 
-    clf = KerasClassifier(
-        model=model_build_fn,
-        loss=["binary_crossentropy", "categorical_crossentropy"],
-        compile__loss_weights=[0.6, 0.4],
-        optimizer="sgd",
-        loss__param_groups==[
-            {"label_smoothing": 0.1},  # results in BinaryCrossentropy(label_smoothing=0.1)
-            {"label_smoothing": 0.2},  # results in CategoricalCrossentropy(label_smoothing=0.2)
-        ]
-    )
-    clf.fit(X, y)
-
-SciKeras also supports output-name based routing.
-See `Keras docs <https://keras.io/guides/functional_api/#models-with-multiple-inputs-and-outputs>`_
-for more background.
-
-.. code:: python
+    from tensorflow.keras.losses import BinaryCrossentropy, CategoricalCrossentropy
 
     clf = KerasClassifier(
         model=model_build_fn,
-        loss={"out1": "binary_crossentropy", "out2": "categorical_crossentropy"},
-        compile__loss_weights=[0.6, 0.4],
-        optimizer="sgd",
-        loss__param_groups=={
-            "out1": {"label_smoothing": 0.1},  # results in BinaryCrossentropy(label_smoothing=0.1)
-            "out2": {"label_smoothing": 0.2},  # results in CategoricalCrossentropy(label_smoothing=0.2)
+        loss={
+            "binary_output_1: BinaryCrossentropy,
+            "binary_output_2": BinaryCrossentropy,
+            "categorical_output_1: CategoricalCrossentropy,
         }
+        optimizer="sgd",
+        loss__param_groups=[
+            ("binary_.*", {"label_smoothing": 0.1}),
+            (".*_1", {"name": "FirstOutputs"}),
+        ],
     )
-    clf.fit(X, y)
-
 
 
 .. _Keras Model docs: https://www.tensorflow.org/api_docs/python/tf/keras/Model
