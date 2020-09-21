@@ -67,25 +67,34 @@ def test_optimizer(optimizer, n_outputs_):
         )
 
 
-# def test_optimizer_with_nested_params():
+def test_custom_loss_nested_kwargs():
 
-#     X, y = make_classification()
+    X, y = make_classification()
 
-#     class Callable:
-#         def __init__(self, param1=0):
-#             self.param1 = param1
+    class Foo:
+        got = dict()
 
-#         def __call__(self, *args):
-#             return args
+        def __init__(self, **kwargs):
+            self.got = kwargs
 
-#     est = KerasClassifier(
-#         model=get_model,
-#         optimizer=optimizers_module.Nadam,
-#         # optimizer__gradient_transformers=[Callable, ],
-#         # optimizer__gradient_transformers__0__param1=True,
-#     )
-#     est.fit(X, y)
-#     assert est.optimizer.gradient_transformers[0].param1
+    class MyLoss:
+        def __init__(self, param1):
+            self.param1 = param1
+            self.__name__ = str(id(self))
+
+        def __call__(self, y_true, y_pred):
+            return losses_module.binary_crossentropy(y_true, y_pred)
+
+    est = KerasClassifier(
+        model=get_model,
+        loss=MyLoss,
+        loss__param1=[Foo, Foo],
+        loss__param1__foo_kwarg=1,
+        loss__param1__0__foo_kwarg=2,
+    )
+    est.fit(X, y)
+    assert est.model_.loss.param1[0].got["foo_kwarg"] == 2
+    assert est.model_.loss.param1[1].got["foo_kwarg"] == 1
 
 
 @pytest.mark.parametrize(

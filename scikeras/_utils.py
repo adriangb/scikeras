@@ -254,6 +254,16 @@ def compile_with_params(items, params, base_params=None):
         base_params = base_params or dict()
         kwargs = {**base_params, **new_base_params}
         if kwargs:
+            for p, v in kwargs.items():
+                kwargs[p] = compile_with_params(
+                    items=v,
+                    params=route_params(
+                        params=params,
+                        destination=f"{p}",
+                        pass_filter=set(),
+                        strict=False,
+                    ),
+                )
             return item(**kwargs)
         else:
             return item
