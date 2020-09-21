@@ -3,6 +3,7 @@ import os
 import random
 import warnings
 
+from inspect import isclass
 from typing import Any, Callable, Dict, Iterable, List, Union
 
 import numpy as np
@@ -201,7 +202,7 @@ def route_params(
     for key, val in params.items():
         if "__" in key:
             # routed param
-            if key.startswith(destination):
+            if key.startswith(destination + "__"):
                 new_key = key[len(destination + "__") :]
                 res[new_key] = val
         else:
@@ -241,3 +242,75 @@ def accepts_kwargs(func: Callable) -> bool:
         for param in inspect.signature(func).parameters.values()
         if param.kind == param.VAR_KEYWORD
     )
+
+
+def compile_with_params(items, params, base_params=None):
+    """Recursively compile nested structures of classes
+    using parameters from params.
+    """
+    if isclass(items):
+        item = items
+        new_base_params = {p: v for p, v in params.items() if "__" not in p}
+        base_params = base_params or dict()
+        kwargs = {**base_params, **new_base_params}
+        if kwargs:
+            return item(**kwargs)
+        else:
+            return item
+    if isinstance(items, (list, tuple)):
+        iter_type_ = type(items)
+        res = list()
+        new_base_params = {p: v for p, v in params.items() if "__" not in p}
+        for idx, item in enumerate(items):
+            item_params = route_params(
+                params=params,
+                destination=f"{idx}",
+                pass_filter=set(),
+                strict=False,
+            )
+            for p, v in item_params.items():
+                item_params[p] = compile_with_params(
+                    items=v,
+                    params=route_params(
+                        params={
+                            k: v_ for k, v_ in item_params.items() if p != k
+                        },
+                        destination=f"{p}",
+                        pass_filter=set(),
+                        strict=False,
+                    ),
+                )
+            res.append(
+                compile_with_params(
+                    items=item, params=item_params, base_params=new_base_params
+                )
+            )
+        return iter_type_(res)
+    if isinstance(items, (dict,)):
+        res = dict()
+        new_base_params = {p: v for p, v in params.items() if "__" not in p}
+        for key, item in items.items():
+            item_params = route_params(
+                params=params,
+                destination=f"{key}",
+                pass_filter=set(),
+                strict=False,
+            )
+            for p, v in item_params.items():
+                item_params[p] = compile_with_params(
+                    items=v,
+                    params=route_params(
+                        params={
+                            k: v_ for k, v_ in item_params.items() if p != k
+                        },
+                        destination=f"{p}",
+                        pass_filter=set(),
+                        strict=False,
+                    ),
+                )
+            res[key] = compile_with_params(
+                items=item, params=item_params, base_params=new_base_params,
+            )
+        return res
+    item = items  # non-class items
+    return item

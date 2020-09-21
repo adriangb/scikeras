@@ -35,6 +35,7 @@ from ._utils import (
     TFRandomState,
     _windows_upcast_ints,
     accepts_kwargs,
+    compile_with_params,
     get_metric_full_name,
     has_param,
     make_model_picklable,
@@ -125,7 +126,15 @@ class BaseWrapper(BaseEstimator):
         "_user_params",
     }
 
-    _routing_prefixes = {"model", "fit", "compile", "predict"}
+    _routing_prefixes = {
+        "model",
+        "fit",
+        "compile",
+        "predict",
+        "optimizer",
+        "loss",
+        "metrics",
+    }
 
     def __init__(
         self,
@@ -228,134 +237,6 @@ class BaseWrapper(BaseEstimator):
 
         return final_build_fn
 
-    def _get_compile_optimizer(self, init_params: Dict[str, Any]) -> None:
-        optimizer = init_params.get("optimizer", None)
-        if isclass(optimizer):
-            optimizer_kwargs = route_params(
-                init_params, destination="optimizer", pass_filter=set()
-            )
-            return optimizer(**optimizer_kwargs)
-        return optimizer
-
-    def _get_compile_loss(self, init_params: Dict[str, Any]) -> None:
-        loss = init_params.get("loss", None)
-        loss_kwargs = route_params(
-            init_params, destination="loss", pass_filter=set(), strict=True,
-        )
-        if (
-            isinstance(loss, (list, tuple))
-            and all(isinstance(el, tuple) for el in loss)
-            and all(len(el) == 3 for el in loss)
-            and all(isinstance(el[0], str) for el in loss)
-        ):
-            if not (
-                all(isinstance(el[2], (str, int)) for el in loss)
-                or all(el[2] is None for el in loss)
-            ):
-                raise ValueError("Cannot mixed named and un-named outputs")
-            out = dict()
-            for output_num, (name, loss_, output_name) in enumerate(loss, 1):
-                output_name = output_name or output_num
-                if isclass(loss_):
-                    this_output_kwargs = loss_kwargs.copy()
-                    if "name" not in this_output_kwargs:
-                        this_output_kwargs["name"] = name
-                    this_output_kwargs.update(
-                        route_params(
-                            init_params,
-                            destination=f"loss__{name}",
-                            pass_filter=set(),
-                            strict=True,
-                        )
-                    )
-                    out[output_name] = loss_(**this_output_kwargs)
-                else:
-                    out[output_name] = loss_
-            if all(isinstance(key, int) for key in out.keys()):
-                # Convert to list
-                out = [out[k] for k in sorted(out.keys())]
-            return out
-        if isclass(loss):
-            return loss(**loss_kwargs)
-        return loss
-
-    def _get_compile_metrics(self, init_params: Dict[str, Any]) -> None:
-        metrics = init_params["metrics"]
-        metrics_kwargs = route_params(
-            init_params, destination="metrics", pass_filter=set(), strict=True,
-        )
-        if (
-            isinstance(metrics, (list, tuple))
-            and all(isinstance(el, tuple) for el in metrics)
-            and all(len(el) == 3 for el in metrics)
-            and all(isinstance(el[0], str) for el in metrics)
-        ):
-            if not (
-                all(isinstance(el[2], (str, int)) for el in metrics)
-                or all(el[2] is None for el in metrics)
-            ):
-                raise ValueError("Cannot mixed named and un-named outputs")
-            out = dict()
-            for output_num, (name, metrics_, output_name) in enumerate(
-                metrics, 1
-            ):
-                output_name = output_name or output_num
-                this_output_kwargs = metrics_kwargs.copy()
-                if "name" not in this_output_kwargs:
-                    this_output_kwargs["name"] = name
-                this_output_kwargs.update(
-                    route_params(
-                        init_params,
-                        destination=f"metrics__{name}",
-                        pass_filter=set(),
-                        strict=True,
-                    )
-                )
-                if isclass(metrics_):
-                    out[output_name] = metrics_(**this_output_kwargs)
-                elif isinstance(metrics_, list):
-                    out_list = list()
-                    # output is getting a list of metrics
-                    for idx, metric in enumerate(metrics_, 1):
-                        if isclass(metric):
-                            this_output_this_metric_kwargs = (
-                                this_output_kwargs.copy()
-                            )
-                            if "name" not in this_output_this_metric_kwargs:
-                                this_output_this_metric_kwargs[
-                                    "name"
-                                ] = f"{name}_{idx}"
-                            else:
-                                this_output_this_metric_kwargs["name"] = (
-                                    this_output_this_metric_kwargs["name"]
-                                    + f"_{idx}"
-                                )
-                            this_output_this_metric_kwargs.update(
-                                route_params(
-                                    init_params,
-                                    destination=f"metrics__{name}__{idx}",
-                                    pass_filter=set(),
-                                    strict=True,
-                                )
-                            )
-                            out_list.append(
-                                metric(**this_output_this_metric_kwargs)
-                            )
-                        else:
-                            # instance/function/string
-                            out_list.append(metric)
-                    out[output_name] = out_list
-                else:
-                    # instance/function/string
-                    out[output_name] = metrics_
-            if all(isinstance(key, int) for key in out.keys()):
-                # Convert to list
-                out = [out[k] for k in sorted(out.keys())]
-            return out
-        else:
-            # No passing of arguments is supported for metric lists
-            return metrics
-
     def _get_compile_kwargs(self):
         """Convert all __init__ params destined to
         `compile` into valid kwargs for `Model.compile` by parsing
@@ -373,14 +254,32 @@ class BaseWrapper(BaseEstimator):
             destination="compile",
             pass_filter=self._compile_kwargs,
         )
-        compile_kwargs["optimizer"] = self._get_compile_optimizer(
-            init_params=init_params
+        compile_kwargs["optimizer"] = compile_with_params(
+            items=compile_kwargs["optimizer"],
+            params=route_params(
+                init_params,
+                destination="optimizer",
+                pass_filter=set(),
+                strict=True,
+            ),
         )
-        compile_kwargs["loss"] = self._get_compile_loss(
-            init_params=init_params
+        compile_kwargs["loss"] = compile_with_params(
+            items=compile_kwargs["loss"],
+            params=route_params(
+                init_params,
+                destination="loss",
+                pass_filter=set(),
+                strict=False,
+            ),
         )
-        compile_kwargs["metrics"] = self._get_compile_metrics(
-            init_params=init_params
+        compile_kwargs["metrics"] = compile_with_params(
+            items=compile_kwargs["metrics"],
+            params=route_params(
+                init_params,
+                destination="metrics",
+                pass_filter=set(),
+                strict=False,
+            ),
         )
         return compile_kwargs
 
@@ -841,11 +740,6 @@ class BaseWrapper(BaseEstimator):
         Returns:
             score: float
                 Mean accuracy of predictions on `X` wrt. `y`.
-
-        Raises:
-            ValueError: If the underlying model isn't configured to
-                compute accuracy. You should pass `metrics=["accuracy"]` to
-                the `.compile()` method of the model.
         """
         # validate sample weights
         if sample_weight is not None:
