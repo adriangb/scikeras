@@ -123,18 +123,15 @@ offer an easy way to compile and tune compilation parameters. Examples:
     y_pred = clf.predict(X_valid)
 
 
-Note that SciKeras automatically interprets the type of classification
-task when using ``KerasClassifier``, as determined by
-:py:func:`~sklearn..utils.multiclass.type_of_target`. This means that if you
-pass a binary target, you need to define a your ``Model``'s output layer
-to apply a ``sigmoid`` nonlinearity to get good results.
+In all cases, returning an un-compiled model is equivalent to
+calling ``model.compile(**compile_kwargs)`` within ``model_build_fn``.
 
 
 Arguments to ``model_build_fn``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
-All user-defined keyword arguments passed to :py:func:`~scikeras.wrappers.BaseWrapper.__init__`
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+User-defined keyword arguments passed to :py:func:`~scikeras.wrappers.BaseWrapper.__init__`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 All keyword arguments that were given to :py:func:`~scikeras.wrappers.BaseWrapper.__init__`
 will be passed to ``model_build_fn`` directly.
 For example, calling ``KerasClassifier(myparam=10)`` will result in a
@@ -145,7 +142,7 @@ via ``compile_kwargs`` if you want a compiled optimizer
 or ``params`` if you want the raw input.
 
 Optional arguments
-++++++++++++++++++
+^^^^^^^^^^^^^^^^^^
 
 You may want to use attributes from
 :py:class:`~scikeras.wrappers.BaseWrapper` such as ``n_features_in_`` while building
@@ -157,21 +154,21 @@ be passed if they are present in ``model``'s signature (i.e. there is an argumen
 with the same name in ``model``'s signature):
 
 ``meta``
-********
+++++++++
 This is a dictionary containing all of the attributes that
 :py:class:`~scikeras.wrappers.BaseWrapper` creates when it is initialized
 These include ``n_features_in_``, ``y_dtype_``, etc. For a full list,
 see the :ref:`scikeras-api` documentation.
 
 ``compile_kwargs``
-************************
+++++++++++++++++++++++++
 This is a dictionary of parameters destined for :py:func:`tensorflow.Keras.Model.compile`.
 This dictionary can be used like ``model.compile(**compile_kwargs)``.
 All optimizers, losses and metrics will be compiled if classes with routed parameters
 were passed (see :ref:`param-routing`).
 
 ``params``
-**************************
+++++++++++++++++++++++++
 Raw dictionary of parameters passed to :py:func:`~scikeras.wrappers.BaseWrapper.__init__`.
 This is basically the same as calling :py:func:`~scikeras.wrappers.BaseWrapper.get_params`.
 
