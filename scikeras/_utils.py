@@ -337,20 +337,20 @@ def compile_with_params(items, params, base_params=None):
     return item
 
 
-def _class_from_strings(items, item_types: str):
+def _class_from_strings(items, item_type: str):
     """Convert shorthand optimizer/loss/metric names to classes.
     """
     if isinstance(items, str):
         item = items
         try:
-            if item_types == "optimizer":
+            if item_type == "optimizer":
                 got = optimizers_module.get(item)
                 if (
                     hasattr(got, "__class__")
                     and type(got).__module__ != "builtins"
                 ):
                     return got.__class__
-            if item_types == "loss":
+            if item_type == "loss":
                 got = losses_module.get(item)
                 if (
                     hasattr(got, "__class__")
@@ -359,7 +359,7 @@ def _class_from_strings(items, item_types: str):
                     return got.__class__
                 else:
                     return got
-            if item_types == "metrics":
+            if item_type == "metrics":
                 got = metrics_module.get(item)
                 if (
                     hasattr(got, "__class__")
@@ -373,11 +373,11 @@ def _class_from_strings(items, item_types: str):
             return item
     elif isinstance(items, (list, tuple)):
         return type(items)(
-            [_class_from_strings(item, item_types) for item in items]
+            [_class_from_strings(item, item_type) for item in items]
         )
     elif isinstance(items, dict):
         return {
-            k: _class_from_strings(item, item_types)
+            k: _class_from_strings(item, item_type)
             for k, item in items.items()
         }
     else:

@@ -1,6 +1,13 @@
+from inspect import isclass
+
 import pytest
 
+from tensorflow.keras import losses as losses_module
+from tensorflow.keras import metrics as metrics_module
+from tensorflow.keras import optimizers as optimizers_module
+
 from scikeras._utils import (
+    _class_from_strings,
     compile_with_params,
     pack_keras_model,
     route_params,
@@ -141,3 +148,28 @@ def test_compile_with_params_params_to_uncompilable():
         compile_with_params(
             items={"test": "not_a_class"}, params={"test__kwarg": None},
         )
+
+
+@pytest.mark.parametrize(
+    "items,expected,item_type",
+    [
+        ("binary_crossentropy", losses_module.binary_crossentropy, "loss"),
+        ("BinaryCrossentropy", losses_module.BinaryCrossentropy, "loss"),
+        ("SGD", optimizers_module.SGD, "optimizer"),
+        ("binary_accuracy", metrics_module.binary_accuracy, "metrics"),
+        ("BinaryAccuracy", metrics_module.BinaryAccuracy, "metrics"),
+        ("Unknown", "Unknown", "loss"),
+        ("Unknown", "Unknown", "optimizer"),
+        ("Unknown", "Unknown", "metrics"),
+    ],
+)
+def test_class_from_strings(items, expected, item_type):
+    """Test the `_class_from_strings` method.
+    """
+    res = _class_from_strings(items=items, item_type=item_type)
+    if isclass(res):
+        assert res is expected
+    elif callable(res):
+        assert res.__name__ == expected.__name__
+    else:
+        assert res == expected
