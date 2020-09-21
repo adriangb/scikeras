@@ -235,6 +235,8 @@ def has_param(func: Callable, param: str) -> bool:
 
 
 def accepts_kwargs(func: Callable) -> bool:
+    """Check if ``func`` accepts kwargs.
+    """
     return any(
         True
         for param in inspect.signature(func).parameters.values()
