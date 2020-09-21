@@ -5,7 +5,6 @@ import os
 import warnings
 
 from collections import defaultdict
-from inspect import isclass
 from typing import Any, Dict
 
 import numpy as np
@@ -23,16 +22,19 @@ from sklearn.utils.validation import (
     check_array,
     check_X_y,
 )
+from tensorflow.keras import losses as losses_module
+from tensorflow.keras import metrics as metrics_module
+from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import (
-    has_arg,
     register_keras_serializable,
 )
 
 from ._utils import (
     LabelDimensionTransformer,
     TFRandomState,
+    _class_from_strings,
     _windows_upcast_ints,
     accepts_kwargs,
     compile_with_params,
@@ -254,6 +256,9 @@ class BaseWrapper(BaseEstimator):
             destination="compile",
             pass_filter=self._compile_kwargs,
         )
+        compile_kwargs["optimizer"] = _class_from_strings(
+            compile_kwargs["optimizer"], "optimizer"
+        )
         compile_kwargs["optimizer"] = compile_with_params(
             items=compile_kwargs["optimizer"],
             params=route_params(
@@ -263,6 +268,9 @@ class BaseWrapper(BaseEstimator):
                 strict=True,
             ),
         )
+        compile_kwargs["loss"] = _class_from_strings(
+            compile_kwargs["loss"], "loss"
+        )
         compile_kwargs["loss"] = compile_with_params(
             items=compile_kwargs["loss"],
             params=route_params(
@@ -271,6 +279,9 @@ class BaseWrapper(BaseEstimator):
                 pass_filter=set(),
                 strict=False,
             ),
+        )
+        compile_kwargs["metrics"] = _class_from_strings(
+            compile_kwargs["metrics"], "metrics"
         )
         compile_kwargs["metrics"] = compile_with_params(
             items=compile_kwargs["metrics"],

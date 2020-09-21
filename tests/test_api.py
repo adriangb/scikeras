@@ -23,7 +23,6 @@ from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
-from scikeras import wrappers
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
@@ -74,7 +73,7 @@ def build_fn_reg(
     return model
 
 
-class InheritClassBuildFnClf(wrappers.KerasClassifier):
+class InheritClassBuildFnClf(KerasClassifier):
     def _keras_build_fn(
         self, hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
@@ -83,7 +82,7 @@ class InheritClassBuildFnClf(wrappers.KerasClassifier):
         )
 
 
-class InheritClassBuildFnReg(wrappers.KerasRegressor):
+class InheritClassBuildFnReg(KerasRegressor):
     def _keras_build_fn(
         self, hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
@@ -97,7 +96,7 @@ class TestBasicAPI:
 
     def test_classify_build_fn(self):
         """Tests a classification task for errors."""
-        clf = wrappers.KerasClassifier(build_fn=build_fn_clf, hidden_dim=5)
+        clf = KerasClassifier(build_fn=build_fn_clf, hidden_dim=5)
         basic_checks(clf, load_iris)
 
     def test_classify_inherit_class_build_fn(self):
@@ -108,7 +107,7 @@ class TestBasicAPI:
 
     def test_regression_build_fn(self):
         """Tests for errors using KerasRegressor."""
-        reg = wrappers.KerasRegressor(build_fn=build_fn_reg, hidden_dim=5)
+        reg = KerasRegressor(build_fn=build_fn_reg, hidden_dim=5)
         basic_checks(reg, load_boston)
 
     def test_regression_inherit_class_build_fn(self):
@@ -585,7 +584,7 @@ def test_compile_model_from_params():
     for myloss in ("mean_squared_error", "mean_absolute_error"):
         estimator = KerasRegressor(build_fn=build_fn_uncompiled, loss=myloss)
         estimator.fit(X, y)
-        assert estimator.model_.loss == myloss
+        assert estimator.model_.loss.__name__ == myloss
 
     # and one that overrides them in build_fn_compiled
     for myloss in ("mean_squared_error", "mean_absolute_error"):

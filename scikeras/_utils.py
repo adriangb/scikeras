@@ -4,12 +4,15 @@ import random
 import warnings
 
 from inspect import isclass
-from typing import Any, Callable, Dict, Iterable, List, Union
+from typing import Any, Callable, Dict, Iterable, List, Type, Union
 
 import numpy as np
 import tensorflow as tf
 
 from sklearn.base import BaseEstimator, TransformerMixin
+from tensorflow.keras import losses as losses_module
+from tensorflow.keras import metrics as metrics_module
+from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.layers import deserialize as deserialize_layer
 from tensorflow.keras.layers import serialize as serialize_layer
 from tensorflow.keras.metrics import deserialize as deserialize_metric
@@ -253,20 +256,17 @@ def compile_with_params(items, params, base_params=None):
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         base_params = base_params or dict()
         kwargs = {**base_params, **new_base_params}
-        if kwargs:
-            for p, v in kwargs.items():
-                kwargs[p] = compile_with_params(
-                    items=v,
-                    params=route_params(
-                        params=params,
-                        destination=f"{p}",
-                        pass_filter=set(),
-                        strict=False,
-                    ),
-                )
-            return item(**kwargs)
-        else:
-            return item
+        for p, v in kwargs.items():
+            kwargs[p] = compile_with_params(
+                items=v,
+                params=route_params(
+                    params=params,
+                    destination=f"{p}",
+                    pass_filter=set(),
+                    strict=False,
+                ),
+            )
+        return item(**kwargs)
     if isinstance(items, (list, tuple)):
         iter_type_ = type(items)
         res = list()
@@ -322,5 +322,63 @@ def compile_with_params(items, params, base_params=None):
                 items=item, params=item_params, base_params=new_base_params,
             )
         return res
-    item = items  # non-class items
+    # non-compilable item, check if it has any routed parameters
+    item = items
+    new_base_params = {p: v for p, v in params.items() if "__" not in p}
+    base_params = base_params or dict()
+    kwargs = {**base_params, **new_base_params}
+    if kwargs:
+        warnings.warn(
+            message=f"SciKeras does not know how to compile {item}"
+            f" but {item} was passed the following parameters:"
+            f" {kwargs}.",
+            category=UserWarning,
+        )
     return item
+
+
+def _class_from_strings(items, item_types: str):
+    """Convert shorthand optimizer/loss/metric names to classes.
+    """
+    if isinstance(items, str):
+        item = items
+        try:
+            if item_types == "optimizer":
+                got = optimizers_module.get(item)
+                if (
+                    hasattr(got, "__class__")
+                    and type(got).__module__ != "builtins"
+                ):
+                    return got.__class__
+            if item_types == "loss":
+                got = losses_module.get(item)
+                if (
+                    hasattr(got, "__class__")
+                    and type(got).__module__ != "builtins"
+                ):
+                    return got.__class__
+                else:
+                    return got
+            if item_types == "metrics":
+                got = metrics_module.get(item)
+                if (
+                    hasattr(got, "__class__")
+                    and type(got).__module__ != "builtins"
+                ):
+                    return got.__class__
+                else:
+                    return got
+        except ValueError:
+            # string not found
+            return item
+    elif isinstance(items, (list, tuple)):
+        return type(items)(
+            [_class_from_strings(item, item_types) for item in items]
+        )
+    elif isinstance(items, dict):
+        return {
+            k: _class_from_strings(item, item_types)
+            for k, item in items.items()
+        }
+    else:
+        return items

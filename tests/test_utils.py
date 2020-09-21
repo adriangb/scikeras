@@ -89,7 +89,8 @@ def test_compile_with_params_nesting():
     assert set(res["optimizer"][5].got.keys()) == {"kwarg"}
     assert res["optimizer"][5].got["kwarg"] == 7
     assert isinstance(res["optimizer"][6], tuple)
-    assert res["optimizer"][6][0] is Foo
+    assert isinstance(res["optimizer"][6][0], Foo)
+    assert set(res["optimizer"][6][0].got.keys()) == set()
 
 
 def test_compile_with_params_dependency():
@@ -121,9 +122,22 @@ def test_compile_with_params_dependency():
     )
     # Checks
     assert isinstance(res["optimizer"][0].got["bar"], Bar)
-    assert res["optimizer"][0].got["bar_class"] is Bar
+    assert isinstance(res["optimizer"][0].got["bar_class"], Bar)
+    assert set(res["optimizer"][0].got["bar_class"].got.keys()) == set()
     assert set(res["optimizer"][0].got["bar"].got.keys()) == {"bar_kwarg"}
     assert res["optimizer"][0].got["bar"].got["bar_kwarg"] == 10
     assert isinstance(res["optimizer"][1][0].got["bar"], Bar)
     assert set(res["optimizer"][1][0].got["bar"].got.keys()) == {"bar_kwarg"}
     assert res["optimizer"][1][0].got["bar"].got["bar_kwarg"] == 11
+
+
+def test_compile_with_params_params_to_uncompilable():
+    """Test that a warning is raised if parameters are routed
+    to a non-class.
+    """
+    with pytest.warns(
+        UserWarning, match="SciKeras does not know how to compile"
+    ):
+        compile_with_params(
+            items={"test": "not_a_class"}, params={"test__kwarg": None},
+        )

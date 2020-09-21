@@ -3,7 +3,6 @@ from inspect import isclass
 import numpy as np
 import pytest
 
-from numpy.lib.type_check import nan_to_num
 from sklearn.datasets import make_classification
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
@@ -12,6 +11,7 @@ from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.engine.compile_utils import losses_mod
 
+from scikeras._utils import _class_from_strings
 from scikeras.wrappers import KerasClassifier
 
 
@@ -124,14 +124,11 @@ def test_loss(loss, n_outputs_):
         loss__name="custom_name",
     )
     est.fit(X, y)
-    if isclass(loss):
-        assert isinstance(est.model_.loss, loss)
+    got = _class_from_strings(loss, "loss")
+    if isclass(got):
         assert est.model_.loss.name == "custom_name"
     else:
-        # Since losses are stateless, TF does not retrieve
-        # the class/function and instead keeps the string it was
-        # passed, thus we can directly check for that
-        assert est.model_.loss == loss
+        assert est.model_.loss.__name__ == got.__name__
 
 
 @pytest.mark.parametrize(
@@ -161,10 +158,12 @@ def test_loss_iterable(loss, n_outputs_):
         loss__from_logits=True,  # default is False
     )
     est.fit(X, y)
-    if isclass(loss):
-        assert est.model_.loss[0].from_logits == True
+    got = _class_from_strings(loss, "loss")
+    if isclass(got):
+        got = got()
+        assert est.model_.loss[0].name == got.name
     else:
-        assert est.model_.loss[0] == loss
+        assert est.model_.loss[0].__name__ == got.__name__
 
     # Test iterable with index-based routed param
     est = KerasClassifier(
@@ -176,10 +175,13 @@ def test_loss_iterable(loss, n_outputs_):
         loss__0__from_logits=True,  # should override above
     )
     est.fit(X, y)
-    if isclass(loss):
+    got = _class_from_strings(loss, "loss")
+    if isclass(got):
+        # from_logits should have been passed and set
         assert est.model_.loss[0].from_logits == True
     else:
-        assert est.model_.loss[0] == loss
+        # at least check the name
+        assert est.model_.loss[0].__name__ == got.__name__
 
 
 @pytest.mark.parametrize(
@@ -209,10 +211,13 @@ def test_loss_dict(loss, n_outputs_):
         loss__from_logits=True,  # default is False
     )
     est.fit(X, y)
-    if isclass(loss):
+    got = _class_from_strings(loss, "loss")
+    if isclass(got):
+        # from_logits should have been passed and set
         assert est.model_.loss["out1"].from_logits == True
     else:
-        assert est.model_.loss["out1"] == loss
+        # at least check the name
+        assert est.model_.loss["out1"].__name__ == got.__name__
 
     # Test dict with key-based routed param
     est = KerasClassifier(
@@ -224,10 +229,13 @@ def test_loss_dict(loss, n_outputs_):
         loss__out1__from_logits=True,  # should override above
     )
     est.fit(X, y)
-    if isclass(loss):
+    got = _class_from_strings(loss, "loss")
+    if isclass(got):
+        # from_logits should have been passed and set
         assert est.model_.loss["out1"].from_logits == True
     else:
-        assert est.model_.loss["out1"] == loss
+        # at least check the name
+        assert est.model_.loss["out1"].__name__ == got.__name__
 
 
 @pytest.mark.parametrize(
