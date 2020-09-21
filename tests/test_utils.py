@@ -146,7 +146,8 @@ def test_compile_with_params_params_to_uncompilable():
         UserWarning, match="SciKeras does not know how to compile"
     ):
         compile_with_params(
-            items={"test": "not_a_class"}, params={"test__kwarg": None},
+            items={"optimizer": optimizers_module.SGD()},
+            params={"optimizer__kwarg": "doesnotmatter"},
         )
 
 

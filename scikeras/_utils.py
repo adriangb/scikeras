@@ -137,6 +137,8 @@ def make_model_picklable(model_obj):
     Model
         The input model, but directly picklable.
     """
+    if not isinstance(model_obj, Model):
+        raise TypeError("`model_obj` must be an instance of a Keras Model")
     model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
 
 
