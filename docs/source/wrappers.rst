@@ -142,7 +142,7 @@ For example, calling ``KerasClassifier(myparam=10)`` will result in a
 Note however that ``KerasClassifier(optimizer="sgd")`` will **not** result in
 ``model_build_fn(optimizer="sgd")``. Instead, you must access ``optimizer`` either
 via ``compile_kwargs`` if you want a compiled optimizer
-or ``init_params`` if you want the raw input.
+or ``params`` if you want the raw input.
 
 Optional arguments
 ++++++++++++++++++
@@ -170,7 +170,7 @@ This dictionary can be used like ``model.compile(**compile_kwargs)``.
 All optimizers, losses and metrics will be compiled if classes with routed parameters
 were passed (see :ref:`param-routing`).
 
-``init_params``
+``params``
 **************************
 Raw dictionary of parameters passed to :py:func:`~scikeras.wrappers.BaseWrapper.__init__`.
 This is basically the same as calling :py:func:`~scikeras.wrappers.BaseWrapper.get_params`.
