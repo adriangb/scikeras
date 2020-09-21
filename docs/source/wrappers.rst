@@ -470,7 +470,7 @@ Multiple callbacks with multiple parameters
     )
 
 To use this syntax, you must pass classes instead of strings or instances.
-For even more complex use cases, you can use the special suffix `__param_groups`
+For even more complex use cases, you can use the special suffix ``__param_groups``
 and pass a list of ``("destination", param_dict)`` instead of individual parameters. This also allows use of
 regex-based keys.
 
