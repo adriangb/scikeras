@@ -481,7 +481,7 @@ regex-based keys.
     clf = KerasClassifier(
         model=model_build_fn,
         loss={
-            "binary_output_1: BinaryCrossentropy,
+            "binary_output_1": BinaryCrossentropy,
             "binary_output_2": BinaryCrossentropy,
             "categorical_output_1: CategoricalCrossentropy,
         }
