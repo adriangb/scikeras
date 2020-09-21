@@ -3,6 +3,7 @@ from inspect import isclass
 import numpy as np
 import pytest
 
+from numpy.lib.arraysetops import isin
 from sklearn.datasets import make_classification
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
@@ -124,11 +125,9 @@ def test_loss(loss, n_outputs_):
         loss__name="custom_name",
     )
     est.fit(X, y)
-    got = _class_from_strings(loss, "loss")
-    if isclass(got):
-        assert est.model_.loss.name == "custom_name"
-    else:
-        assert est.model_.loss.__name__ == got.__name__
+    assert str(loss) in str(est.model_.loss) or isinstance(
+        est.model_.loss, loss
+    )
 
 
 @pytest.mark.parametrize(
@@ -161,7 +160,7 @@ def test_loss_iterable(loss, n_outputs_):
     got = _class_from_strings(loss, "loss")
     if isclass(got):
         got = got()
-        assert est.model_.loss[0].name == got.name
+        assert est.model_.loss[0].from_logits
     else:
         assert est.model_.loss[0].__name__ == got.__name__
 
@@ -254,14 +253,15 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
 
     # loss functions for each output and joined show up as metrics
     metric_idx = 1 + (n_outputs_ if n_outputs_ > 1 else 0)
+    prefix = "out1_" if n_outputs_ > 1 else ""
 
-    metrics_class = None
+    expected_name = metrics
     if isclass(metrics):
         # Test discovery in VSCode fails if TF prints out _any_
         # warnings during discovery
         # (which of course it does if you try to instantiate anything)
-        metrics_class = metrics
         metrics = metrics()
+        expected_name = metrics.name
 
     # List of metrics
     est = KerasClassifier(
@@ -273,19 +273,11 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         metrics__name="custom_name",  # should be ignored
         metrics__0__name="custom_name",  # should be ignored
     )
-    est.fit(X, y)
-    if metrics_class and isinstance(metrics, metrics_class):
-        # Should be a class
-        assert (
-            est.model_.metrics[metric_idx].name != "custom_name"
-            and "loss" not in est.model_.metrics[metric_idx].name
-        )
-        assert (
-            est.model_.metrics_names[metric_idx] != "custom_name"
-            and "loss" not in est.model_.metrics[metric_idx].name
-        )
-    else:
-        assert est.model_.metrics[metric_idx]._fn.__name__ == metrics
+    with pytest.warns(
+        UserWarning, match="SciKeras does not know how to compile"
+    ):
+        est.fit(X, y)
+    assert est.model_.metrics[metric_idx].name == prefix + expected_name
 
     # List of lists of metrics
     est = KerasClassifier(
@@ -298,19 +290,12 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         metrics__0__name="custom_name",  # should be ignored
         metrics__0__0__name="custom_name",  # should be ignored
     )
-    est.fit(X, y)
-    if metrics_class and isinstance(metrics, metrics_class):
-        # Should be a class
-        assert (
-            est.model_.metrics[metric_idx].name != "custom_name"
-            and "loss" not in est.model_.metrics[metric_idx].name
-        )
-        assert (
-            est.model_.metrics_names[metric_idx] != "custom_name"
-            and "loss" not in est.model_.metrics[metric_idx].name
-        )
-    else:
-        assert est.model_.metrics[metric_idx]._fn.__name__ == metrics
+    with pytest.warns(
+        UserWarning, match="SciKeras does not know how to compile"
+    ):
+        est.fit(X, y)
+    assert prefix + expected_name in est.model_.metrics[metric_idx].name
+    assert "custom_name" not in est.model_.metrics[metric_idx].name
 
     # Dict of metrics
     est = KerasClassifier(
@@ -322,19 +307,12 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         metrics__name="custom_name",  # should be ignored
         metrics__out1__name="custom_name",  # should be ignored
     )
-    est.fit(X, y)
-    if metrics_class and isinstance(metrics, metrics_class):
-        # Should be a class
-        assert (
-            est.model_.metrics[metric_idx].name != "custom_name"
-            and "loss" not in est.model_.metrics[metric_idx].name
-        )
-        assert (
-            est.model_.metrics_names[metric_idx] != "custom_name"
-            and "loss" not in est.model_.metrics[metric_idx].name
-        )
-    else:
-        assert est.model_.metrics[metric_idx]._fn.__name__ == metrics
+    with pytest.warns(
+        UserWarning, match="SciKeras does not know how to compile"
+    ):
+        est.fit(X, y)
+    assert prefix + expected_name in est.model_.metrics[metric_idx].name
+    assert "custom_name" not in est.model_.metrics[metric_idx].name
 
     # Dict of lists
     est = KerasClassifier(
@@ -347,15 +325,12 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         metrics__out1__name="custom_name",  # should be ignored
         metrics__out1__0__name="custom_name",  # should be ignored
     )
-    est.fit(X, y)
-    if metrics_class and isinstance(metrics, metrics_class):
-        # Should be a class
-        assert (
-            est.model_.metrics[metric_idx].name != "custom_name"
-            and "loss" not in est.model_.metrics[metric_idx].name
-        )
-    else:
-        assert est.model_.metrics[metric_idx]._fn.__name__ == metrics
+    with pytest.warns(
+        UserWarning, match="SciKeras does not know how to compile"
+    ):
+        est.fit(X, y)
+    assert prefix + expected_name in est.model_.metrics[metric_idx].name
+    assert "custom_name" not in est.model_.metrics[metric_idx].name
 
 
 @pytest.mark.parametrize("n_outputs_", (1, 2))
@@ -393,7 +368,10 @@ def test_metrics_two_metric_per_output(n_outputs_):
         metrics__1__name="custom_name",  # should be ignored
         metrics__1__1__name="custom_name",  # should be ignored
     )
-    est.fit(X, y)
+    with pytest.warns(
+        UserWarning, match="SciKeras does not know how to compile"
+    ):
+        est.fit(X, y)
     if n_outputs_ == 1:
         assert est.model_.metrics[metric_idx].name == "1"
     else:
@@ -419,7 +397,10 @@ def test_metrics_two_metric_per_output(n_outputs_):
         metrics__name="custom_name",  # should be ignored
         metrics__out1__name="custom_name",  # should be ignored
     )
-    est.fit(X, y)
+    with pytest.warns(
+        UserWarning, match="SciKeras does not know how to compile"
+    ):
+        est.fit(X, y)
     if n_outputs_ == 1:
         assert est.model_.metrics[metric_idx].name == "1"
     else:
