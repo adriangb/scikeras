@@ -85,9 +85,7 @@ def test_optimizer_invalid_string():
         optimizer=optimizer,
         loss="binary_crossentropy",
     )
-    with pytest.raises(
-        ValueError, match=r"Unknown optimizer:\s{0,1}" + f"{optimizer}"
-    ):
+    with pytest.raises(ValueError, match="Unknown optimizer"):
         est.fit(X, y)
 
 
@@ -101,8 +99,8 @@ def test_compiling_of_routed_parameters():
     class Foo:
         got = dict()
 
-        def __init__(self, **kwargs):
-            self.got = kwargs
+        def __init__(self, foo_kwarg):
+            self.foo_kwarg = foo_kwarg
 
     class MyLoss:
         def __init__(self, param1):
@@ -120,8 +118,8 @@ def test_compiling_of_routed_parameters():
         loss__param1__0__foo_kwarg=2,
     )
     est.fit(X, y)
-    assert est.model_.loss.param1[0].got["foo_kwarg"] == 2
-    assert est.model_.loss.param1[1].got["foo_kwarg"] == 1
+    assert est.model_.loss.param1[0].foo_kwarg == 2
+    assert est.model_.loss.param1[1].foo_kwarg == 1
 
 
 @pytest.mark.parametrize(
@@ -161,9 +159,7 @@ def test_loss_invalid_string():
     est = KerasClassifier(
         model=get_model, num_hidden=20, optimizer="sgd", loss=loss,
     )
-    with pytest.raises(
-        ValueError, match=r"Unknown loss function:\s{0,1}" + f"{loss}"
-    ):
+    with pytest.raises(ValueError, match="Unknown loss function"):
         est.fit(X, y)
 
 
@@ -433,10 +429,11 @@ def test_metrics_routed_params_iterable(n_outputs_):
         metrics__0__name="custom_name",
     )
     est.fit(X, y)
+    compiled_metrics = est.model_.metrics
     if n_outputs_ == 1:
-        assert est.model_.metrics[metric_idx].name == "custom_name"
+        assert compiled_metrics[metric_idx].name == "custom_name"
     else:
-        assert est.model_.metrics[metric_idx].name == "out1_custom_name"
+        assert compiled_metrics[metric_idx].name == "out1_custom_name"
 
     if n_outputs_ == 1:
         metrics_ = [
@@ -454,17 +451,14 @@ def test_metrics_routed_params_iterable(n_outputs_):
         metrics__0__name="custom_name",  # ends up in index 0 only
     )
     est.fit(X, y)
+    compiled_metrics = est.model_.metrics
     if n_outputs_ == 1:
-        assert est.model_.metrics[metric_idx].name == "custom_name"
+        assert compiled_metrics[metric_idx].name == "custom_name"
     else:
-        assert est.model_.metrics[metric_idx].name == "out1_custom_name"
-        assert (
-            est.model_.metrics[metric_idx + 1].name == "out1_name_all_metrics"
-        )
-        assert est.model_.metrics[metric_idx + 2].name == "out2_custom_name"
-        assert (
-            est.model_.metrics[metric_idx + 3].name == "out2_name_all_metrics"
-        )
+        assert compiled_metrics[metric_idx].name == "out1_custom_name"
+        assert compiled_metrics[metric_idx + 1].name == "out1_name_all_metrics"
+        assert compiled_metrics[metric_idx + 2].name == "out2_custom_name"
+        assert compiled_metrics[metric_idx + 3].name == "out2_name_all_metrics"
 
 
 def test_metrics_routed_params_dict():
@@ -528,9 +522,7 @@ def test_metrics_invalid_string():
         loss="binary_crossentropy",
         metrics=metrics,
     )
-    with pytest.raises(
-        ValueError, match=r"Unknown metric function:\s{0,1}" + f"{metrics[0]}"
-    ):
+    with pytest.raises(ValueError, match="Unknown metric function"):
         est.fit(X, y)
 
 

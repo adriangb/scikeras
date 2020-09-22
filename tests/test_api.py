@@ -558,36 +558,34 @@ def test_history():
 
 def test_compile_model_from_params():
     """Tests that if build_fn returns an un-compiled model,
-    the __init__ parameters will be used to compile it.
+    the __init__ parameters will be used to compile it
+    and that if build_fn returns a compiled model
+    it is not re-compiled.
     """
     # Load data
     data = load_boston()
     X, y = data.data[:100], data.target[:100]
 
     # build_fn that does not compile
-    def build_fn_uncompiled():
+    def build_fn(myloss=None, compile_kwargs=None):
         model = Sequential()
         model.add(keras.layers.Dense(X.shape[1], input_shape=(X.shape[1],)))
         model.add(keras.layers.Activation("relu"))
         model.add(keras.layers.Dense(1))
         model.add(keras.layers.Activation("linear"))
+        if myloss:
+            compile_kwargs.update({"loss": myloss})
+            model.compile(**compile_kwargs)
         return model
 
-    # and one that does
-    def build_fn_compiled(myloss):
-        model = build_fn_uncompiled()
-        model.compile(loss=myloss,)  # nondefault
-        return model
-
-    # create an estimator that compiles with __init__ args
-    # because build_fn_uncompiled returns an un-compiled model
-    for myloss in ("mean_squared_error", "mean_absolute_error"):
-        estimator = KerasRegressor(build_fn=build_fn_uncompiled, loss=myloss)
+    for loss in ("mean_squared_error", "mean_absolute_error"):
+        estimator = KerasRegressor(build_fn=build_fn, loss=loss, myloss=None)
         estimator.fit(X, y)
-        assert estimator.model_.loss.__name__ == myloss
+        assert estimator.model_.loss.__name__ == loss
 
-    # and one that overrides them in build_fn_compiled
     for myloss in ("mean_squared_error", "mean_absolute_error"):
-        estimator = KerasRegressor(build_fn=build_fn_compiled, myloss=myloss)
+        estimator = KerasRegressor(
+            build_fn=build_fn, myloss=myloss, loss="binary_crossentropy"
+        )
         estimator.fit(X, y)
         assert estimator.model_.loss == myloss
