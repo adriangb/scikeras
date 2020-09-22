@@ -320,13 +320,13 @@ def _class_from_strings(items, item_type: str):
     if isinstance(items, str):
         item = items
         if item_type == "optimizer":
-            got = optimizers_module.get(item)
-            if (
-                hasattr(got, "__class__")
-                and type(got).__module__ != "builtins"
-            ):
-                return got.__class__
+            # optimizers.get always returns a function or a class
+            # (never an instance)
+            return optimizers_module.get(item).__class__
         if item_type == "loss":
+            # losses.get returns a class instance
+            # or a function
+            # if it is a class instace, we retrieve the class itself
             got = losses_module.get(item)
             if (
                 hasattr(got, "__class__")
@@ -336,14 +336,9 @@ def _class_from_strings(items, item_type: str):
             else:
                 return got
         if item_type == "metrics":
-            got = metrics_module.get(item)
-            if (
-                hasattr(got, "__class__")
-                and type(got).__module__ != "builtins"
-            ):
-                return got.__class__
-            else:
-                return got
+            # metrics.get always returns a function or a class
+            # (never an instance)
+            return metrics_module.get(item)
     elif isinstance(items, (list, tuple)):
         return type(items)(
             [_class_from_strings(item, item_type) for item in items]

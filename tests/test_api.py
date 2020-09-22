@@ -566,24 +566,25 @@ def test_compile_model_from_params():
     data = load_boston()
     X, y = data.data[:100], data.target[:100]
 
+    losses = ("mean_squared_error", "mean_absolute_error")
+
     # build_fn that does not compile
-    def build_fn(myloss=None, compile_kwargs=None):
+    def build_fn(myloss=None):
         model = Sequential()
         model.add(keras.layers.Dense(X.shape[1], input_shape=(X.shape[1],)))
         model.add(keras.layers.Activation("relu"))
         model.add(keras.layers.Dense(1))
         model.add(keras.layers.Activation("linear"))
         if myloss:
-            compile_kwargs.update({"loss": myloss})
-            model.compile(**compile_kwargs)
+            model.compile(loss=myloss)
         return model
 
-    for loss in ("mean_squared_error", "mean_absolute_error"):
+    for loss in losses:
         estimator = KerasRegressor(build_fn=build_fn, loss=loss, myloss=None)
         estimator.fit(X, y)
         assert estimator.model_.loss.__name__ == loss
 
-    for myloss in ("mean_squared_error", "mean_absolute_error"):
+    for myloss in losses:
         estimator = KerasRegressor(
             build_fn=build_fn, myloss=myloss, loss="binary_crossentropy"
         )
