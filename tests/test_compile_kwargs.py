@@ -10,9 +10,11 @@ from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
-from tensorflow.python.keras.engine.compile_utils import losses_mod
+from tensorflow.python.keras.engine.compile_utils import (
+    losses_mod,
+    metrics_mod,
+)
 
-from scikeras._utils import _class_from_strings
 from scikeras.wrappers import KerasClassifier
 
 
@@ -68,7 +70,29 @@ def test_optimizer(optimizer, n_outputs_):
         )
 
 
-def test_custom_loss_nested_kwargs():
+def test_optimizer_invalid_string():
+    """Tests that a ValueError is raised when an unknown
+    string is passed as an optimizer.
+    """
+
+    X, y = make_classification()
+
+    optimizer = "sgf"  # sgf is not a loss
+
+    est = KerasClassifier(
+        model=get_model,
+        num_hidden=20,
+        optimizer=optimizer,
+        loss="binary_crossentropy",
+    )
+    with pytest.raises(ValueError, match=f"Unknown optimizer: {optimizer}"):
+        est.fit(X, y)
+
+
+def test_compiling_of_routed_parameters():
+    """Tests that routed parameters
+    can themselves be compiled.
+    """
 
     X, y = make_classification()
 
@@ -99,19 +123,12 @@ def test_custom_loss_nested_kwargs():
 
 
 @pytest.mark.parametrize(
-    "loss",
-    (
-        losses_module.BinaryCrossentropy,
-        "BinaryCrossentropy",
-        "binary_crossentropy",
-    ),
+    "loss", (losses_module.BinaryCrossentropy, "BinaryCrossentropy",),
 )
 @pytest.mark.parametrize("n_outputs_", (1, 2))
 def test_loss(loss, n_outputs_):
-    """Tests compiling of single loss with options.
-    Only loss classes will be compiled with custom options,
-    all others (class names, function names) should pass through
-    untouched.
+    """Tests compiling of single loss
+    using routed parameters.
     """
 
     X, y = make_classification()
@@ -130,16 +147,52 @@ def test_loss(loss, n_outputs_):
     )
 
 
+def test_loss_invalid_string():
+    """Tests that a ValueError is raised when an unknown
+    string is passed as a loss.
+    """
+
+    X, y = make_classification()
+
+    loss = "binary_crossentropr"  # binary_crossentropr is not a loss
+
+    est = KerasClassifier(
+        model=get_model, num_hidden=20, optimizer="sgd", loss=loss,
+    )
+    with pytest.raises(ValueError, match=f"Unknown loss function: {loss}"):
+        est.fit(X, y)
+
+
+def test_loss_uncompilable():
+    """Tests that a TypeError is raised when a loss
+    that is not compilable is passed routed parameters.
+    """
+
+    X, y = make_classification()
+
+    loss = losses_module.binary_crossentropy
+
+    est = KerasClassifier(
+        model=get_model,
+        num_hidden=20,
+        optimizer="sgd",
+        loss=loss,
+        loss__from_logits=True,
+    )
+    expected_param = {"from_logits": True}
+    with pytest.raises(
+        TypeError,
+        match=f'TypeError: "{str(loss)}" object of type "{type(loss)}" could not be called with'
+        f" parameters {expected_param}",
+    ):
+        est.fit(X, y)
+
+
 @pytest.mark.parametrize(
-    "loss",
-    (
-        losses_module.BinaryCrossentropy,
-        "BinaryCrossentropy",
-        "binary_crossentropy",
-    ),
+    "loss", (losses_module.BinaryCrossentropy, "BinaryCrossentropy",),
 )
 @pytest.mark.parametrize("n_outputs_", (1, 2))
-def test_loss_iterable(loss, n_outputs_):
+def test_loss_routed_params_iterable(loss, n_outputs_):
     """Tests compiling of loss when it is
     given as an iterable of losses
     mapping to outputs.
@@ -157,12 +210,7 @@ def test_loss_iterable(loss, n_outputs_):
         loss__from_logits=True,  # default is False
     )
     est.fit(X, y)
-    got = _class_from_strings(loss, "loss")
-    if isclass(got):
-        got = got()
-        assert est.model_.loss[0].from_logits
-    else:
-        assert est.model_.loss[0].__name__ == got.__name__
+    assert est.model_.loss[0].from_logits
 
     # Test iterable with index-based routed param
     est = KerasClassifier(
@@ -170,29 +218,18 @@ def test_loss_iterable(loss, n_outputs_):
         num_hidden=20,
         optimizer="sgd",
         loss=[loss],
-        loss__from_logits=False,
-        loss__0__from_logits=True,  # should override above
+        loss__from_logits=True,
+        loss__0__from_logits=False,  # should override above
     )
     est.fit(X, y)
-    got = _class_from_strings(loss, "loss")
-    if isclass(got):
-        # from_logits should have been passed and set
-        assert est.model_.loss[0].from_logits == True
-    else:
-        # at least check the name
-        assert est.model_.loss[0].__name__ == got.__name__
+    assert est.model_.loss[0].from_logits == False
 
 
 @pytest.mark.parametrize(
-    "loss",
-    (
-        losses_module.BinaryCrossentropy,
-        "BinaryCrossentropy",
-        "binary_crossentropy",
-    ),
+    "loss", (losses_module.BinaryCrossentropy, "BinaryCrossentropy",),
 )
 @pytest.mark.parametrize("n_outputs_", (1, 2))
-def test_loss_dict(loss, n_outputs_):
+def test_loss_routed_params_dict(loss, n_outputs_):
     """Tests compiling of loss when it is
     given as an dict of losses
     mapping to outputs.
@@ -210,13 +247,7 @@ def test_loss_dict(loss, n_outputs_):
         loss__from_logits=True,  # default is False
     )
     est.fit(X, y)
-    got = _class_from_strings(loss, "loss")
-    if isclass(got):
-        # from_logits should have been passed and set
-        assert est.model_.loss["out1"].from_logits == True
-    else:
-        # at least check the name
-        assert est.model_.loss["out1"].__name__ == got.__name__
+    assert est.model_.loss["out1"].from_logits == True
 
     # Test dict with key-based routed param
     est = KerasClassifier(
@@ -224,17 +255,11 @@ def test_loss_dict(loss, n_outputs_):
         num_hidden=20,
         optimizer="sgd",
         loss={"out1": loss},
-        loss__from_logits=False,
-        loss__out1__from_logits=True,  # should override above
+        loss__from_logits=True,
+        loss__out1__from_logits=False,  # should override above
     )
     est.fit(X, y)
-    got = _class_from_strings(loss, "loss")
-    if isclass(got):
-        # from_logits should have been passed and set
-        assert est.model_.loss["out1"].from_logits == True
-    else:
-        # at least check the name
-        assert est.model_.loss["out1"].__name__ == got.__name__
+    assert est.model_.loss["out1"].from_logits == False
 
 
 @pytest.mark.parametrize(
@@ -256,12 +281,11 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     prefix = "out1_" if n_outputs_ > 1 else ""
 
     expected_name = metrics
-    if isclass(metrics):
+    if metrics != "binary_accuracy":
         # Test discovery in VSCode fails if TF prints out _any_
         # warnings during discovery
         # (which of course it does if you try to instantiate anything)
-        metrics = metrics()
-        expected_name = metrics.name
+        expected_name = metrics().name
 
     # List of metrics
     est = KerasClassifier(
@@ -269,14 +293,9 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         num_hidden=20,
         optimizer="sgd",
         loss="binary_crossentropy",
-        metrics=[metrics],
-        metrics__name="custom_name",  # should be ignored
-        metrics__0__name="custom_name",  # should be ignored
+        metrics=[metrics if not isclass(metrics) else metrics()],
     )
-    with pytest.warns(
-        UserWarning, match="SciKeras does not know how to compile"
-    ):
-        est.fit(X, y)
+    est.fit(X, y)
     assert est.model_.metrics[metric_idx].name == prefix + expected_name
 
     # List of lists of metrics
@@ -285,17 +304,13 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         num_hidden=20,
         optimizer="sgd",
         loss="binary_crossentropy",
-        metrics=[[metrics] for _ in range(n_outputs_)],
-        metrics__name="custom_name",  # should be ignored
-        metrics__0__name="custom_name",  # should be ignored
-        metrics__0__0__name="custom_name",  # should be ignored
+        metrics=[
+            [metrics if not isclass(metrics) else metrics()]
+            for _ in range(n_outputs_)
+        ],
     )
-    with pytest.warns(
-        UserWarning, match="SciKeras does not know how to compile"
-    ):
-        est.fit(X, y)
-    assert prefix + expected_name in est.model_.metrics[metric_idx].name
-    assert "custom_name" not in est.model_.metrics[metric_idx].name
+    est.fit(X, y)
+    assert prefix + expected_name == est.model_.metrics[metric_idx].name
 
     # Dict of metrics
     est = KerasClassifier(
@@ -303,16 +318,13 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         num_hidden=20,
         optimizer="sgd",
         loss="binary_crossentropy",
-        metrics={"out1": metrics},
-        metrics__name="custom_name",  # should be ignored
-        metrics__out1__name="custom_name",  # should be ignored
+        metrics={
+            f"out{i+1}": metrics if not isclass(metrics) else metrics()
+            for i in range(n_outputs_)
+        },
     )
-    with pytest.warns(
-        UserWarning, match="SciKeras does not know how to compile"
-    ):
-        est.fit(X, y)
-    assert prefix + expected_name in est.model_.metrics[metric_idx].name
-    assert "custom_name" not in est.model_.metrics[metric_idx].name
+    est.fit(X, y)
+    assert prefix + expected_name == est.model_.metrics[metric_idx].name
 
     # Dict of lists
     est = KerasClassifier(
@@ -320,17 +332,13 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         num_hidden=20,
         optimizer="sgd",
         loss="binary_crossentropy",
-        metrics={"out1": metrics},
-        metrics__name="custom_name",  # should be ignored
-        metrics__out1__name="custom_name",  # should be ignored
-        metrics__out1__0__name="custom_name",  # should be ignored
+        metrics={
+            f"out{i+1}": metrics if not isclass(metrics) else metrics()
+            for i in range(n_outputs_)
+        },
     )
-    with pytest.warns(
-        UserWarning, match="SciKeras does not know how to compile"
-    ):
-        est.fit(X, y)
-    assert prefix + expected_name in est.model_.metrics[metric_idx].name
-    assert "custom_name" not in est.model_.metrics[metric_idx].name
+    est.fit(X, y)
+    assert prefix + expected_name == est.model_.metrics[metric_idx].name
 
 
 @pytest.mark.parametrize("n_outputs_", (1, 2))
@@ -364,14 +372,8 @@ def test_metrics_two_metric_per_output(n_outputs_):
         optimizer="sgd",
         loss="binary_crossentropy",
         metrics=metrics_,
-        metrics__name="custom_name",  # should be ignored
-        metrics__1__name="custom_name",  # should be ignored
-        metrics__1__1__name="custom_name",  # should be ignored
     )
-    with pytest.warns(
-        UserWarning, match="SciKeras does not know how to compile"
-    ):
-        est.fit(X, y)
+    est.fit(X, y)
     if n_outputs_ == 1:
         assert est.model_.metrics[metric_idx].name == "1"
     else:
@@ -394,13 +396,8 @@ def test_metrics_two_metric_per_output(n_outputs_):
         optimizer="sgd",
         loss="binary_crossentropy",
         metrics=metrics_,
-        metrics__name="custom_name",  # should be ignored
-        metrics__out1__name="custom_name",  # should be ignored
     )
-    with pytest.warns(
-        UserWarning, match="SciKeras does not know how to compile"
-    ):
-        est.fit(X, y)
+    est.fit(X, y)
     if n_outputs_ == 1:
         assert est.model_.metrics[metric_idx].name == "1"
     else:
@@ -409,7 +406,10 @@ def test_metrics_two_metric_per_output(n_outputs_):
 
 
 @pytest.mark.parametrize("n_outputs_", (1, 2))
-def test_metrics_iterable(n_outputs_):
+def test_metrics_routed_params_iterable(n_outputs_):
+    """Tests compiling metrics with routed parameters
+    when they are passed as an iterable.
+    """
 
     metrics = metrics_module.BinaryAccuracy
 
@@ -462,7 +462,10 @@ def test_metrics_iterable(n_outputs_):
         )
 
 
-def test_metrics_dict():
+def test_metrics_routed_params_dict():
+    """Tests compiling metrics with routed parameters
+    when they are passed as a dict.
+    """
     n_outputs_ = 2
 
     metrics = metrics_module.BinaryAccuracy
@@ -500,3 +503,55 @@ def test_metrics_dict():
     est.fit(X, y)
     assert est.model_.metrics[metric_idx].name == "out1_custom_name"
     assert est.model_.metrics[metric_idx + 1].name == "out2_name_all_metrics"
+
+
+def test_metrics_invalid_string():
+    """Tests that a ValueError is raised when an unknown
+    string is passed as a metric.
+    """
+
+    X, y = make_classification()
+
+    metrics = [
+        "acccuracy",
+    ]  # acccuracy (extra `c`) is not a metric
+
+    est = KerasClassifier(
+        model=get_model,
+        num_hidden=20,
+        optimizer="sgd",
+        loss="binary_crossentropy",
+        metrics=metrics,
+    )
+    with pytest.raises(
+        ValueError, match=f"Unknown metric function: {metrics[0]}"
+    ):
+        est.fit(X, y)
+
+
+def test_metrics_uncompilable():
+    """Tests that a TypeError is raised when a metric
+    that is not compilable is passed routed parameters.
+    """
+
+    X, y = make_classification()
+
+    metrics = [
+        metrics_module.get("accuracy"),
+    ]  # a function
+
+    est = KerasClassifier(
+        model=get_model,
+        num_hidden=20,
+        optimizer="sgd",
+        loss="binary_crossentropy",
+        metrics=metrics,
+        metrics__name="custom_name",
+    )
+    expected_param = {"name": "custom_name"}
+    with pytest.raises(
+        TypeError,
+        match=f'TypeError: "{str(metrics[0])}" object of type "{type(metrics[0])}" could not be called with'
+        f" parameters {expected_param}",
+    ):
+        est.fit(X, y)

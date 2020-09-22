@@ -280,18 +280,6 @@ def compile_with_params(items, params, base_params=None):
                 pass_filter=set(),
                 strict=False,
             )
-            for p, v in item_params.items():
-                item_params[p] = compile_with_params(
-                    items=v,
-                    params=route_params(
-                        params={
-                            k: v_ for k, v_ in item_params.items() if p != k
-                        },
-                        destination=f"{p}",
-                        pass_filter=set(),
-                        strict=False,
-                    ),
-                )
             res.append(
                 compile_with_params(
                     items=item, params=item_params, base_params=new_base_params
@@ -308,18 +296,6 @@ def compile_with_params(items, params, base_params=None):
                 pass_filter=set(),
                 strict=False,
             )
-            for p, v in item_params.items():
-                item_params[p] = compile_with_params(
-                    items=v,
-                    params=route_params(
-                        params={
-                            k: v_ for k, v_ in item_params.items() if p != k
-                        },
-                        destination=f"{p}",
-                        pass_filter=set(),
-                        strict=False,
-                    ),
-                )
             res[key] = compile_with_params(
                 items=item, params=item_params, base_params=new_base_params,
             )
@@ -330,11 +306,9 @@ def compile_with_params(items, params, base_params=None):
     base_params = base_params or dict()
     kwargs = {**base_params, **new_base_params}
     if kwargs:
-        warnings.warn(
-            message=f"SciKeras does not know how to compile {item}"
-            f" but {item} was passed the following parameters:"
-            f" {kwargs}.",
-            category=UserWarning,
+        raise TypeError(
+            f'TypeError: "{str(item)}" object of type "{type(item)}"'
+            f" could not be called with parameters {kwargs}"
         )
     return item
 
@@ -344,35 +318,31 @@ def _class_from_strings(items, item_type: str):
     """
     if isinstance(items, str):
         item = items
-        try:
-            if item_type == "optimizer":
-                got = optimizers_module.get(item)
-                if (
-                    hasattr(got, "__class__")
-                    and type(got).__module__ != "builtins"
-                ):
-                    return got.__class__
-            if item_type == "loss":
-                got = losses_module.get(item)
-                if (
-                    hasattr(got, "__class__")
-                    and type(got).__module__ != "builtins"
-                ):
-                    return got.__class__
-                else:
-                    return got
-            if item_type == "metrics":
-                got = metrics_module.get(item)
-                if (
-                    hasattr(got, "__class__")
-                    and type(got).__module__ != "builtins"
-                ):
-                    return got.__class__
-                else:
-                    return got
-        except ValueError:
-            # string not found
-            return item
+        if item_type == "optimizer":
+            got = optimizers_module.get(item)
+            if (
+                hasattr(got, "__class__")
+                and type(got).__module__ != "builtins"
+            ):
+                return got.__class__
+        if item_type == "loss":
+            got = losses_module.get(item)
+            if (
+                hasattr(got, "__class__")
+                and type(got).__module__ != "builtins"
+            ):
+                return got.__class__
+            else:
+                return got
+        if item_type == "metrics":
+            got = metrics_module.get(item)
+            if (
+                hasattr(got, "__class__")
+                and type(got).__module__ != "builtins"
+            ):
+                return got.__class__
+            else:
+                return got
     elif isinstance(items, (list, tuple)):
         return type(items)(
             [_class_from_strings(item, item_type) for item in items]
