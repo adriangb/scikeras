@@ -308,7 +308,8 @@ def compile_with_params(items, params, base_params=None):
     if kwargs:
         raise TypeError(
             f'TypeError: "{str(item)}" object of type "{type(item)}"'
-            f" could not be called with parameters {kwargs}"
+            "does not accept parameters because it's not a class."
+            f' However, it received parameters "{kwargs}"'
         )
     return item
 

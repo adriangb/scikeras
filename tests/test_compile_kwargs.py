@@ -85,7 +85,9 @@ def test_optimizer_invalid_string():
         optimizer=optimizer,
         loss="binary_crossentropy",
     )
-    with pytest.raises(ValueError, match=f"Unknown optimizer: {optimizer}"):
+    with pytest.raises(
+        ValueError, match=r"Unknown optimizer:\s{0,1}" + f"{optimizer}"
+    ):
         est.fit(X, y)
 
 
@@ -159,7 +161,9 @@ def test_loss_invalid_string():
     est = KerasClassifier(
         model=get_model, num_hidden=20, optimizer="sgd", loss=loss,
     )
-    with pytest.raises(ValueError, match=f"Unknown loss function: {loss}"):
+    with pytest.raises(
+        ValueError, match=r"Unknown loss function:\s{0,1}" + f"{loss}"
+    ):
         est.fit(X, y)
 
 
@@ -182,8 +186,9 @@ def test_loss_uncompilable():
     expected_param = {"from_logits": True}
     with pytest.raises(
         TypeError,
-        match=f'TypeError: "{str(loss)}" object of type "{type(loss)}" could not be called with'
-        f" parameters {expected_param}",
+        match=f'TypeError: "{str(loss)}" object of type "{type(loss)}"'
+        "does not accept parameters because it's not a class."
+        f' However, it received parameters "{expected_param}"',
     ):
         est.fit(X, y)
 
@@ -524,7 +529,7 @@ def test_metrics_invalid_string():
         metrics=metrics,
     )
     with pytest.raises(
-        ValueError, match=f"Unknown metric function: {metrics[0]}"
+        ValueError, match=r"Unknown metric function:\s{0,1}" + f"{metrics[0]}"
     ):
         est.fit(X, y)
 
@@ -551,7 +556,8 @@ def test_metrics_uncompilable():
     expected_param = {"name": "custom_name"}
     with pytest.raises(
         TypeError,
-        match=f'TypeError: "{str(metrics[0])}" object of type "{type(metrics[0])}" could not be called with'
-        f" parameters {expected_param}",
+        match=f'TypeError: "{str(metrics[0])}" object of type "{type(metrics[0])}"'
+        "does not accept parameters because it's not a class."
+        f' However, it received parameters "{expected_param}"',
     ):
         est.fit(X, y)
