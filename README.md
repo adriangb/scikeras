@@ -101,6 +101,7 @@ from scikeras.wrappers import KerasRegressor
 class MLPRegressor(KerasRegressor):
 
     def __init__(self, hidden_layer_sizes=None):
+        super().__init__()
         self.hidden_layer_sizes = hidden_layer_sizes
 
     def _keras_build_fn(self, meta, hidden_layer_sizes):
@@ -128,9 +129,9 @@ from scikeras.wrappers import KerasRegressor
 
 class MLPRegressor(KerasRegressor):
 
-    def __init__(self, hidden_layer_sizes=None, **kwargs):
+    def __init__(self, hidden_layer_sizes=(100, ), **kwargs):
+        super().__init__(**kwargs)
         self.hidden_layer_sizes = hidden_layer_sizes
-        super().__init__(**kwargs)   # this is very important!
 
     def _keras_build_fn(self, meta, hidden_layer_sizes):
         ...
@@ -149,8 +150,9 @@ from scikeras.wrappers import KerasRegressor
 class ChildMLPRegressor(MLPRegressor):
 
     def __init__(self, child_argument=None, **kwargs):
+        super().__init__(**kwargs)
         self.child_argument = child_argument
-        super().__init__(**kwargs)   # this is very important!
+        
 
     def _keras_build_fn(self, meta, hidden_layer_sizes):
         ...
