@@ -164,8 +164,8 @@ see the :ref:`scikeras-api` documentation.
 ++++++++++++++++++++++++
 This is a dictionary of parameters destined for :py:func:`tensorflow.Keras.Model.compile`.
 This dictionary can be used like ``model.compile(**compile_kwargs)``.
-All optimizers, losses and metrics will be compiled if classes with routed parameters
-were passed (see :ref:`param-routing`).
+All optimizers, losses and metrics will be compiled to objects,
+even if string shorthands (e.g. ``optimizer="adam"``) were passed.
 
 ``params``
 ++++++++++++++++++++++++
@@ -210,9 +210,13 @@ random_state
 This behaves similar to the same parameter in ``sklearn`` estimators.
 If set to an integer or a :py:class:`~numpy.random.RandomState` instance,
 it will be used to seed the random number generators used to initialize
-the graph and optimizers. Note that use of this parameter may have
-unforeseen consequences since ``TensorFlow`` only has a *global* random
-state.
+the graph and optimizers.
+
+.. note::
+
+    Use of this parameter may have
+    unforeseen consequences since ``TensorFlow`` only has a *global* random
+    state.
 
 optimizer
 ^^^^^^^^^
@@ -298,11 +302,9 @@ This is one of the main methods you will use. It contains everything
 required to train the model, be it batching of the data, triggering
 the callbacks, or handling the internal validation set.
 
-In general, we assume there to be an ``X`` and a ``y``. And if your
-task does not have an actual ``y``, you may pass ``y=None``.
-
-``X`` and ``y`` are expected to be array-like. SciKeras does not
-currently support :py:class:`tensorflow.data.Dataset` inputs.
+The ``X`` and ``y`` arguments to :py:func:`scikeras.wrappers.BaseWrapper.fit`
+are expected to by array-like and fit in memory (e.g, NumPy arrays).
+SciKeras does not currently support :py:class:`tensorflow.data.Dataset` inputs.
 
 
 partial_fit(X, y, sample_weights=None)
