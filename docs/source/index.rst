@@ -12,7 +12,8 @@ SciKeras provides a Scikit-Learn style API for Keras.
    :maxdepth: 2
    :caption: Contents:
 
-   wrappers
+   quickstart
+   advanced
    api
 
 
