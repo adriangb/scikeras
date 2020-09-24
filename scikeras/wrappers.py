@@ -257,7 +257,7 @@ class BaseWrapper(BaseEstimator):
             pass_filter=self._compile_kwargs,
         )
         compile_kwargs["optimizer"] = _class_from_strings(
-            compile_kwargs["optimizer"], "optimizer"
+            compile_kwargs["optimizer"], optimizers_module.get
         )
         compile_kwargs["optimizer"] = compile_with_params(
             items=compile_kwargs["optimizer"],
@@ -269,7 +269,7 @@ class BaseWrapper(BaseEstimator):
             ),
         )
         compile_kwargs["loss"] = _class_from_strings(
-            compile_kwargs["loss"], "loss"
+            compile_kwargs["loss"], losses_module.get
         )
         compile_kwargs["loss"] = compile_with_params(
             items=compile_kwargs["loss"],
@@ -281,7 +281,7 @@ class BaseWrapper(BaseEstimator):
             ),
         )
         compile_kwargs["metrics"] = _class_from_strings(
-            compile_kwargs["metrics"], "metrics"
+            compile_kwargs["metrics"], metrics_module.get
         )
         compile_kwargs["metrics"] = compile_with_params(
             items=compile_kwargs["metrics"],

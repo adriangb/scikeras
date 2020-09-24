@@ -314,38 +314,27 @@ def compile_with_params(items, params, base_params=None):
     return item
 
 
-def _class_from_strings(items, item_type: str):
+def _class_from_strings(
+    items: Union[str, dict, tuple, list], class_getter: Callable
+):
     """Convert shorthand optimizer/loss/metric names to classes.
     """
     if isinstance(items, str):
         item = items
-        if item_type == "optimizer":
-            # optimizers.get always returns a function or a class
-            # (never an instance)
-            return optimizers_module.get(item).__class__
-        if item_type == "loss":
-            # losses.get returns a class instance
-            # or a function
-            # if it is a class instace, we retrieve the class itself
-            got = losses_module.get(item)
-            if (
-                hasattr(got, "__class__")
-                and type(got).__module__ != "builtins"
-            ):
-                return got.__class__
-            else:
-                return got
-        if item_type == "metrics":
-            # metrics.get always returns a function or a class
-            # (never an instance)
-            return metrics_module.get(item)
+        got = class_getter(item)
+        if hasattr(got, "__class__") and type(got).__module__.startswith(
+            "tensorflow"
+        ):
+            # optimizers.get returns instances instead of classes
+            got = got.__class__
+        return got
     elif isinstance(items, (list, tuple)):
         return type(items)(
-            [_class_from_strings(item, item_type) for item in items]
+            [_class_from_strings(item, class_getter) for item in items]
         )
     elif isinstance(items, dict):
         return {
-            k: _class_from_strings(item, item_type)
+            k: _class_from_strings(item, class_getter)
             for k, item in items.items()
         }
     else:
