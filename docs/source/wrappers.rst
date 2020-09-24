@@ -465,8 +465,8 @@ Example: multiple losses with routed parameters
         model=model_build_fn,
         loss=[BinaryCrossentropy, CategoricalCrossentropy],
         loss__from_logits=True,  # BinaryCrossentropy(from_logits=True) & CategoricalCrossentropy(from_logits=True)
-        loss__0__label_smoothing=0.1,  # BinaryCrossentropy(label_smoothing=0.1)
-        loss__1__label_smoothing=2,  # CategoricalCrossentropy(label_smoothing=0.1)
+        loss__label_smoothing=0.1,  # passed to each sub-item, i.e. `loss=[l(label_smoothing=0.1) for l in loss]`
+        loss__1__label_smoothing=0.5,  # overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)
     )
 
 To use this syntax, you must pass classes instead of strings or instances.
