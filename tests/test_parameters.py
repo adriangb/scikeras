@@ -6,11 +6,9 @@ import pytest
 from sklearn.base import clone
 from tensorflow.python.keras.testing_utils import get_test_data
 
-from scikeras.wrappers import KerasClassifier
-from scikeras.wrappers import KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
-from .mlp_models import dynamic_classifier
-from .mlp_models import dynamic_regressor
+from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
 # Defaults
@@ -31,9 +29,13 @@ class TestRandomState:
         "estimator",
         [
             KerasRegressor(
-                build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
+                build_fn=dynamic_regressor,
+                loss=KerasRegressor.r_squared,
+                model__hidden_layer_sizes=(100,),
             ),
-            KerasClassifier(build_fn=dynamic_classifier),
+            KerasClassifier(
+                build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
+            ),
         ],
     )
     def test_random_states(self, random_state, estimator):
@@ -70,9 +72,13 @@ class TestRandomState:
         "estimator",
         [
             KerasRegressor(
-                build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
+                build_fn=dynamic_regressor,
+                loss=KerasRegressor.r_squared,
+                model__hidden_layer_sizes=(100,),
             ),
-            KerasClassifier(build_fn=dynamic_classifier),
+            KerasClassifier(
+                build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
+            ),
         ],
     )
     @pytest.mark.parametrize("pyhash", [None, "0", "1"])
@@ -136,7 +142,7 @@ def test_sample_weights_fit():
     # build estimator
     estimator = KerasClassifier(
         build_fn=dynamic_classifier,
-        hidden_layer_sizes=(100,),
+        model__hidden_layer_sizes=(100,),
         epochs=10,
         random_state=0,
     )
@@ -182,7 +188,7 @@ def test_sample_weights_score():
     # build estimator
     estimator = KerasRegressor(
         build_fn=dynamic_regressor,
-        hidden_layer_sizes=(100,),
+        model__hidden_layer_sizes=(100,),
         epochs=10,
         random_state=0,
     )
@@ -211,13 +217,15 @@ def test_build_fn_default_params():
     """Tests that default arguments arguments of
     `build_fn` are registered as hyperparameters.
     """
-    est = KerasClassifier(build_fn=dynamic_classifier)
-    params = est.get_params()
-    # (100, ) is the default for dynamic_classifier
-    assert params["hidden_layer_sizes"] == (100,)
-
     est = KerasClassifier(
-        build_fn=dynamic_classifier, hidden_layer_sizes=(200,)
+        build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
     )
     params = est.get_params()
-    assert params["hidden_layer_sizes"] == (200,)
+    # (100, ) is the default for dynamic_classifier
+    assert params["model__hidden_layer_sizes"] == (100,)
+
+    est = KerasClassifier(
+        build_fn=dynamic_classifier, model__hidden_layer_sizes=(200,)
+    )
+    params = est.get_params()
+    assert params["model__hidden_layer_sizes"] == (200,)

@@ -1,23 +1,22 @@
-from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras.layers import Input
-from tensorflow.python.keras.models import Model
+from typing import Any, Dict
+
+from tensorflow.keras.layers import Dense, Input
+from tensorflow.keras.models import Model
 
 from scikeras.wrappers import KerasRegressor
 
 
 def dynamic_classifier(
-    n_features_in_,
-    cls_type_,
-    n_classes_,
-    metrics=None,
-    keras_expected_n_ouputs_=1,
-    loss=None,
-    optimizer="sgd",
-    hidden_layer_sizes=(100,),
-):
+    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+) -> Model:
     """Creates a basic MLP classifier dynamically choosing binary/multiclass
     classification loss and ouput activations.
     """
+    # get parameters
+    n_features_in_ = meta["n_features_in_"]
+    target_type_ = meta["target_type_"]
+    n_classes_ = meta["n_classes_"]
+    model_n_outputs_ = meta["model_n_outputs_"]
 
     inp = Input(shape=(n_features_in_,))
 
@@ -25,45 +24,48 @@ def dynamic_classifier(
     for layer_size in hidden_layer_sizes:
         hidden = Dense(layer_size, activation="relu")(hidden)
 
-    if cls_type_ == "binary":
-        loss = loss or "binary_crossentropy"
+    if target_type_ == "binary":
+        compile_kwargs["loss"] = (
+            compile_kwargs["loss"] or "binary_crossentropy"
+        )
         out = [Dense(1, activation="sigmoid")(hidden)]
-    elif cls_type_ == "multilabel-indicator":
-        loss = loss or "binary_crossentropy"
+    elif target_type_ == "multilabel-indicator":
+        compile_kwargs["loss"] = (
+            compile_kwargs["loss"] or "binary_crossentropy"
+        )
         out = [
             Dense(1, activation="sigmoid")(hidden)
-            for _ in range(keras_expected_n_ouputs_)
+            for _ in range(model_n_outputs_)
         ]
-    elif cls_type_ == "multiclass-multioutput":
-        loss = loss or "binary_crossentropy"
+    elif target_type_ == "multiclass-multioutput":
+        compile_kwargs["loss"] = (
+            compile_kwargs["loss"] or "binary_crossentropy"
+        )
         out = [Dense(n, activation="softmax")(hidden) for n in n_classes_]
     else:
         # multiclass
-        loss = loss or "categorical_crossentropy"
+        compile_kwargs["loss"] = (
+            compile_kwargs["loss"] or "categorical_crossentropy"
+        )
         out = [Dense(n_classes_, activation="softmax")(hidden)]
 
     model = Model(inp, out)
 
-    model.compile(
-        loss=loss, optimizer=optimizer, metrics=metrics,
-    )
+    model.compile(**compile_kwargs)
 
     return model
 
 
 def dynamic_regressor(
-    n_features_in_,
-    n_outputs_,
-    loss=KerasRegressor.r_squared,
-    optimizer="adam",
-    metrics=None,
-    hidden_layer_sizes=(100,),
-):
+    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+) -> Model:
     """Creates a basic MLP regressor dynamically.
     """
-    if loss is None:
-        # Default Model loss, not appropriate for a classifier
-        loss = KerasRegressor.r_squared
+    # get parameters
+    n_features_in_ = meta["n_features_in_"]
+    n_outputs_ = meta["n_outputs_"]
+
+    compile_kwargs["loss"] = compile_kwargs["loss"] or KerasRegressor.r_squared
 
     inp = Input(shape=(n_features_in_,))
 
@@ -75,9 +77,5 @@ def dynamic_regressor(
 
     model = Model(inp, out)
 
-    model.compile(
-        optimizer=optimizer,
-        loss=loss,  # KerasRegressor.r_squared
-        metrics=metrics,
-    )
+    model.compile(**compile_kwargs)
     return model

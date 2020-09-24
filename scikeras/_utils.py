@@ -3,11 +3,12 @@ import os
 import random
 import warnings
 
+from typing import Any, Callable, Dict, Iterable, List, Union
+
 import numpy as np
 import tensorflow as tf
 
-from sklearn.base import BaseEstimator
-from sklearn.base import TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin
 from tensorflow.keras.layers import deserialize as deserialize_layer
 from tensorflow.keras.layers import serialize as serialize_layer
 from tensorflow.keras.metrics import deserialize as deserialize_metric
@@ -155,19 +156,83 @@ def get_metric_full_name(name: str) -> str:
     # deserialize returns the actual function, then get it's name
     # to keep a single consistent name for the metric
     if name == "loss":
-        # may be passed "loss" from thre training history
+        # may be passed "loss" from training history
         return name
     return getattr(deserialize_metric(name), "__name__")
 
 
-def _get_default_args(func):
-    signature = inspect.signature(func)
-    return {
-        k: v.default
-        for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }
+def _windows_upcast_ints(
+    arr: Union[List[np.ndarray], np.ndarray]
+) -> Union[List[np.ndarray], np.ndarray]:
+    # see tensorflow/probability#886
+    def _upcast(x):
+        return x.astype("int64") if x.dtype == np.int32 else x
+
+    if isinstance(arr, np.ndarray):
+        return _upcast(arr)
+    else:
+        return [_upcast(x_) for x_ in arr]
 
 
-def _windows_upcast_ints(x: np.ndarray) -> np.ndarray:
-    return x.astype("int64") if x.dtype == np.int32 else x
+def route_params(
+    params: Dict[str, Any], destination: str, pass_filter: Iterable[str],
+) -> Dict[str, Any]:
+    """Route and trim parameter names.
+
+    Parameters
+    ----------
+    params : Dict[str, Any]
+        Parameters to route/filter.
+    destination : str
+        Destination to route to, ex: `build` or `compile`.
+    pass_filter: Iterable[str]
+        Only keys from `params` that are in the iterable are passed.
+        This does not affect routed parameters.
+
+    Returns
+    -------
+    Dict[str, Any]
+        Filtered parameters, with any routing prefixes removed.
+    """
+    res = dict()
+    for key, val in params.items():
+        if "__" in key:
+            # routed param
+            if key.startswith(destination):
+                new_key = key[len(destination + "__") :]
+                res[new_key] = val
+        else:
+            # non routed
+            if pass_filter is None or key in pass_filter:
+                res[key] = val
+    return res
+
+
+def has_param(func: Callable, param: str) -> bool:
+    """[summary]
+
+    Parameters
+    ----------
+    func : Callable
+        [description]
+    param : str
+        [description]
+
+    Returns
+    -------
+    bool
+        [description]
+    """
+    return any(
+        p.name == param
+        for p in inspect.signature(func).parameters.values()
+        if p.kind in (p.POSITIONAL_OR_KEYWORD, p.KEYWORD_ONLY)
+    )
+
+
+def accepts_kwargs(func: Callable) -> bool:
+    return any(
+        True
+        for param in inspect.signature(func).parameters.values()
+        if param.kind == param.VAR_KEYWORD
+    )

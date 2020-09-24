@@ -1,12 +1,13 @@
 import pickle
 
+from typing import Any, Dict
+
 import numpy as np
 import pytest
 
 from sklearn.datasets import load_boston
 from tensorflow.python import keras
-from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras.layers import Input
+from tensorflow.python.keras.layers import Dense, Input
 from tensorflow.python.keras.models import Model
 
 from scikeras.wrappers import KerasRegressor
@@ -26,7 +27,7 @@ def check_pickle(estimator, loader):
     deserialized_estimator = pickle.loads(serialized_estimator)
     deserialized_estimator.predict(X)
     score_new = deserialized_estimator.score(X, y)
-    np.testing.assert_almost_equal(score, score_new)
+    np.testing.assert_almost_equal(score, score_new, decimal=2)
 
 
 # ---------------------- Custom Loss Test ----------------------
@@ -42,20 +43,30 @@ class CustomLoss(keras.losses.MeanSquaredError):
 def test_custom_loss_function():
     """Test that a custom loss function can be serialized.
     """
-    estimator = KerasRegressor(build_fn=dynamic_regressor, loss=CustomLoss(),)
+    estimator = KerasRegressor(
+        build_fn=dynamic_regressor,
+        loss=CustomLoss(),
+        model__hidden_layer_sizes=(100,),
+    )
     check_pickle(estimator, load_boston)
 
 
 # ---------------------- Subclassed Model Tests ------------------
 
 
-def build_fn_custom_model_registered(n_features_in_, n_outputs_):
+def build_fn_custom_model_registered(
+    meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+) -> Model:
     """Dummy custom Model subclass that is registered to be serializable.
     """
 
     @keras.utils.generic_utils.register_keras_serializable()
     class CustomModelRegistered(Model):
         pass
+
+    # get parameters
+    n_features_in_ = meta["n_features_in_"]
+    n_outputs_ = meta["n_outputs_"]
 
     inp = Input(shape=n_features_in_)
     x1 = Dense(n_features_in_, activation="relu")(inp)
@@ -72,12 +83,18 @@ def test_custom_model_registered():
     check_pickle(estimator, load_boston)
 
 
-def build_fn_custom_model_unregistered(n_features_in_, n_outputs_):
+def build_fn_custom_model_unregistered(
+    meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+) -> Model:
     """Dummy custom Model subclass that is not registed to be serializable.
     """
 
     class CustomModelUnregistered(Model):
         pass
+
+    # get parameters
+    n_features_in_ = meta["n_features_in_"]
+    n_outputs_ = meta["n_outputs_"]
 
     inp = Input(shape=n_features_in_)
     x1 = Dense(n_features_in_, activation="relu")(inp)
@@ -105,5 +122,6 @@ def test_run_eagerly():
         build_fn=dynamic_regressor,
         run_eagerly=True,
         loss=KerasRegressor.r_squared,
+        model__hidden_layer_sizes=(100,),
     )
     check_pickle(estimator, load_boston)

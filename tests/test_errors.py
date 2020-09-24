@@ -5,11 +5,9 @@ import pytest
 
 from sklearn.exceptions import NotFittedError
 
-from scikeras.wrappers import KerasClassifier
-from scikeras.wrappers import KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
-from .mlp_models import dynamic_classifier
-from .mlp_models import dynamic_regressor
+from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
 def test_validate_data():
@@ -53,8 +51,10 @@ class TestInvalidBuildFn:
     """
 
     def test_invalid_build_fn(self):
-        clf = KerasClassifier(build_fn="invalid")
-        with pytest.raises(TypeError, match="build_fn"):
+        clf = KerasClassifier(model="invalid")
+        with pytest.raises(
+            TypeError, match="`model` must be a callable or None"
+        ):
             clf.fit(np.array([[0]]), np.array([0]))
 
     def test_no_build_fn(self):
@@ -85,26 +85,6 @@ class TestInvalidBuildFn:
         ):
             clf.fit(np.array([[0]]), np.array([0]))
 
-    def test_call_and_invalid_build_fn_class(self):
-        class Clf(KerasClassifier):
-            def _keras_build_fn(self, hidden_layer_sizes):
-                return dynamic_classifier(
-                    hidden_layer_sizes=hidden_layer_sizes
-                )
-
-        class DummyBuildClass:
-            def __call__(self, hidden_layer_sizes):
-                return dynamic_classifier(
-                    hidden_layer_sizes=hidden_layer_sizes
-                )
-
-        clf = Clf(build_fn=DummyBuildClass(),)
-
-        with pytest.raises(
-            ValueError, match="cannot implement `_keras_build_fn`"
-        ):
-            clf.fit(np.array([[0]]), np.array([0]))
-
 
 def test_sample_weights_all_zero():
     """Checks for a user-friendly error when sample_weights
@@ -113,7 +93,7 @@ def test_sample_weights_all_zero():
     # build estimator
     estimator = KerasClassifier(
         build_fn=dynamic_classifier,
-        hidden_layer_sizes=(100,),
+        model__hidden_layer_sizes=(100,),
         epochs=10,
         random_state=0,
     )
@@ -126,3 +106,40 @@ def test_sample_weights_all_zero():
 
     with pytest.raises(RuntimeError, match="no samples left"):
         estimator.fit(X, y, sample_weight=sample_weight)
+
+
+def test_build_fn_deprecation():
+    """An appropriate warning is raised when using the `build_fn`
+    parameter instead of `model`.
+    """
+    clf = KerasClassifier(
+        build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,)
+    )
+    with pytest.warns(
+        UserWarning, match="`build_fn` will be renamed to `model`"
+    ):
+        clf.fit([[1]], [1])
+
+
+@pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
+def test_build_fn_and_init_signature_do_not_agree(wrapper):
+    """Test that passing a kwarg not present in the model
+    building function's signature raises a TypeError.
+    """
+
+    def no_bar(foo=42):
+        pass
+
+    # all attempts to pass `bar` should fail
+    est = wrapper(model=no_bar, model__bar=42)
+    with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+        est.fit([[1]], [1])
+    est = wrapper(model=no_bar, bar=42)
+    with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+        est.fit([[1]], [1])
+    est = wrapper(model=no_bar, model__bar=42, foo=43)
+    with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+        est.fit([[1]], [1])
+    est = wrapper(model=no_bar, bar=42, foo=43)
+    with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+        est.fit([[1]], [1])
