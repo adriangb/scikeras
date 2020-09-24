@@ -1,9 +1,6 @@
-from inspect import isclass
-
 import numpy as np
 import pytest
 
-from numpy.lib.arraysetops import isin
 from sklearn.datasets import make_classification
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
@@ -31,8 +28,7 @@ def get_model(num_hidden=10, meta=None, compile_kwargs=None):
 
 
 @pytest.mark.parametrize("optimizer", (optimizers_module.SGD, "SGD", "sgd"))
-@pytest.mark.parametrize("n_outputs_", (1, 2))
-def test_optimizer(optimizer, n_outputs_):
+def test_optimizer(optimizer):
     """Tests compiling of single optimizer with options.
     Since there can only ever be a single optimizer, there is no
     ("name", optimizer, "output") option.
@@ -42,32 +38,21 @@ def test_optimizer(optimizer, n_outputs_):
     """
     # Single output
     X, y = make_classification()
-    y = np.column_stack([y for _ in range(n_outputs_)]).squeeze()
 
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
         optimizer=optimizer,
         optimizer__learning_rate=0.15,
         optimizer__momentum=0.5,
         loss="binary_crossentropy",
     )
     est.fit(X, y)
-    if isclass(optimizer):
-        np.testing.assert_almost_equal(
-            est.model_.optimizer.momentum.value().numpy(), 0.5, decimal=2
-        )
-        np.testing.assert_almost_equal(
-            est.model_.optimizer.learning_rate.value().numpy(), 0.15, decimal=2
-        )
+    est_opt = est.model_.optimizer
+    if not isinstance(optimizer, str):
+        assert float(est_opt.momentum.value()) == pytest.approx(0.5)
+        assert float(est_opt.learning_rate) == pytest.approx(0.15, abs=1e-6)
     else:
-        # TF actually instantiates an optimizer object even if passed a string
-        # Checking __class__ is not a universally valid check, but it works for the
-        # test optimizer (SGD)
-        assert (
-            est.model_.optimizer.__class__
-            == optimizers_module.get(optimizer).__class__
-        )
+        est_opt.__class__ == optimizers_module.get(optimizer).__class__
 
 
 def test_optimizer_invalid_string():
@@ -80,10 +65,7 @@ def test_optimizer_invalid_string():
     optimizer = "sgf"  # sgf is not a loss
 
     est = KerasClassifier(
-        model=get_model,
-        num_hidden=20,
-        optimizer=optimizer,
-        loss="binary_crossentropy",
+        model=get_model, optimizer=optimizer, loss="binary_crossentropy",
     )
     with pytest.raises(ValueError, match="Unknown optimizer"):
         est.fit(X, y)
@@ -135,11 +117,7 @@ def test_loss(loss, n_outputs_):
     y = np.column_stack([y for _ in range(n_outputs_)]).squeeze()
 
     est = KerasClassifier(
-        model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
-        loss=loss,
-        loss__name="custom_name",
+        model=get_model, loss=loss, loss__name="custom_name",
     )
     est.fit(X, y)
     assert str(loss) in str(est.model_.loss) or isinstance(
@@ -156,9 +134,7 @@ def test_loss_invalid_string():
 
     loss = "binary_crossentropr"  # binary_crossentropr is not a loss
 
-    est = KerasClassifier(
-        model=get_model, num_hidden=20, optimizer="sgd", loss=loss,
-    )
+    est = KerasClassifier(model=get_model, num_hidden=20, loss=loss,)
     with pytest.raises(ValueError, match="Unknown loss function"):
         est.fit(X, y)
 
@@ -172,19 +148,9 @@ def test_loss_uncompilable():
 
     loss = losses_module.binary_crossentropy
 
-    est = KerasClassifier(
-        model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
-        loss=loss,
-        loss__from_logits=True,
-    )
-    expected_param = {"from_logits": True}
+    est = KerasClassifier(model=get_model, loss=loss, loss__from_logits=True,)
     with pytest.raises(
-        TypeError,
-        match=f'TypeError: "{str(loss)}" object of type "{type(loss)}"'
-        "does not accept parameters because it's not a class."
-        f' However, it received parameters "{expected_param}"',
+        TypeError, match="does not accept parameters because it's not a class"
     ):
         est.fit(X, y)
 
@@ -205,8 +171,6 @@ def test_loss_routed_params_iterable(loss, n_outputs_):
     # Test iterable with global routed param
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss=[loss],
         loss__from_logits=True,  # default is False
     )
@@ -216,8 +180,6 @@ def test_loss_routed_params_iterable(loss, n_outputs_):
     # Test iterable with index-based routed param
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss=[loss],
         loss__from_logits=True,
         loss__0__from_logits=False,  # should override above
@@ -242,8 +204,6 @@ def test_loss_routed_params_dict(loss, n_outputs_):
     # Test dict with global routed param
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss={"out1": loss},
         loss__from_logits=True,  # default is False
     )
@@ -253,8 +213,6 @@ def test_loss_routed_params_dict(loss, n_outputs_):
     # Test dict with key-based routed param
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss={"out1": loss},
         loss__from_logits=True,
         loss__out1__from_logits=False,  # should override above
@@ -268,10 +226,8 @@ def test_loss_routed_params_dict(loss, n_outputs_):
 )
 @pytest.mark.parametrize("n_outputs_", (1, 2))
 def test_metrics_single_metric_per_output(metrics, n_outputs_):
-    """Metrics without the ("name", metric, "output")
-    syntax should ignore all routed and custom options.
-
-    This tests a single metric per output.
+    """Test a single metric per output using vanilla
+    Keras sytnax and without any routed paramters.
     """
 
     X, y = make_classification()
@@ -291,10 +247,12 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     # List of metrics
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss="binary_crossentropy",
-        metrics=[metrics if not isclass(metrics) else metrics()],
+        metrics=[
+            metrics
+            if not isinstance(metrics, metrics_module.Metric)
+            else metrics()
+        ],
     )
     est.fit(X, y)
     assert est.model_.metrics[metric_idx].name == prefix + expected_name
@@ -302,11 +260,13 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     # List of lists of metrics
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss="binary_crossentropy",
         metrics=[
-            [metrics if not isclass(metrics) else metrics()]
+            [
+                metrics
+                if not isinstance(metrics, metrics_module.Metric)
+                else metrics()
+            ]
             for _ in range(n_outputs_)
         ],
     )
@@ -316,11 +276,11 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     # Dict of metrics
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss="binary_crossentropy",
         metrics={
-            f"out{i+1}": metrics if not isclass(metrics) else metrics()
+            f"out{i+1}": metrics
+            if not isinstance(metrics, metrics_module.Metric)
+            else metrics()
             for i in range(n_outputs_)
         },
     )
@@ -330,11 +290,11 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     # Dict of lists
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss="binary_crossentropy",
         metrics={
-            f"out{i+1}": metrics if not isclass(metrics) else metrics()
+            f"out{i+1}": metrics
+            if not isinstance(metrics, metrics_module.Metric)
+            else metrics()
             for i in range(n_outputs_)
         },
     )
@@ -368,11 +328,7 @@ def test_metrics_two_metric_per_output(n_outputs_):
         ]
 
     est = KerasClassifier(
-        model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
-        loss="binary_crossentropy",
-        metrics=metrics_,
+        model=get_model, loss="binary_crossentropy", metrics=metrics_,
     )
     est.fit(X, y)
     if n_outputs_ == 1:
@@ -392,11 +348,7 @@ def test_metrics_two_metric_per_output(n_outputs_):
 
     # Dict of metrics
     est = KerasClassifier(
-        model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
-        loss="binary_crossentropy",
-        metrics=metrics_,
+        model=get_model, loss="binary_crossentropy", metrics=metrics_,
     )
     est.fit(X, y)
     if n_outputs_ == 1:
@@ -422,8 +374,6 @@ def test_metrics_routed_params_iterable(n_outputs_):
 
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss="binary_crossentropy",
         metrics=[metrics],
         metrics__0__name="custom_name",
@@ -443,8 +393,6 @@ def test_metrics_routed_params_iterable(n_outputs_):
         metrics_ = [metrics for _ in range(n_outputs_)]
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss="binary_crossentropy",
         metrics=metrics_,
         metrics__name="name_all_metrics",  # ends up in index 1 only
@@ -477,8 +425,6 @@ def test_metrics_routed_params_dict():
 
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss="binary_crossentropy",
         metrics={"out1": metrics},
         metrics__out1__name="custom_name",
@@ -492,8 +438,6 @@ def test_metrics_routed_params_dict():
         metrics_ = {f"out{i+1}": metrics for i in range(n_outputs_)}
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss="binary_crossentropy",
         metrics=metrics_,
         metrics__name="name_all_metrics",  # ends up out2 only
@@ -516,11 +460,7 @@ def test_metrics_invalid_string():
     ]  # acccuracy (extra `c`) is not a metric
 
     est = KerasClassifier(
-        model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
-        loss="binary_crossentropy",
-        metrics=metrics,
+        model=get_model, loss="binary_crossentropy", metrics=metrics,
     )
     with pytest.raises(ValueError, match="Unknown metric function"):
         est.fit(X, y)
@@ -539,17 +479,11 @@ def test_metrics_uncompilable():
 
     est = KerasClassifier(
         model=get_model,
-        num_hidden=20,
-        optimizer="sgd",
         loss="binary_crossentropy",
         metrics=metrics,
         metrics__name="custom_name",
     )
-    expected_param = {"name": "custom_name"}
     with pytest.raises(
-        TypeError,
-        match=f'TypeError: "{str(metrics[0])}" object of type "{type(metrics[0])}"'
-        "does not accept parameters because it's not a class."
-        f' However, it received parameters "{expected_param}"',
+        TypeError, match="does not accept parameters because it's not a class"
     ):
         est.fit(X, y)

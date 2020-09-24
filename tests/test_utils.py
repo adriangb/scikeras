@@ -6,12 +6,7 @@ from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 
-from scikeras._utils import (
-    compile_with_params,
-    pack_keras_model,
-    route_params,
-    unpack_keras_model,
-)
+from scikeras._utils import pack_keras_model, route_params, unpack_keras_model
 
 
 @pytest.mark.parametrize("obj", [None, "notamodel"])
