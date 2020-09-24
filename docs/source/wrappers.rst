@@ -65,7 +65,7 @@ Only when the :py:func:`~scikeras.wrappers.KerasClassifier.fit` or
 :py:func:`~scikeras.wrappers.KerasRegressor.fit` method are called, are the
 different attributes of the wrapper, such as the ``model``, initialized.
 An initialized attribute's name always ends on an underscore; e.g., the
-initialized ``module`` is called ``model_``. (This is the same
+initialized ``model`` is called ``model_``. (This is the same
 nomenclature as sklearn uses.) Therefore, you always know which
 attributes you set and which ones were created by the wrappers.
 
@@ -447,14 +447,15 @@ of :py:class:`scikeras.wrappers.BaseWrappers`. Currently, they are:
 - ``callbacks__``: used to instantiate callbacks.
 - ``optimizer__``: used to instantiate optimizers.
 - ``loss__``: used to instantiate losses.
+- ``metrics__``: used to instantiate metrics.
 - ``score__``: passed to the scoring function, i.e. :func:`scikeras.wrappers.BaseWrapper.scorer`.
 
 All routed parameters will be available for hyperparameter tuning.
 
 Below are some example use cases.
 
-Multiple callbacks with multiple parameters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Example: multiple losses with routed parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: python
 
@@ -463,7 +464,6 @@ Multiple callbacks with multiple parameters
     clf = KerasClassifier(
         model=model_build_fn,
         loss=[BinaryCrossentropy, CategoricalCrossentropy],
-        optimizer="sgd",
         loss__from_logits=True,  # BinaryCrossentropy(from_logits=True) & CategoricalCrossentropy(from_logits=True)
         loss__0__label_smoothing=0.1,  # BinaryCrossentropy(label_smoothing=0.1)
         loss__1__label_smoothing=2,  # CategoricalCrossentropy(label_smoothing=0.1)
@@ -485,7 +485,6 @@ regex-based keys.
             "binary_output_2": BinaryCrossentropy,
             "categorical_output_1: CategoricalCrossentropy,
         }
-        optimizer="sgd",
         loss__param_groups=[
             ("binary_.*", {"label_smoothing": 0.1}),
             (".*_1", {"name": "FirstOutputs"}),
