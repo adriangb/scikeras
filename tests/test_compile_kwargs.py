@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from numpy.lib.arraysetops import isin
 from sklearn.datasets import make_classification
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
@@ -237,11 +238,9 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     metric_idx = 1 + (n_outputs_ if n_outputs_ > 1 else 0)
     prefix = "out1_" if n_outputs_ > 1 else ""
 
-    expected_name = metrics
-    if metrics != "binary_accuracy":
-        # Test discovery in VSCode fails if TF prints out _any_
-        # warnings during discovery
-        # (which of course it does if you try to instantiate anything)
+    if isinstance(metrics, str):
+        expected_name = metrics
+    else:
         expected_name = metrics().name
 
     # List of metrics

@@ -8,3 +8,7 @@ from sklearn.exceptions import DataConversionWarning  # noqa
 pytestmark = pytest.mark.filterwarnings(
     "error::sklearn.exceptions.DataConversionWarning"
 )
+
+# @pytest.mark.filterwarnings("ignore:api v1")
+# def test_one():
+#     assert api_v1() == 1
