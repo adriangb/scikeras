@@ -8,10 +8,7 @@ from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
-from tensorflow.python.keras.engine.compile_utils import (
-    losses_mod,
-    metrics_mod,
-)
+from tensorflow.python.keras.engine.compile_utils import losses_mod, metrics_mod
 
 from scikeras.wrappers import KerasClassifier
 
@@ -117,13 +114,9 @@ def test_loss(loss, n_outputs_):
     X, y = make_classification()
     y = np.column_stack([y for _ in range(n_outputs_)]).squeeze()
 
-    est = KerasClassifier(
-        model=get_model, loss=loss, loss__name="custom_name",
-    )
+    est = KerasClassifier(model=get_model, loss=loss, loss__name="custom_name",)
     est.fit(X, y)
-    assert str(loss) in str(est.model_.loss) or isinstance(
-        est.model_.loss, loss
-    )
+    assert str(loss) in str(est.model_.loss) or isinstance(est.model_.loss, loss)
 
 
 def test_loss_invalid_string():
@@ -171,9 +164,7 @@ def test_loss_routed_params_iterable(loss, n_outputs_):
 
     # Test iterable with global routed param
     est = KerasClassifier(
-        model=get_model,
-        loss=[loss],
-        loss__from_logits=True,  # default is False
+        model=get_model, loss=[loss], loss__from_logits=True,  # default is False
     )
     est.fit(X, y)
     assert est.model_.loss[0].from_logits
@@ -222,9 +213,7 @@ def test_loss_routed_params_dict(loss, n_outputs_):
     assert est.model_.loss["out1"].from_logits == False
 
 
-@pytest.mark.parametrize(
-    "metrics", ["binary_accuracy", metrics_module.BinaryAccuracy]
-)
+@pytest.mark.parametrize("metrics", ["binary_accuracy", metrics_module.BinaryAccuracy])
 @pytest.mark.parametrize("n_outputs_", (1, 2))
 def test_metrics_single_metric_per_output(metrics, n_outputs_):
     """Test a single metric per output using vanilla
@@ -248,9 +237,7 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         model=get_model,
         loss="binary_crossentropy",
         metrics=[
-            metrics
-            if not isinstance(metrics, metrics_module.Metric)
-            else metrics()
+            metrics if not isinstance(metrics, metrics_module.Metric) else metrics()
         ],
     )
     est.fit(X, y)
@@ -261,11 +248,7 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         model=get_model,
         loss="binary_crossentropy",
         metrics=[
-            [
-                metrics
-                if not isinstance(metrics, metrics_module.Metric)
-                else metrics()
-            ]
+            [metrics if not isinstance(metrics, metrics_module.Metric) else metrics()]
             for _ in range(n_outputs_)
         ],
     )
@@ -322,8 +305,7 @@ def test_metrics_two_metric_per_output(n_outputs_):
         metrics_ = [metric_class(name="1"), metric_class(name="2")]
     else:
         metrics_ = [
-            [metric_class(name="1"), metric_class(name="2")]
-            for _ in range(n_outputs_)
+            [metric_class(name="1"), metric_class(name="2")] for _ in range(n_outputs_)
         ]
 
     est = KerasClassifier(
@@ -458,9 +440,7 @@ def test_metrics_invalid_string():
         "acccuracy",
     ]  # acccuracy (extra `c`) is not a metric
 
-    est = KerasClassifier(
-        model=get_model, loss="binary_crossentropy", metrics=metrics,
-    )
+    est = KerasClassifier(model=get_model, loss="binary_crossentropy", metrics=metrics,)
     with pytest.raises(ValueError, match="Unknown metric function"):
         est.fit(X, y)
 

@@ -52,9 +52,7 @@ class TestInvalidBuildFn:
 
     def test_invalid_build_fn(self):
         clf = KerasClassifier(model="invalid")
-        with pytest.raises(
-            TypeError, match="`model` must be a callable or None"
-        ):
+        with pytest.raises(TypeError, match="`model` must be a callable or None"):
             clf.fit(np.array([[0]]), np.array([0]))
 
     def test_no_build_fn(self):
@@ -63,26 +61,20 @@ class TestInvalidBuildFn:
 
         clf = NoBuildFn()
 
-        with pytest.raises(
-            ValueError, match="must implement `_keras_build_fn`"
-        ):
+        with pytest.raises(ValueError, match="must implement `_keras_build_fn`"):
             clf.fit(np.array([[0]]), np.array([0]))
 
     def test_call_and_build_fn_function(self):
         class Clf(KerasClassifier):
             def _keras_build_fn(self, hidden_layer_sizes=(100,)):
-                return dynamic_classifier(
-                    hidden_layer_sizes=hidden_layer_sizes
-                )
+                return dynamic_classifier(hidden_layer_sizes=hidden_layer_sizes)
 
         def dummy_func():
             return None
 
         clf = Clf(build_fn=dummy_func,)
 
-        with pytest.raises(
-            ValueError, match="cannot implement `_keras_build_fn`"
-        ):
+        with pytest.raises(ValueError, match="cannot implement `_keras_build_fn`"):
             clf.fit(np.array([[0]]), np.array([0]))
 
 
@@ -112,12 +104,8 @@ def test_build_fn_deprecation():
     """An appropriate warning is raised when using the `build_fn`
     parameter instead of `model`.
     """
-    clf = KerasClassifier(
-        build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,)
-    )
-    with pytest.warns(
-        UserWarning, match="`build_fn` will be renamed to `model`"
-    ):
+    clf = KerasClassifier(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
+    with pytest.warns(UserWarning, match="`build_fn` will be renamed to `model`"):
         clf.fit([[1]], [1])
 
 

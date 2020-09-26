@@ -161,12 +161,8 @@ def test_sample_weights_fit():
     estimator2.fit(X, y)
     # estimator1 should tilt towards y=1
     # estimator2 should predict about equally
-    average_diff_pred_prob_1 = np.average(
-        np.diff(estimator1.predict_proba(X), axis=1)
-    )
-    average_diff_pred_prob_2 = np.average(
-        np.diff(estimator2.predict_proba(X), axis=1)
-    )
+    average_diff_pred_prob_1 = np.average(np.diff(estimator1.predict_proba(X), axis=1))
+    average_diff_pred_prob_2 = np.average(np.diff(estimator2.predict_proba(X), axis=1))
     assert average_diff_pred_prob_2 < average_diff_pred_prob_1
 
     # equal weighting
@@ -217,15 +213,11 @@ def test_build_fn_default_params():
     """Tests that default arguments arguments of
     `build_fn` are registered as hyperparameters.
     """
-    est = KerasClassifier(
-        build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
-    )
+    est = KerasClassifier(build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,))
     params = est.get_params()
     # (100, ) is the default for dynamic_classifier
     assert params["model__hidden_layer_sizes"] == (100,)
 
-    est = KerasClassifier(
-        build_fn=dynamic_classifier, model__hidden_layer_sizes=(200,)
-    )
+    est = KerasClassifier(build_fn=dynamic_classifier, model__hidden_layer_sizes=(200,))
     params = est.get_params()
     assert params["model__hidden_layer_sizes"] == (200,)

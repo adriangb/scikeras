@@ -36,9 +36,7 @@ def _get_check_estimator_ids(obj, estimator_ids=None):
         if not obj.keywords:
             return obj.func.__name__
 
-        kwstring = ",".join(
-            ["{}={}".format(k, v) for k, v in obj.keywords.items()]
-        )
+        kwstring = ",".join(["{}={}".format(k, v) for k, v in obj.keywords.items()])
         return "{}({})".format(obj.func.__name__, kwstring)
     if hasattr(obj, "get_params"):
         # An estimator
@@ -66,11 +64,7 @@ def parametrize_with_checks(estimators, ids=None):
     checks_generator = _parametrize_with_checks(estimators).args[1]
 
     if ids is not None:
-        estimator_ids = {
-            estimator: _id for _id, estimator in zip(ids, estimators)
-        }
+        estimator_ids = {estimator: _id for _id, estimator in zip(ids, estimators)}
         ids = partial(_get_check_estimator_ids, estimator_ids=estimator_ids)
 
-    return pytest.mark.parametrize(
-        "estimator, check", checks_generator, ids=ids
-    )
+    return pytest.mark.parametrize("estimator, check", checks_generator, ids=ids)
