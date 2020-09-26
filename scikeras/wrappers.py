@@ -22,22 +22,26 @@ from sklearn.utils.validation import (
     check_array,
     check_X_y,
 )
+from tensorflow.keras import losses as losses_module
+from tensorflow.keras import metrics as metrics_module
+from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import (
-    has_arg,
     register_keras_serializable,
 )
 
 from ._utils import (
     LabelDimensionTransformer,
     TFRandomState,
+    _class_from_strings,
     _windows_upcast_ints,
     accepts_kwargs,
     get_metric_full_name,
     has_param,
     make_model_picklable,
     route_params,
+    unflatten_params,
 )
 
 
@@ -124,7 +128,15 @@ class BaseWrapper(BaseEstimator):
         "_user_params",
     }
 
-    _routing_prefixes = {"model", "fit", "compile", "predict"}
+    _routing_prefixes = {
+        "model",
+        "fit",
+        "compile",
+        "predict",
+        "optimizer",
+        "loss",
+        "metrics",
+    }
 
     def __init__(
         self,
@@ -227,6 +239,61 @@ class BaseWrapper(BaseEstimator):
 
         return final_build_fn
 
+    def _get_compile_kwargs(self):
+        """Convert all __init__ params destined to
+        `compile` into valid kwargs for `Model.compile` by parsing
+        routed parameters and compiling optimizers, losses and metrics
+        as needed.
+
+        Returns
+        -------
+        dict
+            Dictionary of kwargs for `Model.compile`.
+        """
+        init_params = self.get_params()
+        compile_kwargs = route_params(
+            init_params,
+            destination="compile",
+            pass_filter=self._compile_kwargs,
+        )
+        compile_kwargs["optimizer"] = _class_from_strings(
+            compile_kwargs["optimizer"], optimizers_module.get
+        )
+        compile_kwargs["optimizer"] = unflatten_params(
+            items=compile_kwargs["optimizer"],
+            params=route_params(
+                init_params,
+                destination="optimizer",
+                pass_filter=set(),
+                strict=True,
+            ),
+        )
+        compile_kwargs["loss"] = _class_from_strings(
+            compile_kwargs["loss"], losses_module.get
+        )
+        compile_kwargs["loss"] = unflatten_params(
+            items=compile_kwargs["loss"],
+            params=route_params(
+                init_params,
+                destination="loss",
+                pass_filter=set(),
+                strict=False,
+            ),
+        )
+        compile_kwargs["metrics"] = _class_from_strings(
+            compile_kwargs["metrics"], metrics_module.get
+        )
+        compile_kwargs["metrics"] = unflatten_params(
+            items=compile_kwargs["metrics"],
+            params=route_params(
+                init_params,
+                destination="metrics",
+                pass_filter=set(),
+                strict=False,
+            ),
+        )
+        return compile_kwargs
+
     def _build_keras_model(self):
         """Build the Keras model.
 
@@ -249,6 +316,7 @@ class BaseWrapper(BaseEstimator):
             destination="model",
             pass_filter=getattr(self, "_user_params", set()),
         )
+        compile_kwargs = None
         if has_param(final_build_fn, "meta") or accepts_kwargs(final_build_fn):
             # build_fn accepts `meta`, add it
             meta = route_params(
@@ -259,9 +327,7 @@ class BaseWrapper(BaseEstimator):
             final_build_fn
         ):
             # build_fn accepts `compile_kwargs`, add it
-            compile_kwargs = route_params(
-                params, destination="compile", pass_filter=self._compile_kwargs
-            )
+            compile_kwargs = self._get_compile_kwargs()
             build_params["compile_kwargs"] = compile_kwargs
         if has_param(final_build_fn, "params") or accepts_kwargs(
             final_build_fn
@@ -278,6 +344,12 @@ class BaseWrapper(BaseEstimator):
 
         # make serializable
         make_model_picklable(model)
+
+        # compile model if user gave us an un-compiled model
+        if not (hasattr(model, "loss") and hasattr(model, "optimizer")):
+            if compile_kwargs is None:
+                compile_kwargs = self._get_compile_kwargs()
+            model.compile(**compile_kwargs)
 
         return model
 
@@ -533,20 +605,17 @@ class BaseWrapper(BaseEstimator):
             ValueError : In case of invalid shape for `y` argument.
         """
         # Handle random state
-        if hasattr(self, "random_state"):
-            if isinstance(self.random_state, np.random.RandomState):
-                # Keras needs an integer
-                # we sample an integer and use that as a seed
-                # Given the same RandomState, the seed will always be
-                # the same, thus giving reproducible results
-                state = self.random_state.get_state()
-                self._random_state = self.random_state.randint(low=1)
-                self.random_state.set_state(state)
-            else:
-                # int or None
-                self._random_state = self.random_state
+        if isinstance(self.random_state, np.random.RandomState):
+            # Keras needs an integer
+            # we sample an integer and use that as a seed
+            # Given the same RandomState, the seed will always be
+            # the same, thus giving reproducible results
+            state = self.random_state.get_state()
+            self._random_state = self.random_state.randint(low=1)
+            self.random_state.set_state(state)
         else:
-            self._random_state = None
+            # int or None
+            self._random_state = self.random_state
 
         # Data checks
         if warm_start and not hasattr(self, "n_features_in_"):
@@ -682,11 +751,6 @@ class BaseWrapper(BaseEstimator):
         Returns:
             score: float
                 Mean accuracy of predictions on `X` wrt. `y`.
-
-        Raises:
-            ValueError: If the underlying model isn't configured to
-                compute accuracy. You should pass `metrics=["accuracy"]` to
-                the `.compile()` method of the model.
         """
         # validate sample weights
         if sample_weight is not None:

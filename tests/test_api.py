@@ -14,28 +14,19 @@ from sklearn.ensemble import (
     BaggingClassifier,
     BaggingRegressor,
 )
-from sklearn.exceptions import DataConversionWarning  # noqa
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
 from tensorflow.keras.models import Model, Sequential
-from tensorflow.keras.optimizers import Adam
 from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
-from scikeras import wrappers
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .testing_utils import basic_checks
-
-
-# Force data conversion warnings to be come errors
-pytestmark = pytest.mark.filterwarnings(
-    "error::sklearn.exceptions.DataConversionWarning"
-)
 
 
 def build_fn_clf(
@@ -82,7 +73,7 @@ def build_fn_reg(
     return model
 
 
-class InheritClassBuildFnClf(wrappers.KerasClassifier):
+class InheritClassBuildFnClf(KerasClassifier):
     def _keras_build_fn(
         self, hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
@@ -91,7 +82,7 @@ class InheritClassBuildFnClf(wrappers.KerasClassifier):
         )
 
 
-class InheritClassBuildFnReg(wrappers.KerasRegressor):
+class InheritClassBuildFnReg(KerasRegressor):
     def _keras_build_fn(
         self, hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
@@ -105,7 +96,7 @@ class TestBasicAPI:
 
     def test_classify_build_fn(self):
         """Tests a classification task for errors."""
-        clf = wrappers.KerasClassifier(build_fn=build_fn_clf, hidden_dim=5)
+        clf = KerasClassifier(build_fn=build_fn_clf, hidden_dim=5)
         basic_checks(clf, load_iris)
 
     def test_classify_inherit_class_build_fn(self):
@@ -116,7 +107,7 @@ class TestBasicAPI:
 
     def test_regression_build_fn(self):
         """Tests for errors using KerasRegressor."""
-        reg = wrappers.KerasRegressor(build_fn=build_fn_reg, hidden_dim=5)
+        reg = KerasRegressor(build_fn=build_fn_reg, hidden_dim=5)
         basic_checks(reg, load_boston)
 
     def test_regression_inherit_class_build_fn(self):
@@ -295,7 +286,7 @@ class TestAdvancedAPIFuncs:
         estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         params = {
             "model__hidden_layer_sizes": [[], [5]],
-            "compile__optimizer": ["sgd", "adam"],
+            "optimizer": ["sgd", "adam"],
         }
         search = GridSearchCV(estimator, params)
         basic_checks(search, loader)
@@ -563,3 +554,47 @@ def test_history():
     assert isinstance(estimator.history_, dict)
     assert all(isinstance(k, str) for k in estimator.history_.keys())
     assert all(isinstance(v, list) for v in estimator.history_.values())
+
+
+def test_compile_model_from_params():
+    """Tests that if build_fn returns an un-compiled model,
+    the __init__ parameters will be used to compile it
+    and that if build_fn returns a compiled model
+    it is not re-compiled.
+    """
+    # Load data
+    data = load_boston()
+    X, y = data.data[:100], data.target[:100]
+
+    losses = ("mean_squared_error", "mean_absolute_error")
+
+    # build_fn that does not compile
+    def build_fn(compile_with_loss=None):
+        model = Sequential()
+        model.add(keras.layers.Dense(X.shape[1], input_shape=(X.shape[1],)))
+        model.add(keras.layers.Activation("relu"))
+        model.add(keras.layers.Dense(1))
+        model.add(keras.layers.Activation("linear"))
+        if compile_with_loss:
+            model.compile(loss=compile_with_loss)
+        return model
+
+    for loss in losses:
+        estimator = KerasRegressor(
+            build_fn=build_fn,
+            loss=loss,
+            # compile_with_loss=None returns an un-compiled model
+            compile_with_loss=None,
+        )
+        estimator.fit(X, y)
+        assert estimator.model_.loss.__name__ == loss
+
+    for myloss in losses:
+        estimator = KerasRegressor(
+            build_fn=build_fn,
+            loss="binary_crossentropy",
+            # compile_with_loss != None overrides loss
+            compile_with_loss=myloss,
+        )
+        estimator.fit(X, y)
+        assert estimator.model_.loss == myloss
