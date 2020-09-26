@@ -27,9 +27,7 @@ from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import is_categorical_crossentropy
-from tensorflow.python.keras.utils.generic_utils import (
-    register_keras_serializable,
-)
+from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
 
 from ._utils import (
     LabelDimensionTransformer,
@@ -252,9 +250,7 @@ class BaseWrapper(BaseEstimator):
         """
         init_params = self.get_params()
         compile_kwargs = route_params(
-            init_params,
-            destination="compile",
-            pass_filter=self._compile_kwargs,
+            init_params, destination="compile", pass_filter=self._compile_kwargs,
         )
         compile_kwargs["optimizer"] = _class_from_strings(
             compile_kwargs["optimizer"], optimizers_module.get
@@ -262,10 +258,7 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs["optimizer"] = unflatten_params(
             items=compile_kwargs["optimizer"],
             params=route_params(
-                init_params,
-                destination="optimizer",
-                pass_filter=set(),
-                strict=True,
+                init_params, destination="optimizer", pass_filter=set(), strict=True,
             ),
         )
         compile_kwargs["loss"] = _class_from_strings(
@@ -274,10 +267,7 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs["loss"] = unflatten_params(
             items=compile_kwargs["loss"],
             params=route_params(
-                init_params,
-                destination="loss",
-                pass_filter=set(),
-                strict=False,
+                init_params, destination="loss", pass_filter=set(), strict=False,
             ),
         )
         compile_kwargs["metrics"] = _class_from_strings(
@@ -286,10 +276,7 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs["metrics"] = unflatten_params(
             items=compile_kwargs["metrics"],
             params=route_params(
-                init_params,
-                destination="metrics",
-                pass_filter=set(),
-                strict=False,
+                init_params, destination="metrics", pass_filter=set(), strict=False,
             ),
         )
         return compile_kwargs
@@ -329,9 +316,7 @@ class BaseWrapper(BaseEstimator):
             # build_fn accepts `compile_kwargs`, add it
             compile_kwargs = self._get_compile_kwargs()
             build_params["compile_kwargs"] = compile_kwargs
-        if has_param(final_build_fn, "params") or accepts_kwargs(
-            final_build_fn
-        ):
+        if has_param(final_build_fn, "params") or accepts_kwargs(final_build_fn):
             # build_fn accepts `params`, i.e. all of get_params()
             build_params["params"] = self.get_params()
 
@@ -385,9 +370,7 @@ class BaseWrapper(BaseEstimator):
 
         # collect parameters
         params = self.get_params()
-        fit_args = route_params(
-            params, destination="fit", pass_filter=self._fit_kwargs
-        )
+        fit_args = route_params(params, destination="fit", pass_filter=self._fit_kwargs)
         fit_args["sample_weight"] = sample_weight
 
         if self._random_state is not None:
@@ -421,9 +404,7 @@ class BaseWrapper(BaseEstimator):
             raise RuntimeError(
                 "Detected an input of size "
                 "{}, but {} has {} outputs".format(
-                    (y[0].shape[0], len(y)),
-                    self.model_,
-                    len(self.model_.outputs),
+                    (y[0].shape[0], len(y)), self.model_, len(self.model_.outputs),
                 )
             )
 
@@ -764,13 +745,9 @@ class BaseWrapper(BaseEstimator):
 
         # filter kwargs and get attributes for score
         params = self.get_params()
-        score_args = route_params(
-            params, destination="score", pass_filter=set()
-        )
+        score_args = route_params(params, destination="score", pass_filter=set())
 
-        return self.scorer(
-            y, y_pred, sample_weight=sample_weight, **score_args
-        )
+        return self.scorer(y, y_pred, sample_weight=sample_weight, **score_args)
 
     def get_meta(self) -> Dict[str, Any]:
         """Get meta parameters (parameters created by fit, like
@@ -797,8 +774,7 @@ class BaseWrapper(BaseEstimator):
         passthrough = dict()
         for param, value in params.items():
             if any(
-                param.startswith(prefix + "__")
-                for prefix in self._routing_prefixes
+                param.startswith(prefix + "__") for prefix in self._routing_prefixes
             ):
                 # routed param
                 setattr(self, param, value)
@@ -809,9 +785,7 @@ class BaseWrapper(BaseEstimator):
     def _get_param_names(self):
         """Get parameter names for the estimator"""
         return (
-            k
-            for k in self.__dict__
-            if not k.endswith("_") and not k.startswith("_")
+            k for k in self.__dict__ if not k.endswith("_") and not k.startswith("_")
         )
 
     def _more_tags(self):
@@ -938,9 +912,7 @@ class KerasClassifier(BaseWrapper):
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
-                encoder.fit_transform(
-                    y_.reshape(-1,) if y_.shape[1] == 1 else y_
-                )
+                encoder.fit_transform(y_.reshape(-1,) if y_.shape[1] == 1 else y_)
                 for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
@@ -953,9 +925,7 @@ class KerasClassifier(BaseWrapper):
             # encode
             encoders_ = [LabelEncoder() for _ in range(len(y))]
             y = [
-                encoder.fit_transform(
-                    y_.reshape(-1,) if y_.shape[1] == 1 else y_
-                )
+                encoder.fit_transform(y_.reshape(-1,) if y_.shape[1] == 1 else y_)
                 for encoder, y_ in zip(encoders_, y)
             ]
             classes_ = [encoder.classes_ for encoder in encoders_]
@@ -1022,9 +992,7 @@ class KerasClassifier(BaseWrapper):
                     if y_.shape[1] == 1:
                         # Appease the demands of sklearn transformers
                         y_ = np.squeeze(y_, axis=1)
-                    class_predictions.append(
-                        self.encoders_[i].inverse_transform(y_)
-                    )
+                    class_predictions.append(self.encoders_[i].inverse_transform(y_))
                 if (
                     len(y[i].shape) == 1
                     or y[i].shape[1] == 1
@@ -1042,14 +1010,10 @@ class KerasClassifier(BaseWrapper):
                 if y_.shape[1] == 1:
                     # Appease the demands of sklearn transformers
                     y_ = np.squeeze(y_, axis=1)
-                class_predictions.append(
-                    self.encoders_[i].inverse_transform(y_)
-                )
+                class_predictions.append(self.encoders_[i].inverse_transform(y_))
             elif target_type_ == "multilabel-indicator":
                 class_predictions.append(
-                    self.encoders_[i].inverse_transform(
-                        np.argmax(y[i], axis=1)
-                    )
+                    self.encoders_[i].inverse_transform(np.argmax(y[i], axis=1))
                 )
 
         class_probabilities = np.squeeze(np.column_stack(y))
@@ -1145,9 +1109,7 @@ class KerasClassifier(BaseWrapper):
 
         # collect arguments
         predict_args = route_params(
-            self.get_params(),
-            destination="predict",
-            pass_filter=self._predict_kwargs,
+            self.get_params(), destination="predict", pass_filter=self._predict_kwargs,
         )
 
         # call the Keras model's predict
@@ -1262,13 +1224,9 @@ class KerasRegressor(BaseWrapper):
         # y_pred will always be float32 so we cast y_true to float32
         y_true = tf.cast(y_true, dtype=y_pred.dtype)
         # Calculate R^2
-        ss_res = tf.math.reduce_sum(
-            tf.math.squared_difference(y_true, y_pred), axis=0
-        )
+        ss_res = tf.math.reduce_sum(tf.math.squared_difference(y_true, y_pred), axis=0)
         ss_tot = tf.math.reduce_sum(
-            tf.math.squared_difference(
-                y_true, tf.math.reduce_mean(y_true, axis=0)
-            ),
+            tf.math.squared_difference(y_true, tf.math.reduce_mean(y_true, axis=0)),
             axis=0,
         )
         return tf.math.reduce_mean(

@@ -61,11 +61,7 @@ def test_fully_compliant_estimators(estimator, check):
 
 class SubclassedClassifier(KerasClassifier):
     def __init__(
-        self,
-        model__hidden_layer_sizes=(100,),
-        metrics=None,
-        loss=None,
-        **kwargs,
+        self, model__hidden_layer_sizes=(100,), metrics=None, loss=None, **kwargs,
     ):
         super().__init__(**kwargs)
         self.model__hidden_layer_sizes = model__hidden_layer_sizes
@@ -74,10 +70,7 @@ class SubclassedClassifier(KerasClassifier):
         self.optimizer = "sgd"
 
     def _keras_build_fn(
-        self,
-        hidden_layer_sizes,
-        meta: Dict[str, Any],
-        compile_kwargs: Dict[str, Any],
+        self, hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
         return dynamic_classifier(
             hidden_layer_sizes=hidden_layer_sizes,

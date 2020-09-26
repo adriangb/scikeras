@@ -59,17 +59,13 @@ def build_fn_reg(
     n_features_in_ = meta["n_features_in_"]
 
     model = keras.models.Sequential()
-    model.add(
-        keras.layers.Dense(n_features_in_, input_shape=(n_features_in_,))
-    )
+    model.add(keras.layers.Dense(n_features_in_, input_shape=(n_features_in_,)))
     model.add(keras.layers.Activation("relu"))
     model.add(keras.layers.Dense(hidden_dim))
     model.add(keras.layers.Activation("relu"))
     model.add(keras.layers.Dense(1))
     model.add(keras.layers.Activation("linear"))
-    model.compile(
-        optimizer="sgd", loss="mean_absolute_error", metrics=["accuracy"]
-    )
+    model.compile(optimizer="sgd", loss="mean_absolute_error", metrics=["accuracy"])
     return model
 
 
@@ -175,9 +171,7 @@ def build_fn_clscs(
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(n_classes_, activation="softmax"))
-    model.compile(
-        "adam", loss="categorical_crossentropy", metrics=["accuracy"]
-    )
+    model.compile("adam", loss="categorical_crossentropy", metrics=["accuracy"])
     return model
 
 
@@ -196,9 +190,7 @@ def build_fn_clscf(
         z = Dense(size, activation="relu")(z)
     y = Dense(n_classes_, activation="softmax")(z)
     model = Model(inputs=x, outputs=y)
-    model.compile(
-        "adam", loss="categorical_crossentropy", metrics=["accuracy"]
-    )
+    model.compile("adam", loss="categorical_crossentropy", metrics=["accuracy"])
     return model
 
 
@@ -234,8 +226,7 @@ class TestAdvancedAPIFuncs:
     """Tests advanced features such as pipelines and hyperparameter tuning."""
 
     @pytest.mark.parametrize(
-        "config",
-        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+        "config", ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_standalone(self, config):
         """Tests standalone estimator."""
@@ -252,21 +243,16 @@ class TestAdvancedAPIFuncs:
         basic_checks(estimator, loader)
 
     @pytest.mark.parametrize(
-        "config",
-        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+        "config", ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_searchcv_init_params(self, config):
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         loader, model, build_fn, _ = CONFIG[config]
         estimator = model(
-            build_fn,
-            epochs=1,
-            validation_split=0.1,
-            model__hidden_layer_sizes=[],
+            build_fn, epochs=1, validation_split=0.1, model__hidden_layer_sizes=[],
         )
         basic_checks(
-            GridSearchCV(estimator, {"model__hidden_layer_sizes": [[], [5]]}),
-            loader,
+            GridSearchCV(estimator, {"model__hidden_layer_sizes": [[], [5]]}), loader,
         )
         basic_checks(
             RandomizedSearchCV(
@@ -290,18 +276,13 @@ class TestAdvancedAPIFuncs:
         }
         search = GridSearchCV(estimator, params)
         basic_checks(search, loader)
-        assert search.best_estimator_.model_.optimizer._name.lower() in (
-            "sgd",
-            "adam",
-        )
+        assert search.best_estimator_.model_.optimizer._name.lower() in ("sgd", "adam",)
 
     @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
     def test_ensemble(self, config):
         """Tests compatibility with Scikit-learn's ensembles."""
         loader, model, build_fn, ensembles = CONFIG[config]
-        base_estimator = model(
-            build_fn, epochs=1, model__hidden_layer_sizes=[]
-        )
+        base_estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         for ensemble in ensembles:
             estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
@@ -342,11 +323,7 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={
-                    "optimizer": "adam",
-                    "loss": None,
-                    "metrics": None,
-                },
+                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
         else:
             meta = {
@@ -356,11 +333,7 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={
-                    "optimizer": "adam",
-                    "loss": None,
-                    "metrics": None,
-                },
+                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
 
         estimator = model(build_fn=keras_model)
@@ -386,11 +359,7 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={
-                    "optimizer": "adam",
-                    "loss": None,
-                    "metrics": None,
-                },
+                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
         else:
             meta = {
@@ -400,11 +369,7 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={
-                    "optimizer": "adam",
-                    "loss": None,
-                    "metrics": None,
-                },
+                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
 
         base_estimator = model(build_fn=keras_model)
@@ -460,9 +425,7 @@ class TestPartialFit:
         # Make sure new model not created
         model = estimator.model_
         estimator.partial_fit(X, y)
-        assert (
-            estimator.model_ is model
-        ), "Model memory address should remain constant"
+        assert estimator.model_ is model, "Model memory address should remain constant"
 
     def test_partial_fit_history_len(self):
         # history_ records the history from this partial_fit call
@@ -509,9 +472,7 @@ class TestPartialFit:
             clf2.partial_fit(X, y)
             assert len(clf.history_["loss"]) == 1
             assert len(clf2.history_["loss"]) == k
-            assert np.allclose(
-                clf.history_["loss"][0], clf2.history_["loss"][0]
-            )
+            assert np.allclose(clf.history_["loss"][0], clf2.history_["loss"][0])
 
         weights1 = [w.numpy() for w in clf.model_.weights]
         weights2 = [w.numpy() for w in clf2.model_.weights]
@@ -545,9 +506,7 @@ def test_history():
     """
     data = load_boston()
     X, y = data.data[:100], data.target[:100]
-    estimator = KerasRegressor(
-        build_fn=dynamic_regressor, model__hidden_layer_sizes=[]
-    )
+    estimator = KerasRegressor(build_fn=dynamic_regressor, model__hidden_layer_sizes=[])
 
     estimator.partial_fit(X, y)
 

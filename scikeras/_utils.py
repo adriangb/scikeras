@@ -33,12 +33,8 @@ class TFRandomState:
         )
 
         # Save values
-        self.origin_hashseed = os.environ.get(
-            "PYTHONHASHSEED", self._not_found
-        )
-        self.origin_gpu_det = os.environ.get(
-            "TF_DETERMINISTIC_OPS", self._not_found
-        )
+        self.origin_hashseed = os.environ.get("PYTHONHASHSEED", self._not_found)
+        self.origin_gpu_det = os.environ.get("TF_DETERMINISTIC_OPS", self._not_found)
         self.orig_random_state = random.getstate()
         self.orig_np_random_state = np.random.get_state()
 
@@ -262,10 +258,7 @@ def unflatten_params(items, params, base_params=None):
             kwargs[p] = unflatten_params(
                 items=v,
                 params=route_params(
-                    params=params,
-                    destination=f"{p}",
-                    pass_filter=set(),
-                    strict=False,
+                    params=params, destination=f"{p}", pass_filter=set(), strict=False,
                 ),
             )
         return item(**kwargs)
@@ -275,10 +268,7 @@ def unflatten_params(items, params, base_params=None):
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for idx, item in enumerate(items):
             item_params = route_params(
-                params=params,
-                destination=f"{idx}",
-                pass_filter=set(),
-                strict=False,
+                params=params, destination=f"{idx}", pass_filter=set(), strict=False,
             )
             res.append(
                 unflatten_params(
@@ -291,10 +281,7 @@ def unflatten_params(items, params, base_params=None):
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for key, item in items.items():
             item_params = route_params(
-                params=params,
-                destination=f"{key}",
-                pass_filter=set(),
-                strict=False,
+                params=params, destination=f"{key}", pass_filter=set(), strict=False,
             )
             res[key] = unflatten_params(
                 items=item, params=item_params, base_params=new_base_params,
@@ -314,28 +301,19 @@ def unflatten_params(items, params, base_params=None):
     return item
 
 
-def _class_from_strings(
-    items: Union[str, dict, tuple, list], class_getter: Callable
-):
+def _class_from_strings(items: Union[str, dict, tuple, list], class_getter: Callable):
     """Convert shorthand optimizer/loss/metric names to classes.
     """
     if isinstance(items, str):
         item = items
         got = class_getter(item)
-        if hasattr(got, "__class__") and type(got).__module__.startswith(
-            "tensorflow"
-        ):
+        if hasattr(got, "__class__") and type(got).__module__.startswith("tensorflow"):
             # optimizers.get returns instances instead of classes
             got = got.__class__
         return got
     elif isinstance(items, (list, tuple)):
-        return type(items)(
-            [_class_from_strings(item, class_getter) for item in items]
-        )
+        return type(items)([_class_from_strings(item, class_getter) for item in items])
     elif isinstance(items, dict):
-        return {
-            k: _class_from_strings(item, class_getter)
-            for k, item in items.items()
-        }
+        return {k: _class_from_strings(item, class_getter) for k, item in items.items()}
     else:
         return items
