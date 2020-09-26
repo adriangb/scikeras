@@ -17,11 +17,7 @@ from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from sklearn.utils.multiclass import type_of_target
-from sklearn.utils.validation import (
-    _check_sample_weight,
-    check_array,
-    check_X_y,
-)
+from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module

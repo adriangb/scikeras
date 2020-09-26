@@ -8,10 +8,7 @@ from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
-from tensorflow.python.keras.engine.compile_utils import (
-    losses_mod,
-    metrics_mod,
-)
+from tensorflow.python.keras.engine.compile_utils import losses_mod, metrics_mod
 
 from scikeras.wrappers import KerasClassifier
 
