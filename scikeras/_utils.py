@@ -249,7 +249,7 @@ def accepts_kwargs(func: Callable) -> bool:
     )
 
 
-def compile_with_params(items, params, base_params=None):
+def unflatten_params(items, params, base_params=None):
     """Recursively compile nested structures of classes
     using parameters from params.
     """
@@ -259,7 +259,7 @@ def compile_with_params(items, params, base_params=None):
         base_params = base_params or dict()
         kwargs = {**base_params, **new_base_params}
         for p, v in kwargs.items():
-            kwargs[p] = compile_with_params(
+            kwargs[p] = unflatten_params(
                 items=v,
                 params=route_params(
                     params=params,
@@ -281,7 +281,7 @@ def compile_with_params(items, params, base_params=None):
                 strict=False,
             )
             res.append(
-                compile_with_params(
+                unflatten_params(
                     items=item, params=item_params, base_params=new_base_params
                 )
             )
@@ -296,7 +296,7 @@ def compile_with_params(items, params, base_params=None):
                 pass_filter=set(),
                 strict=False,
             )
-            res[key] = compile_with_params(
+            res[key] = unflatten_params(
                 items=item, params=item_params, base_params=new_base_params,
             )
         return res

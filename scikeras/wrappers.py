@@ -37,11 +37,11 @@ from ._utils import (
     _class_from_strings,
     _windows_upcast_ints,
     accepts_kwargs,
-    compile_with_params,
     get_metric_full_name,
     has_param,
     make_model_picklable,
     route_params,
+    unflatten_params,
 )
 
 
@@ -259,7 +259,7 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs["optimizer"] = _class_from_strings(
             compile_kwargs["optimizer"], optimizers_module.get
         )
-        compile_kwargs["optimizer"] = compile_with_params(
+        compile_kwargs["optimizer"] = unflatten_params(
             items=compile_kwargs["optimizer"],
             params=route_params(
                 init_params,
@@ -271,7 +271,7 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs["loss"] = _class_from_strings(
             compile_kwargs["loss"], losses_module.get
         )
-        compile_kwargs["loss"] = compile_with_params(
+        compile_kwargs["loss"] = unflatten_params(
             items=compile_kwargs["loss"],
             params=route_params(
                 init_params,
@@ -283,7 +283,7 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs["metrics"] = _class_from_strings(
             compile_kwargs["metrics"], metrics_module.get
         )
-        compile_kwargs["metrics"] = compile_with_params(
+        compile_kwargs["metrics"] = unflatten_params(
             items=compile_kwargs["metrics"],
             params=route_params(
                 init_params,
