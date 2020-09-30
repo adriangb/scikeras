@@ -153,3 +153,29 @@ def test_no_loss(loss, compile):
     est = KerasRegressor(model=get_model, loss=loss, compile=compile)
     with pytest.raises(ValueError, match="must provide a loss function"):
         est.fit([[1]], [1])
+
+
+@pytest.mark.parametrize("compile", [True, False])
+def test_no_optimizer(compile):
+    def get_model(compile, meta, compile_kwargs):
+        inp = Input(shape=(meta["n_features_in_"],))
+        hidden = Dense(10, activation="relu")(inp)
+        out = [
+            Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden)
+            for i in range(meta["n_outputs_"])
+        ]
+        model = Model(inp, out)
+        if compile:
+            model.compile(**compile_kwargs)
+        return model
+
+    est = KerasRegressor(
+        model=get_model,
+        loss="categorical_crossentropy",
+        compile=compile,
+        optimizer=None,
+    )
+    with pytest.raises(
+        ValueError, match="Could not interpret optimizer identifier"  # Keras error
+    ):
+        est.fit([[1]], [1])
