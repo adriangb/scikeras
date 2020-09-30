@@ -332,6 +332,16 @@ class BaseWrapper(BaseEstimator):
                 compile_kwargs = self._get_compile_kwargs()
             model.compile(**compile_kwargs)
 
+        if not getattr(model, "loss", None) or (
+            isinstance(model.loss, list) and all(l is None for l in model.loss)
+        ):
+            raise ValueError(
+                "You must provide a loss function to train a model."
+                " Please provide a loss function via the `loss` parameter or"
+                " compile your model with a loss function within your `model`"
+                " model-building method."
+            )
+
         return model
 
     def _fit_keras_model(self, X, y, sample_weight, warm_start):
