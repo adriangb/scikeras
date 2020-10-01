@@ -146,6 +146,8 @@ def test_model_wrong_type():
     est = KerasClassifier(build_fn=object())
     with pytest.raises(
         TypeError, match="`model` must be a callable, a Keras Model instance or None"
+    ):
+        est.fit([[1]], [1])
 
 
 @pytest.mark.parametrize("loss", [None, [None]])
@@ -190,6 +192,5 @@ def test_no_optimizer(compile):
     )
     with pytest.raises(
         ValueError, match="Could not interpret optimizer identifier"  # Keras error
-
     ):
         est.fit([[1]], [1])
