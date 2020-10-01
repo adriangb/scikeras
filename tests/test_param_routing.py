@@ -24,9 +24,13 @@ def test_routing_basic(wrapper, builder):
     X = np.random.uniform(size=(n, d)).astype(float)
     y = np.random.choice(n_classes, size=n).astype(int)
 
-    est = wrapper(build_fn=builder, model__hidden_layer_sizes=(100,))
+    foo_val = object()
 
-    def build_fn(hidden_layer_sizes, compile_kwargs, params, meta):
+    est = wrapper(
+        build_fn=builder, model__hidden_layer_sizes=(100,), model__foo=foo_val
+    )
+
+    def build_fn(hidden_layer_sizes, foo, compile_kwargs, params, meta):
         assert set(params.keys()) == set(est.get_params().keys())
         expected_meta = wrapper._meta - {
             "model_",
@@ -35,13 +39,19 @@ def test_routing_basic(wrapper, builder):
         }
         assert set(meta.keys()) == expected_meta
         assert set(compile_kwargs.keys()).issubset(wrapper._compile_kwargs)
+        assert foo is foo_val
         return builder(
             hidden_layer_sizes=hidden_layer_sizes,
             compile_kwargs=compile_kwargs,
             meta=meta,
         )
 
-    est = wrapper(build_fn=build_fn, model__hidden_layer_sizes=(100,))
+    est = wrapper(
+        build_fn=build_fn, model__hidden_layer_sizes=(100,), model__foo=foo_val
+    )
+    est.fit(X, y)
+
+    est = wrapper(build_fn=build_fn, model__hidden_layer_sizes=(100,), foo=foo_val)
     est.fit(X, y)
 
 

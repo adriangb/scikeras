@@ -12,25 +12,24 @@ from scikeras.wrappers import KerasClassifier, KerasRegressor
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
-def test_validate_data():
-    """Tests the BaseWrapper._validate_data method.
+def test_shape_change_error():
+    """Tests that a ValueError is raised if the input
+    changes shape in subsequent partial fit calls.
     """
 
     estimator = KerasRegressor(
-        build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
+        model=dynamic_regressor,
+        loss=KerasRegressor.r_squared,
+        hidden_layer_sizes=(100,),
     )
     X = np.array([[1, 2], [3, 4]])
-    y = np.array([5, 6])
+    y = np.array([[0, 1, 0], [1, 0, 0]])
 
-    with pytest.raises(RuntimeError, match="Is this estimator fitted?"):
-        # First call requires reset=True
-        estimator._validate_data(X=X, y=y, reset=False)
+    estimator.fit(X=X, y=y)
 
-    estimator._validate_data(X=X, y=y, reset=True)  # no error
-
-    with pytest.raises(ValueError, match=r"but this \w+ is expecting "):
+    with pytest.raises(ValueError, match=r"but this [\w\d]+ is expecting "):
         # Calling with a different shape for X raises an error
-        estimator._validate_data(X=X[:, :1], y=y, reset=False)
+        estimator.partial_fit(X=X[:, :1], y=y)
 
 
 def test_not_fitted_error():
@@ -53,8 +52,11 @@ class TestInvalidBuildFn:
     """
 
     def test_invalid_build_fn(self):
-        clf = KerasClassifier(model="invalid")
-        with pytest.raises(TypeError, match="`model` must be a callable or None"):
+        class Model:
+            pass
+
+        clf = KerasClassifier(model=Model())
+        with pytest.raises(TypeError, match="`model` must be"):
             clf.fit(np.array([[0]]), np.array([0]))
 
     def test_no_build_fn(self):
