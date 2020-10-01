@@ -334,6 +334,21 @@ class BaseWrapper(BaseEstimator):
                 compile_kwargs = self._get_compile_kwargs()
             model.compile(**compile_kwargs)
 
+        if not getattr(model, "loss", None) or (
+            isinstance(model.loss, list)
+            and not any(callable(l) or isinstance(l, str) for l in model.loss)
+        ):
+            raise ValueError(
+                "No valid loss function found."
+                " You must provide a loss function to train."
+                "\n\nTo resolve this issue, do one of the following:"
+                "\n 1. Provide a loss function via the loss parameter."
+                "\n 2. Compile your model with a loss function inside the"
+                " model-building method."
+                "\n\nSee https://www.tensorflow.org/api_docs/python/tf/keras/losses"
+                " for more information on Keras losses."
+            )
+
         return model
 
     def _fit_keras_model(self, X, y, sample_weight, warm_start):
