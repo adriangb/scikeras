@@ -122,6 +122,7 @@ class BaseWrapper(BaseEstimator):
         "model_n_outputs_",
         "_user_params",
         "target_type_",
+        "loss_",
     }
 
     _routing_prefixes = {
@@ -888,9 +889,7 @@ class KerasClassifier(BaseWrapper):
         elif target_type == "multilabel-indicator":
             return "binary_crossentropy"
         else:
-            raise RuntimeError(
-                f'Unknown label type: {target_type} used w/ loss="auto"!'
-            )
+            raise ValueError(f'Unknown label type: {target_type} used w/ loss="auto"!')
 
     def preprocess_y(self, y, reset=True):
         """Handles manipulation of y inputs to fit or score.
@@ -1044,17 +1043,21 @@ class KerasClassifier(BaseWrapper):
                         np.full(shape=(y[i].shape[0], 1), fill_value=classes_[i][0],)
                     )
                 else:
+                    if (
+                        len(y[i].shape) == 1
+                        or y[i].shape[1] == 1
+                        and n_classes_[i] == 2
+                    ):
+                        # result from a single sigmoid output
+                        # reformat so that we have 2 columns
+                        y[i] = np.column_stack([1 - y[i], y[i]])
                     if isinstance(self.encoders_[i][-1], OrdinalEncoder):
-                        y_ = np.argmax(y[i], axis=-1).reshape(-1, 1)
+                        y_ = np.argmax(y[i], axis=1).reshape(-1, 1)
                     else:  # OneHotEncoder
                         idx = np.argmax(y[i], axis=-1)
                         y_ = np.zeros((y[i].shape[0], 2))
                         y_[np.arange(y[i].shape[0]), idx] = 1
                     class_predictions.append(self.encoders_[i].inverse_transform(y_))
-                if len(y[i].shape) == 1 or y[i].shape[1] == 1 and n_classes_[i] == 2:
-                    # result from a single sigmoid output
-                    # reformat so that we have 2 columns
-                    y[i] = np.column_stack([1 - y[i], y[i]])
             elif target_type_ in ("multiclass", "multiclass-multioutput"):
                 # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
                 # array(['apple', 'orange'])

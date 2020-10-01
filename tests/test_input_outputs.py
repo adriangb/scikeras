@@ -43,7 +43,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
         cat_out = Dense(n_classes_, activation="softmax")(x3)
 
         model = Model([inp1, inp2], [cat_out])
-        losses = ["categorical_crossentropy"]
+        losses = ["sparse_categorical_crossentropy"]
         model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
 
         return model
@@ -74,7 +74,7 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
         cat_out = Dense(n_classes_[1], activation="softmax")(x1)
 
         model = Model([inp], [binary_out, cat_out])
-        losses = ["binary_crossentropy", "categorical_crossentropy"]
+        losses = ["binary_crossentropy", "sparse_categorical_crossentropy"]
         model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
 
         return model
