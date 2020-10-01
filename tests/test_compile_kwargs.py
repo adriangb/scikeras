@@ -7,7 +7,6 @@ from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
-from tensorflow.python.keras.engine.compile_utils import losses_mod, metrics_mod
 
 from scikeras.wrappers import KerasClassifier
 
@@ -176,7 +175,7 @@ def test_loss_routed_params_iterable(loss, n_outputs_):
         loss__0__from_logits=False,  # should override above
     )
     est.fit(X, y)
-    assert est.model_.loss[0].from_logits == False
+    assert est.model_.loss[0].from_logits is False
 
 
 @pytest.mark.parametrize(
@@ -199,7 +198,7 @@ def test_loss_routed_params_dict(loss, n_outputs_):
         loss__from_logits=True,  # default is False
     )
     est.fit(X, y)
-    assert est.model_.loss["out1"].from_logits == True
+    assert est.model_.loss["out1"].from_logits is True
 
     # Test dict with key-based routed param
     est = KerasClassifier(
@@ -209,7 +208,7 @@ def test_loss_routed_params_dict(loss, n_outputs_):
         loss__out1__from_logits=False,  # should override above
     )
     est.fit(X, y)
-    assert est.model_.loss["out1"].from_logits == False
+    assert est.model_.loss["out1"].from_logits is False
 
 
 @pytest.mark.parametrize("metrics", ["binary_accuracy", metrics_module.BinaryAccuracy])

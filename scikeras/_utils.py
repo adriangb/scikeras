@@ -4,19 +4,15 @@ import random
 import warnings
 
 from inspect import isclass
-from typing import Any, Callable, Dict, Iterable, List, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Union
 
 import numpy as np
 import tensorflow as tf
 
 from sklearn.base import BaseEstimator, TransformerMixin
-from tensorflow.keras import losses as losses_module
-from tensorflow.keras import metrics as metrics_module
-from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.layers import deserialize as deserialize_layer
 from tensorflow.keras.layers import serialize as serialize_layer
 from tensorflow.keras.metrics import deserialize as deserialize_metric
-from tensorflow.keras.models import Model
 from tensorflow.python.keras.saving import saving_utils
 
 

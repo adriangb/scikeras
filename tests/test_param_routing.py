@@ -1,7 +1,6 @@
 import inspect
 
 from distutils.version import LooseVersion
-from typing import Any, Dict
 
 import numpy as np
 import pytest
@@ -117,6 +116,7 @@ def test_no_extra_meta(wrapper_class, build_fn):
     )
     clf.fit(X, y)
     assert set(clf.get_meta().keys()) == wrapper_class._meta
+
     # without user kwargs
     def build_fn_no_args(meta, compile_kwargs):
         return build_fn(

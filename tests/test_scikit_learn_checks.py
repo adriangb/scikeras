@@ -3,7 +3,6 @@
 from distutils.version import LooseVersion
 from typing import Any, Dict
 
-import numpy as np
 import pytest
 
 from sklearn import __version__ as sklearn_version

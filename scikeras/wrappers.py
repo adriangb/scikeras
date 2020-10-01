@@ -24,7 +24,6 @@ from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
-from tensorflow.python.types.core import Value
 
 from ._utils import (
     Ensure2DTransformer,
@@ -341,7 +340,7 @@ class BaseWrapper(BaseEstimator):
 
         if not getattr(model, "loss", None) or (
             isinstance(model.loss, list)
-            and not any(callable(l) or isinstance(l, str) for l in model.loss)
+            and not any(callable(loss) or isinstance(loss, str) for loss in model.loss)
         ):
             raise ValueError(
                 "No valid loss function found."
@@ -904,19 +903,7 @@ class KerasClassifier(BaseWrapper):
         """
         y = super().preprocess_y(y, reset=reset)
 
-        loss_name = "unknown"  # just a sentinel value
-        if self.loss_:
-            try:
-                loss_fn = losses_module.get(self.loss_)
-                if hasattr(loss_fn, "name"):
-                    # class
-                    loss_name = loss_fn.name
-                else:
-                    # function
-                    loss_name = loss_fn.__name__
-            except ValueError:
-                # unknown loss function
-                pass
+        loss = self.loss_
 
         if len(y.shape) == 1:
             n_outputs_ = 1
@@ -928,7 +915,7 @@ class KerasClassifier(BaseWrapper):
             # single task, single label, binary classification
             model_n_outputs_ = 1  # single sigmoid output expected
             # encode
-            if loss_name == "categorical_crossentropy":
+            if is_categorical_crossentropy(loss):
                 # one-hot encode
                 encoder = make_pipeline(
                     Ensure2DTransformer(),
@@ -947,7 +934,7 @@ class KerasClassifier(BaseWrapper):
             # y = array([1, 5, 2])
             model_n_outputs_ = 1  # single softmax output expected
             # encode
-            if loss_name == "categorical_crossentropy":
+            if is_categorical_crossentropy(loss):
                 # one-hot encode
                 encoder = make_pipeline(
                     Ensure2DTransformer(),
@@ -977,7 +964,7 @@ class KerasClassifier(BaseWrapper):
             y = np.split(y, y.shape[1], axis=1)
             model_n_outputs_ = len(y)
             # encode
-            if loss_name == "categorical_crossentropy":
+            if is_categorical_crossentropy(loss):
                 # one-hot encode
                 encoder = make_pipeline(
                     Ensure2DTransformer(), OneHotEncoder(sparse=False),
@@ -1078,23 +1065,21 @@ class KerasClassifier(BaseWrapper):
             )
 
     def _check_output_model_compatibility(self, y):
-        """Checks that the model output number and loss functions match y.
+        """Checks that the model output number and loss functions match
+        what SciKeras expects.
         """
         # check that if the user gave us a loss function it ended up in
         # the actual model
         if self.loss == "auto":
             try:
-                given_loss_name = losses_module.get(self.loss_).__name__
-                actual_loss = losses_module.get(self.model_.loss)
-                if hasattr(actual_loss, "name"):
-                    actual_loss_name = actual_loss.name
-                else:
-                    actual_loss_name = actual_loss.__name__
-                if given_loss_name != actual_loss_name:
+                same = losses_module.get(self.loss_) is losses_module.get(
+                    self.model_.loss
+                )
+                if not same:
                     warnings.warn(
                         f"loss='auto' resolved to '{self.loss_}',"
-                        f" but model compiled with {actual_loss_name}."
-                        f" Data may not match loss function!"
+                        f" but model compiled with {self.model_.loss}."
+                        " Data may not match loss function!"
                     )
             except ValueError:
                 # unknown loss function
@@ -1102,20 +1087,13 @@ class KerasClassifier(BaseWrapper):
                 pass
         elif self.loss:
             try:
-                given_loss = losses_module.get(self.loss)
-                if hasattr(given_loss, "name"):
-                    given_loss_name = given_loss.name
-                else:
-                    given_loss_name = given_loss.__name__
-                actual_loss = losses_module.get(self.model_.loss)
-                if hasattr(actual_loss, "name"):
-                    actual_loss_name = actual_loss.name
-                else:
-                    actual_loss_name = actual_loss.__name__
-                if given_loss_name != actual_loss_name:
+                same = losses_module.get(self.loss_) is losses_module.get(
+                    self.model_.loss
+                )
+                if not same:
                     warnings.warn(
-                        f"loss={self.loss} but model compiled with {actual_loss_name}."
-                        f" Data may not match loss function!"
+                        f"loss={self.loss} but model compiled with {self.model_.loss}."
+                        " Data may not match loss function!"
                     )
             except ValueError:
                 # unknown loss function
