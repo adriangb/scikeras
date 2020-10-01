@@ -479,11 +479,6 @@ class BaseWrapper(BaseEstimator):
         if reset:
             self.n_features_in_ = n_features
         else:
-            if not hasattr(self, "n_features_in_"):
-                raise RuntimeError(
-                    "The reset parameter is False but there is no "
-                    "n_features_in_ attribute. Is this estimator fitted?"
-                )
             if n_features != self.n_features_in_:
                 raise ValueError(
                     f"X has {n_features} features, but this {self.__name__} "
