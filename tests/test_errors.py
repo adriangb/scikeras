@@ -18,24 +18,18 @@ def test_shape_change_error():
     """
 
     estimator = KerasRegressor(
-        build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
+        model=dynamic_regressor,
+        loss=KerasRegressor.r_squared,
+        hidden_layer_sizes=(100,),
     )
     X = np.array([[1, 2], [3, 4]])
-    y = np.array([[0, 1], [1, 0]])
+    y = np.array([[0, 1, 0], [1, 0, 0]])
 
-    with pytest.raises(RuntimeError, match="Is this estimator fitted?"):
-        # First call requires reset=True
-        estimator._validate_data(X=X, y=y, reset=False)
+    estimator.fit(X=X, y=y)
 
-    estimator._validate_data(X=X, y=y, reset=True)  # no error
-
-    with pytest.raises(ValueError, match=r"but this \w+ is expecting "):
+    with pytest.raises(ValueError, match=r"but this [\w\d]+ is expecting "):
         # Calling with a different shape for X raises an error
-        estimator._validate_data(X=X[:, :1], y=y, reset=False)
-
-    with pytest.raises(ValueError, match=r"but this \w+ is expecting "):
-        # Calling with a different shape for y raises an error
-        estimator._validate_data(X=X, y=y[:, :1], reset=False)
+        estimator.partial_fit(X=X[:, :1], y=y)
 
 
 def test_not_fitted_error():
@@ -58,8 +52,11 @@ class TestInvalidBuildFn:
     """
 
     def test_invalid_build_fn(self):
-        clf = KerasClassifier(model="invalid")
-        with pytest.raises(TypeError, match="`model` must be a callable or None"):
+        class Model:
+            pass
+
+        clf = KerasClassifier(model=Model())
+        with pytest.raises(TypeError, match="`model` must be"):
             clf.fit(np.array([[0]]), np.array([0]))
 
     def test_no_build_fn(self):
@@ -137,16 +134,6 @@ def test_build_fn_and_init_signature_do_not_agree(wrapper):
         est.fit([[1]], [1])
     est = wrapper(model=no_bar, bar=42, foo=43)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit([[1]], [1])
-
-
-def test_model_wrong_type():
-    """Test that a TypeError is raised when model is not    a Model instance, a callable or None.
-    """
-    est = KerasClassifier(build_fn=object())
-    with pytest.raises(
-        TypeError, match="`model` must be a callable, a Keras Model instance or None"
-    ):
         est.fit([[1]], [1])
 
 
