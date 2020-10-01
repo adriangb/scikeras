@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-from numpy.lib.arraysetops import isin
 from sklearn.datasets import make_classification
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module

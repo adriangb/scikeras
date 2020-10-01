@@ -4,8 +4,10 @@ import numpy as np
 import pytest
 
 from sklearn.exceptions import NotFittedError
+from tensorflow.keras.layers import Dense, Input
+from tensorflow.keras.models import Model
 
-from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
@@ -130,4 +132,50 @@ def test_build_fn_and_init_signature_do_not_agree(wrapper):
         est.fit([[1]], [1])
     est = wrapper(model=no_bar, bar=42, foo=43)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+        est.fit([[1]], [1])
+
+
+@pytest.mark.parametrize("loss", [None, [None]])
+@pytest.mark.parametrize("compile", [True, False])
+def test_no_loss(loss, compile):
+    def get_model(compile, meta, compile_kwargs):
+        inp = Input(shape=(meta["n_features_in_"],))
+        hidden = Dense(10, activation="relu")(inp)
+        out = [
+            Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden)
+            for i in range(meta["n_outputs_"])
+        ]
+        model = Model(inp, out)
+        if compile:
+            model.compile(**compile_kwargs)
+        return model
+
+    est = KerasRegressor(model=get_model, loss=loss, compile=compile)
+    with pytest.raises(ValueError, match="must provide a loss function"):
+        est.fit([[1]], [1])
+
+
+@pytest.mark.parametrize("compile", [True, False])
+def test_no_optimizer(compile):
+    def get_model(compile, meta, compile_kwargs):
+        inp = Input(shape=(meta["n_features_in_"],))
+        hidden = Dense(10, activation="relu")(inp)
+        out = [
+            Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden)
+            for i in range(meta["n_outputs_"])
+        ]
+        model = Model(inp, out)
+        if compile:
+            model.compile(**compile_kwargs)
+        return model
+
+    est = KerasRegressor(
+        model=get_model,
+        loss="categorical_crossentropy",
+        compile=compile,
+        optimizer=None,
+    )
+    with pytest.raises(
+        ValueError, match="Could not interpret optimizer identifier"  # Keras error
+    ):
         est.fit([[1]], [1])
