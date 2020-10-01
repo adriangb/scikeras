@@ -59,22 +59,28 @@ class TFRandomState:
         tf.random.set_seed(None)  # TODO: can we revert instead of unset?
 
 
-class LabelDimensionTransformer(TransformerMixin, BaseEstimator):
+class Ensure2DTransformer(TransformerMixin, BaseEstimator):
     """Transforms from 1D -> 2D and back.
-
-    Used when applying LabelTransformer -> OneHotEncoder.
     """
 
     def fit(self, X, y=None):
+        if len(X.shape) == 1:
+            self.should_transform_ = True
+        else:
+            self.should_transform_ = False
         return self
 
     def transform(self, X):
-        if len(X.shape) == 1:
+        if self.should_transform_:
+            if len(X.shape) != 1:
+                raise ValueError("Expected `X.shape`==(n_samples, 1)!")
             X = X.reshape(-1, 1)
         return X
 
     def inverse_transform(self, X):
-        if X.shape[1] == 1:
+        if self.should_transform_:
+            if len(X.shape) != 2 or X.shape[1] != 1:
+                raise ValueError("Expected `X.shape`==(n_samples, 1)!")
             X = np.squeeze(X, axis=1)
         return X
 

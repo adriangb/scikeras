@@ -92,13 +92,17 @@ class TestBasicAPI:
 
     def test_classify_build_fn(self):
         """Tests a classification task for errors."""
-        clf = KerasClassifier(build_fn=build_fn_clf, hidden_dim=5)
+        clf = KerasClassifier(
+            build_fn=build_fn_clf, hidden_dim=5, loss="categorical_crossentropy"
+        )
         basic_checks(clf, load_iris)
 
     def test_classify_inherit_class_build_fn(self):
         """Tests for errors using an inherited class."""
 
-        clf = InheritClassBuildFnClf(build_fn=None, hidden_dim=5)
+        clf = InheritClassBuildFnClf(
+            build_fn=None, hidden_dim=5, loss="categorical_crossentropy"
+        )
         basic_checks(clf, load_iris)
 
     def test_regression_build_fn(self):

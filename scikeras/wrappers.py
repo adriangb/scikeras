@@ -10,12 +10,12 @@ from typing import Any, Dict
 import numpy as np
 import tensorflow as tf
 
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, clone
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
@@ -26,7 +26,7 @@ from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
 
 from ._utils import (
-    LabelDimensionTransformer,
+    Ensure2DTransformer,
     TFRandomState,
     _class_from_strings,
     _windows_upcast_ints,
@@ -408,26 +408,17 @@ class BaseWrapper(BaseEstimator):
         return self
 
     def _check_output_model_compatibility(self, y):
-        """Checks that the model output number and y shape match, reshape as needed.
+        """Checks that the model output number and y shape match.
 
         This is mainly in place to avoid cryptic TF errors.
         """
         # check if this is a multi-output model
         if self.model_n_outputs_ != len(self.model_.outputs):
             raise RuntimeError(
-                "Detected an input of size "
-                "{}, but {} has {} outputs".format(
-                    (y[0].shape[0], len(y)), self.model_, len(self.model_.outputs),
-                )
+                "Detected an input of size"
+                f" {y[0].shape[0]}, but {self.model_} has"
+                f" {self.model_.outputs} outputs"
             )
-
-        # tf v1 does not accept single item lists
-        # tf v2 does
-        # so go with what tf v1 accepts
-        if len(y) == 1:
-            y = y[0]
-        else:
-            y = tuple(np.squeeze(y_) for y_ in y)
         return y
 
     def _validate_data(self, X, y=None, reset=True):
@@ -475,21 +466,27 @@ class BaseWrapper(BaseEstimator):
         X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
 
         n_features = X.shape[1]
+        target_type = type_of_target(y)
 
         if reset:
             self.n_features_in_ = n_features
+            self.target_type_ = target_type
         else:
             if n_features != self.n_features_in_:
                 raise ValueError(
-                    f"X has {n_features} features, but this {self.__name__} "
-                    f"is expecting {self.n_features_in_} features as input."
+                    f"`X` has {n_features} features, but this {self.__name__}"
+                    f" is expecting {self.n_features_in_} features as input."
+                )
+            if target_type != self.target_type_:
+                raise ValueError(
+                    f'`y` is of type "{target_type}", but this {self.__name__}'
+                    f' is expecting "{self.target_type_}" as a target.'
                 )
         if y is None:
             return X
         return X, y
 
-    @staticmethod
-    def preprocess_y(y):
+    def preprocess_y(self, y, reset=True):
         """Handles manipulation of y inputs to fit or score.
 
         By default, this just makes sure y is 2D.
@@ -499,23 +496,32 @@ class BaseWrapper(BaseEstimator):
 
         Returns:
             y : numpy array of shape (n_samples, n_ouputs)
-            extra_args : dictionary of output attributes, ex: n_outputs_
         """
+        y_dtype = y.dtype
+        y_shape = y.shape
 
-        extra_args = {
-            "y_dtype_": y.dtype,
-            "y_shape_": y.shape,
-        }
+        if reset:
+            self.y_dtype_ = y_dtype
+            self.y_shape_ = y_shape
+        else:
+            if self.y_dtype_ != y_dtype:
+                raise ValueError(
+                    f"`y` dtype is {y_dtype}, but this {self.__name__}"
+                    f" is expecting {self.y_dtype_}."
+                )
+            if self.y_shape_ != y.shape:
+                raise ValueError(
+                    f"`y` shape is {y_shape}, but this {self.__name__}"
+                    f" is expecting {self.y_shape_}."
+                )
+        return y
 
-        return y, extra_args
-
-    @staticmethod
-    def postprocess_y(y):
+    def postprocess_y(self, y):
         """Handles manipulation of predicted `y` values.
 
         By default, it joins lists of predictions for multi-ouput models
         into a single numpy array.
-        Subclass and override this method to customize processing.
+        Override this method to customize processing.
 
         Arguments:
             y : 2D numpy array or list of numpy arrays
@@ -524,32 +530,25 @@ class BaseWrapper(BaseEstimator):
         Returns:
             y : 2D numpy array with singular dimensions stripped
                 or 1D numpy array
-            extra_args : attributes of output `y`.
         """
-        y = np.column_stack(y)
+        return np.squeeze(np.column_stack(y))
 
-        extra_args = dict()
-        return np.squeeze(y), extra_args
-
-    @staticmethod
-    def preprocess_X(X):
+    def preprocess_X(self, X, reset=True):
         """Handles manipulation of X before fitting.
 
-        Subclass and override this method to process X, for example
-        accommodate a multi-input model.
+        Override this method to customize processing for X,
+        for example accommodate a multi-input model.
 
         Arguments:
             X : 2D numpy array
 
         Returns:
             X : unchanged 2D numpy array
-            extra_args : attributes of output `y`.
         """
-        extra_args = {
-            "X_dtype_": X.dtype,
-            "X_shape_": X.shape,
-        }
-        return X, extra_args
+        if reset:
+            self.X_dtype_ = X.dtype
+            self.X_shape_ = X.shape
+        return X
 
     def fit(self, X, y, sample_weight=None):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
@@ -645,18 +644,11 @@ class BaseWrapper(BaseEstimator):
                     )
 
         # pre process X, y
-        X, extra_args = self.preprocess_X(X)
-        # update self.X_dtype_, self.X_shape_
-        for attr_name, attr_val in extra_args.items():
-            setattr(self, attr_name, attr_val)
-        y, extra_args = self.preprocess_y(y)
-        # update self.classes_, self.n_outputs_, self.n_classes_ and
-        #  self.target_type_
-        for attr_name, attr_val in extra_args.items():
-            setattr(self, attr_name, attr_val)
+        X = self.preprocess_X(X, reset=reset)
+        y = self.preprocess_y(y, reset=reset)
 
         # build model
-        if (not warm_start) or (not hasattr(self, "model_")):
+        if reset:
             self.model_ = self._build_keras_model()
 
         y = self._check_output_model_compatibility(y)
@@ -722,7 +714,7 @@ class BaseWrapper(BaseEstimator):
         y_pred = self.model_.predict(X, **pred_args)
 
         # post process y
-        y, _ = self.postprocess_y(y_pred)
+        y = self.postprocess_y(y_pred)
         return y
 
     def score(self, X, y, sample_weight=None):
@@ -860,8 +852,7 @@ class KerasClassifier(BaseWrapper):
         """
         return sklearn_accuracy_score(y_true, y_pred, **kwargs)
 
-    @staticmethod
-    def preprocess_y(y):
+    def preprocess_y(self, y, reset=True):
         """Handles manipulation of y inputs to fit or score.
 
         For KerasClassifier, this handles interpreting classes from `y`.
@@ -871,74 +862,89 @@ class KerasClassifier(BaseWrapper):
 
         Returns:
             y : modified 2D numpy array with 0 indexed integer class labels.
-            extra_args : dictionary of output attributes, ex `n_outputs_`
         """
-        y, extra_args = super(KerasClassifier, KerasClassifier).preprocess_y(y)
+        y = super().preprocess_y(y, reset=reset)
 
-        target_type_ = type_of_target(y)
+        loss_name = "unknown"  # just a sentinel value
+        if self.loss:
+            try:
+                loss_fn = losses_module.get(self.loss)
+                loss_name = loss_fn.__name__
+            except ValueError:
+                # unknown loss function
+                pass
 
         if len(y.shape) == 1:
             n_outputs_ = 1
         else:
             n_outputs_ = y.shape[1]
 
-        if target_type_ == "binary":
+        if self.target_type_ == "binary":
             # y = array([1, 0, 1, 0])
             # single task, single label, binary classification
             model_n_outputs_ = 1  # single sigmoid output expected
             # encode
-            encoder = LabelEncoder()
-            # No need to reshape to 1D here,
-            # binary targets are always 1D already
+            if loss_name == "categorical_crossentropy":
+                # one-hot encode
+                encoder = make_pipeline(
+                    Ensure2DTransformer(),
+                    OneHotEncoder(sparse=False, dtype=np.float32),
+                )
+            else:
+                encoder = make_pipeline(
+                    Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
+                )
             y = encoder.fit_transform(y)
-            classes_ = encoder.classes_
+            classes_ = encoder[1].categories_[0]
             # make lists
             encoders_ = [encoder]
             classes_ = [classes_]
             y = [y]
-        elif target_type_ == "multiclass":
+        elif self.target_type_ == "multiclass":
             # y = array([1, 5, 2])
             model_n_outputs_ = 1  # single softmax output expected
             # encode
-            encoder = LabelEncoder()
-            if len(y.shape) > 1 and y.shape[1] == 1:
-                # Make 1D just so LabelEncoder is happy
-                y = y.reshape(-1,)
+            if loss_name == "categorical_crossentropy":
+                # one-hot encode
+                encoder = make_pipeline(
+                    Ensure2DTransformer(),
+                    OneHotEncoder(sparse=False, dtype=np.float32),
+                )
+            else:
+                encoder = make_pipeline(
+                    Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
+                )
             y = encoder.fit_transform(y)
-            classes_ = encoder.classes_
+            classes_ = encoder[1].categories_[0]
             # make lists
             encoders_ = [encoder]
             classes_ = [classes_]
             y = [y]
-        elif target_type_ == "multilabel-indicator":
+        elif self.target_type_ == "multilabel-indicator":
             # y = array([1, 1, 1, 0], [0, 0, 1, 1])
             # split into lists for multi-output Keras
             # will be processed as multiple binary classifications
             classes_ = [np.array([0, 1])] * y.shape[1]
-            y = np.split(y, y.shape[1], axis=1)
-            model_n_outputs_ = len(y)
-            # encode
-            encoders_ = [LabelEncoder() for _ in range(len(y))]
-            y = [
-                encoder.fit_transform(y_.reshape(-1,) if y_.shape[1] == 1 else y_)
-                for encoder, y_ in zip(encoders_, y)
-            ]
-            classes_ = [encoder.classes_ for encoder in encoders_]
-        elif target_type_ == "multiclass-multioutput":
+            y = np.split(y, axis=1)
+        elif self.target_type_ == "multiclass-multioutput":
             # y = array([1, 0, 5], [2, 1, 3])
             # split into lists for multi-output Keras
-            # each will be processesed as a seperate multiclass problem
+            # each will be processed as a separate multiclass problem
             y = np.split(y, y.shape[1], axis=1)
             model_n_outputs_ = len(y)
             # encode
-            encoders_ = [LabelEncoder() for _ in range(len(y))]
-            y = [
-                encoder.fit_transform(y_.reshape(-1,) if y_.shape[1] == 1 else y_)
-                for encoder, y_ in zip(encoders_, y)
-            ]
-            classes_ = [encoder.classes_ for encoder in encoders_]
+            if loss_name == "categorical_crossentropy":
+                # one-hot encode
+                encoder = make_pipeline(
+                    Ensure2DTransformer(), OneHotEncoder(sparse=False),
+                )
+            else:
+                encoder = make_pipeline(Ensure2DTransformer(), OrdinalEncoder(),)
+            encoders_ = [clone(encoder) for _ in range(len(y))]
+            y = [encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)]
+            classes_ = [encoder[1].categories_[0] for encoder in encoders_]
         else:
-            raise ValueError("Unknown label type: {}".format(target_type_))
+            raise ValueError(f"Unknown label type: {self.target_type_}")
 
         # self.classes_ is kept as an array when n_outputs>1 for compatibility
         # with ensembles and other meta estimators
@@ -951,23 +957,24 @@ class KerasClassifier(BaseWrapper):
             n_classes_ = [class_.shape[0] for class_ in classes_]
             n_outputs_ = len(n_classes_)
 
-        extra_args.update(
-            {
-                "classes_": classes_,
-                "encoders_": encoders_,
-                "n_outputs_": n_outputs_,
-                "model_n_outputs_": model_n_outputs_,
-                "n_classes_": n_classes_,
-                "target_type_": target_type_,
-            }
-        )
+        if reset:
+            self.classes_ = classes_
+            self.encoders_ = encoders_
+            self.n_outputs_ = n_outputs_
+            self.model_n_outputs_ = model_n_outputs_
+            self.n_classes_ = n_classes_
+        else:
+            if np.all([c1 == c2 for c1, c2 in zip(self.classes_, classes_)]):
+                pass
+                # TODO: raise ValueErrors if any property changes
 
-        return y, extra_args
+        return y
 
-    def postprocess_y(self, y):
-        """Reverts _pre_process_inputs to return predicted probabilites
-             in formats sklearn likes as well as retrieving the original
-             classes.
+    def postprocess_y(self, y, return_proba=False):
+        """Take class probabilities and inverse transform
+        back into input type, returning either probabilites
+        or class predictions depending on the `return_proba`
+        parameter.
         """
         if not isinstance(y, list):
             # convert single-target y to a list for easier processing
@@ -981,18 +988,14 @@ class KerasClassifier(BaseWrapper):
 
             if target_type_ == "binary":
                 # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
-                if (
-                    isinstance(self.encoders_[i], LabelEncoder)
-                    and len(self.encoders_[i].classes_) == 1
-                ):
+                if len(self.classes_[i]) == 1:
                     # special case: single input label for sigmoid output
                     # may give more predicted classes than inputs for
                     # small sample sizes!
                     # don't even bother inverse transforming, just fill.
                     class_predictions.append(
                         np.full(
-                            shape=(y[i].shape[0], 1),
-                            fill_value=self.encoders_[i].classes_[0],
+                            shape=(y[i].shape[0], 1), fill_value=self.classes_[i][0],
                         )
                     )
                 else:
@@ -1004,7 +1007,7 @@ class KerasClassifier(BaseWrapper):
                 if (
                     len(y[i].shape) == 1
                     or y[i].shape[1] == 1
-                    and len(self.encoders_[i].classes_) == 2
+                    and len(self.classes_[i]) == 2
                 ):
                     # result from a single sigmoid output
                     # reformat so that we have 2 columns
@@ -1015,46 +1018,36 @@ class KerasClassifier(BaseWrapper):
                 idx = np.argmax(y[i], axis=-1)
                 y_ = np.zeros(y[i].shape, dtype=int)
                 y_[np.arange(y[i].shape[0]), idx] = 1
-                if y_.shape[1] == 1:
-                    # Appease the demands of sklearn transformers
-                    y_ = np.squeeze(y_, axis=1)
                 class_predictions.append(self.encoders_[i].inverse_transform(y_))
             elif target_type_ == "multilabel-indicator":
                 class_predictions.append(
                     self.encoders_[i].inverse_transform(np.argmax(y[i], axis=1))
                 )
-
-        class_probabilities = np.squeeze(np.column_stack(y))
-
-        y = np.squeeze(np.column_stack(class_predictions))
-
-        # type cast back to input dtype
-        y = y.astype(self.y_dtype_, copy=False)
-
-        extra_args = {"class_probabilities": class_probabilities}
-
-        return y, extra_args
+        if return_proba:
+            return np.squeeze(np.column_stack(y))
+        else:
+            return np.squeeze(np.column_stack(class_predictions)).astype(
+                self.y_dtype_, copy=False
+            )
 
     def _check_output_model_compatibility(self, y):
         """Checks that the model output number and loss functions match y.
         """
-        # check loss function to adjust the encoding of the input
-        # we need to do this to mimick scikit-learn behavior
-        if isinstance(self.model_.loss, list):
-            losses = self.model_.loss
-        else:
-            losses = [self.model_.loss] * self.n_outputs_
-        for i, loss in enumerate(losses):
-            if is_categorical_crossentropy(loss) and (
-                y[i].ndim == 1 or y[i].shape[1] == 1
-            ):
-                encoder = OneHotEncoder(sparse=False, dtype=np.uint8)
-                tf1dto2d = LabelDimensionTransformer()
-                y[i] = tf1dto2d.fit_transform(y[i])
-                y[i] = encoder.fit_transform(y[i])
-                self.encoders_[i] = make_pipeline(
-                    self.encoders_[i], tf1dto2d, encoder, "passthrough",
-                )
+        # check that if the user gave us a loss function it ended up in
+        # the actual model
+        if self.loss:
+            try:
+                given_loss_name = losses_module.get(self.loss).__name__
+                actual_loss_name = losses_module.get(self.model_.loss).__name__
+                if given_loss_name != actual_loss_name:
+                    warnings.warn(
+                        f"loss={self.loss} but model compiled with {actual_loss_name}."
+                        f" Data may not match loss function!"
+                    )
+            except ValueError:
+                # unknown loss function
+                # in this case, do not do any checks
+                pass
 
         return super()._check_output_model_compatibility(y)
 
@@ -1124,12 +1117,9 @@ class KerasClassifier(BaseWrapper):
         outputs = self.model_.predict(X, **predict_args)
 
         # join list of outputs into single output array
-        _, extra_args = self.postprocess_y(outputs)
+        y = self.postprocess_y(outputs, return_proba=True)
 
-        # get class probabilities from postprocess_y's output
-        class_probabilities = extra_args["class_probabilities"]
-
-        return class_probabilities
+        return y
 
 
 class KerasRegressor(BaseWrapper):
@@ -1173,26 +1163,29 @@ class KerasRegressor(BaseWrapper):
         else:
             return np.squeeze(y.astype(np.float64, copy=False)), dict()
 
-    def preprocess_y(self, y):
+    def preprocess_y(self, y, reset=True):
         """Split y for multi-output tasks.
         """
-        y, extra_args = super().preprocess_y(y)
+        y = super().preprocess_y(y, reset=reset)
 
         if len(y.shape) == 1:
             n_outputs_ = 1
         else:
             n_outputs_ = y.shape[1]
 
-        # for regression, multi-output is handled by single Keras output
-        model_n_outputs_ = 1
-
-        extra_args.update(
-            {"n_outputs_": n_outputs_, "model_n_outputs_": model_n_outputs_,}
-        )
+        if reset:
+            # for regression, multi-output is handled by single Keras output
+            model_n_outputs_ = 1
+            # save meta params
+            self.n_outputs_ = n_outputs_
+            self.model_n_outputs_ = model_n_outputs_
+        else:
+            if self.n_outputs_ != n_outputs_:
+                raise ValueError()
 
         y = [y]  # pack into single output list
 
-        return y, extra_args
+        return y
 
     def score(self, X, y, sample_weight=None):
         """Returns the mean loss on the given test data and labels.
