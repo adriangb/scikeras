@@ -339,10 +339,10 @@ class BaseWrapper(BaseEstimator):
             raise ValueError(
                 "No valid loss function found."
                 " You must provide a loss function to train."
-                "\nPlease provide a loss function via the `loss` parameter or"
+                "\n\nPlease provide a loss function via the `loss` parameter or"
                 " compile your model with a loss function within your `model`"
                 " model-building method."
-                "\nSee https://www.tensorflow.org/api_docs/python/tf/keras/losses"
+                "\n\nSee https://www.tensorflow.org/api_docs/python/tf/keras/losses"
                 " for more information on Keras losses."
             )
 
