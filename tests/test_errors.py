@@ -57,7 +57,7 @@ class TestInvalidBuildFn:
 
         clf = KerasClassifier(model=Model())
         with pytest.raises(TypeError, match="`model` must be"):
-            clf.fit(np.array([[0]]), np.array([0]))
+            clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
     def test_no_build_fn(self):
         class NoBuildFn(KerasClassifier):
@@ -66,7 +66,7 @@ class TestInvalidBuildFn:
         clf = NoBuildFn()
 
         with pytest.raises(ValueError, match="must implement `_keras_build_fn`"):
-            clf.fit(np.array([[0]]), np.array([0]))
+            clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
     def test_call_and_build_fn_function(self):
         class Clf(KerasClassifier):
@@ -79,7 +79,7 @@ class TestInvalidBuildFn:
         clf = Clf(build_fn=dummy_func,)
 
         with pytest.raises(ValueError, match="cannot implement `_keras_build_fn`"):
-            clf.fit(np.array([[0]]), np.array([0]))
+            clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
 
 def test_sample_weights_all_zero():
@@ -108,9 +108,11 @@ def test_build_fn_deprecation():
     """An appropriate warning is raised when using the `build_fn`
     parameter instead of `model`.
     """
-    clf = KerasClassifier(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
+    clf = KerasClassifier(
+        build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,), loss="auto"
+    )
     with pytest.warns(UserWarning, match="`build_fn` will be renamed to `model`"):
-        clf.fit([[1]], [1])
+        clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
 
 @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
@@ -125,16 +127,16 @@ def test_build_fn_and_init_signature_do_not_agree(wrapper):
     # all attempts to pass `bar` should fail
     est = wrapper(model=no_bar, model__bar=42)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))
     est = wrapper(model=no_bar, bar=42)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))
     est = wrapper(model=no_bar, model__bar=42, foo=43)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))
     est = wrapper(model=no_bar, bar=42, foo=43)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))
 
 
 @pytest.mark.parametrize("loss", [None, [None]])

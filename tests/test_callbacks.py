@@ -29,8 +29,8 @@ def test_callbacks():
     estimator = KerasClassifier(
         build_fn=dynamic_classifier,
         callbacks=(SentinalCallback(),),
-        optimizer="adam",
         model__hidden_layer_sizes=(100,),
+        loss="auto",
     )
     # Check for picklign and partial fit
     check_estimators_pickle("KerasClassifier", estimator)

@@ -25,17 +25,13 @@ def dynamic_classifier(
         hidden = Dense(layer_size, activation="relu")(hidden)
 
     if target_type_ == "binary":
-        compile_kwargs["loss"] = compile_kwargs["loss"] or "binary_crossentropy"
         out = [Dense(1, activation="sigmoid")(hidden)]
     elif target_type_ == "multilabel-indicator":
-        compile_kwargs["loss"] = compile_kwargs["loss"] or "binary_crossentropy"
         out = [Dense(1, activation="sigmoid")(hidden) for _ in range(model_n_outputs_)]
     elif target_type_ == "multiclass-multioutput":
-        compile_kwargs["loss"] = compile_kwargs["loss"] or "binary_crossentropy"
         out = [Dense(n, activation="softmax")(hidden) for n in n_classes_]
     else:
         # multiclass
-        compile_kwargs["loss"] = compile_kwargs["loss"] or "categorical_crossentropy"
         out = [Dense(n_classes_, activation="softmax")(hidden)]
 
     model = Model(inp, out)
@@ -53,8 +49,6 @@ def dynamic_regressor(
     # get parameters
     n_features_in_ = meta["n_features_in_"]
     n_outputs_ = meta["n_outputs_"]
-
-    compile_kwargs["loss"] = compile_kwargs["loss"] or KerasRegressor.r_squared
 
     inp = Input(shape=(n_features_in_,))
 

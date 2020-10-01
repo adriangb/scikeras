@@ -28,7 +28,7 @@ from .testing_utils import basic_checks, parametrize_with_checks
             # This is only required for this tests and is not really
             # applicable to real world datasets
             batch_size=1000,
-            optimizer="adam",
+            loss="auto",
             model__hidden_layer_sizes=(100,),
         ),
         KerasRegressor(
@@ -40,8 +40,7 @@ from .testing_utils import basic_checks, parametrize_with_checks
             # This is only required for this tests and is not really
             # applicable to real world datasets
             batch_size=1000,
-            optimizer="adam",
-            loss=KerasRegressor.r_squared,
+            loss="auto",
             model__hidden_layer_sizes=(100,),
         ),
     ],
@@ -61,13 +60,10 @@ def test_fully_compliant_estimators(estimator, check):
 
 class SubclassedClassifier(KerasClassifier):
     def __init__(
-        self, model__hidden_layer_sizes=(100,), metrics=None, loss=None, **kwargs,
+        self, model__hidden_layer_sizes=(100,), **kwargs,
     ):
         super().__init__(**kwargs)
         self.model__hidden_layer_sizes = model__hidden_layer_sizes
-        self.metrics = metrics
-        self.loss = loss
-        self.optimizer = "sgd"
 
     def _keras_build_fn(
         self, hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
@@ -83,7 +79,7 @@ def test_no_attributes_set_init_sublcassed():
     """Tests that subclassed models can be made that
     set all parameters in a single __init__
     """
-    estimator = SubclassedClassifier()
+    estimator = SubclassedClassifier(loss="auto")
     check_no_attributes_set_in_init(estimator.__name__, estimator)
     basic_checks(estimator, load_iris)
 
@@ -100,6 +96,6 @@ def test_no_attributes_set_init_no_args():
         model.compile(loss="mse")
         return model
 
-    estimator = KerasRegressor(model=build_fn)
+    estimator = KerasRegressor(model=build_fn, loss="auto")
     check_no_attributes_set_in_init(estimator.__name__, estimator)
     estimator.fit([[1]], [1])

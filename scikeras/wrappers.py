@@ -24,6 +24,7 @@ from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
+from tensorflow.python.types.core import Value
 
 from ._utils import (
     Ensure2DTransformer,
@@ -120,6 +121,7 @@ class BaseWrapper(BaseEstimator):
         "n_outputs_",
         "model_n_outputs_",
         "_user_params",
+        "target_type_",
     }
 
     _routing_prefixes = {
@@ -259,6 +261,8 @@ class BaseWrapper(BaseEstimator):
                 init_params, destination="optimizer", pass_filter=set(), strict=True,
             ),
         )
+        # replace loss function with final loss function to accommodate loss=="auto"
+        compile_kwargs["loss"] = self.loss_
         compile_kwargs["loss"] = _class_from_strings(
             compile_kwargs["loss"], losses_module.get
         )
@@ -466,7 +470,7 @@ class BaseWrapper(BaseEstimator):
         X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
 
         n_features = X.shape[1]
-        target_type = type_of_target(y)
+        target_type = None if not np.any(y) else type_of_target(y)
 
         if reset:
             self.n_features_in_ = n_features
@@ -477,14 +481,24 @@ class BaseWrapper(BaseEstimator):
                     f"`X` has {n_features} features, but this {self.__name__}"
                     f" is expecting {self.n_features_in_} features as input."
                 )
-            if target_type != self.target_type_:
-                raise ValueError(
-                    f'`y` is of type "{target_type}", but this {self.__name__}'
-                    f' is expecting "{self.target_type_}" as a target.'
-                )
+            if target_type:
+                if target_type != self.target_type_:
+                    raise ValueError(
+                        f'`y` is of type "{target_type}", but this {self.__name__}'
+                        f' is expecting "{self.target_type_}" as a target.'
+                    )
         if y is None:
             return X
         return X, y
+
+    def select_loss(self, y):
+        """Choose an appropriate loss function given a target `y`.
+
+        Parameters
+        ----------
+        y : 1D or 2D numpy array
+        """
+        raise NotImplementedError("Method not implemented for `BaseWrapper`!")
 
     def preprocess_y(self, y, reset=True):
         """Handles manipulation of y inputs to fit or score.
@@ -516,7 +530,7 @@ class BaseWrapper(BaseEstimator):
                 )
         return y
 
-    def postprocess_y(self, y):
+    def postprocess_y(self, y, reset=True):
         """Handles manipulation of predicted `y` values.
 
         By default, it joins lists of predictions for multi-ouput models
@@ -548,6 +562,8 @@ class BaseWrapper(BaseEstimator):
         if reset:
             self.X_dtype_ = X.dtype
             self.X_shape_ = X.shape
+        else:
+            pass  # TODO: check values for match
         return X
 
     def fit(self, X, y, sample_weight=None):
@@ -617,9 +633,6 @@ class BaseWrapper(BaseEstimator):
             reset = True
         X, y = self._validate_data(X=X, y=y, reset=reset)
 
-        # Save input dtype
-        self.y_dtype_ = y.dtype
-
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
                 sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
@@ -642,6 +655,12 @@ class BaseWrapper(BaseEstimator):
                         "Cannot train because there are no samples"
                         " left after deleting points with zero sample weight!"
                     )
+
+        # get actual loss function
+        if self.loss == "auto":
+            self.loss_ = self.select_loss(y)
+        else:
+            self.loss_ = self.loss
 
         # pre process X, y
         X = self.preprocess_X(X, reset=reset)
@@ -702,7 +721,7 @@ class BaseWrapper(BaseEstimator):
         X = self._validate_data(X=X, y=None, reset=False)
 
         # pre process X
-        X, _ = self.preprocess_X(X)
+        X = self.preprocess_X(X, reset=False)
 
         # filter kwargs and get attributes for predict
         params = self.get_params()
@@ -852,6 +871,27 @@ class KerasClassifier(BaseWrapper):
         """
         return sklearn_accuracy_score(y_true, y_pred, **kwargs)
 
+    def select_loss(self, y):
+        """Choose an appropriate loss function given a target `y`.
+
+        Parameters
+        ----------
+        y : 1D or 2D numpy array
+        """
+        target_type = type_of_target(y)
+        if target_type == "binary":
+            return "binary_crossentropy"
+        elif target_type == "multiclass":
+            return "sparse_categorical_crossentropy"
+        elif target_type == "multiclass-multioutput":
+            return "sparse_categorical_crossentropy"
+        elif target_type == "multilabel-indicator":
+            return "binary_crossentropy"
+        else:
+            raise RuntimeError(
+                f'Unknown label type: {target_type} used w/ loss="auto"!'
+            )
+
     def preprocess_y(self, y, reset=True):
         """Handles manipulation of y inputs to fit or score.
 
@@ -866,10 +906,15 @@ class KerasClassifier(BaseWrapper):
         y = super().preprocess_y(y, reset=reset)
 
         loss_name = "unknown"  # just a sentinel value
-        if self.loss:
+        if self.loss_:
             try:
-                loss_fn = losses_module.get(self.loss)
-                loss_name = loss_fn.__name__
+                loss_fn = losses_module.get(self.loss_)
+                if hasattr(loss_fn, "name"):
+                    # class
+                    loss_name = loss_fn.name
+                else:
+                    # function
+                    loss_name = loss_fn.__name__
             except ValueError:
                 # unknown loss function
                 pass
@@ -899,7 +944,6 @@ class KerasClassifier(BaseWrapper):
             # make lists
             encoders_ = [encoder]
             classes_ = [classes_]
-            y = [y]
         elif self.target_type_ == "multiclass":
             # y = array([1, 5, 2])
             model_n_outputs_ = 1  # single softmax output expected
@@ -919,13 +963,14 @@ class KerasClassifier(BaseWrapper):
             # make lists
             encoders_ = [encoder]
             classes_ = [classes_]
-            y = [y]
         elif self.target_type_ == "multilabel-indicator":
             # y = array([1, 1, 1, 0], [0, 0, 1, 1])
             # split into lists for multi-output Keras
             # will be processed as multiple binary classifications
             classes_ = [np.array([0, 1])] * y.shape[1]
-            y = np.split(y, axis=1)
+            encoders_ = [None] * y.shape[1]
+            y = np.split(y, y.shape[1], axis=1)
+            model_n_outputs_ = len(y)
         elif self.target_type_ == "multiclass-multioutput":
             # y = array([1, 0, 5], [2, 1, 3])
             # split into lists for multi-output Keras
@@ -946,7 +991,7 @@ class KerasClassifier(BaseWrapper):
         else:
             raise ValueError(f"Unknown label type: {self.target_type_}")
 
-        # self.classes_ is kept as an array when n_outputs>1 for compatibility
+        # self.classes_ is kept as an array when n_outputs==1 for compatibility
         # with ensembles and other meta estimators
         # which do not support multioutput
         if len(classes_) == 1:
@@ -964,9 +1009,7 @@ class KerasClassifier(BaseWrapper):
             self.model_n_outputs_ = model_n_outputs_
             self.n_classes_ = n_classes_
         else:
-            if np.all([c1 == c2 for c1, c2 in zip(self.classes_, classes_)]):
-                pass
-                # TODO: raise ValueErrors if any property changes
+            pass  # TODO: implement checks
 
         return y
 
@@ -981,6 +1024,10 @@ class KerasClassifier(BaseWrapper):
             y = [y]
 
         target_type_ = self.target_type_
+        classes_ = self.classes_ if isinstance(self.classes_, list) else [self.classes_]
+        n_classes_ = (
+            self.n_classes_ if isinstance(self.n_classes_, list) else [self.n_classes_]
+        )
 
         class_predictions = []
 
@@ -988,27 +1035,23 @@ class KerasClassifier(BaseWrapper):
 
             if target_type_ == "binary":
                 # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
-                if len(self.classes_[i]) == 1:
+                if n_classes_[i] == 1:
                     # special case: single input label for sigmoid output
                     # may give more predicted classes than inputs for
                     # small sample sizes!
                     # don't even bother inverse transforming, just fill.
                     class_predictions.append(
-                        np.full(
-                            shape=(y[i].shape[0], 1), fill_value=self.classes_[i][0],
-                        )
+                        np.full(shape=(y[i].shape[0], 1), fill_value=classes_[i][0],)
                     )
                 else:
-                    y_ = y[i].round().astype(int)
-                    if y_.shape[1] == 1:
-                        # Appease the demands of sklearn transformers
-                        y_ = np.squeeze(y_, axis=1)
+                    if isinstance(self.encoders_[i][-1], OrdinalEncoder):
+                        y_ = np.argmax(y[i], axis=-1).reshape(-1, 1)
+                    else:  # OneHotEncoder
+                        idx = np.argmax(y[i], axis=-1)
+                        y_ = np.zeros((y[i].shape[0], 2))
+                        y_[np.arange(y[i].shape[0]), idx] = 1
                     class_predictions.append(self.encoders_[i].inverse_transform(y_))
-                if (
-                    len(y[i].shape) == 1
-                    or y[i].shape[1] == 1
-                    and len(self.classes_[i]) == 2
-                ):
+                if len(y[i].shape) == 1 or y[i].shape[1] == 1 and n_classes_[i] == 2:
                     # result from a single sigmoid output
                     # reformat so that we have 2 columns
                     y[i] = np.column_stack([1 - y[i], y[i]])
@@ -1016,13 +1059,14 @@ class KerasClassifier(BaseWrapper):
                 # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
                 # array(['apple', 'orange'])
                 idx = np.argmax(y[i], axis=-1)
-                y_ = np.zeros(y[i].shape, dtype=int)
-                y_[np.arange(y[i].shape[0]), idx] = 1
+                if isinstance(self.encoders_[i][-1], OrdinalEncoder):
+                    y_ = idx.reshape(-1, 1)
+                else:  # OneHotEncoder
+                    y_ = np.zeros(y[i].shape, dtype=int)
+                    y_[np.arange(y[i].shape[0]), idx] = 1
                 class_predictions.append(self.encoders_[i].inverse_transform(y_))
             elif target_type_ == "multilabel-indicator":
-                class_predictions.append(
-                    self.encoders_[i].inverse_transform(np.argmax(y[i], axis=1))
-                )
+                class_predictions.append(np.argmax(y[i], axis=1))
         if return_proba:
             return np.squeeze(np.column_stack(y))
         else:
@@ -1035,10 +1079,36 @@ class KerasClassifier(BaseWrapper):
         """
         # check that if the user gave us a loss function it ended up in
         # the actual model
-        if self.loss:
+        if self.loss == "auto":
             try:
-                given_loss_name = losses_module.get(self.loss).__name__
-                actual_loss_name = losses_module.get(self.model_.loss).__name__
+                given_loss_name = losses_module.get(self.loss_).__name__
+                actual_loss = losses_module.get(self.model_.loss)
+                if hasattr(actual_loss, "name"):
+                    actual_loss_name = actual_loss.name
+                else:
+                    actual_loss_name = actual_loss.__name__
+                if given_loss_name != actual_loss_name:
+                    warnings.warn(
+                        f"loss='auto' resolved to '{self.loss_}',"
+                        f" but model compiled with {actual_loss_name}."
+                        f" Data may not match loss function!"
+                    )
+            except ValueError:
+                # unknown loss function
+                # in this case, do not do any checks
+                pass
+        elif self.loss:
+            try:
+                given_loss = losses_module.get(self.loss)
+                if hasattr(given_loss, "name"):
+                    given_loss_name = given_loss.name
+                else:
+                    given_loss_name = given_loss.__name__
+                actual_loss = losses_module.get(self.model_.loss)
+                if hasattr(actual_loss, "name"):
+                    actual_loss_name = actual_loss.name
+                else:
+                    actual_loss_name = actual_loss.__name__
                 if given_loss_name != actual_loss_name:
                     warnings.warn(
                         f"loss={self.loss} but model compiled with {actual_loss_name}."
@@ -1106,7 +1176,7 @@ class KerasClassifier(BaseWrapper):
         X = self._validate_data(X=X, y=None, reset=False)
 
         # pre process X
-        X, _ = self.preprocess_X(X)
+        X = self.preprocess_X(X, reset=False)
 
         # collect arguments
         predict_args = route_params(
@@ -1156,12 +1226,21 @@ class KerasRegressor(BaseWrapper):
         """
         return sklearn_r2_score(y_true, y_pred, **kwargs)
 
+    def select_loss(self, y):
+        """Choose an appropriate loss function given a target `y`.
+
+        Parameters
+        ----------
+        y : 1D or 2D numpy array
+        """
+        return self.r_squared
+
     def postprocess_y(self, y):
         """Ensures output is floatx and squeeze."""
         if np.can_cast(self.y_dtype_, np.float32):
-            return np.squeeze(y.astype(np.float32, copy=False)), dict()
+            return np.squeeze(y.astype(np.float32, copy=False))
         else:
-            return np.squeeze(y.astype(np.float64, copy=False)), dict()
+            return np.squeeze(y.astype(np.float64, copy=False))
 
     def preprocess_y(self, y, reset=True):
         """Split y for multi-output tasks.
@@ -1172,19 +1251,16 @@ class KerasRegressor(BaseWrapper):
             n_outputs_ = 1
         else:
             n_outputs_ = y.shape[1]
+        # for regression, multi-output is handled by single Keras output
+        model_n_outputs_ = 1
 
         if reset:
-            # for regression, multi-output is handled by single Keras output
-            model_n_outputs_ = 1
             # save meta params
             self.n_outputs_ = n_outputs_
             self.model_n_outputs_ = model_n_outputs_
         else:
             if self.n_outputs_ != n_outputs_:
-                raise ValueError()
-
-        y = [y]  # pack into single output list
-
+                raise ValueError()  # TODO: a sensical error message
         return y
 
     def score(self, X, y, sample_weight=None):
@@ -1202,7 +1278,7 @@ class KerasRegressor(BaseWrapper):
                 Mean accuracy of predictions on `X` wrt. `y`.
         """
         # check loss function and warn if it is not the same as score function
-        if self.model_.loss not in ("mean_squared_error", self.r_squared,):
+        if self.model_.loss is not self.r_squared:
             warnings.warn(
                 "Since ScikitLearn's `score` uses R^2 by default, it is "
                 "advisable to use the same loss/metric when optimizing the "
