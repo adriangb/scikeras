@@ -10,15 +10,16 @@ from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
-def test_validate_data():
-    """Tests the BaseWrapper._validate_data method.
+def test_shape_change_error():
+    """Tests that a ValueError is raised if the input
+    changes shape in subsequent partial fit calls.
     """
 
     estimator = KerasRegressor(
         build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
     )
     X = np.array([[1, 2], [3, 4]])
-    y = np.array([5, 6])
+    y = np.array([[0, 1], [1, 0]])
 
     with pytest.raises(RuntimeError, match="Is this estimator fitted?"):
         # First call requires reset=True
@@ -29,6 +30,10 @@ def test_validate_data():
     with pytest.raises(ValueError, match=r"but this \w+ is expecting "):
         # Calling with a different shape for X raises an error
         estimator._validate_data(X=X[:, :1], y=y, reset=False)
+
+    with pytest.raises(ValueError, match=r"but this \w+ is expecting "):
+        # Calling with a different shape for y raises an error
+        estimator._validate_data(X=X, y=y[:, :1], reset=False)
 
 
 def test_not_fitted_error():
@@ -133,4 +138,12 @@ def test_build_fn_and_init_signature_do_not_agree(wrapper):
         est.fit([[1]], [1])
 
 
-# def test_model_wrong_type():
+def test_model_wrong_type():
+    """Test that a TypeError is raised when model is not
+    a Model instance, a callable or None.
+    """
+    est = KerasClassifier(build_fn=object())
+    with pytest.raises(
+        TypeError, match="`model` must be a callable, a Keras Model instance or None"
+    ):
+        est.fit([[1]], [1])
