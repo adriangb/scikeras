@@ -131,3 +131,6 @@ def test_build_fn_and_init_signature_do_not_agree(wrapper):
     est = wrapper(model=no_bar, bar=42, foo=43)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
         est.fit([[1]], [1])
+
+
+# def test_model_wrong_type():

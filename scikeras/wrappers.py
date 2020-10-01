@@ -229,7 +229,9 @@ class BaseWrapper(BaseEstimator):
             # a callable method/function
             final_build_fn = model
         else:
-            raise TypeError("`model` must be a callable or None")
+            raise TypeError(
+                "`model` must be a callable, a Keras Model instance or None"
+            )
 
         return final_build_fn
 
