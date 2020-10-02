@@ -121,6 +121,7 @@ class BaseWrapper(BaseEstimator):
         "model_n_outputs_",
         "_user_params",
         "target_type_",
+        "user_classes_",
     }
 
     _routing_prefixes = {
@@ -551,7 +552,13 @@ class BaseWrapper(BaseEstimator):
             self.X_dtype_ = X.dtype
             self.X_shape_ = X.shape
         else:
-            pass  # TODO: check values for match
+            if not np.can_cast(X.dtype, self.X_dtype_):
+                raise ValueError(
+                    f"Got `X` with dtype {X.dtype},"
+                    f" but this {self.__name__} expected {self.X_dtype_}"
+                    f" and casting from {X.dtype} to {self.X_dtype_} is not safe!"
+                )
+            # X.shape is already checked via n_features_in_ in _validate_data
         return X
 
     def fit(self, X, y, sample_weight=None):
@@ -596,6 +603,9 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
+        if not hasattr(self, "user_classes_"):
+            # set when partial_fit is called with the `classes` param
+            self.user_classes_ = None
         # Handle random state
         if isinstance(self.random_state, np.random.RandomState):
             # Keras needs an integer
@@ -954,14 +964,38 @@ class KerasClassifier(BaseWrapper):
             n_outputs_ = len(n_classes_)
 
         if reset:
-            self.classes_ = classes_
+            self.classes_ = (
+                self.user_classes_ if self.user_classes_ is not None else classes_
+            )
             self.encoders_ = encoders_
             self.n_outputs_ = n_outputs_
             self.model_n_outputs_ = model_n_outputs_
             self.n_classes_ = n_classes_
         else:
-            pass  # TODO: implement checks
-
+            check = (
+                (self.classes_, classes_)
+                if isinstance(self.classes_, list)
+                else ([self.classes_], [classes_])
+            )
+            for col, (old, new) in enumerate(zip(*check)):
+                is_subset = len(set(old) - set(new)) == 0
+                if not is_subset:
+                    raise ValueError(
+                        f"Col {col} of `y` was detected to have {new} classes,"
+                        f" but this {self.__name__} expected only {old} classes."
+                    )
+            if not self.model_n_outputs_ == model_n_outputs_:
+                raise ValueError(
+                    f"`y` was detected to map to {model_n_outputs_} model outputs,"
+                    f" but this {self.__name__} expected {self.model_n_outputs_}"
+                    " model outputs."
+                )
+            if not self.n_outputs_ == n_outputs_:
+                raise ValueError(
+                    f"`y` was detected to map to {n_outputs_} model outputs,"
+                    f" but this {self.__name__} expected {self.n_outputs_}"
+                    " model outputs."
+                )
         return y
 
     def postprocess_y(self, y, return_proba=False):
@@ -1005,7 +1039,7 @@ class KerasClassifier(BaseWrapper):
                         y[i] = np.column_stack([1 - y[i], y[i]])
                     if not is_categorical_crossentropy(self.loss):
                         y_ = np.argmax(y[i], axis=1).reshape(-1, 1)
-                    else:  # OneHotEncoder
+                    else:
                         idx = np.argmax(y[i], axis=-1)
                         y_ = np.zeros((y[i].shape[0], 2))
                         y_[np.arange(y[i].shape[0]), idx] = 1
@@ -1016,7 +1050,7 @@ class KerasClassifier(BaseWrapper):
                 idx = np.argmax(y[i], axis=-1)
                 if not is_categorical_crossentropy(self.loss):
                     y_ = idx.reshape(-1, 1)
-                else:  # OneHotEncoder
+                else:
                     y_ = np.zeros(y[i].shape, dtype=int)
                     y_[np.arange(y[i].shape[0]), idx] = 1
                 class_predictions.append(self.encoders_[i].inverse_transform(y_))
@@ -1089,7 +1123,7 @@ class KerasClassifier(BaseWrapper):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        self.classes_ = classes  # TODO: don't swallow this param
+        self.user_classes_ = classes  # TODO: don't swallow this param
         return super().partial_fit(X, y, sample_weight=sample_weight)
 
     def predict_proba(self, X):
@@ -1193,7 +1227,16 @@ class KerasRegressor(BaseWrapper):
             self.model_n_outputs_ = model_n_outputs_
         else:
             if self.n_outputs_ != n_outputs_:
-                raise ValueError()  # TODO: a sensical error message
+                raise ValueError(
+                    f"`y` was detected to have {n_outputs_} targets,"
+                    f" but this {self.__name__} expected {self.n_outputs_} targets."
+                )
+            if self.n_outputs_ != n_outputs_:
+                raise ValueError(
+                    f"`y` was detected to map to {model_n_outputs_} model outputs,"
+                    f" but this {self.__name__} expected"
+                    f" {self.n_model_n_outputs_outputs_} model outputs."
+                )
         return y
 
     def score(self, X, y, sample_weight=None):
