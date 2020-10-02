@@ -25,8 +25,7 @@ from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
 
-from ._utils import (
-    Ensure2DTransformer,
+from scikeras._utils import (
     TFRandomState,
     _class_from_strings,
     _windows_upcast_ints,
@@ -37,6 +36,7 @@ from ._utils import (
     route_params,
     unflatten_params,
 )
+from scikeras.utils.transformers import Ensure2DTransformer
 
 
 class BaseWrapper(BaseEstimator):
@@ -888,16 +888,19 @@ class KerasClassifier(BaseWrapper):
             # single task, single label, binary classification
             model_n_outputs_ = 1  # single sigmoid output expected
             # encode
-            if is_categorical_crossentropy(loss):
-                # one-hot encode
-                encoder = make_pipeline(
-                    Ensure2DTransformer(),
-                    OneHotEncoder(sparse=False, dtype=np.float32),
-                )
+            if reset:
+                if is_categorical_crossentropy(loss):
+                    # one-hot encode
+                    encoder = make_pipeline(
+                        Ensure2DTransformer(),
+                        OneHotEncoder(sparse=False, dtype=np.float32),
+                    )
+                else:
+                    encoder = make_pipeline(
+                        Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
+                    )
             else:
-                encoder = make_pipeline(
-                    Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
-                )
+                encoder = self.encoders_[0]
             y = encoder.fit_transform(y)
             classes_ = encoder[1].categories_[0]
             # make lists
@@ -907,16 +910,19 @@ class KerasClassifier(BaseWrapper):
             # y = array([1, 5, 2])
             model_n_outputs_ = 1  # single softmax output expected
             # encode
-            if is_categorical_crossentropy(loss):
-                # one-hot encode
-                encoder = make_pipeline(
-                    Ensure2DTransformer(),
-                    OneHotEncoder(sparse=False, dtype=np.float32),
-                )
+            if reset:
+                if is_categorical_crossentropy(loss):
+                    # one-hot encode
+                    encoder = make_pipeline(
+                        Ensure2DTransformer(),
+                        OneHotEncoder(sparse=False, dtype=np.float32),
+                    )
+                else:
+                    encoder = make_pipeline(
+                        Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
+                    )
             else:
-                encoder = make_pipeline(
-                    Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
-                )
+                encoder = self.encoders_[0]
             y = encoder.fit_transform(y)
             classes_ = encoder[1].categories_[0]
             # make lists
@@ -937,16 +943,19 @@ class KerasClassifier(BaseWrapper):
             y = np.split(y, y.shape[1], axis=1)
             model_n_outputs_ = len(y)
             # encode
-            if is_categorical_crossentropy(loss):
-                # one-hot encode
-                encoder = make_pipeline(
-                    Ensure2DTransformer(), OneHotEncoder(sparse=False),
-                )
+            if reset:
+                if is_categorical_crossentropy(loss):
+                    # one-hot encode
+                    encoder = make_pipeline(
+                        Ensure2DTransformer(), OneHotEncoder(sparse=False),
+                    )
+                else:
+                    encoder = make_pipeline(
+                        Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32)
+                    )
+                encoders_ = [clone(encoder) for _ in range(len(y))]
             else:
-                encoder = make_pipeline(
-                    Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32)
-                )
-            encoders_ = [clone(encoder) for _ in range(len(y))]
+                encoders_ = self.encoders_
             y = [encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)]
             classes_ = [encoder[1].categories_[0] for encoder in encoders_]
         else:

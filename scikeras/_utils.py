@@ -9,7 +9,6 @@ from typing import Any, Callable, Dict, Iterable, List, Union
 import numpy as np
 import tensorflow as tf
 
-from sklearn.base import BaseEstimator, TransformerMixin
 from tensorflow.keras.layers import deserialize as deserialize_layer
 from tensorflow.keras.layers import serialize as serialize_layer
 from tensorflow.keras.metrics import deserialize as deserialize_metric
@@ -53,32 +52,6 @@ class TFRandomState:
         random.setstate(self.orig_random_state)
         np.random.set_state(self.orig_np_random_state)
         tf.random.set_seed(None)  # TODO: can we revert instead of unset?
-
-
-class Ensure2DTransformer(TransformerMixin, BaseEstimator):
-    """Transforms from 1D -> 2D and back.
-    """
-
-    def fit(self, X, y=None):
-        if len(X.shape) == 1:
-            self.should_transform_ = True
-        else:
-            self.should_transform_ = False
-        return self
-
-    def transform(self, X):
-        if self.should_transform_:
-            if len(X.shape) != 1:
-                raise ValueError("Expected `X.shape`==(n_samples, 1)!")
-            X = X.reshape(-1, 1)
-        return X
-
-    def inverse_transform(self, X):
-        if self.should_transform_:
-            if len(X.shape) != 2 or X.shape[1] != 1:
-                raise ValueError("Expected `X.shape`==(n_samples, 1)!")
-            X = np.squeeze(X, axis=1)
-        return X
 
 
 def unpack_keras_model(model, training_config, weights):
