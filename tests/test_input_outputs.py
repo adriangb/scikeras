@@ -242,7 +242,7 @@ def test_KerasClassifier_loss_invariance(y, y_type):
     categorical_crossentropy and sparse_categorical_crossentropy
     with either one-hot encoded targets or sparse targets.
     """
-    X = np.array([[1], [0], [1]])
+    X = np.arange(0, y.shape[0]).reshape(-1, 1)
     clf_1 = KerasClassifier(
         model=dynamic_classifier,
         hidden_layer_sizes=(100,),

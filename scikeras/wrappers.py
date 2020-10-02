@@ -885,16 +885,9 @@ class KerasClassifier(BaseWrapper):
             n_outputs_ = 1
             # encode
             if reset:
-                if is_categorical_crossentropy(loss):
-                    # one-hot encode
-                    encoder = make_pipeline(
-                        Ensure2DTransformer(),
-                        OneHotEncoder(sparse=False, dtype=np.float32),
-                    )
-                else:
-                    encoder = make_pipeline(
-                        Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
-                    )
+                encoder = make_pipeline(
+                    Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
+                )
             else:
                 encoder = self.encoders_[0]
             y = encoder.fit_transform(y)
@@ -1041,12 +1034,7 @@ class KerasClassifier(BaseWrapper):
                         # result from a single sigmoid output
                         # reformat so that we have 2 columns
                         y[i] = np.column_stack([1 - y[i], y[i]])
-                    if not is_categorical_crossentropy(self.loss):
-                        y_ = np.argmax(y[i], axis=1).reshape(-1, 1)
-                    else:
-                        idx = np.argmax(y[i], axis=-1)
-                        y_ = np.zeros((y[i].shape[0], 2))
-                        y_[np.arange(y[i].shape[0]), idx] = 1
+                    y_ = np.argmax(y[i], axis=1).reshape(-1, 1)
                     class_predictions.append(self.encoders_[i].inverse_transform(y_))
             elif target_type_ == "multiclass":
                 # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
