@@ -1037,17 +1037,28 @@ class KerasClassifier(BaseWrapper):
         # the actual model
         if self.loss:
             try:
-                same = losses_module.get(self.loss) is losses_module.get(
-                    self.model_.loss
-                )
+                given = losses_module.get(self.loss)
+                got = losses_module.get(self.model_.loss)
+                if isinstance(given, str) and isinstance(got, str):
+                    # strings
+                    same = given == got
+                elif hasattr(given, "name") and hasattr(got, "name"):
+                    # class instances, compare classes
+                    same = given.__class__ is got.__class__
+                elif hasattr(given, "__name__") and hasattr(got, "__name__"):
+                    # functions
+                    same = given is got
+                else:
+                    # custom objects or other; we don't want to check these
+                    raise ValueError  # break out of try block
                 if not same:
                     warnings.warn(
                         f"loss={self.loss} but model compiled with {self.model_.loss}."
                         " Data may not match loss function!"
                     )
             except ValueError:
-                # unknown loss function
-                # in this case, do not do any checks
+                # unknown loss or list of loss functions
+                # raised in the else clause above or if losses_module.get fails
                 pass
 
         return super()._check_output_model_compatibility(y)
