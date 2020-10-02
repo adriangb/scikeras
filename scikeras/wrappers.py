@@ -1062,35 +1062,26 @@ class KerasClassifier(BaseWrapper):
             try:
                 given = losses_module.get(self.loss)
                 got = losses_module.get(self.model_.loss)
-                if hasattr(given, "name") or hasattr(got, "name"):
-                    try:
-                        # one is a class, try to compare as classes
-                        if inspect.isclass(given):
-                            given = given()  # may raise TypeError
-                        if inspect.isclass(got):
-                            got = got()  # may raise TypeError
-                        # class instances, compare classes
-                        same = given.__class__ is got.__class__
-                        if same:
-                            raise ValueError  # break out of clause
-                    except TypeError:
-                        pass
-                if hasattr(given, "__name__") or hasattr(got, "__name__"):
-                    # one is a function, try to compare as functions
-                    try:
-                        if inspect.isclass(given):
-                            given = given()  # may raise TypeError
-                        if inspect.isclass(got):
-                            got = got()  # may raise TypeError
-                        same = given is got
-                        if same:
-                            raise ValueError  # break out of clause
-                    except TypeError:
-                        pass
-                warnings.warn(
-                    f"loss={self.loss} but model compiled with {self.model_.loss}."
-                    " Data may not match loss function!"
-                )
+                if (
+                    inspect.isclass(given)
+                    and isinstance(got, given)
+                    or inspect.isclass(got)
+                    and isinstance(given, got)
+                ):
+                    raise ValueError  # break from clause
+                # we get back either functions (with a __name__ attribute)
+                # or instances (in which case we compare classes)
+                if not hasattr(given, "__name__"):
+                    # instance
+                    given = given.__class__
+                if not hasattr(got, "__name__"):
+                    # instance
+                    got = got.__class__
+                if got is not given:
+                    warnings.warn(
+                        f"loss={self.loss} but model compiled with {self.model_.loss}."
+                        " Data may not match loss function!"
+                    )
             except ValueError:
                 # unknown loss (ex: list of loss functions or custom loss)
                 pass

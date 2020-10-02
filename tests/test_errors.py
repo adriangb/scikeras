@@ -263,6 +263,10 @@ def test_target_classes_change_incremental_fit():
 
 
 def test_loss_mismatch():
+    """Test that users are warned that their data-encoding may not match
+    their model's loss function if they pass `loss=xyz`
+    but self-compile their model with another loss.
+    """
     X = np.array([[1, 2], [2, 3]])
     y = np.array([1, 3])
 
