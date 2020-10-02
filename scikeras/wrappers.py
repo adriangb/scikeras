@@ -5,6 +5,7 @@ import os
 import warnings
 
 from collections import defaultdict
+from pickle import NONE
 from typing import Any, Dict
 
 import numpy as np
@@ -15,8 +16,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
-from sklearn.utils.multiclass import type_of_target
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
@@ -36,6 +36,7 @@ from scikeras._utils import (
     route_params,
     unflatten_params,
 )
+from scikeras.utils import type_of_target
 from scikeras.utils.transformers import Ensure2DTransformer
 
 
@@ -409,7 +410,7 @@ class BaseWrapper(BaseEstimator):
         # return self to allow fit_transform and such to work
         return self
 
-    def _check_output_model_compatibility(self, y):
+    def _check_output_model_compatibility(self, y: np.ndarray) -> None:
         """Checks that the model output number and y shape match.
 
         This is mainly in place to avoid cryptic TF errors.
@@ -421,7 +422,6 @@ class BaseWrapper(BaseEstimator):
                 f" {y[0].shape[0]}, but {self.model_} has"
                 f" {self.model_.outputs} outputs"
             )
-        return y
 
     def _validate_data(self, X, y=None, reset=True):
         """Validate input data and set or check the `n_features_in_` attribute.
@@ -468,7 +468,7 @@ class BaseWrapper(BaseEstimator):
         X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
 
         n_features = X.shape[1]
-        target_type = None if not np.any(y) else type_of_target(y)
+        target_type = None if y is None else type_of_target(y)
 
         if reset:
             self.n_features_in_ = n_features
@@ -662,7 +662,7 @@ class BaseWrapper(BaseEstimator):
         if reset:
             self.model_ = self._build_keras_model()
 
-        y = self._check_output_model_compatibility(y)
+        self._check_output_model_compatibility(y)
 
         # fit model
         return self._fit_keras_model(
@@ -878,15 +878,11 @@ class KerasClassifier(BaseWrapper):
 
         loss = self.loss
 
-        if len(y.shape) == 1:
-            n_outputs_ = 1
-        else:
-            n_outputs_ = y.shape[1]
-
         if self.target_type_ == "binary":
             # y = array([1, 0, 1, 0])
             # single task, single label, binary classification
             model_n_outputs_ = 1  # single sigmoid output expected
+            n_outputs_ = 1
             # encode
             if reset:
                 if is_categorical_crossentropy(loss):
@@ -903,12 +899,15 @@ class KerasClassifier(BaseWrapper):
                 encoder = self.encoders_[0]
             y = encoder.fit_transform(y)
             classes_ = encoder[1].categories_[0]
+            n_classes_ = len(classes_)
             # make lists
             encoders_ = [encoder]
             classes_ = [classes_]
+            n_classes_ = [n_classes_]
         elif self.target_type_ == "multiclass":
             # y = array([1, 5, 2])
             model_n_outputs_ = 1  # single softmax output expected
+            n_outputs_ = 1
             # encode
             if reset:
                 if is_categorical_crossentropy(loss):
@@ -925,52 +924,48 @@ class KerasClassifier(BaseWrapper):
                 encoder = self.encoders_[0]
             y = encoder.fit_transform(y)
             classes_ = encoder[1].categories_[0]
+            n_classes_ = len(classes_)
             # make lists
             encoders_ = [encoder]
             classes_ = [classes_]
-        elif self.target_type_ == "multilabel-indicator":
-            # y = array([1, 1, 1, 0], [0, 0, 1, 1])
-            # split into lists for multi-output Keras
-            # will be processed as multiple binary classifications
-            classes_ = [np.array([0, 1])] * y.shape[1]
-            encoders_ = [None] * y.shape[1]
-            y = np.split(y, y.shape[1], axis=1)
-            model_n_outputs_ = len(y)
-        elif self.target_type_ == "multiclass-multioutput":
-            # y = array([1, 0, 5], [2, 1, 3])
-            # split into lists for multi-output Keras
-            # each will be processed as a separate multiclass problem
-            y = np.split(y, y.shape[1], axis=1)
-            model_n_outputs_ = len(y)
+            n_classes_ = [n_classes_]
+        elif self.target_type_ == "multiclass-one-hot":
+            # y = array([1, 0], [1, 0]) (usually used with categorical_crossentropy)
+            model_n_outputs_ = 1  # single softmax output expected
+            n_outputs_ = 1
             # encode
+            # here we just pass through to allow all Keras use cases
+            # that didn't exist in sklearn to succeed (ex: loss=categorical_crossentropy)
             if reset:
-                if is_categorical_crossentropy(loss):
-                    # one-hot encode
-                    encoder = make_pipeline(
-                        Ensure2DTransformer(), OneHotEncoder(sparse=False),
-                    )
-                else:
-                    encoder = make_pipeline(
-                        Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32)
-                    )
-                encoders_ = [clone(encoder) for _ in range(len(y))]
+                encoder = FunctionTransformer()
             else:
-                encoders_ = self.encoders_
-            y = [encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)]
-            classes_ = [encoder[1].categories_[0] for encoder in encoders_]
+                encoder = self.encoders_[0]
+            y = encoder.fit_transform(y)
+            # there is no real "classes" representation for this type of data
+            classes_ = None
+            n_classes_ = y.shape[1]
+            # make lists
+            encoders_ = [encoder]
+            classes_ = [classes_]
+            n_classes_ = [n_classes_]
         else:
-            raise ValueError(f"Unknown label type: {self.target_type_}")
+            raise ValueError(
+                f"Unknown label type: {self.target_type_}."  # To match errors used by sklearn
+                "\n\nTo implement support, subclass KerasClassifier and override"
+                " `preprocess_y` and `postprocess_y`."
+                "\n\nSee (TODO: link to docs) for more information."
+            )
 
         # self.classes_ is kept as an array when n_outputs==1 for compatibility
         # with ensembles and other meta estimators
         # which do not support multioutput
         if len(classes_) == 1:
-            n_classes_ = classes_[0].size
+            n_classes_ = n_classes_[0]
             classes_ = classes_[0]
             n_outputs_ = 1
-        else:
-            n_classes_ = [class_.shape[0] for class_ in classes_]
-            n_outputs_ = len(n_classes_)
+        # else:  # this branch is unused, but kept as an example for users to extend SciKeras
+        #     n_classes_ = [class_.shape[0] for class_ in classes_]
+        #     n_outputs_ = len(n_classes_)
 
         if reset:
             self.classes_ = (
@@ -1053,7 +1048,7 @@ class KerasClassifier(BaseWrapper):
                         y_ = np.zeros((y[i].shape[0], 2))
                         y_[np.arange(y[i].shape[0]), idx] = 1
                     class_predictions.append(self.encoders_[i].inverse_transform(y_))
-            elif target_type_ in ("multiclass", "multiclass-multioutput"):
+            elif target_type_ == "multiclass":
                 # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
                 # array(['apple', 'orange'])
                 idx = np.argmax(y[i], axis=-1)
@@ -1063,8 +1058,14 @@ class KerasClassifier(BaseWrapper):
                     y_ = np.zeros(y[i].shape, dtype=int)
                     y_[np.arange(y[i].shape[0]), idx] = 1
                 class_predictions.append(self.encoders_[i].inverse_transform(y_))
-            elif target_type_ == "multilabel-indicator":
-                class_predictions.append(np.argmax(y[i], axis=1))
+            elif target_type_ == "multiclass-one-hot":
+                # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
+                # array([[1, 0, 0], [0, 1, 0]])
+                idx = np.argmax(y[i], axis=-1)
+                y_ = np.zeros(y[i].shape, dtype=int)
+                y_[np.arange(y[i].shape[0]), idx] = 1
+                class_predictions.append(y_)
+
         if return_proba:
             return np.squeeze(np.column_stack(y))
         else:
@@ -1076,6 +1077,8 @@ class KerasClassifier(BaseWrapper):
         """Checks that the model output number and loss functions match
         what SciKeras expects.
         """
+        super()._check_output_model_compatibility(y)
+
         # check that if the user gave us a loss function it ended up in
         # the actual model
         if self.loss:
@@ -1103,8 +1106,6 @@ class KerasClassifier(BaseWrapper):
                 # unknown loss or list of loss functions
                 # raised in the else clause above or if losses_module.get fails
                 pass
-
-        return super()._check_output_model_compatibility(y)
 
     def partial_fit(self, X, y, classes=None, sample_weight=None):
         """

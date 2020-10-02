@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
+from scipy.sparse.construct import random
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import MultiLabelBinarizer
 from tensorflow.python.keras.layers import Concatenate, Dense, Input
@@ -13,6 +14,7 @@ from tensorflow.python.keras.testing_utils import get_test_data
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
+from .multi_output_models import MultiOuputClassifier
 
 
 # Defaults
@@ -55,7 +57,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
         return [X[:, 0], X[:, 1:4]]
 
 
-class FunctionalAPIMultiOutputClassifier(KerasClassifier):
+class FunctionalAPIMultiOutputClassifier(MultiOuputClassifier):
     """Tests Functional API Classifier with 2 outputs of different type.
     """
 
@@ -86,7 +88,7 @@ class FunctionalAPIMultiOutputClassifier(KerasClassifier):
         return np.mean(np.all(y == y_pred, axis=1))
 
 
-class FunctionAPIMultiLabelClassifier(KerasClassifier):
+class FunctionAPIMultiLabelClassifier(MultiOuputClassifier):
     """Tests Functional API Classifier with multiple binary outputs.
     """
 
@@ -223,24 +225,71 @@ def test_multi_output_regression():
     assert y_pred_keras.shape == y_pred_sklearn.shape
 
 
+@pytest.mark.parametrize(
+    "y, y_type",
+    [
+        (np.array([1, 2, 3]), "multiclass"),  # ordinal, numeric, sorted
+        (np.array([2, 1, 3]), "multiclass"),  # ordinal, numeric, sorted
+        (
+            np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+            "multiclass-one-hot",
+        ),  # one-hot encoded
+        (np.array(["a", "b", "c"]), "multiclass"),  # categorical
+    ],
+)
+def test_KerasClassifier_loss_invariance(y, y_type):
+    """Test that KerasClassifier can use both
+    categorical_crossentropy and sparse_categorical_crossentropy
+    with either one-hot encoded targets or sparse targets.
+    """
+    X = np.array([[1], [0], [1]])
+    clf_1 = KerasClassifier(
+        model=dynamic_classifier,
+        hidden_layer_sizes=(100,),
+        loss="categorical_crossentropy",
+        random_state=0,
+    )
+    clf_1.fit(X, y)
+    y_1 = clf_1.predict(X)
+    if y_type != "multiclass-one-hot":
+        # sparse_categorical_crossentropy is not compatible with
+        # one-hot encoding and one-hot encoded targets are not used in sklearn
+        # This is a use case that does not natively succeed in Keras or skelarn estimators
+        # and thus SciKeras does not intend to auto-convert data to support it
+        clf_2 = KerasClassifier(
+            model=dynamic_classifier,
+            hidden_layer_sizes=(100,),
+            loss="sparse_categorical_crossentropy",
+            random_state=0,
+        )
+        clf_2.fit(X, y)
+        y_2 = clf_1.predict(X)
+
+        np.testing.assert_equal(y_1, y_2)
+
+
 def test_incompatible_output_dimensions():
     """Compares to the scikit-learn RandomForestRegressor classifier.
     """
     # create dataset with 4 outputs
     X = np.random.rand(10, 20)
-    y = np.random.randint(low=0, high=3, size=(10, 4))
+    y = np.random.randint(low=0, high=3, size=(10,))
 
     # create a model with 2 outputs
     def build_fn_clf(meta: Dict[str, Any], compile_kwargs: Dict[str, Any],) -> Model:
-        """Builds a Sequential based classifier."""
-        model = Sequential()
-        model.add(Dense(20, input_shape=(20,), activation="relu"))
-        model.add(Dense(np.unique(y).size, activation="relu"))
-        model.compile(
-            optimizer="sgd",
-            loss="sparse_categorical_crossentropy",
-            metrics=["accuracy"],
-        )
+        # get params
+        n_features_in_ = meta["n_features_in_"]
+
+        inp = Input((n_features_in_,))
+
+        x1 = Dense(100)(inp)
+
+        binary_out = Dense(1, activation="sigmoid")(x1)
+        cat_out = Dense(2, activation="softmax")(x1)
+
+        model = Model([inp], [binary_out, cat_out])
+        model.compile(loss=["binary_crossentropy", "categorical_crossentropy"])
+
         return model
 
     clf = KerasClassifier(build_fn=build_fn_clf)

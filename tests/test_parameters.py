@@ -4,21 +4,11 @@ import numpy as np
 import pytest
 
 from sklearn.base import clone
-from tensorflow.python.keras.testing_utils import get_test_data
+from sklearn.datasets import make_classification
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
-
-
-# Defaults
-INPUT_DIM = 5
-HIDDEN_DIM = 5
-TRAIN_SAMPLES = 10
-TEST_SAMPLES = 5
-NUM_CLASSES = 2
-BATCH_SIZE = 5
-EPOCHS = 1
 
 
 class TestRandomState:
@@ -42,12 +32,7 @@ class TestRandomState:
         """Tests that the random_state parameter correctly
         engages deterministric training and prediction.
         """
-        (X, y), (_, _) = get_test_data(
-            train_samples=TRAIN_SAMPLES,
-            test_samples=TEST_SAMPLES,
-            input_shape=(INPUT_DIM,),
-            num_classes=NUM_CLASSES,
-        )
+        X, y = make_classification()
 
         # With seed
         estimator.set_params(random_state=random_state)
@@ -87,12 +72,7 @@ class TestRandomState:
         """Tests that the random state context management correctly
         handles TF related env variables.
         """
-        (X, y), (_, _) = get_test_data(
-            train_samples=TRAIN_SAMPLES,
-            test_samples=TEST_SAMPLES,
-            input_shape=(INPUT_DIM,),
-            num_classes=NUM_CLASSES,
-        )
+        X, y = make_classification()
 
         if "random_state" in estimator.get_params():
             estimator.set_params(random_state=None)
