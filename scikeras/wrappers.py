@@ -488,15 +488,6 @@ class BaseWrapper(BaseEstimator):
             return X
         return X, y
 
-    def select_loss(self, y):
-        """Choose an appropriate loss function given a target `y`.
-
-        Parameters
-        ----------
-        y : 1D or 2D numpy array
-        """
-        raise NotImplementedError("Method not implemented for `BaseWrapper`!")
-
     def preprocess_y(self, y, reset=True):
         """Handles manipulation of y inputs to fit or score.
 
@@ -1165,15 +1156,6 @@ class KerasRegressor(BaseWrapper):
             float
         """
         return sklearn_r2_score(y_true, y_pred, **kwargs)
-
-    def select_loss(self, y):
-        """Choose an appropriate loss function given a target `y`.
-
-        Parameters
-        ----------
-        y : 1D or 2D numpy array
-        """
-        return self.r_squared
 
     def postprocess_y(self, y):
         """Ensures output is floatx and squeeze."""
