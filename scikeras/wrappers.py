@@ -121,7 +121,6 @@ class BaseWrapper(BaseEstimator):
         "model_n_outputs_",
         "_user_params",
         "target_type_",
-        "loss_",
     }
 
     _routing_prefixes = {
@@ -261,8 +260,6 @@ class BaseWrapper(BaseEstimator):
                 init_params, destination="optimizer", pass_filter=set(), strict=True,
             ),
         )
-        # replace loss function with final loss function to accommodate loss=="auto"
-        compile_kwargs["loss"] = self.loss_
         compile_kwargs["loss"] = _class_from_strings(
             compile_kwargs["loss"], losses_module.get
         )
@@ -656,12 +653,6 @@ class BaseWrapper(BaseEstimator):
                         " left after deleting points with zero sample weight!"
                     )
 
-        # get actual loss function
-        if self.loss == "auto":
-            self.loss_ = self.select_loss(y)
-        else:
-            self.loss_ = self.loss
-
         # pre process X, y
         X = self.preprocess_X(X, reset=reset)
         y = self.preprocess_y(y, reset=reset)
@@ -871,25 +862,6 @@ class KerasClassifier(BaseWrapper):
         """
         return sklearn_accuracy_score(y_true, y_pred, **kwargs)
 
-    def select_loss(self, y):
-        """Choose an appropriate loss function given a target `y`.
-
-        Parameters
-        ----------
-        y : 1D or 2D numpy array
-        """
-        target_type = type_of_target(y)
-        if target_type == "binary":
-            return "binary_crossentropy"
-        elif target_type == "multiclass":
-            return "sparse_categorical_crossentropy"
-        elif target_type == "multiclass-multioutput":
-            return "sparse_categorical_crossentropy"
-        elif target_type == "multilabel-indicator":
-            return "binary_crossentropy"
-        else:
-            raise ValueError(f'Unknown label type: {target_type} used w/ loss="auto"!')
-
     def preprocess_y(self, y, reset=True):
         """Handles manipulation of y inputs to fit or score.
 
@@ -903,7 +875,7 @@ class KerasClassifier(BaseWrapper):
         """
         y = super().preprocess_y(y, reset=reset)
 
-        loss = self.loss_
+        loss = self.loss
 
         if len(y.shape) == 1:
             n_outputs_ = 1
@@ -970,7 +942,9 @@ class KerasClassifier(BaseWrapper):
                     Ensure2DTransformer(), OneHotEncoder(sparse=False),
                 )
             else:
-                encoder = make_pipeline(Ensure2DTransformer(), OrdinalEncoder(),)
+                encoder = make_pipeline(
+                    Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32)
+                )
             encoders_ = [clone(encoder) for _ in range(len(y))]
             y = [encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)]
             classes_ = [encoder[1].categories_[0] for encoder in encoders_]
@@ -1038,7 +1012,7 @@ class KerasClassifier(BaseWrapper):
                         # result from a single sigmoid output
                         # reformat so that we have 2 columns
                         y[i] = np.column_stack([1 - y[i], y[i]])
-                    if isinstance(self.encoders_[i][-1], OrdinalEncoder):
+                    if not is_categorical_crossentropy(self.loss):
                         y_ = np.argmax(y[i], axis=1).reshape(-1, 1)
                     else:  # OneHotEncoder
                         idx = np.argmax(y[i], axis=-1)
@@ -1049,7 +1023,7 @@ class KerasClassifier(BaseWrapper):
                 # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
                 # array(['apple', 'orange'])
                 idx = np.argmax(y[i], axis=-1)
-                if isinstance(self.encoders_[i][-1], OrdinalEncoder):
+                if not is_categorical_crossentropy(self.loss):
                     y_ = idx.reshape(-1, 1)
                 else:  # OneHotEncoder
                     y_ = np.zeros(y[i].shape, dtype=int)
@@ -1070,24 +1044,9 @@ class KerasClassifier(BaseWrapper):
         """
         # check that if the user gave us a loss function it ended up in
         # the actual model
-        if self.loss == "auto":
+        if self.loss:
             try:
-                same = losses_module.get(self.loss_) is losses_module.get(
-                    self.model_.loss
-                )
-                if not same:
-                    warnings.warn(
-                        f"loss='auto' resolved to '{self.loss_}',"
-                        f" but model compiled with {self.model_.loss}."
-                        " Data may not match loss function!"
-                    )
-            except ValueError:
-                # unknown loss function
-                # in this case, do not do any checks
-                pass
-        elif self.loss:
-            try:
-                same = losses_module.get(self.loss_) is losses_module.get(
+                same = losses_module.get(self.loss) is losses_module.get(
                     self.model_.loss
                 )
                 if not same:

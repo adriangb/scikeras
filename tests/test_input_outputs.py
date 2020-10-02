@@ -52,7 +52,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
     def preprocess_X(X, reset=True):
         """To support multiple inputs, a custom method must be defined.
         """
-        return [X[:, 0], X[:, 1:4]]
+        return [X[:, 0], X[:, 1:4]], dict()
 
 
 class FunctionalAPIMultiOutputClassifier(KerasClassifier):
@@ -237,7 +237,9 @@ def test_incompatible_output_dimensions():
         model.add(Dense(20, input_shape=(20,), activation="relu"))
         model.add(Dense(np.unique(y).size, activation="relu"))
         model.compile(
-            optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"],
+            optimizer="sgd",
+            loss="sparse_categorical_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
@@ -288,7 +290,7 @@ def test_classifier_handles_dtypes(dtype):
             return super()._fit_keras_model(X, y, sample_weight, warm_start)
 
     clf = StrictClassifier(
-        build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,), loss="auto",
+        build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
     )
     clf.fit(X, y, sample_weight=sample_weight)
     assert clf.score(X, y) >= 0
@@ -322,9 +324,7 @@ def test_regressor_handles_dtypes(dtype):
             assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
             return super()._fit_keras_model(X, y, sample_weight, warm_start)
 
-    reg = StrictRegressor(
-        build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,), loss="auto"
-    )
+    reg = StrictRegressor(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
     reg.fit(X, y, sample_weight=sample_weight)
     y_hat = reg.predict(X)
     if y.dtype.kind == "f":
@@ -358,7 +358,6 @@ def test_mixed_dtypes(y_dtype, X_dtype, run_eagerly):
         build_fn=dynamic_regressor,
         run_eagerly=run_eagerly,
         model__hidden_layer_sizes=(100,),
-        loss="auto",
     )
     reg.fit(X, y)
     y_hat = reg.predict(X)

@@ -108,9 +108,7 @@ def test_build_fn_deprecation():
     """An appropriate warning is raised when using the `build_fn`
     parameter instead of `model`.
     """
-    clf = KerasClassifier(
-        build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,), loss="auto"
-    )
+    clf = KerasClassifier(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
     with pytest.warns(UserWarning, match="`build_fn` will be renamed to `model`"):
         clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
@@ -156,7 +154,7 @@ def test_no_loss(loss, compile):
 
     est = KerasRegressor(model=get_model, loss=loss, compile=compile)
     with pytest.raises(ValueError, match="must provide a loss function"):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))
 
 
 @pytest.mark.parametrize("compile", [True, False])
@@ -175,11 +173,11 @@ def test_no_optimizer(compile):
 
     est = KerasRegressor(
         model=get_model,
-        loss="categorical_crossentropy",
+        loss="sparse_categorical_crossentropy",
         compile=compile,
         optimizer=None,
     )
     with pytest.raises(
         ValueError, match="Could not interpret optimizer identifier"  # Keras error
     ):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))

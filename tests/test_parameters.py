@@ -30,13 +30,11 @@ class TestRandomState:
         [
             KerasRegressor(
                 build_fn=dynamic_regressor,
-                loss="auto",
+                loss=KerasRegressor.r_squared,
                 model__hidden_layer_sizes=(100,),
             ),
             KerasClassifier(
-                build_fn=dynamic_classifier,
-                loss="auto",
-                model__hidden_layer_sizes=(100,),
+                build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
             ),
         ],
     )
@@ -75,13 +73,11 @@ class TestRandomState:
         [
             KerasRegressor(
                 build_fn=dynamic_regressor,
-                loss="auto",
+                loss=KerasRegressor.r_squared,
                 model__hidden_layer_sizes=(100,),
             ),
             KerasClassifier(
-                build_fn=dynamic_classifier,
-                model__hidden_layer_sizes=(100,),
-                loss="auto",
+                build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
             ),
         ],
     )
@@ -149,7 +145,6 @@ def test_sample_weights_fit():
         model__hidden_layer_sizes=(100,),
         epochs=10,
         random_state=0,
-        loss="auto",
     )
     estimator1 = clone(estimator)
     estimator2 = clone(estimator)
@@ -192,7 +187,6 @@ def test_sample_weights_score():
         model__hidden_layer_sizes=(100,),
         epochs=10,
         random_state=0,
-        loss="auto",
     )
     estimator1 = clone(estimator)
     estimator2 = clone(estimator)
@@ -219,15 +213,11 @@ def test_build_fn_default_params():
     """Tests that default arguments arguments of
     `build_fn` are registered as hyperparameters.
     """
-    est = KerasClassifier(
-        build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,), loss="auto"
-    )
+    est = KerasClassifier(build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,))
     params = est.get_params()
     # (100, ) is the default for dynamic_classifier
     assert params["model__hidden_layer_sizes"] == (100,)
 
-    est = KerasClassifier(
-        build_fn=dynamic_classifier, model__hidden_layer_sizes=(200,), loss="auto"
-    )
+    est = KerasClassifier(build_fn=dynamic_classifier, model__hidden_layer_sizes=(200,))
     params = est.get_params()
     assert params["model__hidden_layer_sizes"] == (200,)

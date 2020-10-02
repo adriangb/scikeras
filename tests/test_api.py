@@ -45,7 +45,9 @@ def build_fn_clf(
     model.add(keras.layers.Activation("relu"))
     model.add(keras.layers.Dense(n_classes_))
     model.add(keras.layers.Activation("softmax"))
-    model.compile(optimizer="sgd", loss="binary_crossentropy", metrics=["accuracy"])
+    model.compile(
+        optimizer="sgd", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+    )
     return model
 
 
@@ -90,24 +92,24 @@ class TestBasicAPI:
 
     def test_classify_build_fn(self):
         """Tests a classification task for errors."""
-        clf = KerasClassifier(build_fn=build_fn_clf, hidden_dim=5, loss="auto")
+        clf = KerasClassifier(build_fn=build_fn_clf, hidden_dim=5)
         basic_checks(clf, load_iris)
 
     def test_classify_inherit_class_build_fn(self):
         """Tests for errors using an inherited class."""
 
-        clf = InheritClassBuildFnClf(build_fn=None, hidden_dim=5, loss="auto")
+        clf = InheritClassBuildFnClf(build_fn=None, hidden_dim=5)
         basic_checks(clf, load_iris)
 
     def test_regression_build_fn(self):
         """Tests for errors using KerasRegressor."""
-        reg = KerasRegressor(build_fn=build_fn_reg, hidden_dim=5, loss="auto")
+        reg = KerasRegressor(build_fn=build_fn_reg, hidden_dim=5)
         basic_checks(reg, load_boston)
 
     def test_regression_inherit_class_build_fn(self):
         """Tests for errors using KerasRegressor inherited."""
 
-        reg = InheritClassBuildFnReg(build_fn=None, hidden_dim=5, loss="auto")
+        reg = InheritClassBuildFnReg(build_fn=None, hidden_dim=5,)
         basic_checks(reg, load_boston)
 
 
@@ -151,7 +153,7 @@ def build_fn_clss(
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(1, activation="softmax"))
-    model.compile(**compile_kwargs)
+    model.compile("adam", loss="binary_crossentropy", metrics=["accuracy"])
     return model
 
 
@@ -169,7 +171,7 @@ def build_fn_clscs(
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(n_classes_, activation="softmax"))
-    model.compile(**compile_kwargs)
+    model.compile("adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     return model
 
 
@@ -188,7 +190,7 @@ def build_fn_clscf(
         z = Dense(size, activation="relu")(z)
     y = Dense(n_classes_, activation="softmax")(z)
     model = Model(inputs=x, outputs=y)
-    model.compile(**compile_kwargs)
+    model.compile("adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     return model
 
 
@@ -229,14 +231,14 @@ class TestAdvancedAPIFuncs:
     def test_standalone(self, config):
         """Tests standalone estimator."""
         loader, model, build_fn, _ = CONFIG[config]
-        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[], loss="auto")
+        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         basic_checks(estimator, loader)
 
     @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
     def test_pipeline(self, config):
         """Tests compatibility with Scikit-learn's pipeline."""
         loader, model, build_fn, _ = CONFIG[config]
-        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[], loss="auto")
+        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         estimator = Pipeline([("s", StandardScaler()), ("e", estimator)])
         basic_checks(estimator, loader)
 
@@ -247,11 +249,7 @@ class TestAdvancedAPIFuncs:
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         loader, model, build_fn, _ = CONFIG[config]
         estimator = model(
-            build_fn,
-            epochs=1,
-            validation_split=0.1,
-            model__hidden_layer_sizes=[],
-            loss="auto",
+            build_fn, epochs=1, validation_split=0.1, model__hidden_layer_sizes=[],
         )
         basic_checks(
             GridSearchCV(estimator, {"model__hidden_layer_sizes": [[], [5]]}), loader,
@@ -271,7 +269,7 @@ class TestAdvancedAPIFuncs:
     def test_searchcv_routed_params(self, config):
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         loader, model, build_fn, _ = CONFIG[config]
-        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[], loss="auto")
+        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         params = {
             "model__hidden_layer_sizes": [[], [5]],
             "optimizer": ["sgd", "adam"],
@@ -284,9 +282,7 @@ class TestAdvancedAPIFuncs:
     def test_ensemble(self, config):
         """Tests compatibility with Scikit-learn's ensembles."""
         loader, model, build_fn, ensembles = CONFIG[config]
-        base_estimator = model(
-            build_fn, epochs=1, model__hidden_layer_sizes=[], loss="auto"
-        )
+        base_estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         for ensemble in ensembles:
             estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
@@ -296,7 +292,7 @@ class TestAdvancedAPIFuncs:
         """Tests compatibility with Scikit-learn's calibrated classifier CV."""
         loader, _, build_fn, _ = CONFIG[config]
         base_estimator = KerasClassifier(
-            build_fn, epochs=1, model__hidden_layer_sizes=[], loss="auto"
+            build_fn, epochs=1, model__hidden_layer_sizes=[]
         )
         estimator = CalibratedClassifierCV(base_estimator=base_estimator, cv=5)
         basic_checks(estimator, loader)
@@ -318,7 +314,6 @@ class TestPrebuiltModel:
         # make y the same shape as will be used by .fit
         if config != "MLPRegressor":
             y_train = to_categorical(y_train)
-            loss = "sparse_categorical_crossentropy"
             meta = {
                 "n_classes_": n_classes_,
                 "target_type_": "multiclass",
@@ -328,10 +323,9 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": loss, "metrics": None,},
+                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
         else:
-            loss = KerasRegressor.r_squared
             meta = {
                 "n_outputs_": 1,
                 "n_features_in_": x_train.shape[1],
@@ -339,10 +333,10 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": loss, "metrics": None,},
+                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
 
-        estimator = model(build_fn=keras_model, loss=loss)
+        estimator = model(build_fn=keras_model)
         basic_checks(estimator, loader)
 
     @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
@@ -356,7 +350,6 @@ class TestPrebuiltModel:
         # make y the same shape as will be used by .fit
         if config != "MLPRegressor":
             y_train = to_categorical(y_train)
-            loss = "sparse_categorical_crossentropy"
             meta = {
                 "n_classes_": n_classes_,
                 "target_type_": "multiclass",
@@ -366,10 +359,9 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": loss, "metrics": None,},
+                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
         else:
-            loss = KerasRegressor.r_squared
             meta = {
                 "n_outputs_": 1,
                 "n_features_in_": x_train.shape[1],
@@ -377,10 +369,10 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": loss, "metrics": None,},
+                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
 
-        base_estimator = model(build_fn=keras_model, loss=loss)
+        base_estimator = model(build_fn=keras_model)
         for ensemble in ensembles:
             estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
@@ -463,7 +455,7 @@ class TestPartialFit:
     )
     def test_pf_pickle_pf(self, config):
         loader, model, build_fn, _ = CONFIG[config]
-        clf = model(build_fn, epochs=1, model__hidden_layer_sizes=[], loss="auto")
+        clf = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         data = loader()
 
         X, y = data.data[:100], data.target[:100]
@@ -514,9 +506,7 @@ def test_history():
     """
     data = load_boston()
     X, y = data.data[:100], data.target[:100]
-    estimator = KerasRegressor(
-        build_fn=dynamic_regressor, model__hidden_layer_sizes=[], loss="auto"
-    )
+    estimator = KerasRegressor(build_fn=dynamic_regressor, model__hidden_layer_sizes=[])
 
     estimator.partial_fit(X, y)
 
