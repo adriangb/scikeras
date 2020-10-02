@@ -1062,11 +1062,6 @@ class KerasClassifier(BaseWrapper):
             try:
                 given = losses_module.get(self.loss)
                 got = losses_module.get(self.model_.loss)
-                if isinstance(given, str) and isinstance(got, str):
-                    # strings
-                    same = given == got
-                    if same:
-                        raise ValueError  # break out of clause
                 if hasattr(given, "name") or hasattr(got, "name"):
                     try:
                         # one is a class, try to compare as classes
