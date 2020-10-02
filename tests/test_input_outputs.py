@@ -52,7 +52,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
     def preprocess_X(X, reset=True):
         """To support multiple inputs, a custom method must be defined.
         """
-        return [X[:, 0], X[:, 1:4]], dict()
+        return [X[:, 0], X[:, 1:4]]
 
 
 class FunctionalAPIMultiOutputClassifier(KerasClassifier):
