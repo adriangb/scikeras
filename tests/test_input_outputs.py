@@ -268,6 +268,39 @@ def test_KerasClassifier_loss_invariance(y, y_type):
         np.testing.assert_equal(y_1, y_2)
 
 
+@pytest.mark.parametrize(
+    "y, y_type",
+    [
+        (np.array([1, 2, 3]), "multiclass"),  # ordinal, numeric, sorted
+        (np.array([2, 1, 3]), "multiclass"),  # ordinal, numeric, sorted
+        (
+            np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+            "multiclass-one-hot",
+        ),  # one-hot encoded
+        (np.array(["a", "b", "c"]), "multiclass"),  # categorical
+    ],
+)
+@pytest.mark.parametrize(
+    "loss", ["categorical_crossentropy", "sparse_categorical_crossentropy"]
+)
+def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
+    """Test that KerasClassifier can use both
+    categorical_crossentropy and sparse_categorical_crossentropy
+    with either one-hot encoded targets or sparse targets.
+    """
+    if y_type == "multiclass-one-hot" and loss == "sparse_categorical_crossentropy":
+        return  # not compatible, see test_KerasClassifier_loss_invariance
+    X = np.arange(0, y.shape[0]).reshape(-1, 1)
+    clf_1 = KerasClassifier(
+        model=dynamic_classifier, hidden_layer_sizes=(100,), loss=loss, random_state=0,
+    )
+    clf_1.fit(X, y)
+    tfs = clf_1.encoders_
+    clf_1.partial_fit(X, y)
+    tfs_new = clf_1.encoders_
+    assert all(old is new for old, new in zip(tfs, tfs_new))
+
+
 def test_incompatible_output_dimensions():
     """Compares to the scikit-learn RandomForestRegressor classifier.
     """

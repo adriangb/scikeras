@@ -976,12 +976,13 @@ class KerasClassifier(BaseWrapper):
                 else ([self.classes_], [classes_])
             )
             for col, (old, new) in enumerate(zip(*check)):
-                is_subset = len(set(old) - set(new)) == 0
-                if not is_subset:
-                    raise ValueError(
-                        f"Col {col} of `y` was detected to have {new} classes,"
-                        f" but this {self.__name__} expected only {old} classes."
-                    )
+                if old is not None and new is not None:
+                    is_subset = len(set(old) - set(new)) == 0
+                    if not is_subset:
+                        raise ValueError(
+                            f"Col {col} of `y` was detected to have {new} classes,"
+                            f" but this {self.__name__} expected only {old} classes."
+                        )
         return y
 
     def postprocess_y(self, y, return_proba=False):
