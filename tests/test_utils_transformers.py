@@ -42,9 +42,9 @@ class TestEnsure2DTransformer:
             tf.inverse_transform(np.array([1, 1]))
         with pytest.raises(ValueError, match="Expected a 2D array"):
             tf.inverse_transform(np.array([[[1], [1]]]))
-        # 2D with shape[1] != 1 raises an error as well
-        with pytest.raises(ValueError, match="Expected a 2D array"):
-            tf.inverse_transform(np.array([1, 2, 3]).T)
+        # 2D with shape[1] != 1 raises a ValueError as well
+        with pytest.raises(ValueError, match="Expected `X.shape"):
+            tf.inverse_transform(np.array([1, 2, 3]).reshape(-1, 1).T)
         # Fit with NOT 1D
         # Then no errors are raised regardless of X_new's dimensionality
         tf.fit(X.reshape(-1, 1))
