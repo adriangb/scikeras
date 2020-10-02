@@ -6,7 +6,7 @@ import warnings
 
 from collections import defaultdict
 from pickle import NONE
-from typing import Any, Dict
+from typing import Any, Dict, Type
 
 import numpy as np
 import tensorflow as tf
@@ -507,10 +507,11 @@ class BaseWrapper(BaseEstimator):
             self.y_dtype_ = y_dtype
             self.y_shape_ = y_shape
         else:
-            if self.y_dtype_ != y_dtype:
+            if not np.can_cast(y.dtype, self.y_dtype_):
                 raise ValueError(
-                    f"`y` dtype is {y_dtype}, but this {self.__name__}"
-                    f" is expecting {self.y_dtype_}."
+                    f"Got `y` with dtype {y.dtype},"
+                    f" but this {self.__name__} expected {self.X_dtype_}"
+                    f" and casting from {y.dtype} to {self.X_dtype_} is not safe!"
                 )
             if self.y_shape_ != y.shape:
                 raise ValueError(
@@ -981,18 +982,6 @@ class KerasClassifier(BaseWrapper):
                         f"Col {col} of `y` was detected to have {new} classes,"
                         f" but this {self.__name__} expected only {old} classes."
                     )
-            if not self.model_n_outputs_ == model_n_outputs_:
-                raise ValueError(
-                    f"`y` was detected to map to {model_n_outputs_} model outputs,"
-                    f" but this {self.__name__} expected {self.model_n_outputs_}"
-                    " model outputs."
-                )
-            if not self.n_outputs_ == n_outputs_:
-                raise ValueError(
-                    f"`y` was detected to map to {n_outputs_} model outputs,"
-                    f" but this {self.__name__} expected {self.n_outputs_}"
-                    " model outputs."
-                )
         return y
 
     def postprocess_y(self, y, return_proba=False):
@@ -1076,23 +1065,39 @@ class KerasClassifier(BaseWrapper):
                 if isinstance(given, str) and isinstance(got, str):
                     # strings
                     same = given == got
-                elif hasattr(given, "name") and hasattr(got, "name"):
-                    # class instances, compare classes
-                    same = given.__class__ is got.__class__
-                elif hasattr(given, "__name__") and hasattr(got, "__name__"):
-                    # functions
-                    same = given is got
-                else:
-                    # custom objects or other; we don't want to check these
-                    raise ValueError  # break out of try block
-                if not same:
-                    warnings.warn(
-                        f"loss={self.loss} but model compiled with {self.model_.loss}."
-                        " Data may not match loss function!"
-                    )
+                    if same:
+                        raise ValueError  # break out of clause
+                if hasattr(given, "name") or hasattr(got, "name"):
+                    try:
+                        # one is a class, try to compare as classes
+                        if inspect.isclass(given):
+                            given = given()  # may raise TypeError
+                        if inspect.isclass(got):
+                            got = got()  # may raise TypeError
+                        # class instances, compare classes
+                        same = given.__class__ is got.__class__
+                        if same:
+                            raise ValueError  # break out of clause
+                    except TypeError:
+                        pass
+                if hasattr(given, "__name__") or hasattr(got, "__name__"):
+                    # one is a function, try to compare as functions
+                    try:
+                        if inspect.isclass(given):
+                            given = given()  # may raise TypeError
+                        if inspect.isclass(got):
+                            got = got()  # may raise TypeError
+                        same = given is got
+                        if same:
+                            raise ValueError  # break out of clause
+                    except TypeError:
+                        pass
+                warnings.warn(
+                    f"loss={self.loss} but model compiled with {self.model_.loss}."
+                    " Data may not match loss function!"
+                )
             except ValueError:
-                # unknown loss or list of loss functions
-                # raised in the else clause above or if losses_module.get fails
+                # unknown loss (ex: list of loss functions or custom loss)
                 pass
 
     def partial_fit(self, X, y, classes=None, sample_weight=None):
@@ -1223,18 +1228,6 @@ class KerasRegressor(BaseWrapper):
             # save meta params
             self.n_outputs_ = n_outputs_
             self.model_n_outputs_ = model_n_outputs_
-        else:
-            if self.n_outputs_ != n_outputs_:
-                raise ValueError(
-                    f"`y` was detected to have {n_outputs_} targets,"
-                    f" but this {self.__name__} expected {self.n_outputs_} targets."
-                )
-            if self.n_outputs_ != n_outputs_:
-                raise ValueError(
-                    f"`y` was detected to map to {model_n_outputs_} model outputs,"
-                    f" but this {self.__name__} expected"
-                    f" {self.n_model_n_outputs_outputs_} model outputs."
-                )
         return y
 
     def score(self, X, y, sample_weight=None):

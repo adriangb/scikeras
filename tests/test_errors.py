@@ -6,8 +6,9 @@ import pytest
 from sklearn.exceptions import NotFittedError
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
+from tensorflow.python.keras.losses import CategoricalCrossentropy
 
-from scikeras.wrappers import KerasClassifier, KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
@@ -181,3 +182,99 @@ def test_no_optimizer(compile):
         ValueError, match="Could not interpret optimizer identifier"  # Keras error
     ):
         est.fit(np.array([[0], [1]]), np.array([0, 1]))
+
+
+def test_target_type_changes_incremental_fit():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    with pytest.raises(
+        ValueError, match="`y` is of type ",
+    ):
+        y_new = np.array([1, 2])
+        est.partial_fit(X, np.column_stack([y, y_new]))
+
+
+def test_target_type_changes_incremental_fit():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    with pytest.raises(
+        ValueError, match="`y` is of type ",
+    ):
+        y_new = np.array([1, 2])
+        est.partial_fit(X, np.column_stack([y, y_new]))
+
+
+def test_target_dtype_changes_incremental_fit():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    est.partial_fit(X, y.astype(np.uint8))
+    with pytest.raises(
+        ValueError, match=" and casting from ",
+    ):
+        est.partial_fit(X, y.astype(np.float64))
+
+
+def test_target_shape_changes_incremental_fit():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    with pytest.raises(
+        ValueError, match="`y` shape is ",
+    ):
+        est.partial_fit(X, y.reshape(-1, 1))
+
+
+def test_X_dtype_changes_incremental_fit():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    est.partial_fit(X.astype(np.uint8), y)
+    with pytest.raises(
+        ValueError, match=" and casting from ",
+    ):
+        est.partial_fit(X.astype(np.float64), y)
+
+
+def test_target_classes_change_incremental_fit():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    est.partial_fit(X.astype(np.uint8), y)
+    with pytest.raises(
+        ValueError, match="Col 0 of `y` was detected to have ",
+    ):
+        y[0] = 10
+        est.partial_fit(X, y)
+
+
+def test_loss_mismatch():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    def force_loss(hidden_layer_sizes, meta, compile_kwargs):
+        model = dynamic_classifier(hidden_layer_sizes, meta, compile_kwargs)
+        model.compile(loss="categorical_crossentropy")
+        return model
+
+    est = KerasClassifier(
+        model=force_loss, hidden_layer_sizes=(100,), loss="binary_crossentropy",
+    )
+    with pytest.warns(
+        UserWarning, match=" but model compiled with ",
+    ):
+        est.fit(X, y)
