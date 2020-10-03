@@ -100,7 +100,7 @@ def test_sample_weights_all_zero():
     y = np.random.uniform(size=n)
     sample_weight = np.zeros(y.shape)
 
-    with pytest.raises(RuntimeError, match="no samples left"):
+    with pytest.raises(ValueError, match="All sample weights are zero!"):
         estimator.fit(X, y, sample_weight=sample_weight)
 
 

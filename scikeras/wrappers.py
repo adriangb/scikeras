@@ -495,24 +495,8 @@ class BaseWrapper(BaseEstimator):
             sample_weight = _check_sample_weight(
                 sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
             )
-            # Scikit-Learn expects a 0 in sample_weight to mean
-            # "ignore the sample", but because of how Keras applies
-            # sample_weight to the loss function, this doesn't
-            # exactly work out (as in, sklearn estimator checks fail
-            # because the predictions differ by a small margin).
-            # To get around this, we manually delete these samples here
-            zeros = sample_weight == 0
-            if np.any(zeros):
-                X = X[~zeros]
-                y = y[~zeros]
-                sample_weight = sample_weight[~zeros]
-                if sample_weight.size == 0:
-                    # could check any of the arrays here, arbitrary choice
-                    # there will be no samples left! warn users
-                    raise RuntimeError(
-                        "Cannot run because there are no samples"
-                        " left after deleting points with zero sample weight!"
-                    )
+            if np.sum(sample_weight) == 0:
+                raise ValueError("All sample weights are zero!")
         return X, y, sample_weight
 
     def _should_reset(self, warm_start: bool) -> bool:
