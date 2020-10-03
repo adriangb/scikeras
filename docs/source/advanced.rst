@@ -5,8 +5,8 @@ Advanced Usage of SciKeras Wrappers
 Wrapper Classes
 ---------------
 
-The main entry points for SciKeras 
-users are :py:class:`scikeras.wrappers.KerasClassifier`,
+SciKeras has three wrapper classes avialable to
+users: :py:class:`scikeras.wrappers.KerasClassifier`,
 :py:class:`scikeras.wrappers.KerasRegressor` and
 :py:class:`scikeras.wrappers.BaseWrapper`. ``BaseWrapper`` provides general ``Keras`` wrapping functionality and
 ``KerasClassifier`` and ``KerasRegressor`` extend this with functionality
@@ -16,8 +16,9 @@ on the overall functionality of the wrappers and hence will refer to
 Detailed information on usage of specific classes is available in the
 :ref:`scikeras-api` documentation.
 
-The SciKeras wraps the Keras :py:class:`~tensorflow.keras.Model` while
-providing an interface that should be familiar for sklearn users.
+SciKeras wraps the Keras :py:class:`~tensorflow.keras.Model` to
+provide an interface that should be familiar for Scikit-Learn users and is compatible
+with most of the Scikit-Learn ecosystem.
 
 To get started, define your :py:class:`~tensorflow.keras.Model` architecture like you always do,
 but within a callable top-level function (we will call this function ``model_build_fn`` for
