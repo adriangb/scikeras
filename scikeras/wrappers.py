@@ -75,7 +75,6 @@ class BaseWrapper(BaseEstimator):
         "callbacks",
         "validation_split",
         "shuffle",
-        "class_weight",
         "sample_weight",
         "initial_epoch",
         "validation_steps",
@@ -515,6 +514,21 @@ class BaseWrapper(BaseEstimator):
                     )
         return X, y, sample_weight
 
+    def _should_reset(self, warm_start: bool) -> bool:
+        """Check if we should reset the estimator when fitting.
+        """
+        # Data checks
+        if warm_start and not hasattr(self, "is_fitted_"):
+            # Warm start requested but not fitted yet
+            reset = True
+        elif warm_start:
+            # Already fitted and warm start requested
+            reset = False
+        else:
+            # No warm start requested
+            reset = True
+        return reset
+
     @staticmethod
     def preprocess_y(y):
         """Handles manipulation of y inputs to fit or score.
@@ -596,16 +610,7 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        # Data checks
-        if self.warm_start and not hasattr(self, "n_features_in_"):
-            # Warm start requested but not fitted yet
-            reset = True
-        elif self.warm_start:
-            # Already fitted and warm start requested
-            reset = False
-        else:
-            # No warm start requested
-            reset = True
+        reset = self._should_reset(warm_start=self.warm_start)
         X, y = self._validate_data(X=X, y=y, reset=reset)
         X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
         return self._fit(X=X, y=y, sample_weight=sample_weight, reset=reset)
@@ -686,7 +691,10 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        return self._fit(X, y, sample_weight=sample_weight, reset=False)
+        reset = self._should_reset(warm_start=True)
+        X, y = self._validate_data(X=X, y=y, reset=reset)
+        X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
+        return self._fit(X, y, sample_weight=sample_weight, reset=reset)
 
     def predict(self, X):
         """Returns predictions for the given test data.
@@ -899,16 +907,7 @@ class KerasClassifier(BaseWrapper):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        # Data checks
-        if self.warm_start and not hasattr(self, "n_features_in_"):
-            # Warm start requested but not fitted yet
-            reset = True
-        elif self.warm_start:
-            # Already fitted and warm start requested
-            reset = False
-        else:
-            # No warm start requested
-            reset = True
+        reset = self._should_reset(warm_start=self.warm_start)
         # Validate X, y
         X, y = self._validate_data(X=X, y=y, reset=reset)
         # Validate sample_weight
