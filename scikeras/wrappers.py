@@ -4,14 +4,12 @@ import inspect
 import os
 import warnings
 
-from collections import defaultdict
-from pickle import NONE
-from typing import Any, Dict, Type
+from typing import Any, Dict
 
 import numpy as np
 import tensorflow as tf
 
-from sklearn.base import BaseEstimator, clone
+from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
@@ -30,13 +28,12 @@ from scikeras._utils import (
     _class_from_strings,
     _windows_upcast_ints,
     accepts_kwargs,
-    get_metric_full_name,
     has_param,
     make_model_picklable,
     route_params,
     unflatten_params,
 )
-from scikeras.utils import type_of_target
+from scikeras.utils import get_loss_name, get_metric_name, type_of_target
 from scikeras.utils.transformers import Ensure2DTransformer
 
 
@@ -122,7 +119,6 @@ class BaseWrapper(BaseEstimator):
         "model_n_outputs_",
         "_user_params",
         "target_type_",
-        "user_classes_",
     }
 
     _routing_prefixes = {
@@ -395,16 +391,18 @@ class BaseWrapper(BaseEstimator):
         else:
             hist = self.model_.fit(x=X, y=y, **fit_args)
 
-        if warm_start:
-            if not hasattr(self, "history_"):
-                self.history_ = defaultdict(list)
-            self.history_ = {
-                get_metric_full_name(k): self.history_[get_metric_full_name(k)]
-                + hist.history[k]
-                for k in hist.history.keys()
-            }
-        else:
+        if not warm_start or not hasattr(self, "history_"):
             self.history_ = hist.history
+        else:
+            for key, val in hist.history.items():
+                if key in self.history_:
+                    self.history_[key] += [val]
+                    continue
+                # it's possible for the name to change from one iteration
+                # to another if a shorthand name was given since
+                # a pickle->un-pickle round trip may result in the name changing
+                key = get_metric_name(key)
+                self.history_[key] += [val]
         self.is_fitted_ = True
 
         # return self to allow fit_transform and such to work
@@ -413,7 +411,7 @@ class BaseWrapper(BaseEstimator):
     def _check_output_model_compatibility(self, y: np.ndarray) -> None:
         """Checks that the model output number and y shape match.
 
-        This is mainly in place to avoid cryptic TF errors.
+        This is in place to avoid cryptic TF errors.
         """
         # check if this is a multi-output model
         if self.model_n_outputs_ != len(self.model_.outputs):
@@ -604,9 +602,6 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        if not hasattr(self, "user_classes_"):
-            # set when partial_fit is called with the `classes` param
-            self.user_classes_ = None
         # Handle random state
         if isinstance(self.random_state, np.random.RandomState):
             # Keras needs an integer
@@ -892,12 +887,13 @@ class KerasClassifier(BaseWrapper):
             else:
                 encoder = self.encoders_[0]
             y = encoder.fit_transform(y)
-            classes_ = encoder[1].categories_[0]
-            n_classes_ = len(classes_)
-            # make lists
-            encoders_ = [encoder]
-            classes_ = [classes_]
-            n_classes_ = [n_classes_]
+            meta = {
+                "classes_": encoder[1].categories_[0],
+                "n_classes_": len(encoder[1].categories_[0]),
+                "encoders_": [encoder],
+                "model_n_outputs_": 1,
+                "n_outputs_": 1,
+            }
         elif self.target_type_ == "multiclass":
             # y = array([1, 5, 2])
             model_n_outputs_ = 1  # single softmax output expected
@@ -917,12 +913,13 @@ class KerasClassifier(BaseWrapper):
             else:
                 encoder = self.encoders_[0]
             y = encoder.fit_transform(y)
-            classes_ = encoder[1].categories_[0]
-            n_classes_ = len(classes_)
-            # make lists
-            encoders_ = [encoder]
-            classes_ = [classes_]
-            n_classes_ = [n_classes_]
+            meta = {
+                "classes_": encoder[1].categories_[0],
+                "n_classes_": len(encoder[1].categories_[0]),
+                "encoders_": [encoder],
+                "model_n_outputs_": 1,
+                "n_outputs_": 1,
+            }
         elif self.target_type_ == "multiclass-one-hot":
             # y = array([1, 0], [1, 0]) (usually used with categorical_crossentropy)
             model_n_outputs_ = 1  # single softmax output expected
@@ -935,13 +932,13 @@ class KerasClassifier(BaseWrapper):
             else:
                 encoder = self.encoders_[0]
             y = encoder.fit_transform(y)
-            # there is no real "classes" representation for this type of data
-            classes_ = None
-            n_classes_ = y.shape[1]
-            # make lists
-            encoders_ = [encoder]
-            classes_ = [classes_]
-            n_classes_ = [n_classes_]
+            meta = {
+                "classes_": np.arange(0, y.shape[1]),
+                "n_classes_": y.shape[1],
+                "encoders_": [encoder],
+                "model_n_outputs_": 1,
+                "n_outputs_": 1,
+            }
         else:
             raise ValueError(
                 f"Unknown label type: {self.target_type_}."  # To match errors used by sklearn
@@ -950,39 +947,16 @@ class KerasClassifier(BaseWrapper):
                 "\n\nSee (TODO: link to docs) for more information."
             )
 
-        # self.classes_ is kept as an array when n_outputs==1 for compatibility
-        # with ensembles and other meta estimators
-        # which do not support multioutput
-        if len(classes_) == 1:
-            n_classes_ = n_classes_[0]
-            classes_ = classes_[0]
-            n_outputs_ = 1
-        # else:  # this branch is unused, but kept as an example for users to extend SciKeras
-        #     n_classes_ = [class_.shape[0] for class_ in classes_]
-        #     n_outputs_ = len(n_classes_)
-
         if reset:
-            self.classes_ = (
-                self.user_classes_ if self.user_classes_ is not None else classes_
-            )
-            self.encoders_ = encoders_
-            self.n_outputs_ = n_outputs_
-            self.model_n_outputs_ = model_n_outputs_
-            self.n_classes_ = n_classes_
+            self.__dict__.update(meta)
         else:
-            check = (
-                (self.classes_, classes_)
-                if isinstance(self.classes_, list)
-                else ([self.classes_], [classes_])
-            )
-            for col, (old, new) in enumerate(zip(*check)):
-                if old is not None and new is not None:
-                    is_subset = len(set(old) - set(new)) == 0
-                    if not is_subset:
-                        raise ValueError(
-                            f"Col {col} of `y` was detected to have {new} classes,"
-                            f" but this {self.__name__} expected only {old} classes."
-                        )
+            classes_ = meta["classes_"]
+            is_subset = len(set(self.classes_) - set(classes_)) == 0
+            if not is_subset:
+                raise ValueError(
+                    f"`y` was detected to have {classes_} classes,"
+                    f" but this {self.__name__} expected only {self.classes_} classes."
+                )
         return y
 
     def postprocess_y(self, y, return_proba=False):
@@ -1061,23 +1035,8 @@ class KerasClassifier(BaseWrapper):
         # the actual model
         if self.loss:
             try:
-                given = losses_module.get(self.loss)
-                got = losses_module.get(self.model_.loss)
-                if (
-                    inspect.isclass(given)
-                    and isinstance(got, given)
-                    or inspect.isclass(got)
-                    and isinstance(given, got)
-                ):
-                    raise ValueError  # break from clause
-                # we get back either functions (with a __name__ attribute)
-                # or instances (in which case we compare classes)
-                if not hasattr(given, "__name__"):
-                    # instance
-                    given = given.__class__
-                if not hasattr(got, "__name__"):
-                    # instance
-                    got = got.__class__
+                given = get_loss_name(self.loss)
+                got = get_loss_name(self.model_.loss)
                 if got is not given:
                     warnings.warn(
                         f"loss={self.loss} but model compiled with {self.model_.loss}."
@@ -1113,7 +1072,6 @@ class KerasClassifier(BaseWrapper):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        self.user_classes_ = classes  # TODO: don't swallow this param
         return super().partial_fit(X, y, sample_weight=sample_weight)
 
     def predict_proba(self, X):

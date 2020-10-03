@@ -2,7 +2,7 @@ import numpy as np
 
 from sklearn.base import clone
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 
 from scikeras.utils.transformers import Ensure2DTransformer
@@ -24,10 +24,20 @@ class MultiOuputClassifier(KerasClassifier):
                 # y = array([1, 1, 1, 0], [0, 0, 1, 1])
                 # split into lists for multi-output Keras
                 # will be processed as multiple binary classifications
-                classes_ = [np.array([0, 1])] * y.shape[1]
-                encoders_ = [None] * y.shape[1]
+                if reset:
+                    encoders_ = [FunctionTransformer() for _ in range(y.shape[1])]
+                    classes_ = [np.array([0, 1])] * y.shape[1]
+                else:
+                    encoders_ = self.encoders_
+                    classes_ = self.classes_
                 y = np.split(y, y.shape[1], axis=1)
-                model_n_outputs_ = len(y)
+                meta = {
+                    "classes_": classes_,
+                    "n_classes_": [len(c) for c in classes_],
+                    "encoders_": encoders_,
+                    "model_n_outputs_": len(y),
+                    "n_outputs_": len(y),
+                }
             else:  # multiclass-multioutput
                 # y = array([1, 0, 5], [2, 1, 3])
                 # split into lists for multi-output Keras
@@ -50,29 +60,21 @@ class MultiOuputClassifier(KerasClassifier):
                     encoders_ = self.encoders_
                 y = [encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)]
                 classes_ = [encoder[1].categories_[0] for encoder in encoders_]
+                meta = {
+                    "classes_": classes_,
+                    "n_classes_": [len(c) for c in classes_],
+                    "encoders_": encoders_,
+                    "model_n_outputs_": len(y),
+                    "n_outputs_": len(y),
+                }
 
-            if len(classes_) == 1:
-                n_classes_ = classes_[0].size
-                classes_ = classes_[0]
-                n_outputs_ = 1
-            else:
-                n_classes_ = [class_.shape[0] for class_ in classes_]
-                n_outputs_ = len(n_classes_)
+            n_classes_ = [class_.shape[0] for class_ in classes_]
+            n_outputs_ = len(n_classes_)
 
             if reset:
-                self.classes_ = (
-                    self.user_classes_ if self.user_classes_ is not None else classes_
-                )
-                self.encoders_ = encoders_
-                self.n_outputs_ = n_outputs_
-                self.model_n_outputs_ = model_n_outputs_
-                self.n_classes_ = n_classes_
+                self.__dict__.update(meta)
             else:
-                check = (
-                    (self.classes_, classes_)
-                    if isinstance(self.classes_, list)
-                    else ([self.classes_], [classes_])
-                )
+                check = (self.classes_, meta["classes_"])
                 for col, (old, new) in enumerate(zip(*check)):
                     is_subset = len(set(old) - set(new)) == 0
                     if not is_subset:
@@ -80,12 +82,14 @@ class MultiOuputClassifier(KerasClassifier):
                             f"Col {col} of `y` was detected to have {new} classes,"
                             f" but this {self.__name__} expected only {old} classes."
                         )
+                model_n_outputs_ = meta["model_n_outputs_"]
                 if not self.model_n_outputs_ == model_n_outputs_:
                     raise ValueError(
                         f"`y` was detected to map to {model_n_outputs_} model outputs,"
                         f" but this {self.__name__} expected {self.model_n_outputs_}"
                         " model outputs."
                     )
+                n_outputs_ = meta["n_outputs_"]
                 if not self.n_outputs_ == n_outputs_:
                     raise ValueError(
                         f"`y` was detected to map to {n_outputs_} model outputs,"
