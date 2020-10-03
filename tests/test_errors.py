@@ -90,7 +90,7 @@ def test_sample_weights_all_zero():
     estimator = KerasClassifier(
         build_fn=dynamic_classifier,
         model__hidden_layer_sizes=(100,),
-        epochs=10,
+        n_iter=10,
         random_state=0,
     )
 

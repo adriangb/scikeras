@@ -148,7 +148,7 @@ class BaseWrapper(BaseEstimator):
         validation_split=0.0,
         shuffle=True,
         run_eagerly=False,
-        epochs=1,
+        n_iter=1,
         **kwargs,
     ):
 
@@ -170,7 +170,7 @@ class BaseWrapper(BaseEstimator):
         self.validation_split = validation_split
         self.shuffle = shuffle
         self.run_eagerly = run_eagerly
-        self.epochs = epochs
+        self.n_iter = n_iter
 
         # Unpack kwargs
         vars(self).update(**kwargs)
@@ -385,6 +385,7 @@ class BaseWrapper(BaseEstimator):
         params = self.get_params()
         fit_args = route_params(params, destination="fit", pass_filter=self._fit_kwargs)
         fit_args["sample_weight"] = sample_weight
+        fit_args["epochs"] = self.n_iter
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
@@ -392,7 +393,7 @@ class BaseWrapper(BaseEstimator):
         else:
             hist = self.model_.fit(x=X, y=y, **fit_args)
 
-        if reset:
+        if not reset:
             if not hasattr(self, "history_"):
                 self.history_ = defaultdict(list)
             self.history_ = {
@@ -518,7 +519,7 @@ class BaseWrapper(BaseEstimator):
         """Check if we should reset the estimator when fitting.
         """
         # Data checks
-        if warm_start and not hasattr(self, "is_fitted_"):
+        if warm_start and not self.is_fitted_:
             # Warm start requested but not fitted yet
             reset = True
         elif warm_start:
@@ -865,7 +866,7 @@ class KerasClassifier(BaseWrapper):
         validation_split=0.0,
         shuffle=True,
         run_eagerly=False,
-        epochs=1,
+        n_iter=1,
         class_weight=None,
         **kwargs,
     ):
@@ -883,7 +884,7 @@ class KerasClassifier(BaseWrapper):
             validation_split=validation_split,
             shuffle=shuffle,
             run_eagerly=run_eagerly,
-            epochs=epochs,
+            n_iter=n_iter,
             **kwargs,
         )
         # Parse hardcoded params
@@ -923,6 +924,7 @@ class KerasClassifier(BaseWrapper):
             else:
                 class_weight = self.class_weight
             sample_weight = 1 * compute_sample_weight(class_weight, y)
+            X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
         return self._fit(X=X, y=y, sample_weight=sample_weight, reset=reset)
 
     @staticmethod

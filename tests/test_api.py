@@ -231,14 +231,14 @@ class TestAdvancedAPIFuncs:
     def test_standalone(self, config):
         """Tests standalone estimator."""
         loader, model, build_fn, _ = CONFIG[config]
-        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
+        estimator = model(build_fn, n_iter=1, model__hidden_layer_sizes=[])
         basic_checks(estimator, loader)
 
     @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
     def test_pipeline(self, config):
         """Tests compatibility with Scikit-learn's pipeline."""
         loader, model, build_fn, _ = CONFIG[config]
-        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
+        estimator = model(build_fn, n_iter=1, model__hidden_layer_sizes=[])
         estimator = Pipeline([("s", StandardScaler()), ("e", estimator)])
         basic_checks(estimator, loader)
 
@@ -249,7 +249,7 @@ class TestAdvancedAPIFuncs:
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         loader, model, build_fn, _ = CONFIG[config]
         estimator = model(
-            build_fn, epochs=1, validation_split=0.1, model__hidden_layer_sizes=[],
+            build_fn, n_iter=1, validation_split=0.1, model__hidden_layer_sizes=[],
         )
         basic_checks(
             GridSearchCV(estimator, {"model__hidden_layer_sizes": [[], [5]]}), loader,
@@ -257,7 +257,7 @@ class TestAdvancedAPIFuncs:
         basic_checks(
             RandomizedSearchCV(
                 estimator,
-                {"epochs": [1, 2, 3], "optimizer": ["rmsprop", "sgd"]},
+                {"n_iter": [1, 2, 3], "optimizer": ["rmsprop", "sgd"]},
                 n_iter=2,
             ),
             loader,
@@ -269,7 +269,7 @@ class TestAdvancedAPIFuncs:
     def test_searchcv_routed_params(self, config):
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         loader, model, build_fn, _ = CONFIG[config]
-        estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
+        estimator = model(build_fn, n_iter=1, model__hidden_layer_sizes=[])
         params = {
             "model__hidden_layer_sizes": [[], [5]],
             "optimizer": ["sgd", "adam"],
@@ -282,7 +282,7 @@ class TestAdvancedAPIFuncs:
     def test_ensemble(self, config):
         """Tests compatibility with Scikit-learn's ensembles."""
         loader, model, build_fn, ensembles = CONFIG[config]
-        base_estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
+        base_estimator = model(build_fn, n_iter=1, model__hidden_layer_sizes=[])
         for ensemble in ensembles:
             estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
@@ -292,7 +292,7 @@ class TestAdvancedAPIFuncs:
         """Tests compatibility with Scikit-learn's calibrated classifier CV."""
         loader, _, build_fn, _ = CONFIG[config]
         base_estimator = KerasClassifier(
-            build_fn, epochs=1, model__hidden_layer_sizes=[]
+            build_fn, n_iter=1, model__hidden_layer_sizes=[]
         )
         estimator = CalibratedClassifierCV(base_estimator=base_estimator, cv=5)
         basic_checks(estimator, loader)
@@ -455,7 +455,7 @@ class TestPartialFit:
     )
     def test_pf_pickle_pf(self, config):
         loader, model, build_fn, _ = CONFIG[config]
-        clf = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
+        clf = model(build_fn, n_iter=1, model__hidden_layer_sizes=[])
         data = loader()
 
         X, y = data.data[:100], data.target[:100]
