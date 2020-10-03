@@ -497,6 +497,17 @@ class BaseWrapper(BaseEstimator):
             )
             if np.sum(sample_weight) == 0:
                 raise ValueError("All sample weights are zero!")
+            # Scikit-Learn expects a 0 in sample_weight to mean
+            # "ignore the sample", but because of how Keras applies
+            # sample_weight to the loss function, this doesn't
+            # exactly work out (as in, sklearn estimator checks fail
+            # because the predictions differ by a small margin).
+            # To get around this, we manually delete these samples here
+            zeros = sample_weight == 0
+            if np.any(zeros):
+                X = X[~zeros]
+                y = y[~zeros]
+                sample_weight = sample_weight[~zeros]
         return X, y, sample_weight
 
     def _should_reset(self, warm_start: bool) -> bool:
