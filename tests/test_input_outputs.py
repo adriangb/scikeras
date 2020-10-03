@@ -279,7 +279,7 @@ def test_classifier_handles_dtypes(dtype):
     sample_weight = np.ones(y.shape).astype(dtype)
 
     class StrictClassifier(KerasClassifier):
-        def _fit_keras_model(self, X, y, sample_weight, warm_start):
+        def _fit_keras_model(self, X, y, sample_weight, reset):
             if dtype == "object":
                 assert X.dtype == np.dtype(tf.keras.backend.floatx())
             else:
@@ -287,7 +287,7 @@ def test_classifier_handles_dtypes(dtype):
             # y is passed through encoders, it is likely not the original dtype
             # sample_weight should always be floatx
             assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
-            return super()._fit_keras_model(X, y, sample_weight, warm_start)
+            return super()._fit_keras_model(X, y, sample_weight, reset)
 
     clf = StrictClassifier(
         build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
@@ -313,7 +313,7 @@ def test_regressor_handles_dtypes(dtype):
     sample_weight = np.ones(y.shape).astype(dtype)
 
     class StrictRegressor(KerasRegressor):
-        def _fit_keras_model(self, X, y, sample_weight, warm_start):
+        def _fit_keras_model(self, X, y, sample_weight, reset):
             if dtype == "object":
                 assert X.dtype == np.dtype(tf.keras.backend.floatx())
                 assert y.dtype == np.dtype(tf.keras.backend.floatx())
@@ -322,7 +322,7 @@ def test_regressor_handles_dtypes(dtype):
                 assert y.dtype == np.dtype(dtype)
             # sample_weight should always be floatx
             assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
-            return super()._fit_keras_model(X, y, sample_weight, warm_start)
+            return super()._fit_keras_model(X, y, sample_weight, reset)
 
     reg = StrictRegressor(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
     reg.fit(X, y, sample_weight=sample_weight)
@@ -343,7 +343,7 @@ def test_mixed_dtypes(y_dtype, X_dtype, run_eagerly):
     y = np.random.choice(n_classes, size=n).astype(y_dtype)
 
     class StrictRegressor(KerasRegressor):
-        def _fit_keras_model(self, X, y, sample_weight, warm_start):
+        def _fit_keras_model(self, X, y, sample_weight, reset):
             if X_dtype == "object":
                 assert X.dtype == np.dtype(tf.keras.backend.floatx())
             else:
@@ -352,7 +352,7 @@ def test_mixed_dtypes(y_dtype, X_dtype, run_eagerly):
                 assert y.dtype == np.dtype(tf.keras.backend.floatx())
             else:
                 assert y.dtype == np.dtype(y_dtype)
-            return super()._fit_keras_model(X, y, sample_weight, warm_start)
+            return super()._fit_keras_model(X, y, sample_weight, reset)
 
     reg = StrictRegressor(
         build_fn=dynamic_regressor,

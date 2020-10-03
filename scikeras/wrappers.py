@@ -16,6 +16,7 @@ from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
@@ -351,7 +352,7 @@ class BaseWrapper(BaseEstimator):
 
         return model
 
-    def _fit_keras_model(self, X, y, sample_weight, warm_start):
+    def _fit_keras_model(self, X, y, sample_weight, reset):
         """Fits the Keras model.
 
         This method will process all arguments and call the Keras
@@ -365,8 +366,8 @@ class BaseWrapper(BaseEstimator):
                 True labels for `X`.
             sample_weight : array-like of shape (n_samples,)
                 Sample weights. The Keras Model must support this.
-            warm_start : bool
-                If ``warm_start`` is True, don't don't overwrite
+            reset : bool
+                If ``reset`` is False, don't don't overwrite
                 the ``history_`` attribute and append to it instead.
         Returns:
             self : object
@@ -392,7 +393,7 @@ class BaseWrapper(BaseEstimator):
         else:
             hist = self.model_.fit(x=X, y=y, **fit_args)
 
-        if warm_start:
+        if reset:
             if not hasattr(self, "history_"):
                 self.history_ = defaultdict(list)
             self.history_ = {
@@ -489,6 +490,32 @@ class BaseWrapper(BaseEstimator):
         return X, y
 
     @staticmethod
+    def _validate_sample_weight(X, y, sample_weight):
+        if sample_weight is not None:
+            sample_weight = _check_sample_weight(
+                sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
+            )
+            # Scikit-Learn expects a 0 in sample_weight to mean
+            # "ignore the sample", but because of how Keras applies
+            # sample_weight to the loss function, this doesn't
+            # exactly work out (as in, sklearn estimator checks fail
+            # because the predictions differ by a small margin).
+            # To get around this, we manually delete these samples here
+            zeros = sample_weight == 0
+            if np.any(zeros):
+                X = X[~zeros]
+                y = y[~zeros]
+                sample_weight = sample_weight[~zeros]
+                if sample_weight.size == 0:
+                    # could check any of the arrays here, arbitrary choice
+                    # there will be no samples left! warn users
+                    raise RuntimeError(
+                        "Cannot run because there are no samples"
+                        " left after deleting points with zero sample weight!"
+                    )
+        return X, y, sample_weight
+
+    @staticmethod
     def preprocess_y(y):
         """Handles manipulation of y inputs to fit or score.
 
@@ -569,11 +596,21 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        return self._fit(
-            X=X, y=y, sample_weight=sample_weight, warm_start=self.warm_start
-        )
+        # Data checks
+        if self.warm_start and not hasattr(self, "n_features_in_"):
+            # Warm start requested but not fitted yet
+            reset = True
+        elif self.warm_start:
+            # Already fitted and warm start requested
+            reset = False
+        else:
+            # No warm start requested
+            reset = True
+        X, y = self._validate_data(X=X, y=y, reset=reset)
+        X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
+        return self._fit(X=X, y=y, sample_weight=sample_weight, reset=reset)
 
-    def _fit(self, X, y, sample_weight=None, warm_start=False):
+    def _fit(self, X, y, sample_weight=None, reset=True):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
 
         Arguments:
@@ -584,8 +621,8 @@ class BaseWrapper(BaseEstimator):
                 True labels for `X`.
             sample_weight : array-like of shape (n_samples,), default=None
                 Sample weights. The Keras Model must support this.
-            warm_start : bool, default False
-                If ``warm_start`` is True, don't rebuild the model.
+            reset : bool, default True
+                If ``reset`` is False, don't rebuild the model.
         Returns:
             self : object
                 a reference to the instance that can be chain called
@@ -606,43 +643,8 @@ class BaseWrapper(BaseEstimator):
             # int or None
             self._random_state = self.random_state
 
-        # Data checks
-        if warm_start and not hasattr(self, "n_features_in_"):
-            # Warm start requested but not fitted yet
-            reset = True
-        elif warm_start:
-            # Already fitted and warm start requested
-            reset = False
-        else:
-            # No warm start requested
-            reset = True
-        X, y = self._validate_data(X=X, y=y, reset=reset)
-
         # Save input dtype
         self.y_dtype_ = y.dtype
-
-        if sample_weight is not None:
-            sample_weight = _check_sample_weight(
-                sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
-            )
-            # Scikit-Learn expects a 0 in sample_weight to mean
-            # "ignore the sample", but because of how Keras applies
-            # sample_weight to the loss function, this doesn't
-            # exactly work out (as in, sklearn estimator checks fail
-            # because the predictions differ by a small margin).
-            # To get around this, we manually delete these samples here
-            zeros = sample_weight == 0
-            if np.any(zeros):
-                X = X[~zeros]
-                y = y[~zeros]
-                sample_weight = sample_weight[~zeros]
-                if sample_weight.size == 0:
-                    # could check any of the arrays here, arbitrary choice
-                    # there will be no samples left! warn users
-                    raise RuntimeError(
-                        "Cannot train because there are no samples"
-                        " left after deleting points with zero sample weight!"
-                    )
 
         # pre process X, y
         X, extra_args = self.preprocess_X(X)
@@ -656,15 +658,13 @@ class BaseWrapper(BaseEstimator):
             setattr(self, attr_name, attr_val)
 
         # build model
-        if (not warm_start) or (not hasattr(self, "model_")):
+        if reset:
             self.model_ = self._build_keras_model()
 
         y = self._check_output_model_compatibility(y)
 
         # fit model
-        return self._fit_keras_model(
-            X, y, sample_weight=sample_weight, warm_start=warm_start
-        )
+        return self._fit_keras_model(X=X, y=y, sample_weight=sample_weight, reset=reset)
 
     def partial_fit(self, X, y, sample_weight=None):
         """
@@ -686,7 +686,7 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        return self._fit(X, y, sample_weight=sample_weight, warm_start=True)
+        return self._fit(X, y, sample_weight=sample_weight, reset=False)
 
     def predict(self, X):
         """Returns predictions for the given test data.
@@ -741,12 +741,11 @@ class BaseWrapper(BaseEstimator):
             score: float
                 Mean accuracy of predictions on `X` wrt. `y`.
         """
-        # validate sample weights
-        if sample_weight is not None:
-            sample_weight = _check_sample_weight(sample_weight, X)
+        # basic input checks
+        X, y = self._validate_data(X=X, y=y, reset=False)
 
-        # validate y
-        y = check_array(y, ensure_2d=False)
+        # validate sample weights
+        X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
 
         # compute Keras model score
         y_pred = self.predict(X)
@@ -841,6 +840,91 @@ class KerasClassifier(BaseWrapper):
         "model_n_outputs_",
         *BaseWrapper._meta,
     }
+
+    def __init__(
+        self,
+        model=None,
+        *,
+        build_fn=None,  # for backwards compatibility
+        warm_start=False,
+        random_state=None,
+        optimizer="rmsprop",
+        loss=None,
+        metrics=None,
+        batch_size=None,
+        verbose=1,
+        callbacks=None,
+        validation_split=0.0,
+        shuffle=True,
+        run_eagerly=False,
+        epochs=1,
+        class_weight=None,
+        **kwargs,
+    ):
+        super().__init__(
+            model=model,
+            build_fn=build_fn,
+            warm_start=warm_start,
+            random_state=random_state,
+            optimizer=optimizer,
+            loss=loss,
+            metrics=metrics,
+            batch_size=batch_size,
+            verbose=verbose,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            shuffle=shuffle,
+            run_eagerly=run_eagerly,
+            epochs=epochs,
+            **kwargs,
+        )
+        # Parse hardcoded params
+        self.class_weight = class_weight
+
+    def fit(self, X, y, sample_weight=None):
+        """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
+
+        Arguments:
+            X : array-like, shape `(n_samples, n_features)`
+                Training samples where `n_samples` is the number of samples
+                and `n_features` is the number of features.
+            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
+                True labels for `X`.
+            sample_weight : array-like of shape (n_samples,), default=None
+                Sample weights. The Keras Model must support this.
+        Returns:
+            self : object
+                a reference to the instance that can be chain called
+                (ex: instance.fit(X,y).transform(X) )
+        Raises:
+            ValueError : In case of invalid shape for `y` argument.
+        """
+        # Data checks
+        if self.warm_start and not hasattr(self, "n_features_in_"):
+            # Warm start requested but not fitted yet
+            reset = True
+        elif self.warm_start:
+            # Already fitted and warm start requested
+            reset = False
+        else:
+            # No warm start requested
+            reset = True
+        # Validate X, y
+        X, y = self._validate_data(X=X, y=y, reset=reset)
+        # Validate sample_weight
+        X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
+        # Validate class_weight and mix with sample_weight
+        if self.class_weight is not None:
+            sample_weight = sample_weight if sample_weight is not None else 1
+            if isinstance(self.class_weight, list) and all(
+                isinstance(w, (int, float)) for w in self.class_weight
+            ):
+                # for compatibility with Keras' class_weight param
+                class_weight = {i: w for i, w in enumerate(self.class_weight)}
+            else:
+                class_weight = self.class_weight
+            sample_weight = 1 * compute_sample_weight(class_weight, y)
+        return self._fit(X=X, y=y, sample_weight=sample_weight, reset=reset)
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
