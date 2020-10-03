@@ -1033,7 +1033,7 @@ class KerasClassifier(BaseWrapper):
 
         # check that if the user gave us a loss function it ended up in
         # the actual model
-        if self.loss:
+        if self.loss is not None:
             try:
                 given = get_loss_name(self.loss)
                 got = get_loss_name(self.model_.loss)
