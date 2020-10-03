@@ -501,18 +501,43 @@ class TestPartialFit:
         # the rel_error is often higher than 0.5 but the tests are random
 
 
-def test_history():
-    """Test that history_'s keys are strings and values are lists.
-    """
-    data = load_boston()
-    X, y = data.data[:100], data.target[:100]
-    estimator = KerasRegressor(build_fn=dynamic_regressor, model__hidden_layer_sizes=[])
+class TestHistory:
+    def test_history(self):
+        """Test that history_'s keys are strings and values are lists.
+        """
+        data = load_boston()
+        X, y = data.data[:100], data.target[:100]
+        estimator = KerasRegressor(
+            build_fn=dynamic_regressor, model__hidden_layer_sizes=[]
+        )
 
-    estimator.partial_fit(X, y)
+        estimator.partial_fit(X, y)
 
-    assert isinstance(estimator.history_, dict)
-    assert all(isinstance(k, str) for k in estimator.history_.keys())
-    assert all(isinstance(v, list) for v in estimator.history_.values())
+        assert isinstance(estimator.history_, dict)
+        assert all(isinstance(k, str) for k in estimator.history_.keys())
+        assert all(isinstance(v, list) for v in estimator.history_.values())
+
+    def test_partial_fit_shorthand_metric_name(self):
+        """Test that metrics get stored in the `history_` attribute
+        by their long name (and not shorthand) and that they
+        survive a pickle round trip.
+        """
+        estimator = KerasRegressor(
+            build_fn=dynamic_regressor,
+            run_eagerly=True,
+            loss=KerasRegressor.r_squared,
+            model__hidden_layer_sizes=(100,),
+            metrics=["mae"],  # shorthand
+        )
+        X, y = load_boston(return_X_y=True)
+        X = X[:100]
+        y = y[:100]
+        estimator.partial_fit(X, y)
+        assert "mean_absolute_error" in estimator.history_
+        assert "mae" not in estimator.history_
+        estimator = pickle.loads(pickle.dumps(estimator))
+        assert "mean_absolute_error" in estimator.history_
+        assert "mae" not in estimator.history_
 
 
 def test_compile_model_from_params():
