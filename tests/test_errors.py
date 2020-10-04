@@ -256,7 +256,7 @@ def test_target_classes_change_incremental_fit():
     est.fit(X, y)
     est.partial_fit(X.astype(np.uint8), y)
     with pytest.raises(
-        ValueError, match="`y` was detected to have ",
+        ValueError, match="Found unknown categories",
     ):
         y[0] = 10
         est.partial_fit(X, y)

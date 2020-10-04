@@ -13,7 +13,7 @@ from tensorflow.keras.metrics import get as get_metric
 from tensorflow.keras.metrics import serialize as serialize_metric
 
 
-def get_loss_name(loss: Union[str, Loss, Callable]) -> str:
+def loss_name(loss: Union[str, Loss, Callable]) -> str:
     """Retrieves a loss's full name (eg: "mean_squared_error").
 
     Parameters
@@ -26,6 +26,23 @@ def get_loss_name(loss: Union[str, Loss, Callable]) -> str:
     -------
     str
         [description]
+    
+    Examples
+    --------
+    >>> loss_name("BinaryCrossentropy")
+    'BinaryCrossentropy'
+    >>> loss_name("binary_crossentropy")
+    'binary_crossentropy'
+    >>> import tensorflow.keras.losses as losses
+    >>> loss_name(losses.BinaryCrossentropy)
+    'BinaryCrossentropy'
+    >>> loss_name(losses.binary_crossentropy)
+    'binary_crossentropy'
+
+    Raises
+    ------
+    ValueError
+        In case of an unknown loss.
     """
     if isclass(loss):
         try:
@@ -33,15 +50,19 @@ def get_loss_name(loss: Union[str, Loss, Callable]) -> str:
         except TypeError:
             # convert TypeError -> ValueError for consistency with errors
             # raised by get_loss
-            raise ValueError(f"Could not get name for loss {loss}")
-    loss = serialize_loss(get_loss(loss))
+            raise ValueError(f"Unknown loss: {loss}")
+    try:
+        loss = serialize_loss(get_loss(loss))
+    except ValueError:
+        # Error messages are different for metrics or losses; homogenize them
+        raise ValueError(f"Unknown loss: {loss}")
     if isinstance(loss, dict):
         # for classes
         return loss["class_name"]
     return loss  # for functions (serialize returns a string)
 
 
-def get_metric_name(metric: Union[str, Metric, Callable]) -> str:
+def metric_name(metric: Union[str, Metric, Callable]) -> str:
     """Retrieves a metric's full name (eg: "mean_squared_error").
 
     Parameters
@@ -54,15 +75,36 @@ def get_metric_name(metric: Union[str, Metric, Callable]) -> str:
     -------
     str
         Full name for Keras metric. Ex: "mean_squared_error".
+
+    Examples
+    --------
+    >>> metric_name("BinaryCrossentropy")
+    'BinaryCrossentropy'
+    >>> metric_name("binary_crossentropy")
+    'binary_crossentropy'
+    >>> import tensorflow.keras.metrics as metrics
+    >>> metric_name(metrics.BinaryCrossentropy)
+    'BinaryCrossentropy'
+    >>> metric_name(metrics.binary_crossentropy)
+    'binary_crossentropy'
+
+    Raises
+    ------
+    ValueError
+        In case of an unknown metric.
     """
-    if isclass(metrics):
+    if isclass(metric):
         try:
-            metric = metrics()  # get_metric accepts instances, not classes
+            metric = metric()  # get_metric accepts instances, not classes
         except TypeError:
             # convert TypeError -> ValueError for consistency with errors
             # raised by get_metric
-            raise ValueError(f"Could not get name for loss {metric}")
-    metric = serialize_metric(get_metric(metric))
+            raise ValueError(f"Unknown metric: {metric}")
+    try:
+        metric = serialize_metric(get_metric(metric))
+    except ValueError:
+        # Error messages are different for metrics or losses; homogenize them
+        raise ValueError(f"Unknown metric: {metric}")
     if isinstance(metric, dict):
         # for classes
         return metric["class_name"]

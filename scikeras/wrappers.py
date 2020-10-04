@@ -33,7 +33,7 @@ from scikeras._utils import (
     route_params,
     unflatten_params,
 )
-from scikeras.utils import get_loss_name, get_metric_name, type_of_target
+from scikeras.utils import loss_name, metric_name, type_of_target
 from scikeras.utils.transformers import Ensure2DTransformer
 
 
@@ -395,7 +395,7 @@ class BaseWrapper(BaseEstimator):
             self.history_ = dict()
             for key, val in hist.history.items():
                 try:
-                    key = get_metric_name(key)
+                    key = metric_name(key)
                 except ValueError:
                     pass
                 self.history_[key] = [val]
@@ -407,7 +407,7 @@ class BaseWrapper(BaseEstimator):
                 # it's possible for the name to change from one iteration
                 # to another if a shorthand name was given since
                 # a pickle->un-pickle round trip may result in the name changing
-                key = get_metric_name(key)
+                key = metric_name(key)
                 self.history_[key] += [val]
         self.is_fitted_ = True
 
@@ -883,27 +883,23 @@ class KerasClassifier(BaseWrapper):
         if self.target_type_ == "binary":
             # y = array([1, 0, 1, 0])
             # single task, single label, binary classification
-            model_n_outputs_ = 1  # single sigmoid output expected
-            n_outputs_ = 1
             # encode
             if reset:
                 encoder = make_pipeline(
                     Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
-                )
+                ).fit(y)
+                meta = {
+                    "classes_": encoder[1].categories_[0],
+                    "n_classes_": len(encoder[1].categories_[0]),
+                    "encoders_": [encoder],
+                    "model_n_outputs_": 1,
+                    "n_outputs_": 1,
+                }
             else:
                 encoder = self.encoders_[0]
-            y = encoder.fit_transform(y)
-            meta = {
-                "classes_": encoder[1].categories_[0],
-                "n_classes_": len(encoder[1].categories_[0]),
-                "encoders_": [encoder],
-                "model_n_outputs_": 1,
-                "n_outputs_": 1,
-            }
+            y = encoder.transform(y)
         elif self.target_type_ == "multiclass":
             # y = array([1, 5, 2])
-            model_n_outputs_ = 1  # single softmax output expected
-            n_outputs_ = 1
             # encode
             if reset:
                 if is_categorical_crossentropy(loss):
@@ -916,35 +912,35 @@ class KerasClassifier(BaseWrapper):
                     encoder = make_pipeline(
                         Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
                     )
+                y = encoder.fit_transform(y)
+                meta = {
+                    "classes_": encoder[1].categories_[0],
+                    "n_classes_": len(encoder[1].categories_[0]),
+                    "encoders_": [encoder],
+                    "model_n_outputs_": 1,
+                    "n_outputs_": 1,
+                }
             else:
                 encoder = self.encoders_[0]
-            y = encoder.fit_transform(y)
-            meta = {
-                "classes_": encoder[1].categories_[0],
-                "n_classes_": len(encoder[1].categories_[0]),
-                "encoders_": [encoder],
-                "model_n_outputs_": 1,
-                "n_outputs_": 1,
-            }
+                y = encoder.transform(y)
         elif self.target_type_ == "multiclass-one-hot":
             # y = array([1, 0], [1, 0]) (usually used with categorical_crossentropy)
-            model_n_outputs_ = 1  # single softmax output expected
-            n_outputs_ = 1
             # encode
             # here we just pass through to allow all Keras use cases
             # that didn't exist in sklearn to succeed (ex: loss=categorical_crossentropy)
             if reset:
                 encoder = FunctionTransformer()
+                y = encoder.fit_transform(y)
+                meta = {
+                    "classes_": np.arange(0, y.shape[1]),
+                    "n_classes_": y.shape[1],
+                    "encoders_": [encoder],
+                    "model_n_outputs_": 1,
+                    "n_outputs_": 1,
+                }
             else:
                 encoder = self.encoders_[0]
-            y = encoder.fit_transform(y)
-            meta = {
-                "classes_": np.arange(0, y.shape[1]),
-                "n_classes_": y.shape[1],
-                "encoders_": [encoder],
-                "model_n_outputs_": 1,
-                "n_outputs_": 1,
-            }
+                y = encoder.transform(y)
         else:
             raise ValueError(
                 f"Unknown label type: {self.target_type_}."  # To match errors used by sklearn
@@ -955,14 +951,6 @@ class KerasClassifier(BaseWrapper):
 
         if reset:
             self.__dict__.update(meta)
-        else:
-            classes_ = meta["classes_"]
-            is_subset = len(set(self.classes_) - set(classes_)) == 0
-            if not is_subset:
-                raise ValueError(
-                    f"`y` was detected to have {classes_} classes,"
-                    f" but this {self.__name__} expected only {self.classes_} classes."
-                )
         return y
 
     def postprocess_y(self, y, return_proba=False):
@@ -1041,8 +1029,8 @@ class KerasClassifier(BaseWrapper):
         # the actual model
         if self.loss is not None:
             try:
-                given = get_loss_name(self.loss)
-                got = get_loss_name(self.model_.loss)
+                given = loss_name(self.loss)
+                got = loss_name(self.model_.loss)
                 if got is not given:
                     warnings.warn(
                         f"loss={self.loss} but model compiled with {self.model_.loss}."

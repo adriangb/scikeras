@@ -27,17 +27,14 @@ class MultiOuputClassifier(KerasClassifier):
                 if reset:
                     encoders_ = [FunctionTransformer() for _ in range(y.shape[1])]
                     classes_ = [np.array([0, 1])] * y.shape[1]
-                else:
-                    encoders_ = self.encoders_
-                    classes_ = self.classes_
+                    meta = {
+                        "classes_": classes_,
+                        "n_classes_": [len(c) for c in classes_],
+                        "encoders_": encoders_,
+                        "model_n_outputs_": y.shape[1],
+                        "n_outputs_": y.shape[1],
+                    }
                 y = np.split(y, y.shape[1], axis=1)
-                meta = {
-                    "classes_": classes_,
-                    "n_classes_": [len(c) for c in classes_],
-                    "encoders_": encoders_,
-                    "model_n_outputs_": len(y),
-                    "n_outputs_": len(y),
-                }
             else:  # multiclass-multioutput
                 # y = array([1, 0, 5], [2, 1, 3])
                 # split into lists for multi-output Keras
@@ -55,33 +52,21 @@ class MultiOuputClassifier(KerasClassifier):
                         encoder = make_pipeline(
                             Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32)
                         )
-                    encoders_ = [clone(encoder) for _ in range(len(y))]
+                    encoders_ = [clone(encoder).fit(y_) for y_ in y]
+                    classes_ = [encoder[1].categories_[0] for encoder in encoders_]
+                    meta = {
+                        "classes_": classes_,
+                        "n_classes_": [len(c) for c in classes_],
+                        "encoders_": encoders_,
+                        "model_n_outputs_": len(y),
+                        "n_outputs_": len(y),
+                    }
                 else:
                     encoders_ = self.encoders_
-                y = [encoder.fit_transform(y_) for encoder, y_ in zip(encoders_, y)]
-                classes_ = [encoder[1].categories_[0] for encoder in encoders_]
-                meta = {
-                    "classes_": classes_,
-                    "n_classes_": [len(c) for c in classes_],
-                    "encoders_": encoders_,
-                    "model_n_outputs_": len(y),
-                    "n_outputs_": len(y),
-                }
-
-            n_classes_ = [class_.shape[0] for class_ in classes_]
-            n_outputs_ = len(n_classes_)
-
+                y = [encoder.transform(y_) for encoder, y_ in zip(encoders_, y)]
             if reset:
                 self.__dict__.update(meta)
             else:
-                check = (self.classes_, meta["classes_"])
-                for col, (old, new) in enumerate(zip(*check)):
-                    is_subset = len(set(old) - set(new)) == 0
-                    if not is_subset:
-                        raise ValueError(
-                            f"Col {col} of `y` was detected to have {new} classes,"
-                            f" but this {self.__name__} expected only {old} classes."
-                        )
                 model_n_outputs_ = meta["model_n_outputs_"]
                 if not self.model_n_outputs_ == model_n_outputs_:
                     raise ValueError(
@@ -96,7 +81,6 @@ class MultiOuputClassifier(KerasClassifier):
                         f" but this {self.__name__} expected {self.n_outputs_}"
                         " model outputs."
                     )
-
             return y
         else:
             return super().preprocess_y(y, reset)

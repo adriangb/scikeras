@@ -107,29 +107,6 @@ def make_model_picklable(model_obj):
     model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
 
 
-def get_metric_full_name(name: str) -> str:
-    """Get aliases for Keras losses and metrics.
-
-    See: https://github.com/tensorflow/tensorflow/pull/42097
-
-    Parameters
-    ----------
-    name : str
-        Full name or shorthand for Keras metric. Ex: "mse".
-
-    Returns
-    -------
-    str
-        Full name for Keras metric. Ex: "mean_squared_error".
-    """
-    # deserialize returns the actual function, then get it's name
-    # to keep a single consistent name for the metric
-    if name == "loss":
-        # may be passed "loss" from training history
-        return name
-    return getattr(deserialize_metric(name), "__name__")
-
-
 def _windows_upcast_ints(
     arr: Union[List[np.ndarray], np.ndarray]
 ) -> Union[List[np.ndarray], np.ndarray]:
