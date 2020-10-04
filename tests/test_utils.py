@@ -19,12 +19,9 @@ def test_type_of_target(y, expected):
     assert got == expected
 
 
-class CustomMetric(metrics_module.Metric):
-    pass
-
-
 class CustomLoss(losses_module.Loss):
-    pass
+    def __init__(name, param):
+        super().__init__(name=name)
 
 
 @pytest.mark.parametrize(
@@ -37,6 +34,7 @@ class CustomLoss(losses_module.Loss):
         (losses_module.CategoricalCrossentropy(), "CategoricalCrossentropy", None),
         (object(), "", pytest.raises(ValueError, match="Unknown loss")),
         ("unknown_loss", "", pytest.raises(ValueError, match="Unknown loss")),
+        (CustomLoss, "", pytest.raises(ValueError, match="Unknown loss")),
     ],
 )
 def test_loss_name(loss, expected, raises):
@@ -46,6 +44,11 @@ def test_loss_name(loss, expected, raises):
     else:
         got = loss_name(loss)
         assert got == expected
+
+
+class CustomMetric(metrics_module.Metric):
+    def __init__(name, param):
+        super().__init__(name=name)
 
 
 @pytest.mark.parametrize(
@@ -58,6 +61,7 @@ def test_loss_name(loss, expected, raises):
         (metrics_module.CategoricalCrossentropy(), "CategoricalCrossentropy", None),
         (object(), "", pytest.raises(ValueError, match="Unknown metric")),
         ("unknown_metric", "", pytest.raises(ValueError, match="Unknown metric")),
+        (CustomMetric, "", pytest.raises(ValueError, match="Unknown metric")),
     ],
 )
 def test_metric_name(metric, expected, raises):
