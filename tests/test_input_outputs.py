@@ -250,6 +250,7 @@ def test_KerasClassifier_loss_invariance(y, y_type):
         random_state=0,
     )
     clf_1.fit(X, y)
+    clf_1.partial_fit(X, y)
     y_1 = clf_1.predict(X)
     if y_type != "multiclass-one-hot":
         # sparse_categorical_crossentropy is not compatible with
