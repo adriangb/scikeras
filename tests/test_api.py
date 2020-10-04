@@ -501,6 +501,18 @@ class TestPartialFit:
         # the rel_error is often higher than 0.5 but the tests are random
 
 
+def force_compile_shorthand(hidden_layer_sizes, meta, compile_kwargs, params):
+    model = dynamic_regressor(
+        hidden_layer_sizes=hidden_layer_sizes, meta=meta, compile_kwargs=compile_kwargs
+    )
+    model.compile(
+        optimizer=compile_kwargs["optimizer"],
+        loss=compile_kwargs["loss"],
+        metrics=params["metrics"],
+    )
+    return model
+
+
 class TestHistory:
     def test_history(self):
         """Test that history_'s keys are strings and values are lists.
@@ -508,7 +520,7 @@ class TestHistory:
         data = load_boston()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
-            build_fn=dynamic_regressor, model__hidden_layer_sizes=[]
+            model=dynamic_regressor, model__hidden_layer_sizes=[]
         )
 
         estimator.partial_fit(X, y)
@@ -523,7 +535,7 @@ class TestHistory:
         survive a pickle round trip.
         """
         estimator = KerasRegressor(
-            build_fn=dynamic_regressor,
+            model=force_compile_shorthand,
             run_eagerly=True,
             loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=(100,),
@@ -533,11 +545,15 @@ class TestHistory:
         X = X[:100]
         y = y[:100]
         estimator.partial_fit(X, y)
+        assert estimator.model_.metrics_names[1] == "mae"
         assert "mean_absolute_error" in estimator.history_
         assert "mae" not in estimator.history_
+        assert len(estimator.history_["mean_absolute_error"]) == 1
         estimator = pickle.loads(pickle.dumps(estimator))
+        estimator.partial_fit(X, y)
         assert "mean_absolute_error" in estimator.history_
         assert "mae" not in estimator.history_
+        assert len(estimator.history_["mean_absolute_error"]) == 2
 
 
 def test_compile_model_from_params():
