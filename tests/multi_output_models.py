@@ -17,23 +17,24 @@ class MultiOuputClassifier(KerasClassifier):
 
     def preprocess_y(self, y, reset):
         if self.target_type_ in ("multilabel-indicator", "multiclass-multioutput"):
-            y = BaseWrapper.preprocess_y(self, y, reset)
+            y, meta = BaseWrapper.preprocess_y(self, y, reset)
             loss = self.loss
-
             if self.target_type_ == "multilabel-indicator":
                 # y = array([1, 1, 1, 0], [0, 0, 1, 1])
                 # split into lists for multi-output Keras
                 # will be processed as multiple binary classifications
                 if reset:
-                    encoders_ = [FunctionTransformer() for _ in range(y.shape[1])]
+                    target_encoder_ = [FunctionTransformer() for _ in range(y.shape[1])]
                     classes_ = [np.array([0, 1])] * y.shape[1]
-                    meta = {
-                        "classes_": classes_,
-                        "n_classes_": [len(c) for c in classes_],
-                        "encoders_": encoders_,
-                        "model_n_outputs_": y.shape[1],
-                        "n_outputs_": y.shape[1],
-                    }
+                    meta.update(
+                        {
+                            "classes_": classes_,
+                            "n_classes_": [len(c) for c in classes_],
+                            "target_encoder_": target_encoder_,
+                            "model_n_outputs_": y.shape[1],
+                            "n_outputs_": y.shape[1],
+                        }
+                    )
                 y = np.split(y, y.shape[1], axis=1)
             else:  # multiclass-multioutput
                 # y = array([1, 0, 5], [2, 1, 3])
@@ -52,21 +53,23 @@ class MultiOuputClassifier(KerasClassifier):
                         encoder = make_pipeline(
                             Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32)
                         )
-                    encoders_ = [clone(encoder).fit(y_) for y_ in y]
-                    classes_ = [encoder[1].categories_[0] for encoder in encoders_]
-                    meta = {
-                        "classes_": classes_,
-                        "n_classes_": [len(c) for c in classes_],
-                        "encoders_": encoders_,
-                        "model_n_outputs_": len(y),
-                        "n_outputs_": len(y),
-                    }
+                    target_encoder_ = [clone(encoder).fit(y_) for y_ in y]
+                    classes_ = [
+                        encoder[1].categories_[0] for encoder in target_encoder_
+                    ]
+                    meta.update(
+                        {
+                            "classes_": classes_,
+                            "n_classes_": [len(c) for c in classes_],
+                            "target_encoder_": target_encoder_,
+                            "model_n_outputs_": len(y),
+                            "n_outputs_": len(y),
+                        }
+                    )
                 else:
-                    encoders_ = self.encoders_
-                y = [encoder.transform(y_) for encoder, y_ in zip(encoders_, y)]
-            if reset:
-                self.__dict__.update(meta)
-            else:
+                    target_encoder_ = self.target_encoder_
+                y = [encoder.transform(y_) for encoder, y_ in zip(target_encoder_, y)]
+            if not reset:
                 model_n_outputs_ = meta["model_n_outputs_"]
                 if not self.model_n_outputs_ == model_n_outputs_:
                     raise ValueError(
@@ -81,7 +84,7 @@ class MultiOuputClassifier(KerasClassifier):
                         f" but this {self.__name__} expected {self.n_outputs_}"
                         " model outputs."
                     )
-            return y
+            return y, meta
         else:
             return super().preprocess_y(y, reset)
 
@@ -107,7 +110,9 @@ class MultiOuputClassifier(KerasClassifier):
                     else:
                         y_ = np.zeros(y[i].shape, dtype=int)
                         y_[np.arange(y[i].shape[0]), idx] = 1
-                    class_predictions.append(self.encoders_[i].inverse_transform(y_))
+                    class_predictions.append(
+                        self.target_encoder_[i].inverse_transform(y_)
+                    )
 
             if return_proba:
                 return np.squeeze(np.column_stack(y))

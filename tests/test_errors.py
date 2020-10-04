@@ -184,32 +184,6 @@ def test_no_optimizer(compile):
         est.fit(np.array([[0], [1]]), np.array([0, 1]))
 
 
-def test_target_type_changes_incremental_fit():
-    X = np.array([[1, 2], [2, 3]])
-    y = np.array([1, 3])
-
-    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
-    est.fit(X, y)
-    with pytest.raises(
-        ValueError, match="`y` is of type ",
-    ):
-        y_new = np.array([1, 2])
-        est.partial_fit(X, np.column_stack([y, y_new]))
-
-
-def test_target_type_changes_incremental_fit():
-    X = np.array([[1, 2], [2, 3]])
-    y = np.array([1, 3])
-
-    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
-    est.fit(X, y)
-    with pytest.raises(
-        ValueError, match="`y` is of type ",
-    ):
-        y_new = np.array([1, 2])
-        est.partial_fit(X, np.column_stack([y, y_new]))
-
-
 def test_target_dtype_changes_incremental_fit():
     X = np.array([[1, 2], [2, 3]])
     y = np.array([1, 3])
@@ -223,16 +197,41 @@ def test_target_dtype_changes_incremental_fit():
         est.partial_fit(X, y.astype(np.float64))
 
 
-def test_target_shape_changes_incremental_fit():
+def test_target_dims_changes_incremental_fit():
     X = np.array([[1, 2], [2, 3]])
     y = np.array([1, 3])
 
     est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
     est.fit(X, y)
+    y_new = y.reshape(-1, 1)
     with pytest.raises(
-        ValueError, match="`y` shape is ",
+        ValueError, match="`y` has 2 dimensions, but this ",
     ):
-        est.partial_fit(X, y.reshape(-1, 1))
+        est.partial_fit(X, y_new)
+
+
+def test_target_shape_changes_incremental_fit_clf():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3]).reshape(-1, 1)
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    with pytest.raises(
+        ValueError, match="The number of features ",  # raised by transformers
+    ):
+        est.partial_fit(X, np.column_stack([y, y]))
+
+
+def test_target_shape_changes_incremental_fit_reg():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3]).reshape(-1, 1)
+
+    est = KerasRegressor(model=dynamic_regressor, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    with pytest.raises(
+        ValueError, match="Detected `y` to have ",
+    ):
+        est.partial_fit(X, np.column_stack([y, y]))
 
 
 def test_X_dtype_changes_incremental_fit():

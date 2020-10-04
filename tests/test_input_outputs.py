@@ -50,11 +50,11 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
 
         return model
 
-    @staticmethod
-    def preprocess_X(X, reset=True):
+    def preprocess_X(self, X, reset=True):
         """To support multiple inputs, a custom method must be defined.
         """
-        return [X[:, 0], X[:, 1:4]]
+        X, meta = super().preprocess_X(X, reset=reset)
+        return [X[:, 0], X[:, 1:4]], meta
 
 
 class FunctionalAPIMultiOutputClassifier(MultiOuputClassifier):
@@ -290,15 +290,17 @@ def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
     """
     if y_type == "multiclass-one-hot" and loss == "sparse_categorical_crossentropy":
         return  # not compatible, see test_KerasClassifier_loss_invariance
-    X = np.arange(0, y.shape[0]).reshape(-1, 1)
-    clf_1 = KerasClassifier(
+    X1, y1 = np.array([[1, 2, 3]]).T, np.array([1, 2, 3])
+    clf = KerasClassifier(
         model=dynamic_classifier, hidden_layer_sizes=(100,), loss=loss, random_state=0,
     )
-    clf_1.fit(X, y)
-    tfs = clf_1.encoders_
-    clf_1.partial_fit(X, y)
-    tfs_new = clf_1.encoders_
-    assert all(old is new for old, new in zip(tfs, tfs_new))
+    clf.fit(X1, y1)
+    tfs = clf.target_encoder_
+    X2, y2 = X1, np.array([1, 1, 1])  # only 1 out or 3 classes
+    clf.partial_fit(X2, y2)
+    tfs_new = clf.target_encoder_
+    assert tfs_new is tfs  # same transformer was re-used
+    assert set(clf.classes_) == set(y1)
 
 
 def test_incompatible_output_dimensions():
