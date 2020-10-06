@@ -9,7 +9,7 @@ from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
 
 from scikeras.wrappers import KerasClassifier
-from tests.multi_output_models import MultiOuputClassifier
+from tests.multi_output_models import MultiOutputClassifier
 
 
 def get_model(num_hidden=10, meta=None, compile_kwargs=None):
@@ -113,7 +113,7 @@ def test_loss(loss, n_outputs_):
     X, y = make_classification()
     y = np.column_stack([y for _ in range(n_outputs_)]).squeeze()
 
-    est = MultiOuputClassifier(model=get_model, loss=loss, loss__name="custom_name",)
+    est = MultiOutputClassifier(model=get_model, loss=loss, loss__name="custom_name")
     est.fit(X, y)
     assert str(loss) in str(est.model_.loss) or isinstance(est.model_.loss, loss)
 
@@ -162,7 +162,7 @@ def test_loss_routed_params_iterable(loss, n_outputs_):
     y = np.column_stack([y for _ in range(n_outputs_)]).squeeze()
 
     # Test iterable with global routed param
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss=[loss] * (y.shape[1] if len(y.shape) == 2 else 1),
         loss__from_logits=True,  # default is False
@@ -171,7 +171,7 @@ def test_loss_routed_params_iterable(loss, n_outputs_):
     assert est.model_.loss[0].from_logits
 
     # Test iterable with index-based routed param
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss=[loss] * (y.shape[1] if len(y.shape) == 2 else 1),
         loss__from_logits=True,
@@ -195,7 +195,7 @@ def test_loss_routed_params_dict(loss, n_outputs_):
     y = np.column_stack([y for _ in range(n_outputs_)]).squeeze()
 
     # Test dict with global routed param
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss={"out1": loss},
         loss__from_logits=True,  # default is False
@@ -204,7 +204,7 @@ def test_loss_routed_params_dict(loss, n_outputs_):
     assert est.model_.loss["out1"].from_logits == True
 
     # Test dict with key-based routed param
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss={"out1": loss},
         loss__from_logits=True,
@@ -234,7 +234,7 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         expected_name = metrics().name
 
     # List of metrics
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
         metrics=[
@@ -245,7 +245,7 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     assert est.model_.metrics[metric_idx].name == prefix + expected_name
 
     # List of lists of metrics
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
         metrics=[
@@ -257,7 +257,7 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     assert prefix + expected_name == est.model_.metrics[metric_idx].name
 
     # Dict of metrics
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
         metrics={
@@ -271,7 +271,7 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     assert prefix + expected_name == est.model_.metrics[metric_idx].name
 
     # Dict of lists
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
         metrics={
@@ -309,7 +309,7 @@ def test_metrics_two_metric_per_output(n_outputs_):
             [metric_class(name="1"), metric_class(name="2")] for _ in range(n_outputs_)
         ]
 
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model, loss="binary_crossentropy", metrics=metrics_,
     )
     est.fit(X, y)
@@ -329,7 +329,7 @@ def test_metrics_two_metric_per_output(n_outputs_):
         }
 
     # Dict of metrics
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model, loss="binary_crossentropy", metrics=metrics_,
     )
     est.fit(X, y)
@@ -354,7 +354,7 @@ def test_metrics_routed_params_iterable(n_outputs_):
     # loss functions for each output and joined show up as metrics
     metric_idx = 1 + (n_outputs_ if n_outputs_ > 1 else 0)
 
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
         metrics=[metrics],
@@ -373,7 +373,7 @@ def test_metrics_routed_params_iterable(n_outputs_):
         ]
     else:
         metrics_ = [metrics for _ in range(n_outputs_)]
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
         metrics=metrics_,
@@ -405,7 +405,7 @@ def test_metrics_routed_params_dict():
     # loss functions for each output and joined show up as metrics
     metric_idx = 1 + n_outputs_
 
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
         metrics={"out1": metrics},
@@ -418,7 +418,7 @@ def test_metrics_routed_params_dict():
         metrics_ = ({"out1": metrics},)
     else:
         metrics_ = {f"out{i+1}": metrics for i in range(n_outputs_)}
-    est = MultiOuputClassifier(
+    est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
         metrics=metrics_,

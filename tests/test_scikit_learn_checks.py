@@ -14,13 +14,13 @@ from tensorflow.keras import Model, Sequential, layers
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
-from .multi_output_models import MultiOuputClassifier
+from .multi_output_models import MultiOutputClassifier
 from .testing_utils import basic_checks, parametrize_with_checks
 
 
 @parametrize_with_checks(
     estimators=[
-        MultiOuputClassifier(
+        MultiOutputClassifier(
             build_fn=dynamic_classifier,
             # Set batch size to a large number
             # (larger than X.shape[0] is the goal)

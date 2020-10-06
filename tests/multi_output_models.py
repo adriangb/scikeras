@@ -9,7 +9,7 @@ from scikeras.utils.transformers import Ensure2DTransformer
 from scikeras.wrappers import BaseWrapper, KerasClassifier
 
 
-class MultiOuputClassifier(KerasClassifier):
+class MultiOutputClassifier(KerasClassifier):
     """Extend KerasClassifier with the ability to process
     "multilabel-indicator" and "multiclass-multioutput"
     by mapping them to multiple Keras outputs.

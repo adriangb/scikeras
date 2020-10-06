@@ -14,7 +14,7 @@ from tensorflow.python.keras.testing_utils import get_test_data
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
-from .multi_output_models import MultiOuputClassifier
+from .multi_output_models import MultiOutputClassifier
 
 
 # Defaults
@@ -57,7 +57,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
         return [X[:, 0], X[:, 1:4]], meta
 
 
-class FunctionalAPIMultiOutputClassifier(MultiOuputClassifier):
+class FunctionalAPIMultiOutputClassifier(MultiOutputClassifier):
     """Tests Functional API Classifier with 2 outputs of different type.
     """
 
@@ -88,7 +88,7 @@ class FunctionalAPIMultiOutputClassifier(MultiOuputClassifier):
         return np.mean(np.all(y == y_pred, axis=1))
 
 
-class FunctionAPIMultiLabelClassifier(MultiOuputClassifier):
+class FunctionAPIMultiLabelClassifier(MultiOutputClassifier):
     """Tests Functional API Classifier with multiple binary outputs.
     """
 
