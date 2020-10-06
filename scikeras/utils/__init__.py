@@ -187,7 +187,7 @@ def type_of_target(y):
     """
     type_ = _type_of_target(y)
     if type_ == "multilabel-indicator":
-        if len(y.shape) == 2 and np.all(np.sum(y, axis=1) == 1):
+        if y.ndim == 2 and np.all(np.sum(y, axis=1) == 1):
             # one-hot encoded target
             # this is a subset of multilabel-indicator
             # but SciKeras differentiates it since it is

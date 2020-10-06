@@ -110,7 +110,7 @@ class BaseWrapper(BaseEstimator):
         "X_dtype_",
         "y_dtype_",
         "X_shape_",
-        "y_shape_",
+        "y_ndim_",
         "model_",
         "history_",
         "is_fitted_",
@@ -477,7 +477,7 @@ class BaseWrapper(BaseEstimator):
         if y is not None:
             target_type = None if y is None else type_of_target(y)
             meta.update(
-                {"y_dtype_": y.dtype, "y_shape_": y.shape, "target_type_": target_type}
+                {"y_dtype_": y.dtype, "y_ndim_": y.ndim, "target_type_": target_type}
             )
         return meta
 
@@ -502,10 +502,10 @@ class BaseWrapper(BaseEstimator):
                 f" but this {self.__name__} expected {self.X_dtype_}"
                 f" and casting from {y.dtype} to {self.X_dtype_} is not safe!"
             )
-        if len(self.y_shape_) != len(y.shape):
+        if self.y_ndim_ != y.ndim:
             raise ValueError(
-                f"`y` has {len(y.shape)} dimensions, but this {self.__name__}"
-                f" is expecting {len(self.y_shape_)} dimensions in `y`."
+                f"`y` has {y.ndim} dimensions, but this {self.__name__}"
+                f" is expecting {self.y_ndim_} dimensions in `y`."
             )
         return y, self._get_meta(y=y)
 
@@ -954,7 +954,7 @@ class KerasClassifier(BaseWrapper):
                     shape=(y.shape[0], 1), fill_value=self.classes_[0]
                 )
             else:
-                if len(y.shape) == 1 or y.shape[1] == 1 and self.n_classes_ == 2:
+                if y.shape == 1 or (y.shape[1] == 1 and self.n_classes_ == 2):
                     # result from a single sigmoid output
                     # reformat so that we have 2 columns
                     y = np.column_stack([1 - y, y])
@@ -1122,10 +1122,7 @@ class KerasRegressor(BaseWrapper):
         """
         y, meta = super().preprocess_y(y)
 
-        if len(y.shape) == 1:
-            n_outputs_ = 1
-        else:
-            n_outputs_ = y.shape[1]
+        n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         # for regression, multi-output is handled by single Keras output
         model_n_outputs_ = 1
 
