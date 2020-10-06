@@ -56,8 +56,6 @@ class BaseWrapper(BaseEstimator):
         For all other parameters see tf.keras.Model documentation.
     """
 
-    is_fitted_ = False
-
     _tags = {
         "poor_score": True,
         "multioutput": True,
@@ -113,7 +111,6 @@ class BaseWrapper(BaseEstimator):
         "y_ndim_",
         "model_",
         "history_",
-        "is_fitted_",
         "target_type_",
     }
 
@@ -405,7 +402,6 @@ class BaseWrapper(BaseEstimator):
                 # a pickle->un-pickle round trip may result in the name changing
                 key = metric_name(key)
                 self.history_[key] += [val]
-        self.is_fitted_ = True
 
         # return self to allow fit_transform and such to work
         return self
@@ -706,7 +702,7 @@ class BaseWrapper(BaseEstimator):
                 Predictions.
         """
         # check if fitted
-        if not self.is_fitted_:
+        if not self._initialized():
             raise NotFittedError(
                 "Estimator needs to be fit before `predict` " "can be called"
             )
@@ -880,29 +876,28 @@ class KerasClassifier(BaseWrapper):
 
         loss = self.loss
 
-        encoders = {
-            "binary": make_pipeline(
-                Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
-            ),
-            "multiclass": make_pipeline(
-                Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
-            ),
-            "multiclass-one-hot": FunctionTransformer(),
-        }
-        if is_categorical_crossentropy(loss):
-            encoders["multiclass"] = make_pipeline(
-                Ensure2DTransformer(), OneHotEncoder(sparse=False, dtype=np.float32),
-            )
-
-        if self.target_type_ not in encoders:
-            raise ValueError(
-                f"Unknown label type: {self.target_type_}."
-                "\n\nTo implement support, subclass KerasClassifier and override"
-                " `preprocess_y` and `postprocess_y`."
-                "\n\nSee (TODO: link to docs) for more information."
-            )
-
         if not hasattr(self, "target_encoder_"):
+            encoders = {
+                "binary": make_pipeline(
+                    Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
+                ),
+                "multiclass": make_pipeline(
+                    Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
+                ),
+                "multiclass-one-hot": FunctionTransformer(),
+            }
+            if is_categorical_crossentropy(loss):
+                encoders["multiclass"] = make_pipeline(
+                    Ensure2DTransformer(),
+                    OneHotEncoder(sparse=False, dtype=np.float32),
+                )
+            if self.target_type_ not in encoders:
+                raise ValueError(
+                    f"Unknown label type: {self.target_type_}."
+                    "\n\nTo implement support, subclass KerasClassifier and override"
+                    " `preprocess_y` and `postprocess_y`."
+                    "\n\nSee (TODO: link to docs) for more information."
+                )
             self.target_encoder_ = encoders[self.target_type_].fit(y)
 
         y = self.target_encoder_.transform(y)
@@ -920,13 +915,6 @@ class KerasClassifier(BaseWrapper):
                 {"classes_": np.arange(0, y.shape[1]), "n_classes_": y.shape[1],}
             )
 
-        if self.target_type_ not in ["binary", "multiclass", "multiclass-one-hot"]:
-            raise ValueError(
-                f"Unknown label type: {self.target_type_}."  # To match errors used by sklearn
-                "\n\nTo implement support, subclass KerasClassifier and override"
-                " `preprocess_y` and `postprocess_y`."
-                "\n\nSee (TODO: link to docs) for more information."
-            )
         meta.update(
             {
                 "target_encoder_": self.target_encoder_,
@@ -934,6 +922,13 @@ class KerasClassifier(BaseWrapper):
                 "n_outputs_": 1,
             }
         )
+        # Make sure consistent
+        if hasattr(self, "n_outputs_") and self.n_outputs_ != meta["n_outputs_"]:
+            raise ValueError(
+                f"Detected `y` to have {meta['n_outputs_']},"
+                f" but this {self.__name__} expects"
+                f" {self.n_outputs_} for `y`."
+            )
 
         return y, meta
 
@@ -1051,7 +1046,7 @@ class KerasClassifier(BaseWrapper):
                 (instead of `(n_sample, 1)` as in Keras).
         """
         # check if fitted
-        if not self.is_fitted_:
+        if not self._initialized():
             raise NotFittedError(
                 "Estimator needs to be fit before `predict` " "can be called"
             )
@@ -1126,7 +1121,7 @@ class KerasRegressor(BaseWrapper):
         # for regression, multi-output is handled by single Keras output
         model_n_outputs_ = 1
 
-        # Make sure consisent
+        # Make sure consistent
         if hasattr(self, "n_outputs_") and self.n_outputs_ != n_outputs_:
             raise ValueError(
                 f"Detected `y` to have {n_outputs_},"
