@@ -589,7 +589,6 @@ class BaseWrapper(BaseEstimator):
         self._meta.update(set(X_meta.keys()))
         self._meta.update(set(y_meta.keys()))
 
-
         self.model_ = self._build_keras_model()
         self._check_output_model_compatibility(y)
 
@@ -643,6 +642,9 @@ class BaseWrapper(BaseEstimator):
                     f"{self.__name__} is expecting {self.n_features_in_} "
                     f"features as input."
                 )
+        else:
+            X, _ = self.preprocess_X(X)
+            y, _ = self.preprocess_y(y)
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
@@ -901,8 +903,12 @@ class KerasClassifier(BaseWrapper):
                 "\n\nSee (TODO: link to docs) for more information."
             )
 
-        encoder = encoders[self.target_type_]
-        self.target_encoder_ = encoder.fit(y)
+        if not hasattr(self, "target_encoder_"):
+            encoder = encoders[self.target_type_].fit(y)
+            self.target_encoder_ = encoder.fit(y)
+        else:
+            encoder = self.target_encoder_
+
         y = self.target_encoder_.transform(y)
 
         if self.target_type_ in ["binary", "multiclass"]:
@@ -925,7 +931,11 @@ class KerasClassifier(BaseWrapper):
                 "\n\nSee (TODO: link to docs) for more information."
             )
         meta.update(
-            {"target_encoder_": encoder, "model_n_outputs_": 1, "n_outputs_": 1}
+            {
+                "target_encoder_": self.target_encoder_,
+                "model_n_outputs_": 1,
+                "n_outputs_": 1,
+            }
         )
 
         return y, meta
