@@ -481,7 +481,6 @@ class BaseWrapper(BaseEstimator):
             )
         return meta
 
-    # TODO: rename to check_y
     def preprocess_y(self, y: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """Handles manipulation of y inputs to fit or score.
 
@@ -590,7 +589,6 @@ class BaseWrapper(BaseEstimator):
         self._meta.update(set(y_meta.keys()))
 
         self.model_ = self._build_keras_model()
-        self._check_output_model_compatibility(y)
 
         return X, y, meta
 
@@ -635,16 +633,17 @@ class BaseWrapper(BaseEstimator):
             should_init = False
         if should_init:
             X, y, meta = self._initialize(X, y)
-
-            if meta["n_features_in_"] != self.n_features_in_:
-                raise ValueError(
-                    f"`X` has {meta['n_features_in_']} features, but this "
-                    f"{self.__name__} is expecting {self.n_features_in_} "
-                    f"features as input."
-                )
         else:
-            X, _ = self.preprocess_X(X)
+            X, meta = self.preprocess_X(X)
             y, _ = self.preprocess_y(y)
+        self._check_output_model_compatibility(y)
+
+        if meta["n_features_in_"] != self.n_features_in_:
+            raise ValueError(
+                f"`X` has {meta['n_features_in_']} features, but this "
+                f"{self.__name__} is expecting {self.n_features_in_} "
+                f"features as input."
+            )
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
@@ -904,12 +903,10 @@ class KerasClassifier(BaseWrapper):
             )
 
         if not hasattr(self, "target_encoder_"):
-            encoder = encoders[self.target_type_].fit(y)
-            self.target_encoder_ = encoder.fit(y)
-        else:
-            encoder = self.target_encoder_
+            self.target_encoder_ = encoders[self.target_type_].fit(y)
 
         y = self.target_encoder_.transform(y)
+        encoder = self.target_encoder_
 
         if self.target_type_ in ["binary", "multiclass"]:
             meta.update(
