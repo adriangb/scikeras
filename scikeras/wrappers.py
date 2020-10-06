@@ -423,7 +423,7 @@ class BaseWrapper(BaseEstimator):
                 f" {self.model_.outputs} outputs"
             )
 
-    def _validate_data(self, X, y=None, reset=True):
+    def _validate_data(self, X, y=None):
         """Validate input data and set or check the `n_features_in_` attribute.
         Parameters
         ----------
@@ -433,10 +433,6 @@ class BaseWrapper(BaseEstimator):
         y : array-like of shape (n_samples,), default=None
             The targets. If None, `check_array` is called on `X` and
             `check_X_y` is called otherwise.
-        reset : bool, default=True
-            Whether to reset the `n_features_in_` attribute.
-            If False, the input will be checked for consistency with data
-            provided when reset was last True.
 
         Returns
         -------
@@ -467,35 +463,32 @@ class BaseWrapper(BaseEstimator):
             )
         X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
 
-        n_features = X.shape[1]
-        target_type = None if y is None else type_of_target(y)
-
-        if reset:
-            self.n_features_in_ = n_features
-            self.target_type_ = target_type
-        else:
-            if n_features != self.n_features_in_:
-                raise ValueError(
-                    f"`X` has {n_features} features, but this {self.__name__}"
-                    f" is expecting {self.n_features_in_} features as input."
-                )
         if y is None:
             return X
         return X, y
 
-    def preprocess_y(
-        self, y: np.ndarray, reset: bool = True
-    ) -> Tuple[
-        Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]], Dict[str, Any]
-    ]:
+    def _get_meta(self, X=None, y=None):
+        meta = {}
+        if X is not None:
+            n_features = X.shape[1]
+            meta.update(
+                {"X_dtype_": X.dtype, "X_shape_": X.shape, "n_features_in_": n_features}
+            )
+        if y is not None:
+            target_type = None if y is None else type_of_target(y)
+            meta.update(
+                {"y_dtype_": y.dtype, "y_shape_": y.shape, "target_type_": target_type}
+            )
+        return meta
+
+    # TODO: rename to check_y
+    def preprocess_y(self, y: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """Handles manipulation of y inputs to fit or score.
 
         Parameters
         ----------
         y : np.ndarray
             1D or 2D numpy array.
-        reset : bool, optional
-            [description], by default True
 
         Returns
         -------
@@ -504,27 +497,20 @@ class BaseWrapper(BaseEstimator):
         meta : Dict[str, Any]
             Meta parameters, as determined from input.
         """
-        if not reset:
-            if not np.can_cast(y.dtype, self.y_dtype_):
-                raise ValueError(
-                    f"Got `y` with dtype {y.dtype},"
-                    f" but this {self.__name__} expected {self.X_dtype_}"
-                    f" and casting from {y.dtype} to {self.X_dtype_} is not safe!"
-                )
-            if len(self.y_shape_) != len(y.shape):
-                raise ValueError(
-                    f"`y` has {len(y.shape)} dimensions, but this {self.__name__}"
-                    f" is expecting {len(self.y_shape_)} dimensions in `y`."
-                )
-        meta = {
-            "y_dtype_": y.dtype,
-            "y_shape_": y.shape,
-        }
-        return y, meta
+        if not np.can_cast(y.dtype, self.y_dtype_):
+            raise ValueError(
+                f"Got `y` with dtype {y.dtype},"
+                f" but this {self.__name__} expected {self.X_dtype_}"
+                f" and casting from {y.dtype} to {self.X_dtype_} is not safe!"
+            )
+        if len(self.y_shape_) != len(y.shape):
+            raise ValueError(
+                f"`y` has {len(y.shape)} dimensions, but this {self.__name__}"
+                f" is expecting {len(self.y_shape_)} dimensions in `y`."
+            )
+        return y, self._get_meta(y=y)
 
-    def postprocess_y(
-        self, y: Union[np.ndarray, List[np.ndarray]], reset: bool = True
-    ) -> np.ndarray:
+    def postprocess_y(self, y: Union[np.ndarray, List[np.ndarray]]) -> np.ndarray:
         """Handles manipulation of predicted `y` values.
 
         By default, it joins lists of predictions for multi-output models
@@ -542,7 +528,7 @@ class BaseWrapper(BaseEstimator):
         return np.squeeze(np.column_stack(y))
 
     def preprocess_X(
-        self, X: np.ndarray, reset: bool = True
+        self, X: np.ndarray
     ) -> Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]]:
         """Handles manipulation of X before fitting.
 
@@ -555,19 +541,13 @@ class BaseWrapper(BaseEstimator):
         Returns:
             X : unchanged 2D numpy array
         """
-        if not reset:
-            if not np.can_cast(X.dtype, self.X_dtype_):
-                raise ValueError(
-                    f"Got `X` with dtype {X.dtype},"
-                    f" but this {self.__name__} expected {self.X_dtype_}"
-                    f" and casting from {X.dtype} to {self.X_dtype_} is not safe!"
-                )
-            # X.shape is already checked via n_features_in_ in _validate_data
-        meta = {
-            "X_dtype_": X.dtype,
-            "X_shape_": X.shape,
-        }
-        return X, meta
+        if not np.can_cast(X.dtype, self.X_dtype_):
+            raise ValueError(
+                f"Got `X` with dtype {X.dtype},"
+                f" but this {self.__name__} expected {self.X_dtype_}"
+                f" and casting from {X.dtype} to {self.X_dtype_} is not safe!"
+            )
+        return X, self._get_meta(X=X)
 
     def fit(self, X, y, sample_weight=None):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
@@ -590,6 +570,30 @@ class BaseWrapper(BaseEstimator):
         return self._fit(
             X=X, y=y, sample_weight=sample_weight, warm_start=self.warm_start
         )
+
+    def _initialized(self):
+        return hasattr(self, "n_features_in_")
+
+    def _initialize(self, X, y):
+        X, y = self._validate_data(X=X, y=y)
+
+        meta = self._get_meta(X, y)
+        vars(self).update(**meta)
+
+        X, X_meta = self.preprocess_X(X)
+        vars(self).update(**X_meta)
+
+        y, y_meta = self.preprocess_y(y)
+        vars(self).update(**y_meta)
+
+        self._meta.update(set(X_meta.keys()))
+        self._meta.update(set(y_meta.keys()))
+
+
+        self.model_ = self._build_keras_model()
+        self._check_output_model_compatibility(y)
+
+        return X, y, meta
 
     def _fit(self, X, y, sample_weight=None, warm_start=False):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
@@ -627,16 +631,18 @@ class BaseWrapper(BaseEstimator):
             self._random_state = self.random_state
 
         # Data checks
-        if warm_start and not hasattr(self, "n_features_in_"):
-            # Warm start requested but not fitted yet
-            reset = True
-        elif warm_start:
-            # Already fitted and warm start requested
-            reset = False
-        else:
-            # No warm start requested
-            reset = True
-        X, y = self._validate_data(X=X, y=y, reset=reset)
+        should_init = True
+        if (self.warm_start or warm_start) and self._initialized():
+            should_init = False
+        if should_init:
+            X, y, meta = self._initialize(X, y)
+
+            if meta["n_features_in_"] != self.n_features_in_:
+                raise ValueError(
+                    f"`X` has {meta['n_features_in_']} features, but this "
+                    f"{self.__name__} is expecting {self.n_features_in_} "
+                    f"features as input."
+                )
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
@@ -649,32 +655,15 @@ class BaseWrapper(BaseEstimator):
             # because the predictions differ by a small margin).
             # To get around this, we manually delete these samples here
             zeros = sample_weight == 0
+            if zeros.sum() == zeros.size:
+                raise RuntimeError(
+                    "Cannot train because there are no samples"
+                    " left after deleting points with zero sample weight!"
+                )
             if np.any(zeros):
                 X = X[~zeros]
                 y = y[~zeros]
                 sample_weight = sample_weight[~zeros]
-                if sample_weight.size == 0:
-                    # could check any of the arrays here, arbitrary choice
-                    # there will be no samples left! warn users
-                    raise RuntimeError(
-                        "Cannot train because there are no samples"
-                        " left after deleting points with zero sample weight!"
-                    )
-
-        # pre process X, y
-        X, X_meta = self.preprocess_X(X, reset=reset)
-        y, y_meta = self.preprocess_y(y, reset=reset)
-        if reset:
-            vars(self).update(**X_meta)
-            vars(self).update(**y_meta)
-            self._meta.update(set(X_meta.keys()))
-            self._meta.update(set(y_meta.keys()))
-
-        # build model
-        if reset:
-            self.model_ = self._build_keras_model()
-
-        self._check_output_model_compatibility(y)
 
         # fit model
         return self._fit_keras_model(
@@ -722,10 +711,10 @@ class BaseWrapper(BaseEstimator):
             )
 
         # basic input checks
-        X = self._validate_data(X=X, y=None, reset=False)
+        X = self._validate_data(X=X, y=None)
 
         # pre process X
-        X, _ = self.preprocess_X(X, reset=False)
+        X, _ = self.preprocess_X(X)
 
         # filter kwargs and get attributes for predict
         params = self.get_params()
@@ -866,7 +855,7 @@ class KerasClassifier(BaseWrapper):
         return sklearn_accuracy_score(y_true, y_pred, **kwargs)
 
     def preprocess_y(
-        self, y: np.ndarray, reset: bool = True
+        self, y: np.ndarray
     ) -> Tuple[
         Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]], Dict[str, Any]
     ]:
@@ -878,8 +867,6 @@ class KerasClassifier(BaseWrapper):
         ----------
         y : np.ndarray
             1D or 2D numpy array.
-        reset : bool, optional
-            [description], by default True
 
         Returns
         -------
@@ -888,84 +875,58 @@ class KerasClassifier(BaseWrapper):
         meta : Dict[str, Any]
             Meta parameters, as determined from input.
         """
-        y, meta = super().preprocess_y(y, reset=reset)
+        y, meta = super().preprocess_y(y)
 
         loss = self.loss
 
-        if self.target_type_ == "binary":
-            # y = array([1, 0, 1, 0])
-            # single task, single label, binary classification
-            # encode
-            if reset:
-                encoder = make_pipeline(
-                    Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
-                ).fit(y)
-                meta.update(
-                    {
-                        "classes_": encoder[1].categories_[0],
-                        "n_classes_": encoder[1].categories_[0].size,
-                        "target_encoder_": encoder,
-                        "model_n_outputs_": 1,
-                        "n_outputs_": 1,
-                    }
-                )
-            else:
-                encoder = self.target_encoder_
-            y = encoder.transform(y)
-        elif self.target_type_ == "multiclass":
-            # y = array([1, 5, 2])
-            # encode
-            if reset:
-                if is_categorical_crossentropy(loss):
-                    # one-hot encode
-                    encoder = make_pipeline(
-                        Ensure2DTransformer(),
-                        OneHotEncoder(sparse=False, dtype=np.float32),
-                    )
-                else:
-                    encoder = make_pipeline(
-                        Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
-                    )
-                y = encoder.fit_transform(y)
-                meta.update(
-                    {
-                        "classes_": encoder[1].categories_[0],
-                        "n_classes_": encoder[1].categories_[0].size,
-                        "target_encoder_": encoder,
-                        "model_n_outputs_": 1,
-                        "n_outputs_": 1,
-                    }
-                )
-            else:
-                encoder = self.target_encoder_
-                y = encoder.transform(y)
+        encoders = {
+            "binary": make_pipeline(
+                Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
+            ),
+            "multiclass": make_pipeline(
+                Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
+            ),
+            "multiclass-one-hot": FunctionTransformer(),
+        }
+        if is_categorical_crossentropy(loss):
+            encoders["multiclass"] = make_pipeline(
+                Ensure2DTransformer(), OneHotEncoder(sparse=False, dtype=np.float32),
+            )
+
+        if self.target_type_ not in encoders:
+            raise ValueError(
+                f"Unknown label type: {self.target_type_}."
+                "\n\nTo implement support, subclass KerasClassifier and override"
+                " `preprocess_y` and `postprocess_y`."
+                "\n\nSee (TODO: link to docs) for more information."
+            )
+
+        encoder = encoders[self.target_type_]
+        self.target_encoder_ = encoder.fit(y)
+        y = self.target_encoder_.transform(y)
+
+        if self.target_type_ in ["binary", "multiclass"]:
+            meta.update(
+                {
+                    "classes_": encoder[1].categories_[0],
+                    "n_classes_": encoder[1].categories_[0].size,
+                }
+            )
         elif self.target_type_ == "multiclass-one-hot":
-            # y = array([1, 0], [1, 0]) (usually used with categorical_crossentropy)
-            # encode
-            # here we just pass through to allow all Keras use cases
-            # that didn't exist in sklearn to succeed (ex: loss=categorical_crossentropy)
-            if reset:
-                encoder = FunctionTransformer()
-                y = encoder.fit_transform(y)
-                meta.update(
-                    {
-                        "classes_": np.arange(0, y.shape[1]),
-                        "n_classes_": y.shape[1],
-                        "target_encoder_": encoder,
-                        "model_n_outputs_": 1,
-                        "n_outputs_": 1,
-                    }
-                )
-            else:
-                encoder = self.target_encoder_
-                y = encoder.transform(y)
-        else:
+            meta.update(
+                {"classes_": np.arange(0, y.shape[1]), "n_classes_": y.shape[1],}
+            )
+
+        if self.target_type_ not in ["binary", "multiclass", "multiclass-one-hot"]:
             raise ValueError(
                 f"Unknown label type: {self.target_type_}."  # To match errors used by sklearn
                 "\n\nTo implement support, subclass KerasClassifier and override"
                 " `preprocess_y` and `postprocess_y`."
                 "\n\nSee (TODO: link to docs) for more information."
             )
+        meta.update(
+            {"target_encoder_": encoder, "model_n_outputs_": 1, "n_outputs_": 1}
+        )
 
         return y, meta
 
@@ -1089,10 +1050,10 @@ class KerasClassifier(BaseWrapper):
             )
 
         # basic input checks
-        X = self._validate_data(X=X, y=None, reset=False)
+        X = self._validate_data(X=X, y=None)
 
         # pre process X
-        X, _ = self.preprocess_X(X, reset=False)
+        X, _ = self.preprocess_X(X)
 
         # collect arguments
         predict_args = route_params(
@@ -1149,10 +1110,10 @@ class KerasRegressor(BaseWrapper):
         else:
             return np.squeeze(y.astype(np.float64, copy=False))
 
-    def preprocess_y(self, y, reset=True):
+    def preprocess_y(self, y):
         """Split y for multi-output tasks.
         """
-        y, meta = super().preprocess_y(y, reset=reset)
+        y, meta = super().preprocess_y(y)
 
         if len(y.shape) == 1:
             n_outputs_ = 1
@@ -1161,14 +1122,13 @@ class KerasRegressor(BaseWrapper):
         # for regression, multi-output is handled by single Keras output
         model_n_outputs_ = 1
 
-        # save meta params
-        if not reset:
-            if self.n_outputs_ != n_outputs_:
-                raise ValueError(
-                    f"Detected `y` to have {n_outputs_},"
-                    f" but this {self.__name__} expects"
-                    f" {self.n_outputs_} for `y`."
-                )
+        # Make sure consisent
+        if hasattr(self, "n_outputs_") and self.n_outputs_ != n_outputs_:
+            raise ValueError(
+                f"Detected `y` to have {n_outputs_},"
+                f" but this {self.__name__} expects"
+                f" {self.n_outputs_} for `y`."
+            )
             # No need to check model_n_outputs_ since that's hardcoded
         meta.update(
             {"n_outputs_": n_outputs_, "model_n_outputs_": model_n_outputs_,}
