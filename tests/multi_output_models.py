@@ -15,78 +15,79 @@ class MultiOutputClassifier(KerasClassifier):
     by mapping them to multiple Keras outputs.
     """
 
-    def preprocess_y(self, y, reset):
-        if self.target_type_ in ("multilabel-indicator", "multiclass-multioutput"):
-            y, meta = BaseWrapper.preprocess_y(self, y, reset)
-            loss = self.loss
-            if self.target_type_ == "multilabel-indicator":
-                # y = array([1, 1, 1, 0], [0, 0, 1, 1])
-                # split into lists for multi-output Keras
-                # will be processed as multiple binary classifications
-                if reset:
-                    target_encoder_ = [FunctionTransformer() for _ in range(y.shape[1])]
-                    classes_ = [np.array([0, 1])] * y.shape[1]
-                    meta.update(
-                        {
-                            "classes_": classes_,
-                            "n_classes_": [len(c) for c in classes_],
-                            "target_encoder_": target_encoder_,
-                            "model_n_outputs_": y.shape[1],
-                            "n_outputs_": y.shape[1],
-                        }
-                    )
-                y = np.split(y, y.shape[1], axis=1)
-            else:  # multiclass-multioutput
-                # y = array([1, 0, 5], [2, 1, 3])
-                # split into lists for multi-output Keras
-                # each will be processed as a separate multiclass problem
-                y = np.split(y, y.shape[1], axis=1)
-                model_n_outputs_ = len(y)
-                # encode
-                if reset:
-                    if is_categorical_crossentropy(loss):
-                        # one-hot encode
-                        encoder = make_pipeline(
-                            Ensure2DTransformer(), OneHotEncoder(sparse=False),
-                        )
-                    else:
-                        encoder = make_pipeline(
-                            Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32)
-                        )
-                    target_encoder_ = [clone(encoder).fit(y_) for y_ in y]
-                    classes_ = [
-                        encoder[1].categories_[0] for encoder in target_encoder_
-                    ]
-                    meta.update(
-                        {
-                            "classes_": classes_,
-                            "n_classes_": [len(c) for c in classes_],
-                            "target_encoder_": target_encoder_,
-                            "model_n_outputs_": len(y),
-                            "n_outputs_": len(y),
-                        }
+    def preprocess_y(self, y):
+        reset = True
+        if self.target_type_ not in ("multilabel-indicator", "multiclass-multioutput"):
+            return super().preprocess_y(y)
+
+        y, meta = BaseWrapper.preprocess_y(self, y)
+        loss = self.loss
+        if self.target_type_ == "multilabel-indicator":
+            # y = array([1, 1, 1, 0], [0, 0, 1, 1])
+            # split into lists for multi-output Keras
+            # will be processed as multiple binary classifications
+            if reset:
+                target_encoder_ = [FunctionTransformer() for _ in range(y.shape[1])]
+                classes_ = [np.array([0, 1])] * y.shape[1]
+                meta.update(
+                    {
+                        "classes_": classes_,
+                        "n_classes_": [len(c) for c in classes_],
+                        "target_encoder_": target_encoder_,
+                        "model_n_outputs_": y.shape[1],
+                        "n_outputs_": y.shape[1],
+                    }
+                )
+            y = np.split(y, y.shape[1], axis=1)
+        else:  # multiclass-multioutput
+            # y = array([1, 0, 5], [2, 1, 3])
+            # split into lists for multi-output Keras
+            # each will be processed as a separate multiclass problem
+            y = np.split(y, y.shape[1], axis=1)
+            model_n_outputs_ = len(y)
+            # encode
+            if reset:
+                if is_categorical_crossentropy(loss):
+                    # one-hot encode
+                    encoder = make_pipeline(
+                        Ensure2DTransformer(), OneHotEncoder(sparse=False),
                     )
                 else:
-                    target_encoder_ = self.target_encoder_
-                y = [encoder.transform(y_) for encoder, y_ in zip(target_encoder_, y)]
-            if not reset:
-                model_n_outputs_ = meta["model_n_outputs_"]
-                if not self.model_n_outputs_ == model_n_outputs_:
-                    raise ValueError(
-                        f"`y` was detected to map to {model_n_outputs_} model outputs,"
-                        f" but this {self.__name__} expected {self.model_n_outputs_}"
-                        " model outputs."
+                    encoder = make_pipeline(
+                        Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32)
                     )
-                n_outputs_ = meta["n_outputs_"]
-                if not self.n_outputs_ == n_outputs_:
-                    raise ValueError(
-                        f"`y` was detected to map to {n_outputs_} model outputs,"
-                        f" but this {self.__name__} expected {self.n_outputs_}"
-                        " model outputs."
-                    )
-            return y, meta
-        else:
-            return super().preprocess_y(y, reset)
+                target_encoder_ = [clone(encoder).fit(y_) for y_ in y]
+                classes_ = [
+                    encoder[1].categories_[0] for encoder in target_encoder_
+                ]
+                meta.update(
+                    {
+                        "classes_": classes_,
+                        "n_classes_": [len(c) for c in classes_],
+                        "target_encoder_": target_encoder_,
+                        "model_n_outputs_": len(y),
+                        "n_outputs_": len(y),
+                    }
+                )
+            else:
+                target_encoder_ = self.target_encoder_
+            y = [encoder.transform(y_) for encoder, y_ in zip(target_encoder_, y)]
+        if not reset:
+            model_n_outputs_ = meta["model_n_outputs_"]
+            if not self.model_n_outputs_ == model_n_outputs_:
+                raise ValueError(
+                    f"`y` was detected to map to {model_n_outputs_} model outputs,"
+                    f" but this {self.__name__} expected {self.model_n_outputs_}"
+                    " model outputs."
+                )
+            n_outputs_ = meta["n_outputs_"]
+            if not self.n_outputs_ == n_outputs_:
+                raise ValueError(
+                    f"`y` was detected to map to {n_outputs_} model outputs,"
+                    f" but this {self.__name__} expected {self.n_outputs_}"
+                    " model outputs."
+                )
+        return y, meta
 
     def postprocess_y(self, y, return_proba=False):
         if self.target_type_ in ("multilabel-indicator", "multiclass-multioutput"):
