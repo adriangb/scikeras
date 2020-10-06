@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 import numpy as np
 
 from sklearn.base import clone
@@ -15,12 +17,20 @@ class MultiOutputClassifier(KerasClassifier):
     by mapping them to multiple Keras outputs.
     """
 
+    def _get_meta(self, X=None, y=None) -> Dict[str, Any]:
+        meta = super()._get_meta(X=X, y=y)
+        if y is not None and meta["target_type_"] in (
+            "multilabel-indicator",
+            "multiclass-multioutput",
+        ):
+            meta["model_n_outputs_"] = meta["n_outputs_"] = y.shape[1]
+        return meta
+
     def preprocess_y(self, y):
         if self.target_type_ not in ("multilabel-indicator", "multiclass-multioutput"):
             return super().preprocess_y(y)
 
         y, meta = BaseWrapper.preprocess_y(self, y)
-        meta["model_n_outputs_"] = meta["n_outputs_"] = y.shape[1]
         y = np.split(y, y.shape[1], axis=1)
         loss = self.loss
         target_encoder_ = getattr(self, "target_encoder_", None)
