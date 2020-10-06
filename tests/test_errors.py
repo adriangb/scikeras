@@ -98,7 +98,7 @@ def test_sample_weights_all_zero():
     # we create 20 points
     n, d = 50, 4
     X = np.random.uniform(size=(n, d))
-    y = np.random.uniform(size=n)
+    y = np.random.choice(2, size=n).astype("uint8")
     sample_weight = np.zeros(y.shape)
 
     with pytest.raises(RuntimeError, match="no samples left"):

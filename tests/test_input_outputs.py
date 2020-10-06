@@ -50,10 +50,10 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
 
         return model
 
-    def preprocess_X(self, X, reset=True):
+    def preprocess_X(self, X):
         """To support multiple inputs, a custom method must be defined.
         """
-        X, meta = super().preprocess_X(X, reset=reset)
+        X, meta = super().preprocess_X(X)
         return [X[:, 0], X[:, 1:4]], meta
 
 

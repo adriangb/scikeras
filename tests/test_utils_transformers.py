@@ -21,16 +21,21 @@ class TestEnsure2DTransformer:
     )
     def test_invalid_input_transform(self, X_new):
         tf = Ensure2DTransformer()
-        X = np.array([1, 1])
+        X = np.random.uniform(size=(100, 3))
         # Fit with 1D then pass 2D or 3D
         # Raises ValueError
         tf.fit(X)
-        with pytest.raises(ValueError, match="Expected a 1D array"):
+        with pytest.raises(ValueError, match="Expected a 1D or 2D array"):
             tf.transform(X_new)
         # Fit with NOT 1D
         # Then no errors are raised regardless of X_new's dimensionality
         tf.fit(X.reshape(-1, 1))
         tf.transform(X_new)
+
+    def test_almost_1d(self):
+        tf = Ensure2DTransformer()
+        X = np.random.uniform(size=(100, 1))
+        tf.fit_transform(X)
 
     def test_invalid_input_inverse_transform(self):
         tf = Ensure2DTransformer()
