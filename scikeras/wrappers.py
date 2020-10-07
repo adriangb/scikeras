@@ -476,19 +476,42 @@ class BaseWrapper(BaseEstimator):
             y_dtype_ = y.dtype
             y_ndim_ = y.ndim
             if reset:
-                # TODO: validate these meta
                 self.target_type_ = target_type_
                 self.y_dtype_ = y_dtype_
                 self.y_ndim_ = y_ndim_
+            else:
+                if not np.can_cast(y_dtype_, self.y_dtype_):
+                    raise ValueError(
+                        f"Got `y` with dtype {y_dtype_},"
+                        f" but this {self.__name__} expected {self.y_dtype_}"
+                        f" and casting from {y_dtype_} to {self.y_dtype_} is not safe!"
+                    )
+                if self.y_ndim_ != y_ndim_:
+                    raise ValueError(
+                        f"`y` has {y_ndim_} dimensions, but this {self.__name__}"
+                        f" is expecting {self.y_ndim_} dimensions in `y`."
+                    )
         X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
         X_dtype_ = X.dtype
         X_shape_ = X.shape
         n_features_in_ = X.shape[1]
         if reset:
-            # TODO: validate these meta
             self.X_dtype_ = X_dtype_
             self.X_shape_ = X_shape_
             self.n_features_in_ = n_features_in_
+        else:
+            if not np.can_cast(X_dtype_, self.X_dtype_):
+                raise ValueError(
+                    f"Got `X` with dtype {X_dtype_},"
+                    f" but this {self.__name__} expected {self.X_dtype_}"
+                    f" and casting from {X_dtype_} to {self.X_dtype_} is not safe!"
+                )
+            if len(X_shape_) != len(self.X_shape_):
+                raise ValueError(
+                    f"`X` has {len(X_shape_)} dimensions, but this {self.__name__}"
+                    f" is expecting {len(self.X_shape_)} dimensions in `X`."
+                )
+            super()._check_n_features(X=X, reset=reset)
 
         if y is None:
             return X

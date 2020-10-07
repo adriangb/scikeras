@@ -13,7 +13,7 @@ from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
-def test_shape_change_error():
+def test_X_shape_change():
     """Tests that a ValueError is raised if the input
     changes shape in subsequent partial fit calls.
     """
@@ -23,14 +23,14 @@ def test_shape_change_error():
         loss=KerasRegressor.r_squared,
         hidden_layer_sizes=(100,),
     )
-    X = np.array([[1, 2], [3, 4]])
+    X = np.array([[1, 2], [3, 4]]).reshape(2, 2, 1)
     y = np.array([[0, 1, 0], [1, 0, 0]])
 
     estimator.fit(X=X, y=y)
 
-    with pytest.raises(ValueError, match=r"but this [\w\d]+ is expecting "):
-        # Calling with a different shape for X raises an error
-        estimator.partial_fit(X=X[:, :1], y=y)
+    with pytest.raises(ValueError, match=r"dimensions in `X`"):
+        # Calling with a different number of dimensions for X raises an error
+        estimator.partial_fit(X=X.reshape(2, 2), y=y)
 
 
 def test_not_fitted_error():

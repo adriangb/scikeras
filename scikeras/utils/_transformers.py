@@ -88,7 +88,7 @@ class KerasClassifierTargetTransformer(BaseKerasClassifierTargetTransformer):
     """Default target transformer for KerasClassifier.
     """
 
-    def __init__(self, target_type, loss):
+    def __init__(self, target_type="unknown", loss=None):
         self.target_type = target_type
         self.loss = loss
 
@@ -111,8 +111,8 @@ class KerasClassifierTargetTransformer(BaseKerasClassifierTargetTransformer):
             raise ValueError(
                 f"Unknown label type: {self.target_type}."
                 "\n\nTo implement support, subclass KerasClassifier and override"
-                " `preprocess_y` and `postprocess_y`."
-                "\n\nSee (TODO: link to docs) for more information."
+                " `target_transformer` with a transformer that supports this"
+                " label type."
             )
         self.final_encoder_ = encoders[self.target_type].fit(y)
         if self.target_type in ["binary", "multiclass"]:
@@ -128,7 +128,8 @@ class KerasClassifierTargetTransformer(BaseKerasClassifierTargetTransformer):
 
     def transform(self, X: np.ndarray) -> np.ndarray:
         y = X  # rename for clarity, the input is always expected to be a target `y`
-        # TODO: validate self.classes_ and self.n_classes_, n_outputs_, model_n_outputs_
+        # no need to validate n_outputs_ or model_n_outputs_, those are hardcoded
+        # self.classes_ and self.n_classes_ are validated by the transformers themselves
         return self.final_encoder_.transform(y)
 
     def inverse_transform(
@@ -229,7 +230,15 @@ class KerasRegressorTargetTransformer(BaseKerasRegressorTargetTransformer):
         return self
 
     def transform(self, X: np.ndarray) -> np.ndarray:
-        return X
+        y = X
+        n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
+        if n_outputs_ != self.n_outputs_:
+            raise ValueError(
+                f"Detected `y` to have {n_outputs_},"
+                f" but this {self} expects"
+                f" {self.n_outputs_} for `y`."
+            )
+        return y
 
     def inverse_transform(self, X: np.ndarray) -> np.ndarray:
         y = X  # rename for clarity, the input is always expected to be a target `y`
