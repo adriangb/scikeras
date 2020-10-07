@@ -11,7 +11,6 @@ import tensorflow as tf
 
 from tensorflow.keras.layers import deserialize as deserialize_layer
 from tensorflow.keras.layers import serialize as serialize_layer
-from tensorflow.keras.metrics import deserialize as deserialize_metric
 from tensorflow.python.keras.saving import saving_utils
 
 

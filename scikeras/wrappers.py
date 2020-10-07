@@ -9,7 +9,6 @@ from typing import Any, Dict, Tuple, Union
 import numpy as np
 import tensorflow as tf
 
-from attr import s
 from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score

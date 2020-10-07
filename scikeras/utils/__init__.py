@@ -39,7 +39,7 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     -------
     str
         [description]
-    
+
     Examples
     --------
     >>> loss_name("BinaryCrossentropy")
