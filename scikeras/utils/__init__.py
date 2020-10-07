@@ -12,6 +12,19 @@ from tensorflow.keras.metrics import Metric
 from tensorflow.keras.metrics import get as get_metric
 from tensorflow.keras.metrics import serialize as serialize_metric
 
+from scikeras.utils._transformers import (
+    BaseKerasClassifierFeatureTransformer,
+    BaseKerasClassifierTargetTransformer,
+    BaseKerasRegressorFeatureTransformer,
+    BaseKerasRegressorTargetTransformer,
+    BaseScikerasDataTransformer,
+    Ensure2DTransformer,
+    KerasClassifierFeatureTransformer,
+    KerasClassifierTargetTransformer,
+    KerasRegressorFeatureTransformer,
+    KerasRegressorTargetTransformer,
+)
+
 
 def loss_name(loss: Union[str, Loss, Callable]) -> str:
     """Retrieves a loss's full name (eg: "mean_squared_error").
