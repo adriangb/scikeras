@@ -592,21 +592,9 @@ class BaseWrapper(BaseEstimator):
     def _initialize(
         self, X: np.ndarray, y: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray]:
-        self._meta = self.__class__._meta.copy()  # avoid mutating class attribute
-
-        X, y = self._validate_data(X=X, y=y)
-
-        meta = self._get_meta(X, y)
+        X, y, meta = self._validate_data(X=X, y=y, reset=True)
         vars(self).update(**meta)
-
-        X, X_meta = self.preprocess_X(X)
-        vars(self).update(**X_meta)
-
-        y, y_meta = self.preprocess_y(y)
-        vars(self).update(**y_meta)
-
-        self._meta.update(set(X_meta.keys()))
-        self._meta.update(set(y_meta.keys()))
+        self._meta.update(set(meta.keys()))
 
         self.model_ = self._build_keras_model()
 
@@ -646,14 +634,11 @@ class BaseWrapper(BaseEstimator):
             self._random_state = self.random_state
 
         # Data checks
-        should_init = True
-        if (self.warm_start or warm_start) and self._initialized():
-            should_init = False
-        if should_init:
+        if not ((self.warm_start or warm_start) and self._initialized()):
             X, y = self._initialize(X, y)
         else:
-            X, _ = self.preprocess_X(X)
-            y, _ = self.preprocess_y(y)
+            X, y = self._validate_data(X, y, reset=False)
+
         self._check_output_model_compatibility(y)
 
         if sample_weight is not None:
