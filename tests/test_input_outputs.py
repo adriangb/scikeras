@@ -4,9 +4,8 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from scipy.sparse.construct import random
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.preprocessing import FunctionTransformer, MultiLabelBinarizer
 from tensorflow.python.keras.layers import Concatenate, Dense, Input
 from tensorflow.python.keras.models import Model, Sequential
 from tensorflow.python.keras.testing_utils import get_test_data
@@ -22,6 +21,11 @@ INPUT_DIM = 5
 TRAIN_SAMPLES = 10
 TEST_SAMPLES = 5
 NUM_CLASSES = 2
+
+
+class MultiInputTransformer(FunctionTransformer):
+    def get_meta_params(self):
+        return dict()
 
 
 class FunctionalAPIMultiInputClassifier(KerasClassifier):
@@ -50,11 +54,9 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
 
         return model
 
-    def preprocess_X(self, X):
-        """To support multiple inputs, a custom method must be defined.
-        """
-        X, meta = super().preprocess_X(X)
-        return [X[:, 0], X[:, 1:4]], meta
+    @property
+    def feature_encoder(self):
+        return MultiInputTransformer(func=lambda X: [X[:, 0], X[:, 1:4]],)
 
 
 class FunctionalAPIMultiOutputClassifier(MultiOutputClassifier):
@@ -332,22 +334,6 @@ def test_incompatible_output_dimensions():
 
     with pytest.raises(RuntimeError):
         clf.fit(X, y)
-
-
-def test_BaseWrapper_postprocess_y():
-    """Checks BaseWrapper.postprocess_y.
-
-    This method is overriden in KerasRegressor and KerasClassifier
-    and so it is not tested by any other checks.
-
-    It is provided as a convenience method so that subclassed models
-    with multiple outputs don't have to implement it just to convert
-    the list output from Keras to a Numpy array (that's all it does).
-    """
-    y_array = np.array([0])
-    y_list = [0]
-    y_postprocessed = BaseWrapper().postprocess_y(y_list)
-    np.testing.assert_equal(y_postprocessed, y_array)
 
 
 @pytest.mark.parametrize(

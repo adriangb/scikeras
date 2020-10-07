@@ -442,6 +442,9 @@ class BaseWrapper(BaseEstimator):
         y : array-like of shape (n_samples,), default=None
             The targets. If None, `check_array` is called on `X` and
             `check_X_y` is called otherwise.
+        reset : bool, default=False
+            If True, override all meta attributes.
+            If False, verify that they haven't changed.
 
         Returns
         -------
@@ -478,8 +481,7 @@ class BaseWrapper(BaseEstimator):
                 self.target_type_ = target_type_
                 self.y_dtype_ = y_dtype_
                 self.y_ndim_ = y_ndim_
-        else:
-            X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
+        X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
         X_dtype_ = X.dtype
         X_shape_ = X.shape
         n_features_in_ = X.shape[1]

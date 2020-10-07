@@ -78,7 +78,7 @@ class MultiOutputKerasClassifierTargetTransformer(KerasClassifierTargetTransform
                 else:
                     y_ = np.zeros(y[i].shape, dtype=int)
                     y_[np.arange(y[i].shape[0]), idx] = 1
-                class_predictions.append(self.target_encoder_[i].inverse_transform(y_))
+                class_predictions.append(self.final_encoder_[i].inverse_transform(y_))
 
         if return_proba:
             return np.squeeze(np.column_stack(y))
