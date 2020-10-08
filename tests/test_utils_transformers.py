@@ -24,7 +24,7 @@ class TestEnsure2DTransformer:
         X = np.random.uniform(size=100)
         tf = Ensure2DTransformer().fit(X)
 
-        if X.ndim == 2:
+        if X.ndim == 1:
             with pytest.raises(ValueError, match="Expected a 1D array"):
                 tf.transform(X_new)
         else:

@@ -19,7 +19,7 @@ class Ensure2DTransformer(TransformerMixin, BaseEstimator):
 
     def transform(self, X: np.ndarray) -> np.ndarray:
         if self.should_transform_:
-            if not (X.ndim == 1 or (np.prod(X.shape) == X.size)):
+            if not (X.ndim == 1 and (np.prod(X.shape) == X.size)):
                 raise ValueError(
                     "Expected a 1D array for `X` "
                     "or for X to have one meaningful dimension (e.g, "

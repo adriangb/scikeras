@@ -511,7 +511,16 @@ class BaseWrapper(BaseEstimator):
                     f"`X` has {len(X_shape_)} dimensions, but this {self.__name__}"
                     f" is expecting {len(self.X_shape_)} dimensions in `X`."
                 )
-            super()._check_n_features(X=X, reset=reset)
+            # The following check is a backport from
+            # sklearn.base.BaseEstimator._check_n_features
+            # since this method is not available in sklearn <= 0.22.0
+            if n_features_in_ != self.n_features_in_:
+                raise ValueError(
+                    "X has {} features, but {} is expecting {} features "
+                    "as input.".format(
+                        n_features_in_, self.__class__.__name__, self.n_features_in_
+                    )
+                )
 
         if y is None:
             return X
