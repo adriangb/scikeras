@@ -31,7 +31,8 @@ from scikeras._utils import (
     route_params,
     unflatten_params,
 )
-from scikeras.utils import (
+from scikeras.utils import loss_name, metric_name, type_of_target
+from scikeras.utils.transformers import (
     BaseKerasClassifierFeatureTransformer,
     BaseKerasClassifierTargetTransformer,
     BaseKerasRegressorFeatureTransformer,
@@ -41,9 +42,6 @@ from scikeras.utils import (
     KerasClassifierTargetTransformer,
     KerasRegressorFeatureTransformer,
     KerasRegressorTargetTransformer,
-    loss_name,
-    metric_name,
-    type_of_target,
 )
 
 
@@ -564,14 +562,12 @@ class BaseWrapper(BaseEstimator):
     ) -> Tuple[np.ndarray, np.ndarray]:
         self._meta = self.__class__._meta.copy()  # avoid modifying mutable class attr
 
-        X, y = self._validate_data(X=X, y=y, reset=True)
-
         self.target_encoder_ = self.target_encoder.fit(y)
-        target_meta = self.target_encoder_.get_meta_params()
+        target_meta = self.target_encoder_.get_metadata()
         vars(self).update(**target_meta)
         self._meta.update(set(target_meta.keys()))
         self.feature_encoder_ = self.feature_encoder.fit(X)
-        feature_meta = self.feature_encoder_.get_meta_params()
+        feature_meta = self.feature_encoder_.get_metadata()
         vars(self).update(**feature_meta)
         self._meta.update(set(feature_meta.keys()))
 
@@ -614,6 +610,7 @@ class BaseWrapper(BaseEstimator):
 
         # Data checks
         if not ((self.warm_start or warm_start) and self._initialized()):
+            X, y = self._validate_data(X, y, reset=True)
             X, y = self._initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
@@ -635,9 +632,9 @@ class BaseWrapper(BaseEstimator):
             # To get around this, we manually delete these samples here
             zeros = sample_weight == 0
             if zeros.sum() == zeros.size:
-                raise RuntimeError(
-                    "Cannot train because there are no samples"
-                    " left after deleting points with zero sample weight!"
+                raise ValueError(
+                    "No training samples had any weight; only zeros were passed in sample_weight."
+                    " That means there's nothing to train on by definition, so training can not be completed."
                 )
             if np.any(zeros):
                 X = X[~zeros]

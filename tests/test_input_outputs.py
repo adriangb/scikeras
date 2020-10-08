@@ -24,7 +24,7 @@ NUM_CLASSES = 2
 
 
 class MultiInputTransformer(FunctionTransformer):
-    def get_meta_params(self):
+    def get_metadata(self):
         return dict()
 
 
@@ -57,37 +57,6 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
     @property
     def feature_encoder(self):
         return MultiInputTransformer(func=lambda X: [X[:, 0], X[:, 1:4]],)
-
-
-class FunctionalAPIMultiOutputClassifier(MultiOutputClassifier):
-    """Tests Functional API Classifier with 2 outputs of different type.
-    """
-
-    def _keras_build_fn(
-        self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
-    ) -> Model:
-        # get params
-        n_features_in_ = meta["n_features_in_"]
-        n_classes_ = meta["n_classes_"]
-
-        inp = Input((n_features_in_,))
-
-        x1 = Dense(100)(inp)
-
-        binary_out = Dense(1, activation="sigmoid")(x1)
-        cat_out = Dense(n_classes_[1], activation="softmax")(x1)
-
-        model = Model([inp], [binary_out, cat_out])
-        losses = ["binary_crossentropy", "sparse_categorical_crossentropy"]
-        model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
-
-        return model
-
-    def score(self, X, y):
-        """Taken from sklearn.multiouput.MultiOutputClassifier
-        """
-        y_pred = self.predict(X)
-        return np.mean(np.all(y == y_pred, axis=1))
 
 
 class FunctionAPIMultiLabelClassifier(MultiOutputClassifier):
@@ -159,13 +128,30 @@ def test_multi_input():
 def test_multi_output():
     """Compares to scikit-learn RandomForestClassifier classifier.
     """
-    clf_keras = FunctionalAPIMultiOutputClassifier()
+
+    def get_model(meta: Dict[str, Any]) -> Model:
+        # get params
+        n_features_in_ = meta["n_features_in_"]
+
+        inp = Input((n_features_in_,))
+
+        x1 = Dense(100)(inp)
+
+        out = [Dense(1, activation="sigmoid")(x1) for _ in range(meta["n_outputs_"])]
+
+        model = Model([inp], out)
+        losses = "binary_crossentropy"
+        model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
+
+        return model
+
+    clf_keras = MultiOutputClassifier(model=get_model)
     clf_sklearn = RandomForestClassifier()
 
     # generate data
     X = np.random.rand(10, 4)
     y1 = np.random.randint(0, 2, size=(10, 1))
-    y2 = np.random.randint(0, 11, size=(10, 1))
+    y2 = np.random.randint(0, 2, size=(10, 1))
     y = np.hstack([y1, y2])
 
     clf_keras.fit(X, y)

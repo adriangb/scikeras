@@ -1,9 +1,8 @@
 from inspect import isclass
-from typing import Callable, Type, Union
+from typing import Callable, Union
 
 import numpy as np
 
-from sklearn import metrics
 from sklearn.utils.multiclass import type_of_target as _type_of_target
 from tensorflow.keras.losses import Loss
 from tensorflow.keras.losses import get as get_loss
@@ -11,19 +10,6 @@ from tensorflow.keras.losses import serialize as serialize_loss
 from tensorflow.keras.metrics import Metric
 from tensorflow.keras.metrics import get as get_metric
 from tensorflow.keras.metrics import serialize as serialize_metric
-
-from scikeras.utils._transformers import (
-    BaseKerasClassifierFeatureTransformer,
-    BaseKerasClassifierTargetTransformer,
-    BaseKerasRegressorFeatureTransformer,
-    BaseKerasRegressorTargetTransformer,
-    BaseScikerasDataTransformer,
-    Ensure2DTransformer,
-    KerasClassifierFeatureTransformer,
-    KerasClassifierTargetTransformer,
-    KerasRegressorFeatureTransformer,
-    KerasRegressorTargetTransformer,
-)
 
 
 def loss_name(loss: Union[str, Loss, Callable]) -> str:

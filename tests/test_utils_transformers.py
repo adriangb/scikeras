@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from scikeras.utils import Ensure2DTransformer
+from scikeras.utils.transformers import Ensure2DTransformer
 
 
 class TestEnsure2DTransformer:
