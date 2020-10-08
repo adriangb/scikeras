@@ -15,7 +15,7 @@ class MultiLabelTransformer(KerasClassifierTargetTransformer):
         self.n_outputs_ = self.model_n_outputs_ = X.shape[1]
         self.y_dtype_ = X.dtype
         self.classes_ = [np.array([0, 1])] * X.shape[1]
-        self.n_classes_ = [c.size for c in self.classes_]
+        self.n_classes_ = [2] * X.shape[1]
         return self
 
     def transform(self, X: np.ndarray) -> List[np.ndarray]:
