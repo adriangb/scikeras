@@ -35,8 +35,7 @@ class MultiLabelTransformer(KerasClassifierTargetTransformer):
 
 class MultiOutputClassifier(KerasClassifier):
     """Extend KerasClassifier with the ability to process
-    "multilabel-indicator" and "multiclass-multioutput"
-    by mapping them to multiple Keras outputs.
+    "multilabel-indicator" by mapping to multiple Keras outputs.
     """
 
     @property
