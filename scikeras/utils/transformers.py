@@ -215,10 +215,9 @@ class KerasClassifierTargetTransformer(BaseKerasClassifierTargetTransformer):
 
         if return_proba:
             return y
-        else:
-            return np.squeeze(np.column_stack(class_predictions)).astype(
-                self.y_dtype_, copy=False
-            )
+        return np.squeeze(np.column_stack(class_predictions)).astype(
+            self.y_dtype_, copy=False
+        )
 
     def get_metadata(self):
         return {
