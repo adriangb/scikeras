@@ -49,21 +49,52 @@ class Ensure2DTransformer(TransformerMixin, BaseEstimator):
 class BaseScikerasDataTransformer(TransformerMixin, BaseEstimator, ABC):
     @abstractmethod
     def fit(self, X: np.ndarray) -> "BaseScikerasDataTransformer":
-        pass
+        """Fit this transformer using `X`.
+        """
 
     @abstractmethod
     def transform(
         self, X: np.ndarray
     ) -> Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]]:
-        pass
+        """Convert input numpy array to the format expected by the
+        Keras Model this is being used with.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Numpy array.
+
+        Returns
+        -------
+        Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]]
+            Numpy array, list of arrays or dict of arrays mapping
+            to the Model's outputs.
+        """
 
     @abstractmethod
     def inverse_transform(self, X: Union[List[np.ndarray], np.ndarray]) -> np.ndarray:
-        pass
+        """Invert the transformation.
+
+        Parameters
+        ----------
+        X : Union[List[np.ndarray], np.ndarray]
+            Output from Keras Model.
+
+        Returns
+        -------
+        np.ndarray
+            Numpy array.
+        """
 
     @abstractmethod
     def get_meta_params(self) -> Dict[str, Any]:
-        pass
+        """Retrieve the meta parameters of this transformer.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of of format parameter: value.
+        """
 
 
 class BaseKerasClassifierTargetTransformer(BaseScikerasDataTransformer):
@@ -74,14 +105,25 @@ class BaseKerasClassifierTargetTransformer(BaseScikerasDataTransformer):
     def inverse_transform(
         self, X: Union[List[np.ndarray], np.ndarray], return_proba: bool = False
     ) -> np.ndarray:
-        pass
+        """Invert transfromation.
+
+        Parameters
+        ----------
+        X : Union[List[np.ndarray], np.ndarray]
+            Output from Keras Model.
+        return_proba : bool, optional
+            If True, return class probabilities instead of predictions, by default False
+
+        Returns
+        -------
+        np.ndarray
+            Numpy array or class probabilities or predictions.
+        """
 
 
 class BaseKerasClassifierFeatureTransformer(BaseScikerasDataTransformer):
     """Base class for KerasClassifier feature transformers.
     """
-
-    pass
 
 
 class KerasClassifierTargetTransformer(BaseKerasClassifierTargetTransformer):
@@ -198,7 +240,7 @@ class KerasClassifierFeatureTransformer(BaseKerasClassifierFeatureTransformer):
         return X
 
     def inverse_transform(self, X: np.ndarray) -> np.ndarray:
-        return X
+        raise NotImplementedError
 
     def get_meta_params(self):
         return dict()
@@ -208,14 +250,10 @@ class BaseKerasRegressorTargetTransformer(BaseScikerasDataTransformer):
     """Base class for KerasRegressor target transformers.
     """
 
-    pass
-
 
 class BaseKerasRegressorFeatureTransformer(BaseScikerasDataTransformer):
     """Base class for KerasRegressor feature transformers.
     """
-
-    pass
 
 
 class KerasRegressorTargetTransformer(BaseKerasRegressorTargetTransformer):
@@ -265,7 +303,7 @@ class KerasRegressorFeatureTransformer(BaseKerasRegressorFeatureTransformer):
         return X
 
     def inverse_transform(self, X: np.ndarray) -> np.ndarray:
-        return X
+        raise NotImplementedError
 
     def get_meta_params(self):
         return dict()

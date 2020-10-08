@@ -544,16 +544,18 @@ class TestHistory:
         X, y = load_boston(return_X_y=True)
         X = X[:100]
         y = y[:100]
-        estimator.partial_fit(X, y)
+        estimator.fit(X, y)
         assert estimator.model_.metrics_names[1] == "mae"
         assert "mean_absolute_error" in estimator.history_
         assert "mae" not in estimator.history_
         assert len(estimator.history_["mean_absolute_error"]) == 1
+        estimator.partial_fit(X, y)  # check partial_fit before pickle
+        assert len(estimator.history_["mean_absolute_error"]) == 2
         estimator = pickle.loads(pickle.dumps(estimator))
-        estimator.partial_fit(X, y)
+        estimator.partial_fit(X, y)  # check partial_fit after pickle
         assert "mean_absolute_error" in estimator.history_
         assert "mae" not in estimator.history_
-        assert len(estimator.history_["mean_absolute_error"]) == 2
+        assert len(estimator.history_["mean_absolute_error"]) == 3
 
 
 def test_compile_model_from_params():
