@@ -6,8 +6,8 @@ Installation
    :local:
 
 
-pip installation
-~~~~~~~~~~~~~~~~
+Users Installation
+~~~~~~~~~~~~~~~~~~
 
 To install with pip, run:
 
@@ -17,8 +17,8 @@ To install with pip, run:
 
 We recommend to use a virtual environment for this.
 
-From source
-~~~~~~~~~~~
+Developer Installation
+~~~~~~~~~~~~~~~~~~~~~~
 
 If you would like to use the must recent additions to scikeras or
 help development, you should install scikeras from source.
