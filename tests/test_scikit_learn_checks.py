@@ -29,7 +29,7 @@ from .testing_utils import basic_checks, parametrize_with_checks
             # applicable to real world datasets
             batch_size=100,
             optimizer="adam",
-            model__hidden_layer_sizes=[]
+            model__hidden_layer_sizes=[],
             epochs=1,
         ),
         KerasRegressor(
