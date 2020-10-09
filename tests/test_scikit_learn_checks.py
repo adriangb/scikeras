@@ -30,7 +30,7 @@ from .testing_utils import basic_checks, parametrize_with_checks
             batch_size=100,
             optimizer="adam",
             model__hidden_layer_sizes=[]
-            epochs=1
+            epochs=1,
         ),
         KerasRegressor(
             build_fn=dynamic_regressor,
@@ -44,7 +44,7 @@ from .testing_utils import basic_checks, parametrize_with_checks
             optimizer="adam",
             loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=[],
-            epochs=1
+            epochs=1,
         ),
     ],
     ids=["KerasClassifier", "KerasRegressor"],
