@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from functools import partial
 from typing import Any, Dict, List, Union
 
 import numpy as np
