@@ -10,9 +10,10 @@ users: :py:class:`scikeras.wrappers.KerasClassifier`,
 :py:class:`scikeras.wrappers.KerasRegressor` and
 :py:class:`scikeras.wrappers.BaseWrapper`. ``BaseWrapper`` provides general ``Keras`` wrapping functionality and
 ``KerasClassifier`` and ``KerasRegressor`` extend this with functionality
-specific to classifiers and regressors respectively. This document focuses
+specific to classifiers and regressors respectively. Although you will
+usually be using either ``KerasClassifier`` and ``KerasRegressor``, this document focuses
 on the overall functionality of the wrappers and hence will refer to 
-:py:class:`scikeras.wrappers.BaseWrapper` as a proxy for all of the wrapper classes.
+:py:class:`scikeras.wrappers.BaseWrapper` as a proxy for both of the wrapper classes.
 Detailed information on usage of specific classes is available in the
 :ref:`scikeras-api` documentation.
 
@@ -188,56 +189,20 @@ requires them to be arrays of equal length
 (see docs for Scikit-Learn's :py:class:`~sklearn.multioutput.MultiOutputClassifier`).
 Scikit-Learn has no support for multiple inputs.
 To work around this issue, SciKeras implements a data conversion
-abstraction in the form of ``preprocess_{X,y}`` and ``postprocess_{X, y}``.
-Within these methods, you may split a single input ``X`` into multiple inputs
+abstraction in the form of Scikit-Learn style transformers,
+one for ``X`` (features) and one for ``y`` (target).
+By implementing a custom transformer, you can split a single input ``X`` into multiple inputs
 for :py:class:`tensorflow.keras.Model` or perform any other manipulation you need.
+To override the default transformers, simply override
+:py:func:`scikeras.wrappers.BaseWrappers.target_transformer` or
+:py:func:`scikeras.wrappers.BaseWrappers.function_transformer` for ``y`` and ``X`` respectively.
 
 This said, note that if you are trying to use outputs of uneven length or
 other more complex scenarios, SciKeras may be able to handle them but the rest
 of the Scikit-Learn ecosystem likely will not.
 
-
-Below is an example:
-
-.. code:: python
-
-    X = [[1, 2], ["a", "b", "c"]]  # multiple inputs of different lengths
-    y = np.array([[1, 0, 1], ["apple", "orange", "apple"]]  # a mix of output types
-
-    def model_build_fn(meta):
-        my_n_classes_ = meta["my_n_classes_"]
-        inp1 = Input((1,))
-        inp2 = Input((3,))
-        x3 = Concatenate(axis=-1)([x1, x2])
-        binary_out = Dense(1, activation="sigmoid")(x3)
-        cat_out = Dense(my_n_classes_[1], activation="softmax")(x3)
-        model = Model([inp], [binary_out, cat_out])
-        return model
-
-    class MyWrapper(KerasClassifier):
-            
-            def preprocess_y(self, y):
-                extra_args = dict()  # this will be used like self.__dict__.update(extra_args)
-                my_n_classes_ = [2, np.unique(y[:, 1]).size]
-                extra_args["my_n_classes_"] = my_n_classes_
-                # split up the targets
-                y = [y[:, 0], y[:, 1]]
-                return y, extra_args
-            
-            def preprocess_X(self, X):
-                extra_args = dict()  # this will be used like self.__dict__.update(extra_args)
-                # perform some transformation on only one part of the input
-                self.input_encoder = OneHotEncoder()
-                X[1] = self.input_encoder.fit_transform(X[1])
-                return X, extra_args
-
-    clf = MyWrapper(
-        model=model_build_fn,
-        loss=["binary_crossentropy", "categorical_crossentropy"],
-        optimizer="adam"
-    )
-    clf.fit(X, y)
-
+For a complete example, see the multi-input and multi-output examples in the
+:ref:`tutorials` section.
 
 .. _param-routing:
 
@@ -301,8 +266,6 @@ regex-based keys.
         ],
     )
 
-
-.. _Keras Model docs: https://www.tensorflow.org/api_docs/python/tf/keras/Model
 
 .. _Keras Callbacks docs: https://www.tensorflow.org/api_docs/python/tf/keras/callbacks
 

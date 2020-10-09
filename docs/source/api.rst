@@ -203,3 +203,6 @@ to do is implement this method.
    scikeras.wrappers.BaseWrapper
    scikeras.wrappers.KerasClassifier
    scikeras.wrappers.KerasRegressor
+
+
+.. _Keras Model docs: https://www.tensorflow.org/api_docs/python/tf/keras/Model
