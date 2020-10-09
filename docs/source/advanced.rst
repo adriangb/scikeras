@@ -181,7 +181,7 @@ Multiple inputs or outputs
 In some cases, the input actually consists of multiple inputs. E.g.,
 in a text classification task, you might have an array that contains
 the integers representing the tokens for each sample, and another
-array containing the number of tokens of each sample. skorch has you
+array containing the number of tokens of each sample. SciKeras has you
 covered here as well.
 
 Scikit-Learn natively supports multiple outputs, although it technically
@@ -204,10 +204,10 @@ of the Scikit-Learn ecosystem likely will not.
 For a complete example, see the multi-input and multi-output examples in the
 :ref:`tutorials` section.
 
-.. _param-routing:
-
 Routed parameters
 -----------------
+
+.. _param-routing:
 
 For more advanced used cases, SciKeras supports
 Scikit-Learn style parameter routing to override parameters

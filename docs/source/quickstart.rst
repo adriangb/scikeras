@@ -71,7 +71,7 @@ interface, it is possible to put it into an sklearn
 Grid search
 -----------
 
-Another advantage of skorch is that you can perform an sklearn
+Another advantage of SciKeras is that you can perform an sklearn
 :class:`~sklearn.model_selection.GridSearchCV` or
 :class:`~sklearn.model_selection.RandomizedSearchCV`:
 
