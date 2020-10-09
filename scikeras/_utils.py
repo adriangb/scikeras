@@ -3,12 +3,16 @@ import os
 import random
 import warnings
 
-from typing import Any, Callable, Dict, Iterable, List, Union
+from inspect import isclass
+from typing import Any, Callable, Dict, Iterable, List, Type, Union
 
 import numpy as np
 import tensorflow as tf
 
 from sklearn.base import BaseEstimator, TransformerMixin
+from tensorflow.keras import losses as losses_module
+from tensorflow.keras import metrics as metrics_module
+from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.layers import deserialize as deserialize_layer
 from tensorflow.keras.layers import serialize as serialize_layer
 from tensorflow.keras.metrics import deserialize as deserialize_metric
@@ -29,12 +33,8 @@ class TFRandomState:
         )
 
         # Save values
-        self.origin_hashseed = os.environ.get(
-            "PYTHONHASHSEED", self._not_found
-        )
-        self.origin_gpu_det = os.environ.get(
-            "TF_DETERMINISTIC_OPS", self._not_found
-        )
+        self.origin_hashseed = os.environ.get("PYTHONHASHSEED", self._not_found)
+        self.origin_gpu_det = os.environ.get("TF_DETERMINISTIC_OPS", self._not_found)
         self.orig_random_state = random.getstate()
         self.orig_np_random_state = np.random.get_state()
 
@@ -111,10 +111,6 @@ def pack_keras_model(model_obj, protocol):
     Pickled model
         A tuple following the pickle protocol.
     """
-
-    if not isinstance(model_obj, Model):
-        raise TypeError("`model_obj` must be an instance of a Keras Model")
-    # pack up model
     model_metadata = saving_utils.model_metadata(model_obj)
     training_config = model_metadata.get("training_config", None)
     model = serialize_layer(model_obj)
@@ -133,8 +129,6 @@ def make_model_picklable(model_obj):
     Model
         The input model, but directly picklable.
     """
-    if not isinstance(model_obj, Model):
-        raise TypeError("`model_obj` must be an instance of a Keras Model")
     model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
 
 
@@ -175,7 +169,10 @@ def _windows_upcast_ints(
 
 
 def route_params(
-    params: Dict[str, Any], destination: str, pass_filter: Iterable[str],
+    params: Dict[str, Any],
+    destination: str,
+    pass_filter: Union[None, Iterable[str]],
+    strict: bool = False,
 ) -> Dict[str, Any]:
     """Route and trim parameter names.
 
@@ -198,13 +195,15 @@ def route_params(
     for key, val in params.items():
         if "__" in key:
             # routed param
-            if key.startswith(destination):
+            if key.startswith(destination + "__"):
                 new_key = key[len(destination + "__") :]
                 res[new_key] = val
         else:
             # non routed
             if pass_filter is None or key in pass_filter:
                 res[key] = val
+    if strict:
+        res = {k: v for k, v in res.items() if "__" not in k}
     return res
 
 
@@ -231,8 +230,84 @@ def has_param(func: Callable, param: str) -> bool:
 
 
 def accepts_kwargs(func: Callable) -> bool:
+    """Check if ``func`` accepts kwargs.
+    """
     return any(
         True
         for param in inspect.signature(func).parameters.values()
         if param.kind == param.VAR_KEYWORD
     )
+
+
+def unflatten_params(items, params, base_params=None):
+    """Recursively compile nested structures of classes
+    using parameters from params.
+    """
+    if isclass(items):
+        item = items
+        new_base_params = {p: v for p, v in params.items() if "__" not in p}
+        base_params = base_params or dict()
+        kwargs = {**base_params, **new_base_params}
+        for p, v in kwargs.items():
+            kwargs[p] = unflatten_params(
+                items=v,
+                params=route_params(
+                    params=params, destination=f"{p}", pass_filter=set(), strict=False,
+                ),
+            )
+        return item(**kwargs)
+    if isinstance(items, (list, tuple)):
+        iter_type_ = type(items)
+        res = list()
+        new_base_params = {p: v for p, v in params.items() if "__" not in p}
+        for idx, item in enumerate(items):
+            item_params = route_params(
+                params=params, destination=f"{idx}", pass_filter=set(), strict=False,
+            )
+            res.append(
+                unflatten_params(
+                    items=item, params=item_params, base_params=new_base_params
+                )
+            )
+        return iter_type_(res)
+    if isinstance(items, (dict,)):
+        res = dict()
+        new_base_params = {p: v for p, v in params.items() if "__" not in p}
+        for key, item in items.items():
+            item_params = route_params(
+                params=params, destination=f"{key}", pass_filter=set(), strict=False,
+            )
+            res[key] = unflatten_params(
+                items=item, params=item_params, base_params=new_base_params,
+            )
+        return res
+    # non-compilable item, check if it has any routed parameters
+    item = items
+    new_base_params = {p: v for p, v in params.items() if "__" not in p}
+    base_params = base_params or dict()
+    kwargs = {**base_params, **new_base_params}
+    if kwargs:
+        raise TypeError(
+            f'TypeError: "{str(item)}" object of type "{type(item)}"'
+            "does not accept parameters because it's not a class."
+            f' However, it received parameters "{kwargs}"'
+        )
+    return item
+
+
+def _class_from_strings(items: Union[str, dict, tuple, list], class_getter: Callable):
+    """Convert shorthand optimizer/loss/metric names to classes.
+    """
+    if isinstance(items, str):
+        item = items
+        got = class_getter(item)
+        if hasattr(got, "__class__") and type(got).__module__.startswith("tensorflow"):
+            # optimizers.get returns instances instead of classes
+            got = got.__class__
+        return got
+    elif isinstance(items, (list, tuple)):
+        return type(items)([_class_from_strings(item, class_getter) for item in items])
+    elif isinstance(items, dict):
+        return {k: _class_from_strings(item, class_getter) for k, item in items.items()}
+    else:
+        return items

@@ -40,8 +40,5 @@ def test_callbacks():
     assert estimator.callbacks[0].called != SentinalCallback.called
     serialized_estimator = pickle.dumps(estimator)
     deserialized_estimator = pickle.loads(serialized_estimator)
-    assert (
-        deserialized_estimator.callbacks[0].called
-        == estimator.callbacks[0].called
-    )
+    assert deserialized_estimator.callbacks[0].called == estimator.callbacks[0].called
     estimator.fit([[0]], [1])  # quick fit

@@ -4,31 +4,32 @@ import numpy as np
 import pytest
 
 from sklearn.exceptions import NotFittedError
+from tensorflow.keras.layers import Dense, Input
+from tensorflow.keras.models import Model
 
-from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
-def test_validate_data():
-    """Tests the BaseWrapper._validate_data method.
+def test_shape_change_error():
+    """Tests that a ValueError is raised if the input
+    changes shape in subsequent partial fit calls.
     """
 
     estimator = KerasRegressor(
-        build_fn=dynamic_regressor, loss=KerasRegressor.r_squared,
+        model=dynamic_regressor,
+        loss=KerasRegressor.r_squared,
+        hidden_layer_sizes=(100,),
     )
     X = np.array([[1, 2], [3, 4]])
-    y = np.array([5, 6])
+    y = np.array([[0, 1, 0], [1, 0, 0]])
 
-    with pytest.raises(RuntimeError, match="Is this estimator fitted?"):
-        # First call requires reset=True
-        estimator._validate_data(X=X, y=y, reset=False)
+    estimator.fit(X=X, y=y)
 
-    estimator._validate_data(X=X, y=y, reset=True)  # no error
-
-    with pytest.raises(ValueError, match=r"but this \w+ is expecting "):
+    with pytest.raises(ValueError, match=r"but this [\w\d]+ is expecting "):
         # Calling with a different shape for X raises an error
-        estimator._validate_data(X=X[:, :1], y=y, reset=False)
+        estimator.partial_fit(X=X[:, :1], y=y)
 
 
 def test_not_fitted_error():
@@ -51,10 +52,11 @@ class TestInvalidBuildFn:
     """
 
     def test_invalid_build_fn(self):
-        clf = KerasClassifier(model="invalid")
-        with pytest.raises(
-            TypeError, match="`model` must be a callable or None"
-        ):
+        class Model:
+            pass
+
+        clf = KerasClassifier(model=Model())
+        with pytest.raises(TypeError, match="`model` must be"):
             clf.fit(np.array([[0]]), np.array([0]))
 
     def test_no_build_fn(self):
@@ -63,26 +65,20 @@ class TestInvalidBuildFn:
 
         clf = NoBuildFn()
 
-        with pytest.raises(
-            ValueError, match="must implement `_keras_build_fn`"
-        ):
+        with pytest.raises(ValueError, match="must implement `_keras_build_fn`"):
             clf.fit(np.array([[0]]), np.array([0]))
 
     def test_call_and_build_fn_function(self):
         class Clf(KerasClassifier):
             def _keras_build_fn(self, hidden_layer_sizes=(100,)):
-                return dynamic_classifier(
-                    hidden_layer_sizes=hidden_layer_sizes
-                )
+                return dynamic_classifier(hidden_layer_sizes=hidden_layer_sizes)
 
         def dummy_func():
             return None
 
         clf = Clf(build_fn=dummy_func,)
 
-        with pytest.raises(
-            ValueError, match="cannot implement `_keras_build_fn`"
-        ):
+        with pytest.raises(ValueError, match="cannot implement `_keras_build_fn`"):
             clf.fit(np.array([[0]]), np.array([0]))
 
 
@@ -112,12 +108,8 @@ def test_build_fn_deprecation():
     """An appropriate warning is raised when using the `build_fn`
     parameter instead of `model`.
     """
-    clf = KerasClassifier(
-        build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,)
-    )
-    with pytest.warns(
-        UserWarning, match="`build_fn` will be renamed to `model`"
-    ):
+    clf = KerasClassifier(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
+    with pytest.warns(UserWarning, match="`build_fn` will be renamed to `model`"):
         clf.fit([[1]], [1])
 
 
@@ -142,4 +134,50 @@ def test_build_fn_and_init_signature_do_not_agree(wrapper):
         est.fit([[1]], [1])
     est = wrapper(model=no_bar, bar=42, foo=43)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+        est.fit([[1]], [1])
+
+
+@pytest.mark.parametrize("loss", [None, [None]])
+@pytest.mark.parametrize("compile", [True, False])
+def test_no_loss(loss, compile):
+    def get_model(compile, meta, compile_kwargs):
+        inp = Input(shape=(meta["n_features_in_"],))
+        hidden = Dense(10, activation="relu")(inp)
+        out = [
+            Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden)
+            for i in range(meta["n_outputs_"])
+        ]
+        model = Model(inp, out)
+        if compile:
+            model.compile(**compile_kwargs)
+        return model
+
+    est = KerasRegressor(model=get_model, loss=loss, compile=compile)
+    with pytest.raises(ValueError, match="must provide a loss function"):
+        est.fit([[1]], [1])
+
+
+@pytest.mark.parametrize("compile", [True, False])
+def test_no_optimizer(compile):
+    def get_model(compile, meta, compile_kwargs):
+        inp = Input(shape=(meta["n_features_in_"],))
+        hidden = Dense(10, activation="relu")(inp)
+        out = [
+            Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden)
+            for i in range(meta["n_outputs_"])
+        ]
+        model = Model(inp, out)
+        if compile:
+            model.compile(**compile_kwargs)
+        return model
+
+    est = KerasRegressor(
+        model=get_model,
+        loss="categorical_crossentropy",
+        compile=compile,
+        optimizer=None,
+    )
+    with pytest.raises(
+        ValueError, match="Could not interpret optimizer identifier"  # Keras error
+    ):
         est.fit([[1]], [1])
