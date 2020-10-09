@@ -44,9 +44,7 @@ def test_custom_loss_function():
     """Test that a custom loss function can be serialized.
     """
     estimator = KerasRegressor(
-        build_fn=dynamic_regressor,
-        loss=CustomLoss(),
-        model__hidden_layer_sizes=(100,),
+        build_fn=dynamic_regressor, loss=CustomLoss(), model__hidden_layer_sizes=(100,),
     )
     check_pickle(estimator, load_boston)
 

@@ -184,10 +184,7 @@ def test_multi_label_clasification():
     y = MultiLabelBinarizer().fit_transform(y)
 
     (x_train, _), (_, _) = get_test_data(
-        train_samples=y.shape[0],
-        test_samples=0,
-        input_shape=(4,),
-        num_classes=3,
+        train_samples=y.shape[0], test_samples=0, input_shape=(4,), num_classes=3,
     )
 
     clf_keras.fit(x_train, y)
@@ -234,17 +231,13 @@ def test_incompatible_output_dimensions():
     y = np.random.randint(low=0, high=3, size=(10, 4))
 
     # create a model with 2 outputs
-    def build_fn_clf(
-        meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
-    ) -> Model:
+    def build_fn_clf(meta: Dict[str, Any], compile_kwargs: Dict[str, Any],) -> Model:
         """Builds a Sequential based classifier."""
         model = Sequential()
         model.add(Dense(20, input_shape=(20,), activation="relu"))
         model.add(Dense(np.unique(y).size, activation="relu"))
         model.compile(
-            optimizer="sgd",
-            loss="categorical_crossentropy",
-            metrics=["accuracy"],
+            optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"],
         )
         return model
 
@@ -273,8 +266,7 @@ def test_BaseWrapper_postprocess_y():
 
 
 @pytest.mark.parametrize(
-    "dtype",
-    ["float32", "float64", "int64", "int32", "uint8", "uint16", "object"],
+    "dtype", ["float32", "float64", "int64", "int32", "uint8", "uint16", "object"],
 )
 def test_classifier_handles_dtypes(dtype):
     """Tests that classifiers correctly handle dtype conversions and
@@ -309,8 +301,7 @@ def test_classifier_handles_dtypes(dtype):
 
 
 @pytest.mark.parametrize(
-    "dtype",
-    ["float32", "float64", "int64", "int32", "uint8", "uint16", "object"],
+    "dtype", ["float32", "float64", "int64", "int32", "uint8", "uint16", "object"],
 )
 def test_regressor_handles_dtypes(dtype):
     """Tests that regressors correctly handle dtype conversions and
@@ -333,9 +324,7 @@ def test_regressor_handles_dtypes(dtype):
             assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
             return super()._fit_keras_model(X, y, sample_weight, warm_start)
 
-    reg = StrictRegressor(
-        build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,)
-    )
+    reg = StrictRegressor(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
     reg.fit(X, y, sample_weight=sample_weight)
     y_hat = reg.predict(X)
     if y.dtype.kind == "f":
@@ -345,9 +334,7 @@ def test_regressor_handles_dtypes(dtype):
 
 
 @pytest.mark.parametrize("X_dtype", ["float32", "int64"])
-@pytest.mark.parametrize(
-    "y_dtype,", ["float32", "float64", "uint8", "int16", "object"]
-)
+@pytest.mark.parametrize("y_dtype,", ["float32", "float64", "uint8", "int16", "object"])
 @pytest.mark.parametrize("run_eagerly", [True, False])
 def test_mixed_dtypes(y_dtype, X_dtype, run_eagerly):
     n, d = 20, 3
