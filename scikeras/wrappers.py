@@ -528,7 +528,7 @@ class BaseWrapper(BaseEstimator):
             Transformer implementing the BaseKerasTransformer
             interface.
         """
-        return FunctionTransformer()
+        raise NotImplemented
 
     @property
     def feature_encoder(self) -> BaseKerasTransformer:
@@ -540,7 +540,7 @@ class BaseWrapper(BaseEstimator):
             Transformer implementing the BaseKerasTransformer
             interface.
         """
-        return FunctionTransformer()
+        raise NotImplemented
 
     def fit(self, X, y, sample_weight=None):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
