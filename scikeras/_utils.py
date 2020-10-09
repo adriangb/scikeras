@@ -20,7 +20,7 @@ class TFRandomState:
         self._not_found = object()
 
     def __enter__(self):
-        warnings.warn(
+        warnings.warning(
             "Setting the random state for TF involves "
             "irreversibly re-setting the random seed. "
             "This may have unintended side effects."
