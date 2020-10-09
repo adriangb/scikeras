@@ -31,7 +31,6 @@ from .testing_utils import basic_checks, parametrize_with_checks
             optimizer="adam",
             model__hidden_layer_sizes=[],
             epochs=1,
-            random_state=0,
         ),
         KerasRegressor(
             build_fn=dynamic_regressor,
@@ -46,7 +45,6 @@ from .testing_utils import basic_checks, parametrize_with_checks
             loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=[],
             epochs=1,
-            random_state=0,
         ),
     ],
     ids=["KerasClassifier", "KerasRegressor"],
