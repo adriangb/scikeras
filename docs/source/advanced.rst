@@ -244,29 +244,6 @@ Example: multiple losses with routed parameters
         loss__1__label_smoothing=0.5,  # overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)
     )
 
-To use this syntax, you must pass classes instead of strings or instances.
-For even more complex use cases, you can use the special suffix ``__param_groups``
-and pass a list of ``("destination", param_dict)`` instead of individual parameters. This also allows use of
-regex-based keys.
-
-.. code:: python
-
-    from tensorflow.keras.losses import BinaryCrossentropy, CategoricalCrossentropy
-
-    clf = KerasClassifier(
-        model=model_build_fn,
-        loss={
-            "binary_output_1": BinaryCrossentropy,
-            "binary_output_2": BinaryCrossentropy,
-            "categorical_output_1: CategoricalCrossentropy,
-        }
-        loss__param_groups=[
-            ("binary_.*", {"label_smoothing": 0.1}),
-            (".*_1", {"name": "FirstOutputs"}),
-        ],
-    )
-
-
 .. _Keras Callbacks docs: https://www.tensorflow.org/api_docs/python/tf/keras/callbacks
 
 .. _Keras Metrics docs: https://www.tensorflow.org/api_docs/python/tf/keras/metrics
