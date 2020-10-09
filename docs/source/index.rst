@@ -20,6 +20,7 @@ Overall, SciKeras aims at being as flexible as Keras while having a clean interf
    :caption: Contents:
    install
    quickstart
+   tutorials
    advanced
    api
 
