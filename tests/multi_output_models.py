@@ -2,11 +2,11 @@ from typing import List
 
 import numpy as np
 
-from scikeras.utils.transformers import KerasClassifierTargetTransformer
+from scikeras.utils.transformers import ClassifierLabelEncoder
 from scikeras.wrappers import KerasClassifier
 
 
-class MultiLabelTransformer(KerasClassifierTargetTransformer):
+class MultiLabelTransformer(ClassifierLabelEncoder):
     def fit(self, X: np.ndarray) -> "MultiLabelTransformer":
         if self.target_type != "multilabel-indicator":
             return super().fit(X)

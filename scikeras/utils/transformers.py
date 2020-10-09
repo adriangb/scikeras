@@ -42,9 +42,9 @@ class Ensure2DTransformer(TransformerMixin, BaseEstimator):
         return X
 
 
-class BaseScikerasDataTransformer(TransformerMixin, BaseEstimator, ABC):
+class BaseKerasTransformer(TransformerMixin, BaseEstimator, ABC):
     @abstractmethod
-    def fit(self, X: np.ndarray) -> "BaseScikerasDataTransformer":
+    def fit(self, X: np.ndarray) -> "BaseKerasTransformer":
         """Fit this transformer using `X`.
         """
 
@@ -83,7 +83,7 @@ class BaseScikerasDataTransformer(TransformerMixin, BaseEstimator, ABC):
         """
 
     @abstractmethod
-    def get_metadata(self) -> Dict[str, Any]:
+    def get_meta(self) -> Dict[str, Any]:
         """Retrieve the meta parameters of this transformer.
 
         Returns
@@ -93,36 +93,16 @@ class BaseScikerasDataTransformer(TransformerMixin, BaseEstimator, ABC):
         """
 
 
-class BaseKerasClassifierTargetTransformer(BaseScikerasDataTransformer):
-    """Base class for KerasClassifier target transformers.
+class KerasFunctionTransformer(FunctionTransformer, BaseKerasTransformer):
+    """sklearn.preprocessing.FunctionTransformer implementing basic SciKeras
+    transformer interface.
     """
 
-    @abstractmethod
-    def inverse_transform(
-        self, X: Union[List[np.ndarray], np.ndarray], return_proba: bool = False
-    ) -> np.ndarray:
-        """Invert transfromation.
-
-        Parameters
-        ----------
-        X : Union[List[np.ndarray], np.ndarray]
-            Output from Keras Model.
-        return_proba : bool, optional
-            If True, return class probabilities instead of predictions, by default False
-
-        Returns
-        -------
-        np.ndarray
-            Numpy array or class probabilities or predictions.
-        """
+    def get_meta(self) -> Dict[str, Any]:
+        return dict()
 
 
-class BaseKerasClassifierFeatureTransformer(BaseScikerasDataTransformer):
-    """Base class for KerasClassifier feature transformers.
-    """
-
-
-class KerasClassifierTargetTransformer(BaseKerasClassifierTargetTransformer):
+class ClassifierLabelEncoder(BaseKerasTransformer):
     """Default target transformer for KerasClassifier.
     """
 
@@ -130,7 +110,7 @@ class KerasClassifierTargetTransformer(BaseKerasClassifierTargetTransformer):
         self.target_type = target_type
         self.loss = loss
 
-    def fit(self, X: np.ndarray) -> "KerasClassifierTargetTransformer":
+    def fit(self, X: np.ndarray) -> "ClassifierLabelEncoder":
         y = X  # rename for clarity, the input is always expected to be a target `y`
         encoders = {
             "binary": make_pipeline(
@@ -215,7 +195,7 @@ class KerasClassifierTargetTransformer(BaseKerasClassifierTargetTransformer):
             self.y_dtype_, copy=False
         )
 
-    def get_metadata(self):
+    def get_meta(self):
         return {
             "classes_": self.classes_,
             "n_classes_": self.n_classes_,
@@ -224,38 +204,11 @@ class KerasClassifierTargetTransformer(BaseKerasClassifierTargetTransformer):
         }
 
 
-class KerasClassifierFeatureTransformer(BaseKerasClassifierFeatureTransformer):
-    """Default feature transformer for KerasClassifier.
-    """
-
-    def fit(self, X: np.ndarray) -> "KerasClassifierFeatureTransformer":
-        return self
-
-    def transform(self, X: np.ndarray) -> np.ndarray:
-        return X
-
-    def inverse_transform(self, X: np.ndarray) -> np.ndarray:
-        raise NotImplementedError
-
-    def get_metadata(self):
-        return dict()
-
-
-class BaseKerasRegressorTargetTransformer(BaseScikerasDataTransformer):
-    """Base class for KerasRegressor target transformers.
-    """
-
-
-class BaseKerasRegressorFeatureTransformer(BaseScikerasDataTransformer):
-    """Base class for KerasRegressor feature transformers.
-    """
-
-
-class KerasRegressorTargetTransformer(BaseKerasRegressorTargetTransformer):
+class RegressorTargetEncoder(BaseKerasTransformer):
     """Default target transformer for KerasRegressor.
     """
 
-    def fit(self, X: np.ndarray) -> "BaseKerasRegressorTargetTransformer":
+    def fit(self, X: np.ndarray) -> "RegressorTargetEncoder":
         y = X  # rename for clarity, the input is always expected to be a target `y`
         self.y_dtype_ = y.dtype
         self.n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
@@ -280,25 +233,8 @@ class KerasRegressorTargetTransformer(BaseKerasRegressorTargetTransformer):
         else:
             return np.squeeze(y.astype(np.float64, copy=False))
 
-    def get_metadata(self):
+    def get_meta(self):
         return {
             "n_outputs_": self.n_outputs_,
             "model_n_outputs_": self.model_n_outputs_,
         }
-
-
-class KerasRegressorFeatureTransformer(BaseKerasRegressorFeatureTransformer):
-    """Default feature transformer for KerasClassifier.
-    """
-
-    def fit(self, X: np.ndarray) -> "KerasRegressorFeatureTransformer":
-        return self
-
-    def transform(self, X: np.ndarray) -> np.ndarray:
-        return X
-
-    def inverse_transform(self, X: np.ndarray) -> np.ndarray:
-        raise NotImplementedError
-
-    def get_metadata(self):
-        return dict()

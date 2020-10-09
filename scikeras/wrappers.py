@@ -13,7 +13,6 @@ from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
-from sklearn.preprocessing import FunctionTransformer
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
@@ -33,15 +32,10 @@ from scikeras._utils import (
 )
 from scikeras.utils import loss_name, metric_name, type_of_target
 from scikeras.utils.transformers import (
-    BaseKerasClassifierFeatureTransformer,
-    BaseKerasClassifierTargetTransformer,
-    BaseKerasRegressorFeatureTransformer,
-    BaseKerasRegressorTargetTransformer,
-    BaseScikerasDataTransformer,
-    KerasClassifierFeatureTransformer,
-    KerasClassifierTargetTransformer,
-    KerasRegressorFeatureTransformer,
-    KerasRegressorTargetTransformer,
+    BaseKerasTransformer,
+    ClassifierLabelEncoder,
+    KerasFunctionTransformer,
+    RegressorTargetEncoder,
 )
 
 
@@ -525,12 +519,28 @@ class BaseWrapper(BaseEstimator):
         return X, y
 
     @property
-    def target_encoder(self) -> BaseScikerasDataTransformer:
-        return FunctionTransformer()
+    def target_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for targets / ``y``.
+
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
+        """
+        return KerasFunctionTransformer()
 
     @property
-    def feature_encoder(self) -> BaseScikerasDataTransformer:
-        return FunctionTransformer()
+    def feature_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for features / ``X``.
+
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
+        """
+        return KerasFunctionTransformer()
 
     def fit(self, X, y, sample_weight=None):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
@@ -563,11 +573,11 @@ class BaseWrapper(BaseEstimator):
         self._meta = self.__class__._meta.copy()  # avoid modifying mutable class attr
 
         self.target_encoder_ = self.target_encoder.fit(y)
-        target_meta = self.target_encoder_.get_metadata()
+        target_meta = self.target_encoder_.get_meta()
         vars(self).update(**target_meta)
         self._meta.update(set(target_meta.keys()))
         self.feature_encoder_ = self.feature_encoder.fit(X)
-        feature_meta = self.feature_encoder_.get_metadata()
+        feature_meta = self.feature_encoder_.get_meta()
         vars(self).update(**feature_meta)
         self._meta.update(set(feature_meta.keys()))
 
@@ -677,7 +687,7 @@ class BaseWrapper(BaseEstimator):
                 and `n_features` is the number of features.
 
         Returns:
-            preds: array-like, shape `(n_samples,)`
+            y_pred: array-like, shape `(n_samples,)`
                 Predictions.
         """
         # check if fitted
@@ -702,8 +712,8 @@ class BaseWrapper(BaseEstimator):
         y_pred = self.model_.predict(X, **pred_args)
 
         # post process y
-        y = self.target_encoder_.inverse_transform(y_pred)
-        return y
+        y_pred = self.target_encoder_.inverse_transform(y_pred)
+        return y_pred
 
     def score(self, X, y, sample_weight=None):
         """Returns the mean accuracy on the given test data and labels.
@@ -831,14 +841,33 @@ class KerasClassifier(BaseWrapper):
         return sklearn_accuracy_score(y_true, y_pred, **kwargs)
 
     @property
-    def target_encoder(self) -> BaseKerasClassifierTargetTransformer:
-        return KerasClassifierTargetTransformer(
-            loss=self.loss, target_type=self.target_type_
-        )
+    def target_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for targets / ``y``.
+
+        For ``KerasClassifier.predict_proba`` to
+        work, this transformer must accept a ``return_proba``
+        argument in ``inverse_transform`` with a default value
+        of ``False``.
+
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
+        """
+        return ClassifierLabelEncoder(loss=self.loss, target_type=self.target_type_)
 
     @property
-    def feature_encoder(self) -> BaseKerasClassifierFeatureTransformer:
-        return KerasClassifierFeatureTransformer()
+    def feature_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for features / ``X``.
+
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
+        """
+        return KerasFunctionTransformer()
 
     def _check_output_model_compatibility(self, y):
         """Checks that the model output number and loss functions match
@@ -966,12 +995,12 @@ class KerasRegressor(BaseWrapper):
         return sklearn_r2_score(y_true, y_pred, **kwargs)
 
     @property
-    def target_encoder(self) -> BaseKerasRegressorTargetTransformer:
-        return KerasRegressorTargetTransformer()
+    def target_encoder(self) -> BaseKerasTransformer:
+        return RegressorTargetEncoder()
 
     @property
-    def feature_encoder(self) -> BaseKerasRegressorFeatureTransformer:
-        return KerasRegressorFeatureTransformer()
+    def feature_encoder(self) -> BaseKerasTransformer:
+        return KerasFunctionTransformer()
 
     def score(self, X, y, sample_weight=None):
         """Returns the mean loss on the given test data and labels.
