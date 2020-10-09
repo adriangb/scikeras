@@ -522,6 +522,9 @@ class BaseWrapper(BaseEstimator):
     def target_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for targets / ``y``.
 
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
+
         Returns
         -------
         BaseKerasTransformer
@@ -533,6 +536,9 @@ class BaseWrapper(BaseEstimator):
     @property
     def feature_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for features / ``X``.
+
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
 
         Returns
         -------
@@ -849,6 +855,9 @@ class KerasClassifier(BaseWrapper):
         argument in ``inverse_transform`` with a default value
         of ``False``.
 
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
+
         Returns
         -------
         BaseKerasTransformer
@@ -860,6 +869,9 @@ class KerasClassifier(BaseWrapper):
     @property
     def feature_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for features / ``X``.
+
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
 
         Returns
         -------
@@ -996,10 +1008,32 @@ class KerasRegressor(BaseWrapper):
 
     @property
     def target_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for targets / ``y``.
+
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
+
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
+        """
         return RegressorTargetEncoder()
 
     @property
     def feature_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for features / ``X``.
+
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
+
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
+        """
         return FunctionTransformer()
 
     def score(self, X, y, sample_weight=None):
