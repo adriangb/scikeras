@@ -27,9 +27,9 @@ from .testing_utils import basic_checks, parametrize_with_checks
             # slightly if X is shuffled.
             # This is only required for this tests and is not really
             # applicable to real world datasets
-            batch_size=1000,
+            batch_size=100,
             optimizer="adam",
-            model__hidden_layer_sizes=(100,),
+            model__hidden_layer_sizes=[],
         ),
         KerasRegressor(
             build_fn=dynamic_regressor,
@@ -39,10 +39,10 @@ from .testing_utils import basic_checks, parametrize_with_checks
             # slightly if X is shuffled.
             # This is only required for this tests and is not really
             # applicable to real world datasets
-            batch_size=1000,
+            batch_size=100,
             optimizer="adam",
             loss=KerasRegressor.r_squared,
-            model__hidden_layer_sizes=(100,),
+            model__hidden_layer_sizes=[],
         ),
     ],
     ids=["KerasClassifier", "KerasRegressor"],
