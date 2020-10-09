@@ -13,6 +13,7 @@ from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
+from sklearn.preprocessing import FunctionTransformer
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
@@ -34,7 +35,6 @@ from scikeras.utils import loss_name, metric_name, type_of_target
 from scikeras.utils.transformers import (
     BaseKerasTransformer,
     ClassifierLabelEncoder,
-    KerasFunctionTransformer,
     RegressorTargetEncoder,
 )
 
@@ -528,7 +528,7 @@ class BaseWrapper(BaseEstimator):
             Transformer implementing the BaseKerasTransformer
             interface.
         """
-        return KerasFunctionTransformer()
+        return FunctionTransformer()
 
     @property
     def feature_encoder(self) -> BaseKerasTransformer:
@@ -540,7 +540,7 @@ class BaseWrapper(BaseEstimator):
             Transformer implementing the BaseKerasTransformer
             interface.
         """
-        return KerasFunctionTransformer()
+        return FunctionTransformer()
 
     def fit(self, X, y, sample_weight=None):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
@@ -573,11 +573,11 @@ class BaseWrapper(BaseEstimator):
         self._meta = self.__class__._meta.copy()  # avoid modifying mutable class attr
 
         self.target_encoder_ = self.target_encoder.fit(y)
-        target_meta = self.target_encoder_.get_meta()
+        target_meta = getattr(self.target_encoder_, "get_meta", lambda: dict())()
         vars(self).update(**target_meta)
         self._meta.update(set(target_meta.keys()))
         self.feature_encoder_ = self.feature_encoder.fit(X)
-        feature_meta = self.feature_encoder_.get_meta()
+        feature_meta = getattr(self.feature_encoder, "get_meta", lambda: dict())()
         vars(self).update(**feature_meta)
         self._meta.update(set(feature_meta.keys()))
 
@@ -867,7 +867,7 @@ class KerasClassifier(BaseWrapper):
             Transformer implementing the BaseKerasTransformer
             interface.
         """
-        return KerasFunctionTransformer()
+        return FunctionTransformer()
 
     def _check_output_model_compatibility(self, y):
         """Checks that the model output number and loss functions match
@@ -1000,7 +1000,7 @@ class KerasRegressor(BaseWrapper):
 
     @property
     def feature_encoder(self) -> BaseKerasTransformer:
-        return KerasFunctionTransformer()
+        return FunctionTransformer()
 
     def score(self, X, y, sample_weight=None):
         """Returns the mean loss on the given test data and labels.

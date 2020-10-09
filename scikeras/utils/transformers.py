@@ -93,15 +93,6 @@ class BaseKerasTransformer(TransformerMixin, BaseEstimator, ABC):
         """
 
 
-class KerasFunctionTransformer(FunctionTransformer, BaseKerasTransformer):
-    """sklearn.preprocessing.FunctionTransformer implementing basic SciKeras
-    transformer interface.
-    """
-
-    def get_meta(self) -> Dict[str, Any]:
-        return dict()
-
-
 class ClassifierLabelEncoder(BaseKerasTransformer):
     """Default target transformer for KerasClassifier.
     """
