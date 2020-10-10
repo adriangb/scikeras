@@ -43,19 +43,16 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
         In case of an unknown loss.
     """
     if isclass(loss):
-        try:
-            loss = loss()  # get_loss accepts instances, not classes
-        except TypeError:
-            # convert TypeError -> ValueError for consistency with errors
-            # raised by get_loss
-            raise ValueError(f"Unknown loss: {loss}")
+        loss = loss()  # get_loss accepts instances, not classes
     try:
         loss = serialize_loss(get_loss(loss))
     except ValueError:
-        # Error messages are different for metrics or losses; homogenize them
-        raise ValueError(f"Unknown loss: {loss}")
+        # Error messages change slightly across TF versions
+        # And errors are different for unknown strings vs. unknown objects
+        # We homogenize them to a single error message
+        raise ValueError(f"Unable to determine name for loss: {loss}")
     if isinstance(loss, dict):
-        # for classes
+        # classes are serialized as dicts
         return loss["class_name"]
     return loss  # for functions (serialize returns a string)
 
@@ -92,18 +89,15 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
         In case of an unknown metric.
     """
     if isclass(metric):
-        try:
-            metric = metric()  # get_metric accepts instances, not classes
-        except TypeError:
-            # convert TypeError -> ValueError for consistency with errors
-            # raised by get_metric
-            raise ValueError(f"Unknown metric: {metric}")
+        metric = metric()  # get_metric accepts instances, not classes
     try:
         metric = serialize_metric(get_metric(metric))
     except ValueError:
-        # Error messages are different for metrics or losses; homogenize them
-        raise ValueError(f"Unknown metric: {metric}")
+        # Error messages change slightly across TF versions
+        # And errors are different for unknown strings vs. unknown objects
+        # We homogenize them to a single error message
+        raise ValueError(f"Unable to determine name for metric: {metric}")
     if isinstance(metric, dict):
-        # for classes
+        # classes are serialized as dicts
         return metric["class_name"]
     return metric  # for functions (serialize returns a string)

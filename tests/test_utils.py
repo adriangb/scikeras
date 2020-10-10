@@ -11,6 +11,10 @@ class CustomLoss(losses_module.Loss):
     pass
 
 
+class NotALoss:
+    pass
+
+
 @pytest.mark.parametrize(
     "loss,expected,raises",
     [
@@ -19,10 +23,17 @@ class CustomLoss(losses_module.Loss):
         (losses_module.categorical_crossentropy, "categorical_crossentropy", None),
         (losses_module.CategoricalCrossentropy, "CategoricalCrossentropy", None),
         (losses_module.CategoricalCrossentropy(), "CategoricalCrossentropy", None),
-        (object(), "", pytest.raises(ValueError, match="Unknown loss")),
-        ("unknown_loss", "", pytest.raises(ValueError, match="Unknown loss")),
+        (object(), "", pytest.raises(ValueError, match="Unable to determine name")),
+        (object, "", pytest.raises(ValueError, match="Unable to determine name")),
+        (
+            "unknown_loss",
+            "",
+            pytest.raises(ValueError, match="Unable to determine name"),
+        ),
         (CustomLoss, "CustomLoss", None),
         (CustomLoss(), "CustomLoss", None),
+        (NotALoss, "", pytest.raises(ValueError, match="Unable to determine name")),
+        (NotALoss(), "", pytest.raises(ValueError, match="Unable to determine name")),
     ],
 )
 def test_loss_name(loss, expected, raises):
@@ -38,6 +49,10 @@ class CustomMetric(metrics_module.AUC):
     pass
 
 
+class NotAMetric:
+    pass
+
+
 @pytest.mark.parametrize(
     "metric,expected,raises",
     [
@@ -46,10 +61,17 @@ class CustomMetric(metrics_module.AUC):
         (metrics_module.categorical_crossentropy, "categorical_crossentropy", None),
         (metrics_module.CategoricalCrossentropy, "CategoricalCrossentropy", None),
         (metrics_module.CategoricalCrossentropy(), "CategoricalCrossentropy", None),
-        (object(), "", pytest.raises(ValueError, match="Unknown metric")),
-        ("unknown_metric", "", pytest.raises(ValueError, match="Unknown metric")),
+        (object(), "", pytest.raises(ValueError, match="Unable to determine name")),
+        (object, "", pytest.raises(ValueError, match="Unable to determine name")),
+        (
+            "unknown_metric",
+            "",
+            pytest.raises(ValueError, match="Unable to determine name"),
+        ),
         (CustomMetric, "CustomMetric", None),
         (CustomMetric(), "CustomMetric", None),
+        (NotAMetric, "", pytest.raises(ValueError, match="Unable to determine name")),
+        (NotAMetric(), "", pytest.raises(ValueError, match="Unable to determine name")),
     ],
 )
 def test_metric_name(metric, expected, raises):
