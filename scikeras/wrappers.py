@@ -898,7 +898,7 @@ class KerasClassifier(BaseWrapper):
         try:
             given = loss_name(self.loss)
             got = loss_name(self.model_.loss)
-        except ValueError:
+        except (ValueError, TypeError):
             # unknown loss (ex: list of loss functions or custom loss)
             return
         if given is not default_val and got is not given:
