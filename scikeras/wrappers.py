@@ -4,8 +4,7 @@ import inspect
 import os
 import warnings
 
-from collections import defaultdict
-from typing import Any, Dict
+from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 import tensorflow as tf
@@ -14,28 +13,29 @@ from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-from sklearn.utils.multiclass import type_of_target
+from sklearn.preprocessing import FunctionTransformer
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
-from tensorflow.python.keras.losses import is_categorical_crossentropy
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
 
-from ._utils import (
-    LabelDimensionTransformer,
+from scikeras._utils import (
     TFRandomState,
     _class_from_strings,
     _windows_upcast_ints,
     accepts_kwargs,
-    get_metric_full_name,
     has_param,
     make_model_picklable,
     route_params,
     unflatten_params,
+)
+from scikeras.utils import loss_name, metric_name, type_of_target
+from scikeras.utils.transformers import (
+    BaseKerasTransformer,
+    ClassifierLabelEncoder,
+    RegressorTargetEncoder,
 )
 
 
@@ -57,8 +57,6 @@ class BaseWrapper(BaseEstimator):
             function calls.
         For all other parameters see tf.keras.Model documentation.
     """
-
-    is_fitted_ = False
 
     _tags = {
         "poor_score": True,
@@ -107,19 +105,15 @@ class BaseWrapper(BaseEstimator):
     }
 
     _meta = {
-        # parameters created by wrappers within `fit`
-        "_random_state",
+        # public attributes created by wrappers within `fit`
         "n_features_in_",
         "X_dtype_",
         "y_dtype_",
         "X_shape_",
-        "y_shape_",
+        "y_ndim_",
         "model_",
         "history_",
-        "is_fitted_",
-        "n_outputs_",
-        "model_n_outputs_",
-        "_user_params",
+        "target_type_",
     }
 
     _routing_prefixes = {
@@ -338,7 +332,7 @@ class BaseWrapper(BaseEstimator):
 
         if not getattr(model, "loss", None) or (
             isinstance(model.loss, list)
-            and not any(callable(l) or isinstance(l, str) for l in model.loss)
+            and not any(callable(loss) or isinstance(loss, str) for loss in model.loss)
         ):
             raise ValueError(
                 "No valid loss function found."
@@ -394,46 +388,45 @@ class BaseWrapper(BaseEstimator):
         else:
             hist = self.model_.fit(x=X, y=y, **fit_args)
 
-        if warm_start:
-            if not hasattr(self, "history_"):
-                self.history_ = defaultdict(list)
-            self.history_ = {
-                get_metric_full_name(k): self.history_[get_metric_full_name(k)]
-                + hist.history[k]
-                for k in hist.history.keys()
-            }
+        if not warm_start or not hasattr(self, "history_"):
+            self.history_ = dict()
+            for key, val in hist.history.items():
+                try:
+                    key = metric_name(key)
+                except ValueError:
+                    pass
+                self.history_[key] = [val]
         else:
-            self.history_ = hist.history
-        self.is_fitted_ = True
+            for key, val in hist.history.items():
+                if key in self.history_:
+                    self.history_[key] += [val]
+                    continue
+                # it's possible for the name to change from one iteration
+                # to another if a shorthand name was given since
+                # a pickle->un-pickle round trip may result in the name changing
+                key = metric_name(key)
+                self.history_[key] += [val]
 
         # return self to allow fit_transform and such to work
         return self
 
-    def _check_output_model_compatibility(self, y):
-        """Checks that the model output number and y shape match, reshape as needed.
+    def _check_output_model_compatibility(self, y: np.ndarray) -> None:
+        """Checks that the model output number and y shape match.
 
-        This is mainly in place to avoid cryptic TF errors.
+        This is in place to avoid cryptic TF errors.
         """
         # check if this is a multi-output model
         if self.model_n_outputs_ != len(self.model_.outputs):
             raise RuntimeError(
-                "Detected an input of size "
-                "{}, but {} has {} outputs".format(
-                    (y[0].shape[0], len(y)), self.model_, len(self.model_.outputs),
-                )
+                "Detected an input of size"
+                f" {y[0].shape[0]}, but {self.model_} has"
+                f" {self.model_.outputs} outputs"
             )
 
-        # tf v1 does not accept single item lists
-        # tf v2 does
-        # so go with what tf v1 accepts
-        if len(y) == 1:
-            y = y[0]
-        else:
-            y = tuple(np.squeeze(y_) for y_ in y)
-        return y
-
-    def _validate_data(self, X, y=None, reset=True):
-        """Validate input data and set or check the `n_features_in_` attribute.
+    def _validate_data(
+        self, X, y=None, reset: bool = False
+    ) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
+        """Validate input arrays and set or check their meta-parameters.
         Parameters
         ----------
         X : {array-like, sparse matrix, dataframe} of shape \
@@ -442,15 +435,14 @@ class BaseWrapper(BaseEstimator):
         y : array-like of shape (n_samples,), default=None
             The targets. If None, `check_array` is called on `X` and
             `check_X_y` is called otherwise.
-        reset : bool, default=True
-            Whether to reset the `n_features_in_` attribute.
-            If False, the input will be checked for consistency with data
-            provided when reset was last True.
+        reset : bool, default=False
+            If True, override all meta attributes.
+            If False, verify that they haven't changed.
 
         Returns
         -------
-        out : {ndarray, sparse matrix} or tuple of these
-            The validated input. A tuple is returned if `y` is not None.
+        out : Tuple[np.ndarray, Union[np.ndarray, None]]
+            The validated input.
         """
 
         def _check_array_dtype(arr):
@@ -474,84 +466,89 @@ class BaseWrapper(BaseEstimator):
             y = check_array(
                 y, ensure_2d=False, allow_nd=False, dtype=_check_array_dtype(y)
             )
+            target_type_ = type_of_target(y)
+            y_dtype_ = y.dtype
+            y_ndim_ = y.ndim
+            if reset:
+                self.target_type_ = target_type_
+                self.y_dtype_ = y_dtype_
+                self.y_ndim_ = y_ndim_
+            else:
+                if not np.can_cast(y_dtype_, self.y_dtype_):
+                    raise ValueError(
+                        f"Got `y` with dtype {y_dtype_},"
+                        f" but this {self.__name__} expected {self.y_dtype_}"
+                        f" and casting from {y_dtype_} to {self.y_dtype_} is not safe!"
+                    )
+                if self.y_ndim_ != y_ndim_:
+                    raise ValueError(
+                        f"`y` has {y_ndim_} dimensions, but this {self.__name__}"
+                        f" is expecting {self.y_ndim_} dimensions in `y`."
+                    )
         X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
-
-        n_features = X.shape[1]
-
+        X_dtype_ = X.dtype
+        X_shape_ = X.shape
+        n_features_in_ = X.shape[1]
         if reset:
-            self.n_features_in_ = n_features
+            self.X_dtype_ = X_dtype_
+            self.X_shape_ = X_shape_
+            self.n_features_in_ = n_features_in_
         else:
-            if n_features != self.n_features_in_:
+            if not np.can_cast(X_dtype_, self.X_dtype_):
                 raise ValueError(
-                    f"X has {n_features} features, but this {self.__name__} "
-                    f"is expecting {self.n_features_in_} features as input."
+                    f"Got `X` with dtype {X_dtype_},"
+                    f" but this {self.__name__} expected {self.X_dtype_}"
+                    f" and casting from {X_dtype_} to {self.X_dtype_} is not safe!"
                 )
+            if len(X_shape_) != len(self.X_shape_):
+                raise ValueError(
+                    f"`X` has {len(X_shape_)} dimensions, but this {self.__name__}"
+                    f" is expecting {len(self.X_shape_)} dimensions in `X`."
+                )
+            # The following check is a backport from
+            # sklearn.base.BaseEstimator._check_n_features
+            # since this method is not available in sklearn <= 0.22.0
+            if n_features_in_ != self.n_features_in_:
+                raise ValueError(
+                    "X has {} features, but {} is expecting {} features "
+                    "as input.".format(
+                        n_features_in_, self.__class__.__name__, self.n_features_in_
+                    )
+                )
+
         if y is None:
             return X
         return X, y
 
-    @staticmethod
-    def preprocess_y(y):
-        """Handles manipulation of y inputs to fit or score.
+    @property
+    def target_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for targets / ``y``.
 
-        By default, this just makes sure y is 2D.
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
 
-        Arguments:
-            y : 1D or 2D numpy array
-
-        Returns:
-            y : numpy array of shape (n_samples, n_ouputs)
-            extra_args : dictionary of output attributes, ex: n_outputs_
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
         """
+        raise FunctionTransformer()
 
-        extra_args = {
-            "y_dtype_": y.dtype,
-            "y_shape_": y.shape,
-        }
+    @property
+    def feature_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for features / ``X``.
 
-        return y, extra_args
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
 
-    @staticmethod
-    def postprocess_y(y):
-        """Handles manipulation of predicted `y` values.
-
-        By default, it joins lists of predictions for multi-ouput models
-        into a single numpy array.
-        Subclass and override this method to customize processing.
-
-        Arguments:
-            y : 2D numpy array or list of numpy arrays
-                (the latter is for multi-ouput models)
-
-        Returns:
-            y : 2D numpy array with singular dimensions stripped
-                or 1D numpy array
-            extra_args : attributes of output `y`.
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
         """
-        y = np.column_stack(y)
-
-        extra_args = dict()
-        return np.squeeze(y), extra_args
-
-    @staticmethod
-    def preprocess_X(X):
-        """Handles manipulation of X before fitting.
-
-        Subclass and override this method to process X, for example
-        accommodate a multi-input model.
-
-        Arguments:
-            X : 2D numpy array
-
-        Returns:
-            X : unchanged 2D numpy array
-            extra_args : attributes of output `y`.
-        """
-        extra_args = {
-            "X_dtype_": X.dtype,
-            "X_shape_": X.shape,
-        }
-        return X, extra_args
+        raise FunctionTransformer()
 
     def fit(self, X, y, sample_weight=None):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
@@ -574,6 +571,27 @@ class BaseWrapper(BaseEstimator):
         return self._fit(
             X=X, y=y, sample_weight=sample_weight, warm_start=self.warm_start
         )
+
+    def _initialized(self):
+        return hasattr(self, "n_features_in_")
+
+    def _initialize(
+        self, X: np.ndarray, y: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        self._meta = self.__class__._meta.copy()  # avoid modifying mutable class attr
+
+        self.target_encoder_ = self.target_encoder.fit(y)
+        target_meta = getattr(self.target_encoder_, "get_meta", lambda: dict())()
+        vars(self).update(**target_meta)
+        self._meta.update(set(target_meta.keys()))
+        self.feature_encoder_ = self.feature_encoder.fit(X)
+        feature_meta = getattr(self.feature_encoder, "get_meta", lambda: dict())()
+        vars(self).update(**feature_meta)
+        self._meta.update(set(feature_meta.keys()))
+
+        self.model_ = self._build_keras_model()
+
+        return X, y
 
     def _fit(self, X, y, sample_weight=None, warm_start=False):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
@@ -609,19 +627,16 @@ class BaseWrapper(BaseEstimator):
             self._random_state = self.random_state
 
         # Data checks
-        if warm_start and not hasattr(self, "n_features_in_"):
-            # Warm start requested but not fitted yet
-            reset = True
-        elif warm_start:
-            # Already fitted and warm start requested
-            reset = False
+        if not ((self.warm_start or warm_start) and self._initialized()):
+            X, y = self._validate_data(X, y, reset=True)
+            X, y = self._initialize(X, y)
         else:
-            # No warm start requested
-            reset = True
-        X, y = self._validate_data(X=X, y=y, reset=reset)
+            X, y = self._validate_data(X, y)
 
-        # Save input dtype
-        self.y_dtype_ = y.dtype
+        y = self.target_encoder_.transform(y)
+        X = self.feature_encoder_.transform(X)
+
+        self._check_output_model_compatibility(y)
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
@@ -634,34 +649,15 @@ class BaseWrapper(BaseEstimator):
             # because the predictions differ by a small margin).
             # To get around this, we manually delete these samples here
             zeros = sample_weight == 0
+            if zeros.sum() == zeros.size:
+                raise ValueError(
+                    "No training samples had any weight; only zeros were passed in sample_weight."
+                    " That means there's nothing to train on by definition, so training can not be completed."
+                )
             if np.any(zeros):
                 X = X[~zeros]
                 y = y[~zeros]
                 sample_weight = sample_weight[~zeros]
-                if sample_weight.size == 0:
-                    # could check any of the arrays here, arbitrary choice
-                    # there will be no samples left! warn users
-                    raise RuntimeError(
-                        "Cannot train because there are no samples"
-                        " left after deleting points with zero sample weight!"
-                    )
-
-        # pre process X, y
-        X, extra_args = self.preprocess_X(X)
-        # update self.X_dtype_, self.X_shape_
-        for attr_name, attr_val in extra_args.items():
-            setattr(self, attr_name, attr_val)
-        y, extra_args = self.preprocess_y(y)
-        # update self.classes_, self.n_outputs_, self.n_classes_ and
-        #  self.target_type_
-        for attr_name, attr_val in extra_args.items():
-            setattr(self, attr_name, attr_val)
-
-        # build model
-        if (not warm_start) or (not hasattr(self, "model_")):
-            self.model_ = self._build_keras_model()
-
-        y = self._check_output_model_compatibility(y)
 
         # fit model
         return self._fit_keras_model(
@@ -699,20 +695,20 @@ class BaseWrapper(BaseEstimator):
                 and `n_features` is the number of features.
 
         Returns:
-            preds: array-like, shape `(n_samples,)`
+            y_pred: array-like, shape `(n_samples,)`
                 Predictions.
         """
         # check if fitted
-        if not self.is_fitted_:
+        if not self._initialized():
             raise NotFittedError(
                 "Estimator needs to be fit before `predict` " "can be called"
             )
 
         # basic input checks
-        X = self._validate_data(X=X, y=None, reset=False)
+        X = self._validate_data(X=X, y=None)
 
         # pre process X
-        X, _ = self.preprocess_X(X)
+        X = self.feature_encoder_.transform(X)
 
         # filter kwargs and get attributes for predict
         params = self.get_params()
@@ -724,8 +720,8 @@ class BaseWrapper(BaseEstimator):
         y_pred = self.model_.predict(X, **pred_args)
 
         # post process y
-        y, _ = self.postprocess_y(y_pred)
-        return y
+        y_pred = self.target_encoder_.inverse_transform(y_pred)
+        return y_pred
 
     def score(self, X, y, sample_weight=None):
         """Returns the mean accuracy on the given test data and labels.
@@ -834,16 +830,6 @@ class KerasClassifier(BaseWrapper):
         **BaseWrapper._tags,
     }
 
-    _meta = {
-        "n_classes_",
-        "target_type_",
-        "classes_",
-        "encoders_",
-        "n_outputs_",
-        "model_n_outputs_",
-        *BaseWrapper._meta,
-    }
-
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
         """Accuracy score based on true and predicted target values.
@@ -862,203 +848,61 @@ class KerasClassifier(BaseWrapper):
         """
         return sklearn_accuracy_score(y_true, y_pred, **kwargs)
 
-    @staticmethod
-    def preprocess_y(y):
-        """Handles manipulation of y inputs to fit or score.
+    @property
+    def target_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for targets / ``y``.
 
-        For KerasClassifier, this handles interpreting classes from `y`.
+        For ``KerasClassifier.predict_proba`` to
+        work, this transformer must accept a ``return_proba``
+        argument in ``inverse_transform`` with a default value
+        of ``False``.
 
-        Arguments:
-            y : 1D or 2D numpy array
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
 
-        Returns:
-            y : modified 2D numpy array with 0 indexed integer class labels.
-            extra_args : dictionary of output attributes, ex `n_outputs_`
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
         """
-        y, extra_args = super(KerasClassifier, KerasClassifier).preprocess_y(y)
+        return ClassifierLabelEncoder(loss=self.loss, target_type=self.target_type_)
 
-        target_type_ = type_of_target(y)
+    @property
+    def feature_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for features / ``X``.
 
-        if len(y.shape) == 1:
-            n_outputs_ = 1
-        else:
-            n_outputs_ = y.shape[1]
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
 
-        if target_type_ == "binary":
-            # y = array([1, 0, 1, 0])
-            # single task, single label, binary classification
-            model_n_outputs_ = 1  # single sigmoid output expected
-            # encode
-            encoder = LabelEncoder()
-            # No need to reshape to 1D here,
-            # binary targets are always 1D already
-            y = encoder.fit_transform(y)
-            classes_ = encoder.classes_
-            # make lists
-            encoders_ = [encoder]
-            classes_ = [classes_]
-            y = [y]
-        elif target_type_ == "multiclass":
-            # y = array([1, 5, 2])
-            model_n_outputs_ = 1  # single softmax output expected
-            # encode
-            encoder = LabelEncoder()
-            if len(y.shape) > 1 and y.shape[1] == 1:
-                # Make 1D just so LabelEncoder is happy
-                y = y.reshape(-1,)
-            y = encoder.fit_transform(y)
-            classes_ = encoder.classes_
-            # make lists
-            encoders_ = [encoder]
-            classes_ = [classes_]
-            y = [y]
-        elif target_type_ == "multilabel-indicator":
-            # y = array([1, 1, 1, 0], [0, 0, 1, 1])
-            # split into lists for multi-output Keras
-            # will be processed as multiple binary classifications
-            classes_ = [np.array([0, 1])] * y.shape[1]
-            y = np.split(y, y.shape[1], axis=1)
-            model_n_outputs_ = len(y)
-            # encode
-            encoders_ = [LabelEncoder() for _ in range(len(y))]
-            y = [
-                encoder.fit_transform(y_.reshape(-1,) if y_.shape[1] == 1 else y_)
-                for encoder, y_ in zip(encoders_, y)
-            ]
-            classes_ = [encoder.classes_ for encoder in encoders_]
-        elif target_type_ == "multiclass-multioutput":
-            # y = array([1, 0, 5], [2, 1, 3])
-            # split into lists for multi-output Keras
-            # each will be processesed as a seperate multiclass problem
-            y = np.split(y, y.shape[1], axis=1)
-            model_n_outputs_ = len(y)
-            # encode
-            encoders_ = [LabelEncoder() for _ in range(len(y))]
-            y = [
-                encoder.fit_transform(y_.reshape(-1,) if y_.shape[1] == 1 else y_)
-                for encoder, y_ in zip(encoders_, y)
-            ]
-            classes_ = [encoder.classes_ for encoder in encoders_]
-        else:
-            raise ValueError("Unknown label type: {}".format(target_type_))
-
-        # self.classes_ is kept as an array when n_outputs>1 for compatibility
-        # with ensembles and other meta estimators
-        # which do not support multioutput
-        if len(classes_) == 1:
-            n_classes_ = classes_[0].size
-            classes_ = classes_[0]
-            n_outputs_ = 1
-        else:
-            n_classes_ = [class_.shape[0] for class_ in classes_]
-            n_outputs_ = len(n_classes_)
-
-        extra_args.update(
-            {
-                "classes_": classes_,
-                "encoders_": encoders_,
-                "n_outputs_": n_outputs_,
-                "model_n_outputs_": model_n_outputs_,
-                "n_classes_": n_classes_,
-                "target_type_": target_type_,
-            }
-        )
-
-        return y, extra_args
-
-    def postprocess_y(self, y):
-        """Reverts _pre_process_inputs to return predicted probabilites
-             in formats sklearn likes as well as retrieving the original
-             classes.
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
         """
-        if not isinstance(y, list):
-            # convert single-target y to a list for easier processing
-            y = [y]
-
-        target_type_ = self.target_type_
-
-        class_predictions = []
-
-        for i in range(self.n_outputs_):
-
-            if target_type_ == "binary":
-                # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
-                if (
-                    isinstance(self.encoders_[i], LabelEncoder)
-                    and len(self.encoders_[i].classes_) == 1
-                ):
-                    # special case: single input label for sigmoid output
-                    # may give more predicted classes than inputs for
-                    # small sample sizes!
-                    # don't even bother inverse transforming, just fill.
-                    class_predictions.append(
-                        np.full(
-                            shape=(y[i].shape[0], 1),
-                            fill_value=self.encoders_[i].classes_[0],
-                        )
-                    )
-                else:
-                    y_ = y[i].round().astype(int)
-                    if y_.shape[1] == 1:
-                        # Appease the demands of sklearn transformers
-                        y_ = np.squeeze(y_, axis=1)
-                    class_predictions.append(self.encoders_[i].inverse_transform(y_))
-                if (
-                    len(y[i].shape) == 1
-                    or y[i].shape[1] == 1
-                    and len(self.encoders_[i].classes_) == 2
-                ):
-                    # result from a single sigmoid output
-                    # reformat so that we have 2 columns
-                    y[i] = np.column_stack([1 - y[i], y[i]])
-            elif target_type_ in ("multiclass", "multiclass-multioutput"):
-                # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
-                # array(['apple', 'orange'])
-                idx = np.argmax(y[i], axis=-1)
-                y_ = np.zeros(y[i].shape, dtype=int)
-                y_[np.arange(y[i].shape[0]), idx] = 1
-                if y_.shape[1] == 1:
-                    # Appease the demands of sklearn transformers
-                    y_ = np.squeeze(y_, axis=1)
-                class_predictions.append(self.encoders_[i].inverse_transform(y_))
-            elif target_type_ == "multilabel-indicator":
-                class_predictions.append(
-                    self.encoders_[i].inverse_transform(np.argmax(y[i], axis=1))
-                )
-
-        class_probabilities = np.squeeze(np.column_stack(y))
-
-        y = np.squeeze(np.column_stack(class_predictions))
-
-        # type cast back to input dtype
-        y = y.astype(self.y_dtype_, copy=False)
-
-        extra_args = {"class_probabilities": class_probabilities}
-
-        return y, extra_args
+        return FunctionTransformer()
 
     def _check_output_model_compatibility(self, y):
-        """Checks that the model output number and loss functions match y.
+        """Checks that the model output number and loss functions match
+        what SciKeras expects.
         """
-        # check loss function to adjust the encoding of the input
-        # we need to do this to mimick scikit-learn behavior
-        if isinstance(self.model_.loss, list):
-            losses = self.model_.loss
-        else:
-            losses = [self.model_.loss] * self.n_outputs_
-        for i, loss in enumerate(losses):
-            if is_categorical_crossentropy(loss) and (
-                y[i].ndim == 1 or y[i].shape[1] == 1
-            ):
-                encoder = OneHotEncoder(sparse=False, dtype=np.uint8)
-                tf1dto2d = LabelDimensionTransformer()
-                y[i] = tf1dto2d.fit_transform(y[i])
-                y[i] = encoder.fit_transform(y[i])
-                self.encoders_[i] = make_pipeline(
-                    self.encoders_[i], tf1dto2d, encoder, "passthrough",
-                )
+        super()._check_output_model_compatibility(y)
 
-        return super()._check_output_model_compatibility(y)
+        # check that if the user gave us a loss function it ended up in
+        # the actual model
+        if self.loss is not None:
+            try:
+                given = loss_name(self.loss)
+                got = loss_name(self.model_.loss)
+                if got is not given:
+                    warnings.warn(
+                        f"loss={self.loss} but model compiled with {self.model_.loss}."
+                        " Data may not match loss function!"
+                    )
+            except ValueError:
+                # unknown loss (ex: list of loss functions or custom loss)
+                pass
 
     def partial_fit(self, X, y, classes=None, sample_weight=None):
         """
@@ -1086,7 +930,6 @@ class KerasClassifier(BaseWrapper):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        self.classes_ = classes  # TODO: don't swallow this param
         return super().partial_fit(X, y, sample_weight=sample_weight)
 
     def predict_proba(self, X):
@@ -1106,16 +949,16 @@ class KerasClassifier(BaseWrapper):
                 (instead of `(n_sample, 1)` as in Keras).
         """
         # check if fitted
-        if not self.is_fitted_:
+        if not self._initialized():
             raise NotFittedError(
                 "Estimator needs to be fit before `predict` " "can be called"
             )
 
         # basic input checks
-        X = self._validate_data(X=X, y=None, reset=False)
+        X = self._validate_data(X=X, y=None)
 
         # pre process X
-        X, _ = self.preprocess_X(X)
+        X = self.feature_encoder_.transform(X)
 
         # collect arguments
         predict_args = route_params(
@@ -1125,13 +968,10 @@ class KerasClassifier(BaseWrapper):
         # call the Keras model's predict
         outputs = self.model_.predict(X, **predict_args)
 
-        # join list of outputs into single output array
-        _, extra_args = self.postprocess_y(outputs)
+        # post process y
+        y = self.target_encoder_.inverse_transform(outputs, return_proba=True)
 
-        # get class probabilities from postprocess_y's output
-        class_probabilities = extra_args["class_probabilities"]
-
-        return class_probabilities
+        return y
 
 
 class KerasRegressor(BaseWrapper):
@@ -1168,33 +1008,35 @@ class KerasRegressor(BaseWrapper):
         """
         return sklearn_r2_score(y_true, y_pred, **kwargs)
 
-    def postprocess_y(self, y):
-        """Ensures output is floatx and squeeze."""
-        if np.can_cast(self.y_dtype_, np.float32):
-            return np.squeeze(y.astype(np.float32, copy=False)), dict()
-        else:
-            return np.squeeze(y.astype(np.float64, copy=False)), dict()
+    @property
+    def target_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for targets / ``y``.
 
-    def preprocess_y(self, y):
-        """Split y for multi-output tasks.
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
+
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
         """
-        y, extra_args = super().preprocess_y(y)
+        return RegressorTargetEncoder()
 
-        if len(y.shape) == 1:
-            n_outputs_ = 1
-        else:
-            n_outputs_ = y.shape[1]
+    @property
+    def feature_encoder(self) -> BaseKerasTransformer:
+        """Retrieve a transformer for features / ``X``.
 
-        # for regression, multi-output is handled by single Keras output
-        model_n_outputs_ = 1
+        Metadata will be collected from `get_metadata` if
+        the transformer implements that method.
 
-        extra_args.update(
-            {"n_outputs_": n_outputs_, "model_n_outputs_": model_n_outputs_,}
-        )
-
-        y = [y]  # pack into single output list
-
-        return y, extra_args
+        Returns
+        -------
+        BaseKerasTransformer
+            Transformer implementing the BaseKerasTransformer
+            interface.
+        """
+        return FunctionTransformer()
 
     def score(self, X, y, sample_weight=None):
         """Returns the mean loss on the given test data and labels.
@@ -1211,7 +1053,7 @@ class KerasRegressor(BaseWrapper):
                 Mean accuracy of predictions on `X` wrt. `y`.
         """
         # check loss function and warn if it is not the same as score function
-        if self.model_.loss not in ("mean_squared_error", self.r_squared,):
+        if self.model_.loss is not self.r_squared:
             warnings.warn(
                 "Since ScikitLearn's `score` uses R^2 by default, it is "
                 "advisable to use the same loss/metric when optimizing the "
