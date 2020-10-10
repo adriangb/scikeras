@@ -152,8 +152,10 @@ class BaseWrapper(BaseEstimator):
         **kwargs,
     ):
 
+        # ensure prebuilt model can be serialized
+        if isinstance(model, Model):
+            make_model_picklable(model)
         if isinstance(build_fn, Model):
-            # ensure prebuilt model can be serialized
             make_model_picklable(build_fn)
 
         # Parse hardcoded params

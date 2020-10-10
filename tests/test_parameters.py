@@ -29,13 +29,11 @@ class TestRandomState:
         "estimator",
         [
             KerasRegressor(
-                build_fn=dynamic_regressor,
+                model=dynamic_regressor,
                 loss=KerasRegressor.r_squared,
                 model__hidden_layer_sizes=(100,),
             ),
-            KerasClassifier(
-                build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
-            ),
+            KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
         ],
     )
     def test_random_states(self, random_state, estimator):
@@ -72,13 +70,11 @@ class TestRandomState:
         "estimator",
         [
             KerasRegressor(
-                build_fn=dynamic_regressor,
+                model=dynamic_regressor,
                 loss=KerasRegressor.r_squared,
                 model__hidden_layer_sizes=(100,),
             ),
-            KerasClassifier(
-                build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
-            ),
+            KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
         ],
     )
     @pytest.mark.parametrize("pyhash", [None, "0", "1"])
@@ -141,7 +137,7 @@ def test_sample_weights_fit():
     """
     # build estimator
     estimator = KerasClassifier(
-        build_fn=dynamic_classifier,
+        model=dynamic_classifier,
         model__hidden_layer_sizes=(100,),
         epochs=10,
         random_state=0,
@@ -156,9 +152,11 @@ def test_sample_weights_fit():
     # heavily weight towards y=1 points
     sw_first_class = [0.8] * 5000 + [0.2] * 5000
     # train estimator 1 with weights
-    estimator1.fit(X, y, sample_weight=sw_first_class)
+    with pytest.warns(UserWarning, match="Setting the random state"):
+        estimator1.fit(X, y, sample_weight=sw_first_class)
     # train estimator 2 without weights
-    estimator2.fit(X, y)
+    with pytest.warns(UserWarning, match="Setting the random state"):
+        estimator2.fit(X, y)
     # estimator1 should tilt towards y=1
     # estimator2 should predict about equally
     average_diff_pred_prob_1 = np.average(np.diff(estimator1.predict_proba(X), axis=1))
@@ -183,7 +181,7 @@ def test_sample_weights_score():
     """
     # build estimator
     estimator = KerasRegressor(
-        build_fn=dynamic_regressor,
+        model=dynamic_regressor,
         model__hidden_layer_sizes=(100,),
         epochs=10,
         random_state=0,
@@ -213,11 +211,11 @@ def test_build_fn_default_params():
     """Tests that default arguments arguments of
     `build_fn` are registered as hyperparameters.
     """
-    est = KerasClassifier(build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,))
+    est = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,))
     params = est.get_params()
     # (100, ) is the default for dynamic_classifier
     assert params["model__hidden_layer_sizes"] == (100,)
 
-    est = KerasClassifier(build_fn=dynamic_classifier, model__hidden_layer_sizes=(200,))
+    est = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(200,))
     params = est.get_params()
     assert params["model__hidden_layer_sizes"] == (200,)

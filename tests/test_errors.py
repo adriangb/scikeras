@@ -36,7 +36,7 @@ def test_not_fitted_error():
     """Tests error when trying to use predict before fit.
     """
     estimator = KerasClassifier(
-        build_fn=dynamic_classifier, loss=KerasRegressor.r_squared,
+        model=dynamic_classifier, loss=KerasRegressor.r_squared,
     )
     X = np.random.rand(10, 20)
     with pytest.raises(NotFittedError):
@@ -76,7 +76,7 @@ class TestInvalidBuildFn:
         def dummy_func():
             return None
 
-        clf = Clf(build_fn=dummy_func,)
+        clf = Clf(model=dummy_func,)
 
         with pytest.raises(ValueError, match="cannot implement `_keras_build_fn`"):
             clf.fit(np.array([[0]]), np.array([0]))
@@ -88,10 +88,7 @@ def test_sample_weights_all_zero():
     """
     # build estimator
     estimator = KerasClassifier(
-        build_fn=dynamic_classifier,
-        model__hidden_layer_sizes=(100,),
-        epochs=10,
-        random_state=0,
+        model=dynamic_classifier, model__hidden_layer_sizes=(100,),
     )
 
     # we create 20 points
