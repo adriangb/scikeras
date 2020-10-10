@@ -78,15 +78,15 @@ def test_compiling_of_routed_parameters():
     class Foo:
         got = dict()
 
-        def __init__(self, foo_kwarg):
+        def __init__(self, foo_kwarg="foo_kwarg_default"):
             self.foo_kwarg = foo_kwarg
 
-    class MyLoss:
-        def __init__(self, param1):
+    class MyLoss(losses_module.Loss):
+        def __init__(self, param1="param1_default", *args, **kwargs):
+            super().__init__(*args, **kwargs)
             self.param1 = param1
-            self.__name__ = str(id(self))
 
-        def __call__(self, y_true, y_pred):
+        def __call__(self, y_true, y_pred, sample_weight=None):
             return losses_module.binary_crossentropy(y_true, y_pred)
 
     est = KerasClassifier(
