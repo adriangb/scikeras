@@ -4,19 +4,7 @@ import pytest
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
 
-from scikeras.utils import loss_name, metric_name, type_of_target
-
-
-@pytest.mark.parametrize(
-    "y, expected",
-    [
-        (np.array([[1, 0], [0, 1]]), "multiclass-one-hot"),
-        (np.array([[1, 0], [1, 1]]), "multilabel-indicator"),
-    ],
-)
-def test_type_of_target(y, expected):
-    got = type_of_target(y)
-    assert got == expected
+from scikeras.utils import loss_name, metric_name
 
 
 class CustomLoss(losses_module.Loss):

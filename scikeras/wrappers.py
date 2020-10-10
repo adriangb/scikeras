@@ -14,6 +14,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.preprocessing import FunctionTransformer
+from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
@@ -31,7 +32,7 @@ from scikeras._utils import (
     route_params,
     unflatten_params,
 )
-from scikeras.utils import loss_name, metric_name, type_of_target
+from scikeras.utils import loss_name, metric_name
 from scikeras.utils.transformers import (
     BaseKerasTransformer,
     ClassifierLabelEncoder,
@@ -390,6 +391,14 @@ class BaseWrapper(BaseEstimator):
 
         if not warm_start or not hasattr(self, "history_"):
             self.history_ = dict()
+            # a serialization roundtrip will mutate
+            # Keras metrics shorthand names,
+            # which would result in having both `mse`
+            # and `mean_squared_error` as keys (for example)
+            # to avoid this, we normalize to the full-name
+            # But metric_name raises a ValueError for unknown metrics,
+            # including user-defined metrics
+            # in this case, we save the name as-is by ignoring the exception
             for key, val in hist.history.items():
                 try:
                     key = metric_name(key)
@@ -401,10 +410,10 @@ class BaseWrapper(BaseEstimator):
                 if key in self.history_:
                     self.history_[key] += [val]
                     continue
-                # it's possible for the name to change from one iteration
-                # to another if a shorthand name was given since
-                # a pickle->un-pickle round trip may result in the name changing
-                key = metric_name(key)
+                try:
+                    key = metric_name(key)
+                except ValueError:
+                    pass
                 self.history_[key] += [val]
 
         # return self to allow fit_transform and such to work
@@ -573,7 +582,7 @@ class BaseWrapper(BaseEstimator):
         )
 
     def _initialized(self):
-        return hasattr(self, "n_features_in_")
+        return hasattr(self, "model_")
 
     def _initialize(
         self, X: np.ndarray, y: np.ndarray
@@ -592,8 +601,6 @@ class BaseWrapper(BaseEstimator):
         self._meta.update(set(feature_meta.keys()))
 
         self.model_ = self._build_keras_model()
-
-        return X, y
 
     def _fit(self, X, y, sample_weight=None, warm_start=False):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
@@ -631,7 +638,7 @@ class BaseWrapper(BaseEstimator):
         # Data checks
         if not ((self.warm_start or warm_start) and self._initialized()):
             X, y = self._validate_data(X, y, reset=True)
-            X, y = self._initialize(X, y)
+            self._initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
 

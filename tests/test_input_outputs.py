@@ -220,7 +220,7 @@ def test_multi_output_regression():
         (np.array([2, 1, 3]), "multiclass"),  # ordinal, numeric, sorted
         (
             np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
-            "multiclass-one-hot",
+            "multilabel-indicator",
         ),  # one-hot encoded
         (np.array(["a", "b", "c"]), "multiclass"),  # categorical
     ],
@@ -240,9 +240,9 @@ def test_KerasClassifier_loss_invariance(y, y_type):
     clf_1.fit(X, y)
     clf_1.partial_fit(X, y)
     y_1 = clf_1.predict(X)
-    if y_type != "multiclass-one-hot":
+    if y_type != "multilabel-indicator":
         # sparse_categorical_crossentropy is not compatible with
-        # one-hot encoding and one-hot encoded targets are not used in sklearn
+        # one-hot encoded targets, and one-hot encoded targets are not used in sklearn
         # This is a use case that does not natively succeed in Keras or skelarn estimators
         # and thus SciKeras does not intend to auto-convert data to support it
         clf_2 = KerasClassifier(
@@ -264,7 +264,7 @@ def test_KerasClassifier_loss_invariance(y, y_type):
         (np.array([2, 1, 3]), "multiclass"),  # ordinal, numeric, sorted
         (
             np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
-            "multiclass-one-hot",
+            "multilabel-indicator",
         ),  # one-hot encoded
         (np.array(["a", "b", "c"]), "multiclass"),  # categorical
     ],
@@ -277,7 +277,7 @@ def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
     categorical_crossentropy and sparse_categorical_crossentropy
     with either one-hot encoded targets or sparse targets.
     """
-    if y_type == "multiclass-one-hot" and loss == "sparse_categorical_crossentropy":
+    if y_type == "multilabel-indicator" and loss == "sparse_categorical_crossentropy":
         return  # not compatible, see test_KerasClassifier_loss_invariance
     X1, y1 = np.array([[1, 2, 3]]).T, np.array([1, 2, 3])
     clf = KerasClassifier(
