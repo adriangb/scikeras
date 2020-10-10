@@ -103,6 +103,13 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
 
     def fit(self, X: np.ndarray) -> "ClassifierLabelEncoder":
         y = X  # rename for clarity, the input is always expected to be a target `y`
+        target_type = self.target_type
+        if (
+            target_type == "multilabel-indicator"
+            and y.ndim == 2
+            and np.all(np.sum(y, axis=1) == 1)
+        ):
+            target_type = "multiclass-one-hot"
         encoders = {
             "binary": make_pipeline(
                 Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
@@ -116,18 +123,18 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
             encoders["multiclass"] = make_pipeline(
                 Ensure2DTransformer(), OneHotEncoder(sparse=False, dtype=np.float32),
             )
-        if self.target_type not in encoders:
+        if target_type not in encoders:
             raise ValueError(
-                f"Unknown label type: {self.target_type}."
+                f"Unknown label type: {target_type}."
                 "\n\nTo implement support, subclass KerasClassifier and override"
                 " `target_transformer` with a transformer that supports this"
                 " label type."
             )
-        self.final_encoder_ = encoders[self.target_type].fit(y)
-        if self.target_type in ["binary", "multiclass"]:
+        self.final_encoder_ = encoders[target_type].fit(y)
+        if target_type in ["binary", "multiclass"]:
             self.classes_ = self.final_encoder_[1].categories_[0]
             self.n_classes_ = self.classes_.size
-        elif self.target_type == "multiclass-one-hot":
+        elif target_type == "multiclass-one-hot":
             self.classes_ = np.arange(0, y.shape[1])
             self.n_classes_ = y.shape[1]
         self.n_outputs_ = 1
@@ -172,7 +179,7 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
                 y_ = np.zeros(y.shape, dtype=int)
                 y_[np.arange(y.shape[0]), idx] = 1
             class_predictions = self.final_encoder_.inverse_transform(y_)
-        else:  # "multiclass-one-hot"
+        else:  # target_type == "multiclass-one-hot" in `fit`
             # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
             # array([[1, 0, 0], [0, 1, 0]])
             idx = np.argmax(y, axis=-1)
