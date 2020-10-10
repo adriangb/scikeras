@@ -410,10 +410,7 @@ class BaseWrapper(BaseEstimator):
                 if key in self.history_:
                     self.history_[key] += [val]
                     continue
-                try:
-                    key = metric_name(key)
-                except ValueError:
-                    pass
+                key = metric_name(key)
                 self.history_[key] += [val]
 
         # return self to allow fit_transform and such to work
