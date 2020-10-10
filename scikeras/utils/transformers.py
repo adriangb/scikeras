@@ -83,7 +83,7 @@ class BaseKerasTransformer(TransformerMixin, BaseEstimator, ABC):
         """
 
     @abstractmethod
-    def get_meta(self) -> Dict[str, Any]:
+    def get_metadata(self) -> Dict[str, Any]:
         """Retrieve the meta parameters of this transformer.
 
         Returns
@@ -186,7 +186,7 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
             self.y_dtype_, copy=False
         )
 
-    def get_meta(self):
+    def get_metadata(self):
         return {
             "classes_": self.classes_,
             "n_classes_": self.n_classes_,
@@ -224,7 +224,7 @@ class RegressorTargetEncoder(BaseKerasTransformer):
         else:
             return np.squeeze(y.astype(np.float64, copy=False))
 
-    def get_meta(self):
+    def get_metadata(self):
         return {
             "n_outputs_": self.n_outputs_,
             "model_n_outputs_": self.model_n_outputs_,

@@ -109,7 +109,7 @@ def test_estimator_conserves_meta(wrapper_class, build_fn):
     # with user kwargs
     clf = wrapper_class(model=build_fn, model__hidden_layer_sizes=(100,))
     clf.fit(X, y)
-    assert wrapper_class._meta.issubset(set(clf.get_meta().keys()))
+    assert wrapper_class._meta.issubset(set(clf.get_metadata().keys()))
     # without user kwargs
     def build_fn_no_args(meta, compile_kwargs):
         return build_fn(
@@ -118,7 +118,7 @@ def test_estimator_conserves_meta(wrapper_class, build_fn):
 
     clf = wrapper_class(model=build_fn_no_args)
     clf.fit(X, y)
-    assert wrapper_class._meta.issubset(set(clf.get_meta().keys()))
+    assert wrapper_class._meta.issubset(set(clf.get_metadata().keys()))
 
 
 def test_model_params_property():
