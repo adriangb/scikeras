@@ -88,10 +88,7 @@ def test_sample_weights_all_zero():
     """
     # build estimator
     estimator = KerasClassifier(
-        build_fn=dynamic_classifier,
-        model__hidden_layer_sizes=(100,),
-        epochs=10,
-        random_state=0,
+        build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,),
     )
 
     # we create 20 points

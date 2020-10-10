@@ -156,9 +156,11 @@ def test_sample_weights_fit():
     # heavily weight towards y=1 points
     sw_first_class = [0.8] * 5000 + [0.2] * 5000
     # train estimator 1 with weights
-    estimator1.fit(X, y, sample_weight=sw_first_class)
+    with pytest.warns(UserWarning, match="Setting the random state"):
+        estimator1.fit(X, y, sample_weight=sw_first_class)
     # train estimator 2 without weights
-    estimator2.fit(X, y)
+    with pytest.warns(UserWarning, match="Setting the random state"):
+        estimator2.fit(X, y)
     # estimator1 should tilt towards y=1
     # estimator2 should predict about equally
     average_diff_pred_prob_1 = np.average(np.diff(estimator1.predict_proba(X), axis=1))
