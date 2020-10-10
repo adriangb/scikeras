@@ -46,7 +46,7 @@ def build_fn_clf(
     model.add(keras.layers.Dense(n_classes_))
     model.add(keras.layers.Activation("softmax"))
     model.compile(
-        optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"]
+        optimizer="sgd", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
     )
     return model
 
@@ -92,24 +92,24 @@ class TestBasicAPI:
 
     def test_classify_build_fn(self):
         """Tests a classification task for errors."""
-        clf = KerasClassifier(model=build_fn_clf, hidden_dim=5)
+        clf = KerasClassifier(build_fn=build_fn_clf, hidden_dim=5)
         basic_checks(clf, load_iris)
 
     def test_classify_inherit_class_build_fn(self):
         """Tests for errors using an inherited class."""
 
-        clf = InheritClassBuildFnClf(model=None, hidden_dim=5)
+        clf = InheritClassBuildFnClf(build_fn=None, hidden_dim=5)
         basic_checks(clf, load_iris)
 
     def test_regression_build_fn(self):
         """Tests for errors using KerasRegressor."""
-        reg = KerasRegressor(model=build_fn_reg, hidden_dim=5)
+        reg = KerasRegressor(build_fn=build_fn_reg, hidden_dim=5)
         basic_checks(reg, load_boston)
 
     def test_regression_inherit_class_build_fn(self):
         """Tests for errors using KerasRegressor inherited."""
 
-        reg = InheritClassBuildFnReg(model=None, hidden_dim=5,)
+        reg = InheritClassBuildFnReg(build_fn=None, hidden_dim=5,)
         basic_checks(reg, load_boston)
 
 
@@ -171,7 +171,7 @@ def build_fn_clscs(
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(n_classes_, activation="softmax"))
-    model.compile("adam", loss="categorical_crossentropy", metrics=["accuracy"])
+    model.compile("adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     return model
 
 
@@ -190,7 +190,7 @@ def build_fn_clscf(
         z = Dense(size, activation="relu")(z)
     y = Dense(n_classes_, activation="softmax")(z)
     model = Model(inputs=x, outputs=y)
-    model.compile("adam", loss="categorical_crossentropy", metrics=["accuracy"])
+    model.compile("adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     return model
 
 
@@ -336,7 +336,7 @@ class TestPrebuiltModel:
                 compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
 
-        estimator = model(model=keras_model)
+        estimator = model(build_fn=keras_model)
         basic_checks(estimator, loader)
 
     @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
@@ -372,7 +372,7 @@ class TestPrebuiltModel:
                 compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
 
-        base_estimator = model(model=keras_model)
+        base_estimator = model(build_fn=keras_model)
         for ensemble in ensembles:
             estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
@@ -385,7 +385,7 @@ def test_warm_start():
     X, y = data.data[:100], data.target[:100]
     # Initial fit
     estimator = KerasRegressor(
-        model=dynamic_regressor,
+        build_fn=dynamic_regressor,
         loss=KerasRegressor.r_squared,
         model__hidden_layer_sizes=(100,),
     )
@@ -412,7 +412,7 @@ class TestPartialFit:
         data = load_boston()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
-            model=dynamic_regressor,
+            build_fn=dynamic_regressor,
             loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=[100,],
         )
@@ -436,7 +436,7 @@ class TestPartialFit:
         data = load_boston()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
-            model=dynamic_regressor,
+            build_fn=dynamic_regressor,
             loss=KerasRegressor.r_squared,
             metrics="mean_squared_error",
             model__hidden_layer_sizes=[100,],
@@ -527,18 +527,61 @@ class TestPartialFit:
         # the rel_error is often higher than 0.5 but the tests are random
 
 
-def test_history():
-    """Test that history_'s keys are strings and values are lists.
-    """
-    data = load_boston()
-    X, y = data.data[:100], data.target[:100]
-    estimator = KerasRegressor(model=dynamic_regressor, model__hidden_layer_sizes=[])
+def force_compile_shorthand(hidden_layer_sizes, meta, compile_kwargs, params):
+    model = dynamic_regressor(
+        hidden_layer_sizes=hidden_layer_sizes, meta=meta, compile_kwargs=compile_kwargs
+    )
+    model.compile(
+        optimizer=compile_kwargs["optimizer"],
+        loss=compile_kwargs["loss"],
+        metrics=params["metrics"],
+    )
+    return model
 
-    estimator.partial_fit(X, y)
 
-    assert isinstance(estimator.history_, dict)
-    assert all(isinstance(k, str) for k in estimator.history_.keys())
-    assert all(isinstance(v, list) for v in estimator.history_.values())
+class TestHistory:
+    def test_history(self):
+        """Test that history_'s keys are strings and values are lists.
+        """
+        data = load_boston()
+        X, y = data.data[:100], data.target[:100]
+        estimator = KerasRegressor(
+            model=dynamic_regressor, model__hidden_layer_sizes=[]
+        )
+
+        estimator.partial_fit(X, y)
+
+        assert isinstance(estimator.history_, dict)
+        assert all(isinstance(k, str) for k in estimator.history_.keys())
+        assert all(isinstance(v, list) for v in estimator.history_.values())
+
+    def test_partial_fit_shorthand_metric_name(self):
+        """Test that metrics get stored in the `history_` attribute
+        by their long name (and not shorthand) and that they
+        survive a pickle round trip.
+        """
+        estimator = KerasRegressor(
+            model=force_compile_shorthand,
+            run_eagerly=True,
+            loss=KerasRegressor.r_squared,
+            model__hidden_layer_sizes=(100,),
+            metrics=["mae"],  # shorthand
+        )
+        X, y = load_boston(return_X_y=True)
+        X = X[:100]
+        y = y[:100]
+        estimator.fit(X, y)
+        assert estimator.model_.metrics_names[1] == "mae"
+        assert "mean_absolute_error" in estimator.history_
+        assert "mae" not in estimator.history_
+        assert len(estimator.history_["mean_absolute_error"]) == 1
+        estimator.partial_fit(X, y)  # check partial_fit before pickle
+        assert len(estimator.history_["mean_absolute_error"]) == 2
+        estimator = pickle.loads(pickle.dumps(estimator))
+        estimator.partial_fit(X, y)  # check partial_fit after pickle
+        assert "mean_absolute_error" in estimator.history_
+        assert "mae" not in estimator.history_
+        assert len(estimator.history_["mean_absolute_error"]) == 3
 
 
 def test_compile_model_from_params():
@@ -566,7 +609,7 @@ def test_compile_model_from_params():
 
     for loss in losses:
         estimator = KerasRegressor(
-            model=build_fn,
+            build_fn=build_fn,
             loss=loss,
             # compile_with_loss=None returns an un-compiled model
             compile_with_loss=None,
@@ -576,7 +619,7 @@ def test_compile_model_from_params():
 
     for myloss in losses:
         estimator = KerasRegressor(
-            model=build_fn,
+            build_fn=build_fn,
             loss="binary_crossentropy",
             # compile_with_loss != None overrides loss
             compile_with_loss=myloss,

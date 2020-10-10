@@ -6,13 +6,14 @@ import pytest
 from sklearn.exceptions import NotFittedError
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
+from tensorflow.python.keras.losses import CategoricalCrossentropy
 
-from scikeras.wrappers import KerasClassifier, KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
-def test_shape_change_error():
+def test_X_shape_change():
     """Tests that a ValueError is raised if the input
     changes shape in subsequent partial fit calls.
     """
@@ -22,14 +23,14 @@ def test_shape_change_error():
         loss=KerasRegressor.r_squared,
         hidden_layer_sizes=(100,),
     )
-    X = np.array([[1, 2], [3, 4]])
+    X = np.array([[1, 2], [3, 4]]).reshape(2, 2, 1)
     y = np.array([[0, 1, 0], [1, 0, 0]])
 
     estimator.fit(X=X, y=y)
 
-    with pytest.raises(ValueError, match=r"but this [\w\d]+ is expecting "):
-        # Calling with a different shape for X raises an error
-        estimator.partial_fit(X=X[:, :1], y=y)
+    with pytest.raises(ValueError, match=r"dimensions in `X`"):
+        # Calling with a different number of dimensions for X raises an error
+        estimator.partial_fit(X=X.reshape(2, 2), y=y)
 
 
 def test_not_fitted_error():
@@ -57,7 +58,7 @@ class TestInvalidBuildFn:
 
         clf = KerasClassifier(model=Model())
         with pytest.raises(TypeError, match="`model` must be"):
-            clf.fit(np.array([[0]]), np.array([0]))
+            clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
     def test_no_build_fn(self):
         class NoBuildFn(KerasClassifier):
@@ -66,7 +67,7 @@ class TestInvalidBuildFn:
         clf = NoBuildFn()
 
         with pytest.raises(ValueError, match="must implement `_keras_build_fn`"):
-            clf.fit(np.array([[0]]), np.array([0]))
+            clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
     def test_call_and_build_fn_function(self):
         class Clf(KerasClassifier):
@@ -79,7 +80,7 @@ class TestInvalidBuildFn:
         clf = Clf(model=dummy_func,)
 
         with pytest.raises(ValueError, match="cannot implement `_keras_build_fn`"):
-            clf.fit(np.array([[0]]), np.array([0]))
+            clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
 
 def test_sample_weights_all_zero():
@@ -94,10 +95,10 @@ def test_sample_weights_all_zero():
     # we create 20 points
     n, d = 50, 4
     X = np.random.uniform(size=(n, d))
-    y = np.random.uniform(size=n)
+    y = np.random.choice(2, size=n).astype("uint8")
     sample_weight = np.zeros(y.shape)
 
-    with pytest.raises(RuntimeError, match="no samples left"):
+    with pytest.raises(ValueError, match="only zeros were passed in sample_weight"):
         estimator.fit(X, y, sample_weight=sample_weight)
 
 
@@ -107,7 +108,7 @@ def test_build_fn_deprecation():
     """
     clf = KerasClassifier(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
     with pytest.warns(UserWarning, match="`build_fn` will be renamed to `model`"):
-        clf.fit([[1]], [1])
+        clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
 
 @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
@@ -122,16 +123,16 @@ def test_build_fn_and_init_signature_do_not_agree(wrapper):
     # all attempts to pass `bar` should fail
     est = wrapper(model=no_bar, model__bar=42)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))
     est = wrapper(model=no_bar, bar=42)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))
     est = wrapper(model=no_bar, model__bar=42, foo=43)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))
     est = wrapper(model=no_bar, bar=42, foo=43)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))
 
 
 @pytest.mark.parametrize("loss", [None, [None]])
@@ -151,7 +152,7 @@ def test_no_loss(loss, compile):
 
     est = KerasRegressor(model=get_model, loss=loss, compile=compile)
     with pytest.raises(ValueError, match="must provide a loss function"):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))
 
 
 @pytest.mark.parametrize("compile", [True, False])
@@ -170,11 +171,110 @@ def test_no_optimizer(compile):
 
     est = KerasRegressor(
         model=get_model,
-        loss="categorical_crossentropy",
+        loss="sparse_categorical_crossentropy",
         compile=compile,
         optimizer=None,
     )
     with pytest.raises(
         ValueError, match="Could not interpret optimizer identifier"  # Keras error
     ):
-        est.fit([[1]], [1])
+        est.fit(np.array([[0], [1]]), np.array([0, 1]))
+
+
+def test_target_dtype_changes_incremental_fit():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    est.partial_fit(X, y.astype(np.uint8))
+    with pytest.raises(
+        ValueError, match=" and casting from ",
+    ):
+        est.partial_fit(X, y.astype(np.float64))
+
+
+def test_target_dims_changes_incremental_fit():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    y_new = y.reshape(-1, 1)
+    with pytest.raises(
+        ValueError, match="`y` has 2 dimensions, but this ",
+    ):
+        est.partial_fit(X, y_new)
+
+
+def test_target_shape_changes_incremental_fit_clf():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3]).reshape(-1, 1)
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    with pytest.raises(
+        ValueError, match="The number of features ",  # raised by transformers
+    ):
+        est.partial_fit(X, np.column_stack([y, y]))
+
+
+def test_target_shape_changes_incremental_fit_reg():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3]).reshape(-1, 1)
+
+    est = KerasRegressor(model=dynamic_regressor, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    with pytest.raises(
+        ValueError, match="Detected `y` to have ",
+    ):
+        est.partial_fit(X, np.column_stack([y, y]))
+
+
+def test_X_dtype_changes_incremental_fit():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    est.partial_fit(X.astype(np.uint8), y)
+    with pytest.raises(
+        ValueError, match=" and casting from ",
+    ):
+        est.partial_fit(X.astype(np.float64), y)
+
+
+def test_target_classes_change_incremental_fit():
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    est.fit(X, y)
+    est.partial_fit(X.astype(np.uint8), y)
+    with pytest.raises(
+        ValueError, match="Found unknown categories",
+    ):
+        y[0] = 10
+        est.partial_fit(X, y)
+
+
+def test_loss_mismatch():
+    """Test that users are warned that their data-encoding may not match
+    their model's loss function if they pass `loss=xyz`
+    but self-compile their model with another loss.
+    """
+    X = np.array([[1, 2], [2, 3]])
+    y = np.array([1, 3])
+
+    def force_loss(hidden_layer_sizes, meta, compile_kwargs):
+        model = dynamic_classifier(hidden_layer_sizes, meta, compile_kwargs)
+        model.compile(loss="categorical_crossentropy")
+        return model
+
+    est = KerasClassifier(
+        model=force_loss, hidden_layer_sizes=(100,), loss="binary_crossentropy",
+    )
+    with pytest.warns(
+        UserWarning, match=" but model compiled with ",
+    ):
+        est.fit(X, y)

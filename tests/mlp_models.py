@@ -35,7 +35,9 @@ def dynamic_classifier(
         out = [Dense(n, activation="softmax")(hidden) for n in n_classes_]
     else:
         # multiclass
-        compile_kwargs["loss"] = compile_kwargs["loss"] or "categorical_crossentropy"
+        compile_kwargs["loss"] = (
+            compile_kwargs["loss"] or "sparse_categorical_crossentropy"
+        )
         out = [Dense(n_classes_, activation="softmax")(hidden)]
 
     model = Model(inp, out)
