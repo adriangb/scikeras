@@ -8,8 +8,7 @@ from scikeras.utils import loss_name, metric_name
 
 
 class CustomLoss(losses_module.Loss):
-    def __init__(name, param):
-        super().__init__(name=name)
+    pass
 
 
 @pytest.mark.parametrize(
@@ -22,7 +21,8 @@ class CustomLoss(losses_module.Loss):
         (losses_module.CategoricalCrossentropy(), "CategoricalCrossentropy", None),
         (object(), "", pytest.raises(ValueError, match="Unknown loss")),
         ("unknown_loss", "", pytest.raises(ValueError, match="Unknown loss")),
-        (CustomLoss, "", pytest.raises(ValueError, match="Unknown loss")),
+        (CustomLoss, "CustomLoss", None),
+        (CustomLoss(), "CustomLoss", None),
     ],
 )
 def test_loss_name(loss, expected, raises):
@@ -34,9 +34,8 @@ def test_loss_name(loss, expected, raises):
         assert got == expected
 
 
-class CustomMetric(metrics_module.Metric):
-    def __init__(name, param):
-        super().__init__(name=name)
+class CustomMetric(metrics_module.AUC):
+    pass
 
 
 @pytest.mark.parametrize(
@@ -49,7 +48,8 @@ class CustomMetric(metrics_module.Metric):
         (metrics_module.CategoricalCrossentropy(), "CategoricalCrossentropy", None),
         (object(), "", pytest.raises(ValueError, match="Unknown metric")),
         ("unknown_metric", "", pytest.raises(ValueError, match="Unknown metric")),
-        (CustomMetric, "", pytest.raises(ValueError, match="Unknown metric")),
+        (CustomMetric, "CustomMetric", None),
+        (CustomMetric(), "CustomMetric", None),
     ],
 )
 def test_metric_name(metric, expected, raises):
