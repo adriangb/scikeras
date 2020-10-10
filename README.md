@@ -267,7 +267,7 @@ The default implementation of `preprocess_y` for `KerasClassifier` attempts to a
 
 ### Multi-input problems
 
-As mentioned above, `Scikit-Learn` does not support multi-input problems since `X` must be a sinlge `numpy.array`. However, in order to extend this functionality, the wrappers provide a `preprocess_X` method that allows mapping a single `numpy.arary` to a list of `numpy.array` for multi-input `Keras` models. For example:
+As mentioned above, `Scikit-Learn` does not support multi-input problems since `X` must be a single `numpy.array`. However, in order to extend this functionality, the wrappers provide a `preprocess_X` method that allows mapping a single `numpy.arary` to a list of `numpy.array` for multi-input `Keras` models. For example:
 
 ```python3
 class FunctionalAPIMultiInputClassifier(KerasClassifier):
