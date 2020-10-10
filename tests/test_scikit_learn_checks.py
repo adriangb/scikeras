@@ -20,7 +20,7 @@ from .testing_utils import basic_checks, parametrize_with_checks
 @parametrize_with_checks(
     estimators=[
         KerasClassifier(
-            build_fn=dynamic_classifier,
+            model=dynamic_classifier,
             # Set batch size to a large number
             # (larger than X.shape[0] is the goal)
             # if batch_size < X.shape[0], results will very
@@ -32,7 +32,7 @@ from .testing_utils import basic_checks, parametrize_with_checks
             model__hidden_layer_sizes=[],
         ),
         KerasRegressor(
-            build_fn=dynamic_regressor,
+            model=dynamic_regressor,
             # Set batch size to a large number
             # (larger than X.shape[0] is the goal)
             # if batch_size < X.shape[0], results will very

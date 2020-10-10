@@ -26,9 +26,7 @@ def test_routing_basic(wrapper, builder):
 
     foo_val = object()
 
-    est = wrapper(
-        build_fn=builder, model__hidden_layer_sizes=(100,), model__foo=foo_val
-    )
+    est = wrapper(model=builder, model__hidden_layer_sizes=(100,), model__foo=foo_val)
 
     def build_fn(hidden_layer_sizes, foo, compile_kwargs, params, meta):
         assert set(params.keys()) == set(est.get_params().keys())
@@ -46,12 +44,10 @@ def test_routing_basic(wrapper, builder):
             meta=meta,
         )
 
-    est = wrapper(
-        build_fn=build_fn, model__hidden_layer_sizes=(100,), model__foo=foo_val
-    )
+    est = wrapper(model=build_fn, model__hidden_layer_sizes=(100,), model__foo=foo_val)
     est.fit(X, y)
 
-    est = wrapper(build_fn=build_fn, model__hidden_layer_sizes=(100,), foo=foo_val)
+    est = wrapper(model=build_fn, model__hidden_layer_sizes=(100,), foo=foo_val)
     est.fit(X, y)
 
 
@@ -87,7 +83,7 @@ def test_routing_kwargs(wrapper, builder):
         kwargs.pop("params")  # dynamic_classifier/regressor don't accept it
         return builder(*args, **kwargs)
 
-    est = wrapper(build_fn=build_fn, model__hidden_layer_sizes=(100,))
+    est = wrapper(model=build_fn, model__hidden_layer_sizes=(100,))
     est.fit(X, y)
 
 
@@ -104,7 +100,7 @@ def test_no_extra_meta(wrapper_class, build_fn):
     y = np.random.choice(n_classes, size=n).astype(int)
 
     # with user kwargs
-    clf = wrapper_class(build_fn=build_fn, model__hidden_layer_sizes=(100,))
+    clf = wrapper_class(model=build_fn, model__hidden_layer_sizes=(100,))
     clf.fit(X, y)
     assert set(clf.get_meta().keys()) == wrapper_class._meta
     # without user kwargs
@@ -113,7 +109,7 @@ def test_no_extra_meta(wrapper_class, build_fn):
             hidden_layer_sizes=(100,), meta=meta, compile_kwargs=compile_kwargs,
         )
 
-    clf = wrapper_class(build_fn=build_fn_no_args)
+    clf = wrapper_class(model=build_fn_no_args)
     clf.fit(X, y)
     assert set(clf.get_meta().keys()) == wrapper_class._meta - {"_user_params"}
 
@@ -148,8 +144,8 @@ def test_routed_unrouted_equivalence():
     X = np.random.uniform(size=(n, d)).astype(float)
     y = np.random.choice(n_classes, size=n).astype(int)
 
-    clf = KerasClassifier(build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,))
+    clf = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,))
     clf.fit(X, y)
 
-    clf = KerasClassifier(build_fn=dynamic_classifier, hidden_layer_sizes=(100,))
+    clf = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
     clf.fit(X, y)

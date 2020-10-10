@@ -44,7 +44,7 @@ def test_custom_loss_function():
     """Test that a custom loss function can be serialized.
     """
     estimator = KerasRegressor(
-        build_fn=dynamic_regressor, loss=CustomLoss(), model__hidden_layer_sizes=(100,),
+        model=dynamic_regressor, loss=CustomLoss(), model__hidden_layer_sizes=(100,),
     )
     check_pickle(estimator, load_boston)
 
@@ -77,7 +77,7 @@ def build_fn_custom_model_registered(
 def test_custom_model_registered():
     """Test that a registered subclassed Model can be serialized.
     """
-    estimator = KerasRegressor(build_fn=build_fn_custom_model_registered)
+    estimator = KerasRegressor(model=build_fn_custom_model_registered)
     check_pickle(estimator, load_boston)
 
 
@@ -105,7 +105,7 @@ def build_fn_custom_model_unregistered(
 def test_custom_model_unregistered():
     """Test that an unregistered subclassed Model raises an error.
     """
-    estimator = KerasRegressor(build_fn=build_fn_custom_model_unregistered)
+    estimator = KerasRegressor(model=build_fn_custom_model_unregistered)
     with pytest.raises(ValueError, match="Unknown layer"):
         check_pickle(estimator, load_boston)
 
@@ -117,7 +117,7 @@ def test_run_eagerly():
     """Test that models compiled with run_eagerly can be serialized.
     """
     estimator = KerasRegressor(
-        build_fn=dynamic_regressor,
+        model=dynamic_regressor,
         run_eagerly=True,
         loss=KerasRegressor.r_squared,
         model__hidden_layer_sizes=(100,),
