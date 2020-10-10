@@ -542,7 +542,7 @@ class BaseWrapper(BaseEstimator):
             Transformer implementing the BaseKerasTransformer
             interface.
         """
-        raise FunctionTransformer()
+        return FunctionTransformer()
 
     @property
     def feature_encoder(self) -> BaseKerasTransformer:
@@ -557,7 +557,7 @@ class BaseWrapper(BaseEstimator):
             Transformer implementing the BaseKerasTransformer
             interface.
         """
-        raise FunctionTransformer()
+        return FunctionTransformer()
 
     def fit(self, X, y, sample_weight=None):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
@@ -886,21 +886,6 @@ class KerasClassifier(BaseWrapper):
         """
         return ClassifierLabelEncoder(loss=self.loss, target_type=self.target_type_)
 
-    @property
-    def feature_encoder(self) -> BaseKerasTransformer:
-        """Retrieve a transformer for features / ``X``.
-
-        Metadata will be collected from `get_metadata` if
-        the transformer implements that method.
-
-        Returns
-        -------
-        BaseKerasTransformer
-            Transformer implementing the BaseKerasTransformer
-            interface.
-        """
-        return FunctionTransformer()
-
     def _check_output_model_compatibility(self, y):
         """Checks that the model output number and loss functions match
         what SciKeras expects.
@@ -1040,46 +1025,6 @@ class KerasRegressor(BaseWrapper):
             interface.
         """
         return RegressorTargetEncoder()
-
-    @property
-    def feature_encoder(self) -> BaseKerasTransformer:
-        """Retrieve a transformer for features / ``X``.
-
-        Metadata will be collected from `get_metadata` if
-        the transformer implements that method.
-
-        Returns
-        -------
-        BaseKerasTransformer
-            Transformer implementing the BaseKerasTransformer
-            interface.
-        """
-        return FunctionTransformer()
-
-    def score(self, X, y, sample_weight=None):
-        """Returns the mean loss on the given test data and labels.
-
-        Arguments:
-            X: array-like, shape `(n_samples, n_features)`
-                Test samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
-            y: array-like, shape `(n_samples,)`
-                True labels for `X`.
-
-        Returns:
-            score: float
-                Mean accuracy of predictions on `X` wrt. `y`.
-        """
-        # check loss function and warn if it is not the same as score function
-        if self.model_.loss is not self.r_squared:
-            warnings.warn(
-                "Since ScikitLearn's `score` uses R^2 by default, it is "
-                "advisable to use the same loss/metric when optimizing the "
-                "model.This class provides an R^2 implementation in "
-                "`KerasRegressor.r_squared`."
-            )
-
-        return super().score(X, y, sample_weight=sample_weight)
 
     @staticmethod
     @register_keras_serializable()
