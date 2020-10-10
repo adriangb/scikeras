@@ -17,10 +17,12 @@ from sklearn.ensemble import (
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
@@ -92,24 +94,24 @@ class TestBasicAPI:
 
     def test_classify_build_fn(self):
         """Tests a classification task for errors."""
-        clf = KerasClassifier(build_fn=build_fn_clf, hidden_dim=5)
+        clf = KerasClassifier(model=build_fn_clf, hidden_dim=5)
         basic_checks(clf, load_iris)
 
     def test_classify_inherit_class_build_fn(self):
         """Tests for errors using an inherited class."""
 
-        clf = InheritClassBuildFnClf(build_fn=None, hidden_dim=5)
+        clf = InheritClassBuildFnClf(model=None, hidden_dim=5)
         basic_checks(clf, load_iris)
 
     def test_regression_build_fn(self):
         """Tests for errors using KerasRegressor."""
-        reg = KerasRegressor(build_fn=build_fn_reg, hidden_dim=5)
+        reg = KerasRegressor(model=build_fn_reg, hidden_dim=5)
         basic_checks(reg, load_boston)
 
     def test_regression_inherit_class_build_fn(self):
         """Tests for errors using KerasRegressor inherited."""
 
-        reg = InheritClassBuildFnReg(build_fn=None, hidden_dim=5,)
+        reg = InheritClassBuildFnReg(model=None, hidden_dim=5,)
         basic_checks(reg, load_boston)
 
 
@@ -336,7 +338,7 @@ class TestPrebuiltModel:
                 compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
 
-        estimator = model(build_fn=keras_model)
+        estimator = model(model=keras_model)
         basic_checks(estimator, loader)
 
     @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
@@ -372,7 +374,7 @@ class TestPrebuiltModel:
                 compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
 
-        base_estimator = model(build_fn=keras_model)
+        base_estimator = model(model=keras_model)
         for ensemble in ensembles:
             estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
@@ -385,7 +387,7 @@ def test_warm_start():
     X, y = data.data[:100], data.target[:100]
     # Initial fit
     estimator = KerasRegressor(
-        build_fn=dynamic_regressor,
+        model=dynamic_regressor,
         loss=KerasRegressor.r_squared,
         model__hidden_layer_sizes=(100,),
     )
@@ -407,12 +409,18 @@ def test_warm_start():
         model = estimator.model_
 
 
+@register_keras_serializable(name="CustomMetric")
+class CustomMetric(metrics_module.MeanAbsoluteError):
+    def __reduce__(self):
+        return metrics_module.deserialize, (metrics_module.serialize(self),)
+
+
 class TestPartialFit:
     def test_partial_fit(self):
         data = load_boston()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
-            build_fn=dynamic_regressor,
+            model=dynamic_regressor,
             loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=[100,],
         )
@@ -427,6 +435,27 @@ class TestPartialFit:
         estimator.partial_fit(X, y)
         assert estimator.model_ is model, "Model memory address should remain constant"
 
+    def test_partial_fit_history_metric_names(self):
+        data = load_boston()
+        X, y = data.data[:100], data.target[:100]
+        estimator = KerasRegressor(
+            model=dynamic_regressor,
+            loss=KerasRegressor.r_squared,
+            model__hidden_layer_sizes=[100,],
+            metrics=["mse", CustomMetric(name="custom_metric")],
+        )
+        estimator.partial_fit(X, y)
+        # Make custom metric names are preserved
+        # and shorthand metric names are saved by their full name
+        for _ in range(2):
+            estimator = pickle.loads(pickle.dumps(estimator))
+            estimator = estimator.partial_fit(X, y)
+            assert set(estimator.history_.keys()) == {
+                "loss",
+                "mean_squared_error",
+                "custom_metric",
+            }
+
     def test_partial_fit_history_len(self):
         # history_ records the history from this partial_fit call
         # Make sure for each call to partial_fit a single entry
@@ -436,7 +465,7 @@ class TestPartialFit:
         data = load_boston()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
-            build_fn=dynamic_regressor,
+            model=dynamic_regressor,
             loss=KerasRegressor.r_squared,
             metrics="mean_squared_error",
             model__hidden_layer_sizes=[100,],
@@ -609,7 +638,7 @@ def test_compile_model_from_params():
 
     for loss in losses:
         estimator = KerasRegressor(
-            build_fn=build_fn,
+            model=build_fn,
             loss=loss,
             # compile_with_loss=None returns an un-compiled model
             compile_with_loss=None,
@@ -619,7 +648,7 @@ def test_compile_model_from_params():
 
     for myloss in losses:
         estimator = KerasRegressor(
-            build_fn=build_fn,
+            model=build_fn,
             loss="binary_crossentropy",
             # compile_with_loss != None overrides loss
             compile_with_loss=myloss,

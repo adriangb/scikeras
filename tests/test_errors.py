@@ -7,6 +7,7 @@ from sklearn.exceptions import NotFittedError
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.losses import CategoricalCrossentropy
+from tensorflow.python.types.core import Value
 
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
@@ -274,7 +275,7 @@ def test_loss_mismatch():
     est = KerasClassifier(
         model=force_loss, hidden_layer_sizes=(100,), loss="binary_crossentropy",
     )
-    with pytest.warns(
-        UserWarning, match=" but model compiled with ",
+    with pytest.raises(
+        ValueError, match=" but model compiled with ",
     ):
         est.fit(X, y)
