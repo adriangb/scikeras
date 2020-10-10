@@ -6,10 +6,8 @@ import pytest
 from sklearn.exceptions import NotFittedError
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
-from tensorflow.python.keras.losses import CategoricalCrossentropy
-from tensorflow.python.types.core import Value
 
-from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
