@@ -69,7 +69,7 @@ def test_routing_kwargs(wrapper, builder):
 
     # build once to get expected meta-parameters
     expected_meta = (
-        wrapper(build_fn=builder, model__hidden_layer_sizes=(100,)).fit(X, y)._meta
+        wrapper(model=builder, model__hidden_layer_sizes=(100,)).fit(X, y)._meta
     )
     expected_meta = expected_meta - {
         "model_",

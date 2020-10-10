@@ -533,7 +533,7 @@ class BaseWrapper(BaseEstimator):
     def target_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for targets / ``y``.
 
-        Metadata will be collected from `get_metadatadata` if
+        Metadata will be collected from `get_metadata` if
         the transformer implements that method.
 
         Returns
@@ -548,7 +548,7 @@ class BaseWrapper(BaseEstimator):
     def feature_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for features / ``X``.
 
-        Metadata will be collected from `get_metadatadata` if
+        Metadata will be collected from `get_metadata` if
         the transformer implements that method.
 
         Returns
@@ -866,7 +866,7 @@ class KerasClassifier(BaseWrapper):
         argument in ``inverse_transform`` with a default value
         of ``False``.
 
-        Metadata will be collected from `get_metadatadata` if
+        Metadata will be collected from `get_metadata` if
         the transformer implements that method.
 
         Returns
@@ -881,7 +881,7 @@ class KerasClassifier(BaseWrapper):
     def feature_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for features / ``X``.
 
-        Metadata will be collected from `get_metadatadata` if
+        Metadata will be collected from `get_metadata` if
         the transformer implements that method.
 
         Returns
@@ -900,18 +900,18 @@ class KerasClassifier(BaseWrapper):
 
         # check that if the user gave us a loss function it ended up in
         # the actual model
-        if self.loss is not None:
-            try:
-                given = loss_name(self.loss)
-                got = loss_name(self.model_.loss)
-                if got is not given:
-                    warnings.warn(
-                        f"loss={self.loss} but model compiled with {self.model_.loss}."
-                        " Data may not match loss function!"
-                    )
-            except ValueError:
-                # unknown loss (ex: list of loss functions or custom loss)
-                pass
+        default_val = inspect.signature(self.__init__).parameters["loss"].default
+        try:
+            given = loss_name(self.loss)
+            got = loss_name(self.model_.loss)
+        except ValueError:
+            # unknown loss (ex: list of loss functions or custom loss)
+            return
+        if given is not default_val and got is not given:
+            raise ValueError(
+                f"loss={self.loss} but model compiled with {self.model_.loss}."
+                " Data may not match loss function!"
+            )
 
     def partial_fit(self, X, y, classes=None, sample_weight=None):
         """
@@ -1021,7 +1021,7 @@ class KerasRegressor(BaseWrapper):
     def target_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for targets / ``y``.
 
-        Metadata will be collected from `get_metadatadata` if
+        Metadata will be collected from `get_metadata` if
         the transformer implements that method.
 
         Returns
@@ -1036,7 +1036,7 @@ class KerasRegressor(BaseWrapper):
     def feature_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for features / ``X``.
 
-        Metadata will be collected from `get_metadatadata` if
+        Metadata will be collected from `get_metadata` if
         the transformer implements that method.
 
         Returns
