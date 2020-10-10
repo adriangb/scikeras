@@ -301,7 +301,7 @@ class BaseWrapper(BaseEstimator):
         if has_param(final_build_fn, "meta") or accepts_kwargs(final_build_fn):
             # build_fn accepts `meta`, add it
             meta = route_params(
-                self.get_meta(), destination=None, pass_filter=self._meta,
+                self.get_metadata(), destination=None, pass_filter=self._meta,
             )
             build_params["meta"] = meta
         if has_param(final_build_fn, "compile_kwargs") or accepts_kwargs(
@@ -524,7 +524,7 @@ class BaseWrapper(BaseEstimator):
     def target_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for targets / ``y``.
 
-        Metadata will be collected from `get_metadata` if
+        Metadata will be collected from `get_metadatadata` if
         the transformer implements that method.
 
         Returns
@@ -539,7 +539,7 @@ class BaseWrapper(BaseEstimator):
     def feature_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for features / ``X``.
 
-        Metadata will be collected from `get_metadata` if
+        Metadata will be collected from `get_metadatadata` if
         the transformer implements that method.
 
         Returns
@@ -581,11 +581,13 @@ class BaseWrapper(BaseEstimator):
         self._meta = self.__class__._meta.copy()  # avoid modifying mutable class attr
 
         self.target_encoder_ = self.target_encoder.fit(y)
-        target_meta = getattr(self.target_encoder_, "get_meta", lambda: dict())()
-        vars(self).update(**target_meta)
-        self._meta.update(set(target_meta.keys()))
+        target_metadata = getattr(
+            self.target_encoder_, "get_metadata", lambda: dict()
+        )()
+        vars(self).update(**target_metadata)
+        self._meta.update(set(target_metadata.keys()))
         self.feature_encoder_ = self.feature_encoder.fit(X)
-        feature_meta = getattr(self.feature_encoder, "get_meta", lambda: dict())()
+        feature_meta = getattr(self.feature_encoder, "get_metadata", lambda: dict())()
         vars(self).update(**feature_meta)
         self._meta.update(set(feature_meta.keys()))
 
@@ -755,7 +757,7 @@ class BaseWrapper(BaseEstimator):
 
         return self.scorer(y, y_pred, sample_weight=sample_weight, **score_args)
 
-    def get_meta(self) -> Dict[str, Any]:
+    def get_metadata(self) -> Dict[str, Any]:
         """Get meta parameters (parameters created by fit, like
         n_features_in_ or target_type_).
 
@@ -857,7 +859,7 @@ class KerasClassifier(BaseWrapper):
         argument in ``inverse_transform`` with a default value
         of ``False``.
 
-        Metadata will be collected from `get_metadata` if
+        Metadata will be collected from `get_metadatadata` if
         the transformer implements that method.
 
         Returns
@@ -872,7 +874,7 @@ class KerasClassifier(BaseWrapper):
     def feature_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for features / ``X``.
 
-        Metadata will be collected from `get_metadata` if
+        Metadata will be collected from `get_metadatadata` if
         the transformer implements that method.
 
         Returns
@@ -1012,7 +1014,7 @@ class KerasRegressor(BaseWrapper):
     def target_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for targets / ``y``.
 
-        Metadata will be collected from `get_metadata` if
+        Metadata will be collected from `get_metadatadata` if
         the transformer implements that method.
 
         Returns
@@ -1027,7 +1029,7 @@ class KerasRegressor(BaseWrapper):
     def feature_encoder(self) -> BaseKerasTransformer:
         """Retrieve a transformer for features / ``X``.
 
-        Metadata will be collected from `get_metadata` if
+        Metadata will be collected from `get_metadatadata` if
         the transformer implements that method.
 
         Returns

@@ -24,7 +24,7 @@ NUM_CLASSES = 2
 
 
 class MultiInputTransformer(FunctionTransformer):
-    def get_meta(self):
+    def get_metadata(self):
         return dict()
 
 
