@@ -241,7 +241,7 @@ def test_incompatible_output_dimensions():
         )
         return model
 
-    clf = KerasClassifier(build_fn=build_fn_clf)
+    clf = KerasClassifier(model=build_fn_clf)
 
     with pytest.raises(RuntimeError):
         clf.fit(X, y)
@@ -289,9 +289,7 @@ def test_classifier_handles_dtypes(dtype):
             assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
             return super()._fit_keras_model(X, y, sample_weight, warm_start)
 
-    clf = StrictClassifier(
-        build_fn=dynamic_classifier, model__hidden_layer_sizes=(100,)
-    )
+    clf = StrictClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,))
     clf.fit(X, y, sample_weight=sample_weight)
     assert clf.score(X, y) >= 0
     if y.dtype.kind != "O":
@@ -324,7 +322,7 @@ def test_regressor_handles_dtypes(dtype):
             assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
             return super()._fit_keras_model(X, y, sample_weight, warm_start)
 
-    reg = StrictRegressor(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
+    reg = StrictRegressor(model=dynamic_regressor, model__hidden_layer_sizes=(100,))
     reg.fit(X, y, sample_weight=sample_weight)
     y_hat = reg.predict(X)
     if y.dtype.kind == "f":
@@ -355,7 +353,7 @@ def test_mixed_dtypes(y_dtype, X_dtype, run_eagerly):
             return super()._fit_keras_model(X, y, sample_weight, warm_start)
 
     reg = StrictRegressor(
-        build_fn=dynamic_regressor,
+        model=dynamic_regressor,
         run_eagerly=run_eagerly,
         model__hidden_layer_sizes=(100,),
     )

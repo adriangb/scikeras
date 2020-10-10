@@ -27,7 +27,7 @@ def test_callbacks():
     """Test estimators with callbacks.
     """
     estimator = KerasClassifier(
-        build_fn=dynamic_classifier,
+        model=dynamic_classifier,
         callbacks=(SentinalCallback(),),
         optimizer="adam",
         model__hidden_layer_sizes=(100,),
