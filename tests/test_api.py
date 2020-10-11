@@ -17,6 +17,7 @@ from sklearn.ensemble import (
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
 from tensorflow.keras.models import Model, Sequential
@@ -623,35 +624,73 @@ def test_compile_model_from_params():
     data = load_boston()
     X, y = data.data[:100], data.target[:100]
 
-    losses = ("mean_squared_error", "mean_absolute_error")
+    losses = (losses_module.MeanAbsoluteError, losses_module.MeanSquaredError)
 
     # build_fn that does not compile
-    def build_fn(compile_with_loss=None):
+    def build_fn(my_loss=None):
         model = Sequential()
         model.add(keras.layers.Dense(X.shape[1], input_shape=(X.shape[1],)))
         model.add(keras.layers.Activation("relu"))
         model.add(keras.layers.Dense(1))
         model.add(keras.layers.Activation("linear"))
-        if compile_with_loss:
-            model.compile(loss=compile_with_loss)
+        if my_loss is not None:
+            model.compile(loss=my_loss)
         return model
 
+    # Calling with loss=None (or other default)
+    # and compiling within build_fn must work
     for loss in losses:
+        loss_obj = loss()
         estimator = KerasRegressor(
             model=build_fn,
-            loss=loss,
-            # compile_with_loss=None returns an un-compiled model
-            compile_with_loss=None,
-        )
-        estimator.fit(X, y)
-        assert estimator.model_.loss.__name__ == loss
-
-    for myloss in losses:
-        estimator = KerasRegressor(
-            model=build_fn,
-            loss="binary_crossentropy",
             # compile_with_loss != None overrides loss
-            compile_with_loss=myloss,
+            my_loss=loss_obj,
         )
         estimator.fit(X, y)
-        assert estimator.model_.loss == myloss
+        assert estimator.model_.loss is loss_obj
+
+    # Passing a value for loss AND compiling with
+    # the SAME loss should succeed, and the final loss
+    # should be the user-supplied loss
+    for loss in losses:
+        loss_obj = loss()
+        estimator = KerasRegressor(
+            model=build_fn,
+            loss=loss(),
+            # compile_with_loss != None overrides loss
+            my_loss=loss_obj,
+        )
+        estimator.fit(X, y)
+        assert estimator.model_.loss is loss_obj
+
+    # Passing a non-default value for loss AND compiling with
+    # a DIFFERENT loss should raise a ValueError
+    for loss in losses:
+        loss_obj = loss()
+        estimator = KerasRegressor(
+            model=build_fn,
+            loss=losses_module.CosineSimilarity(),
+            # compile_with_loss != None overrides loss
+            my_loss=loss_obj,
+        )
+        with pytest.raises(ValueError, match=" but model compiled with "):
+            estimator.fit(X, y)
+
+    # This should apply even if the default is != None
+    class DefaultLossNotNone(KerasRegressor):
+        def __init__(self, *args, loss=losses_module.CosineSimilarity(), **kwargs):
+            super().__init__(*args, **kwargs, loss=loss)
+
+    for loss in losses:
+        loss_obj = loss()
+        estimator = DefaultLossNotNone(model=build_fn, my_loss=loss_obj,)
+        estimator.fit(X, y)
+        assert estimator.model_.loss is loss_obj
+
+    for loss in losses:
+        loss_obj = loss()
+        estimator = DefaultLossNotNone(
+            model=build_fn, loss=losses_module.CategoricalHinge(), my_loss=loss_obj,
+        )
+        with pytest.raises(ValueError, match=" but model compiled with "):
+            estimator.fit(X, y)

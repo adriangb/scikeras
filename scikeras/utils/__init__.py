@@ -44,6 +44,11 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     """
     if isclass(loss):
         loss = loss()  # get_loss accepts instances, not classes
+    if not (isinstance(loss, (str, Loss)) or callable(loss)):
+        raise TypeError(
+            "`loss` must be a string, a function, an instance of tf.keras.losses.Loss"
+            " or a class inheriting from tf.keras.losses.Loss"
+        )
     try:
         loss = serialize_loss(get_loss(loss))
     except ValueError:
@@ -90,6 +95,12 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
     """
     if isclass(metric):
         metric = metric()  # get_metric accepts instances, not classes
+    if not (isinstance(metric, (str, Metric)) or callable(metric)):
+        raise TypeError(
+            "`metric` must be a string, a function, an instance of"
+            " tf.keras.metrics.Metric or a class inheriting from"
+            " tf.keras.metrics.Metric"
+        )
     try:
         metric = serialize_metric(get_metric(metric))
     except ValueError:

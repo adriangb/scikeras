@@ -419,7 +419,7 @@ class BaseWrapper(BaseEstimator):
         # return self to allow fit_transform and such to work
         return self
 
-    def _check_output_model_compatibility(self, y: np.ndarray) -> None:
+    def _check_model_compatibility(self, y: np.ndarray) -> None:
         """Checks that the model output number and y shape match.
 
         This is in place to avoid cryptic TF errors.
@@ -430,6 +430,22 @@ class BaseWrapper(BaseEstimator):
                 "Detected an input of size"
                 f" {y[0].shape[0]}, but {self.model_} has"
                 f" {self.model_.outputs} outputs"
+            )
+        # check that if the user gave us a loss function it ended up in
+        # the actual model
+        default_val = inspect.signature(self.__init__).parameters["loss"].default
+        try:
+            if default_val is not None:
+                default_val = loss_name(default_val)
+            given = loss_name(self.loss)
+            got = loss_name(self.model_.loss)
+        except (ValueError, TypeError):
+            # unknown loss (ex: list of loss functions or custom loss)
+            return
+        if given is not default_val and got is not given:
+            raise ValueError(
+                f"loss={self.loss} but model compiled with {self.model_.loss}."
+                " Data may not match loss function!"
             )
 
     def _validate_data(
@@ -654,7 +670,7 @@ class BaseWrapper(BaseEstimator):
         y = self.target_encoder_.transform(y)
         X = self.feature_encoder_.transform(X)
 
-        self._check_output_model_compatibility(y)
+        self._check_model_compatibility(y)
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(
@@ -885,27 +901,6 @@ class KerasClassifier(BaseWrapper):
             interface.
         """
         return ClassifierLabelEncoder(loss=self.loss, target_type=self.target_type_)
-
-    def _check_output_model_compatibility(self, y):
-        """Checks that the model output number and loss functions match
-        what SciKeras expects.
-        """
-        super()._check_output_model_compatibility(y)
-
-        # check that if the user gave us a loss function it ended up in
-        # the actual model
-        default_val = inspect.signature(self.__init__).parameters["loss"].default
-        try:
-            given = loss_name(self.loss)
-            got = loss_name(self.model_.loss)
-        except ValueError:
-            # unknown loss (ex: list of loss functions or custom loss)
-            return
-        if given is not default_val and got is not given:
-            raise ValueError(
-                f"loss={self.loss} but model compiled with {self.model_.loss}."
-                " Data may not match loss function!"
-            )
 
     def partial_fit(self, X, y, classes=None, sample_weight=None):
         """
