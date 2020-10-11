@@ -15,6 +15,7 @@ def _camel2snake(s: str) -> str:
     """
     return "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")
 
+
 def loss_name(loss: Union[str, Loss, Callable]) -> str:
     """Retrieves a loss's full name (eg: "mean_squared_error").
 
