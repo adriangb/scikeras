@@ -664,7 +664,8 @@ class BaseWrapper(BaseEstimator):
             if zeros.sum() == zeros.size:
                 raise ValueError(
                     "No training samples had any weight; only zeros were passed in sample_weight."
-                    " That means there's nothing to train on by definition, so training can not be completed."
+                    " That means there's nothing to train on by definition, so training can not be completed.\n\n"
+                    "To resolve this error, have at least one non-zero sample_weight"
                 )
             if np.any(zeros):
                 X = X[~zeros]
