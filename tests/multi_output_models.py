@@ -2,13 +2,16 @@ from typing import List
 
 import numpy as np
 
+from sklearn.utils.multiclass import type_of_target
+
 from scikeras.utils.transformers import ClassifierLabelEncoder
 from scikeras.wrappers import KerasClassifier
 
 
 class MultiLabelTransformer(ClassifierLabelEncoder):
     def fit(self, X: np.ndarray) -> "MultiLabelTransformer":
-        if self.target_type != "multilabel-indicator":
+        self._target_type = type_of_target(X)
+        if self._target_type != "multilabel-indicator":
             return super().fit(X)
         # y = array([1, 1, 1, 0], [0, 0, 1, 1])
         # each col will be processed as multiple binary classifications
@@ -19,14 +22,14 @@ class MultiLabelTransformer(ClassifierLabelEncoder):
         return self
 
     def transform(self, X: np.ndarray) -> List[np.ndarray]:
-        if self.target_type != "multilabel-indicator":
+        if self._target_type != "multilabel-indicator":
             return super().transform(X)
         return np.split(X, X.shape[1], axis=1)
 
     def inverse_transform(
         self, X: List[np.ndarray], return_proba: bool = False
     ) -> np.ndarray:
-        if self.target_type != "multilabel-indicator":
+        if self._target_type != "multilabel-indicator":
             return super().inverse_transform(X, return_proba=return_proba)
         if not return_proba:
             X = [np.argmax(X_, axis=1).astype(self.y_dtype_, copy=False) for X_ in X]
@@ -40,7 +43,7 @@ class MultiOutputClassifier(KerasClassifier):
 
     @property
     def target_encoder(self) -> MultiLabelTransformer:
-        return MultiLabelTransformer(target_type=self.target_type_)
+        return MultiLabelTransformer()
 
     def score(self, X, y):
         """Taken from sklearn.multiouput.MultiOutputClassifier

@@ -4,9 +4,9 @@ from typing import Any, Dict, List, Union
 import numpy as np
 
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils.multiclass import type_of_target
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder
+from sklearn.utils.multiclass import type_of_target
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 
 
@@ -43,7 +43,7 @@ class Ensure2DTransformer(TransformerMixin, BaseEstimator):
         return X
 
 
-class ClassifierLabelEncoder(BaseKerasTransformer):
+class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
     """Default target transformer for KerasClassifier.
     """
 
@@ -76,12 +76,17 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
             )
         self.final_encoder_ = encoders[target_type].fit(y)
 
-        if (
-            target_type == "multilabel-indicator"
-            and
-            np.all(np.sum(y, axis=1)==1)
-        ):
+        if target_type == "multilabel-indicator" and np.all(np.sum(y, axis=1) == 1):
             target_type = "multiclass-onehot"
+            self.n_outputs_ = None
+            self.model_n_outputs_ = None
+            self.y_dtype_ = y.dtype
+        else:
+            self.n_outputs_ = 1
+            self.model_n_outputs_ = 1
+            self.y_dtype_ = y.dtype
+
+        self._target_type = target_type
 
         if target_type in ["binary", "multiclass"]:
             self.classes_ = self.final_encoder_[1].categories_[0]
@@ -143,7 +148,7 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
             y_[np.arange(y.shape[0]), idx] = 1
             class_predictions = y_
         else:
-           class_predictions = None
+            class_predictions = None
 
         if return_proba:
             return y
@@ -160,7 +165,7 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
         }
 
 
-class RegressorTargetEncoder(BaseKerasTransformer):
+class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
     """Default target transformer for KerasRegressor.
     """
 
