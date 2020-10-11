@@ -44,20 +44,20 @@ class CustomMetric(metrics_module.AUC):
     "metric,expected,raises",
     [
         ("categorical_crossentropy", "categorical_crossentropy", None),
-        ("CategoricalCrossentropy", "CategoricalCrossentropy", None),
+        ("CategoricalCrossentropy", "categorical_crossentropy", None),
         (metrics_module.categorical_crossentropy, "categorical_crossentropy", None),
-        (metrics_module.CategoricalCrossentropy, "CategoricalCrossentropy", None),
-        (metrics_module.CategoricalCrossentropy(), "CategoricalCrossentropy", None),
+        (metrics_module.CategoricalCrossentropy, "categorical_crossentropy", None),
+        (metrics_module.CategoricalCrossentropy(), "categorical_crossentropy", None),
         (object(), "", pytest.raises(TypeError, match="`metric` must be a")),
         (object, "", pytest.raises(TypeError, match="`metric` must be a")),
         (list(), "", pytest.raises(TypeError, match="`metric` must be a")),
         (
             "unknown_metric",
             "",
-            pytest.raises(ValueError, match="Unable to determine name"),
+            pytest.raises(ValueError, match="Unknown metric function"),
         ),
-        (CustomMetric, "CustomMetric", None),
-        (CustomMetric(), "CustomMetric", None),
+        (CustomMetric, "custom_metric", None),
+        (CustomMetric(), "custom_metric", None),
     ],
 )
 def test_metric_name(metric, expected, raises):

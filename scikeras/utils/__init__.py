@@ -77,6 +77,10 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
     str
         Full name for Keras metric. Ex: "mean_squared_error".
 
+    Notes
+    -----
+    The result of this function will always be in snake case, not camel case.
+
     Examples
     --------
     >>> metric_name("BinaryCrossentropy")
@@ -102,14 +106,7 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
             " tf.keras.metrics.Metric or a class inheriting from"
             " tf.keras.metrics.Metric"
         )
-    try:
-        metric = serialize_metric(get_metric(metric))
-    except ValueError:
-        # Error messages change slightly across TF versions
-        # And errors are different for unknown strings vs. unknown objects
-        # We homogenize them to a single error message
-        raise ValueError(f"Unable to determine name for metric: {metric}")
-    if isinstance(metric, dict):
-        # classes are serialized as dicts
-        return metric["class_name"]
-    return metric  # for functions (serialize returns a string)
+    fn_or_cls = keras_metric_get(metric)
+    if isinstance(fn_or_cls, Metric):
+        return _camel2snake(fn_or_cls.__class__.__name__)
+    return fn_or_cls.__name__
