@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Union
 import numpy as np
 
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils.multiclass import type_of_target
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder
 from tensorflow.python.keras.losses import is_categorical_crossentropy
@@ -42,74 +43,16 @@ class Ensure2DTransformer(TransformerMixin, BaseEstimator):
         return X
 
 
-class BaseKerasTransformer(TransformerMixin, BaseEstimator, ABC):
-    @abstractmethod
-    def fit(self, X: np.ndarray) -> "BaseKerasTransformer":
-        """Fit this transformer using `X`.
-        """
-
-    @abstractmethod
-    def transform(
-        self, X: np.ndarray
-    ) -> Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]]:
-        """Convert input numpy array to the format expected by the
-        Keras Model this is being used with.
-
-        Parameters
-        ----------
-        X : np.ndarray
-            Numpy array.
-
-        Returns
-        -------
-        Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]]
-            Numpy array, list of arrays or dict of arrays mapping
-            to the Model's outputs.
-        """
-
-    @abstractmethod
-    def inverse_transform(self, X: Union[List[np.ndarray], np.ndarray]) -> np.ndarray:
-        """Invert the transformation.
-
-        Parameters
-        ----------
-        X : Union[List[np.ndarray], np.ndarray]
-            Output from Keras Model.
-
-        Returns
-        -------
-        np.ndarray
-            Numpy array.
-        """
-
-    @abstractmethod
-    def get_metadata(self) -> Dict[str, Any]:
-        """Retrieve the meta parameters of this transformer.
-
-        Returns
-        -------
-        Dict[str, Any]
-            Dictionary of of format parameter: value.
-        """
-
-
 class ClassifierLabelEncoder(BaseKerasTransformer):
     """Default target transformer for KerasClassifier.
     """
 
-    def __init__(self, target_type="unknown", loss=None):
-        self.target_type = target_type
+    def __init__(self, loss=None):
         self.loss = loss
 
     def fit(self, X: np.ndarray) -> "ClassifierLabelEncoder":
         y = X  # rename for clarity, the input is always expected to be a target `y`
-        target_type = self.target_type
-        if (
-            target_type == "multilabel-indicator"
-            and y.ndim == 2
-            and np.all(np.sum(y, axis=1) == 1)
-        ):
-            target_type = "multiclass-one-hot"
+        target_type = type_of_target(y)
         encoders = {
             "binary": make_pipeline(
                 Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
@@ -117,7 +60,8 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
             "multiclass": make_pipeline(
                 Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
             ),
-            "multiclass-one-hot": FunctionTransformer(),
+            "multiclass-multioutput": FunctionTransformer(),
+            "multilabel-indicator": FunctionTransformer(),
         }
         if is_categorical_crossentropy(self.loss):
             encoders["multiclass"] = make_pipeline(
@@ -131,15 +75,27 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
                 " label type."
             )
         self.final_encoder_ = encoders[target_type].fit(y)
+
+        if (
+            target_type == "multilabel-indicator"
+            and
+            np.all(np.sum(y, axis=1)==1)
+        ):
+            target_type = "multiclass-onehot"
+
         if target_type in ["binary", "multiclass"]:
             self.classes_ = self.final_encoder_[1].categories_[0]
             self.n_classes_ = self.classes_.size
-        elif target_type == "multiclass-one-hot":
+        elif target_type == "multiclass-onehot":  # one-hot encoded multiclass
             self.classes_ = np.arange(0, y.shape[1])
             self.n_classes_ = y.shape[1]
+        else:
+            self.classes_ = None
+            self.n_classes_ = None
         self.n_outputs_ = 1
         self.model_n_outputs_ = 1
         self.y_dtype_ = y.dtype
+        self._target_type = target_type
         return self
 
     def transform(self, X: np.ndarray) -> np.ndarray:
@@ -152,7 +108,7 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
         self, X: np.ndarray, return_proba: bool = False
     ) -> np.ndarray:
         y = X  # rename for clarity, the input is always expected to be a target `y`
-        if self.target_type == "binary":
+        if self._target_type == "binary":
             # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
             if self.n_classes_ == 1:
                 # special case: single input label for sigmoid output
@@ -169,7 +125,7 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
                     y = np.column_stack([1 - y, y])
                 y_ = np.argmax(y, axis=1).reshape(-1, 1)
                 class_predictions = self.final_encoder_.inverse_transform(y_)
-        elif self.target_type == "multiclass":
+        elif self._target_type == "multiclass":
             # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
             # array(['apple', 'orange'])
             idx = np.argmax(y, axis=-1)
@@ -179,13 +135,15 @@ class ClassifierLabelEncoder(BaseKerasTransformer):
                 y_ = np.zeros(y.shape, dtype=int)
                 y_[np.arange(y.shape[0]), idx] = 1
             class_predictions = self.final_encoder_.inverse_transform(y_)
-        else:  # target_type == "multiclass-one-hot" in `fit`
-            # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
+        elif self._target_type == "multiclass-onehot":
+            # array([.8, .1, .1], [.1, .8, .1]) ->
             # array([[1, 0, 0], [0, 1, 0]])
             idx = np.argmax(y, axis=-1)
             y_ = np.zeros(y.shape, dtype=int)
             y_[np.arange(y.shape[0]), idx] = 1
             class_predictions = y_
+        else:
+           class_predictions = None
 
         if return_proba:
             return y
