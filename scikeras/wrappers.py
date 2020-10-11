@@ -439,7 +439,7 @@ class BaseWrapper(BaseEstimator):
         except (ValueError, TypeError):
             # unknown loss (ex: list of loss functions or custom loss)
             return
-        if given is not default_val and got is not given:
+        if given != default_val and got != given:
             raise ValueError(
                 f"loss={self.loss} but model compiled with {self.model_.loss}."
                 " Data may not match loss function!"
