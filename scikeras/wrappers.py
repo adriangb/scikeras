@@ -431,19 +431,19 @@ class BaseWrapper(BaseEstimator):
         # check that if the user gave us a loss function it ended up in
         # the actual model
         default_val = inspect.signature(self.__init__).parameters["loss"].default
-        try:
+        if all(
+            isinstance(x, (str, losses_module.Loss, type))
+            for x in [self.loss, self.model_.loss]
+        ):  # filter out loss list/dicts/etc.
             if default_val is not None:
                 default_val = loss_name(default_val)
             given = loss_name(self.loss)
             got = loss_name(self.model_.loss)
-        except (ValueError, TypeError):
-            # unknown loss (ex: list of loss functions or custom loss)
-            return
-        if given != default_val and got != given:
-            raise ValueError(
-                f"loss={self.loss} but model compiled with {self.model_.loss}."
-                " Data may not match loss function!"
-            )
+            if given != default_val and got != given:
+                raise ValueError(
+                    f"loss={self.loss} but model compiled with {self.model_.loss}."
+                    " Data may not match loss function!"
+                )
 
     def _validate_data(
         self, X, y=None, reset: bool = False
