@@ -413,7 +413,7 @@ class BaseWrapper(BaseEstimator):
         """
         # check if this is a multi-output model
         if self.model_n_outputs_ != len(self.model_.outputs):
-            raise RuntimeError(
+            raise ValueError(
                 "Detected an input of size"
                 f" {y[0].shape[0]}, but {self.model_} has"
                 f" {self.model_.outputs} outputs"
