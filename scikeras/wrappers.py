@@ -4,6 +4,7 @@ import inspect
 import os
 import warnings
 
+from collections import defaultdict
 from typing import Any, Dict, Tuple, Union
 
 import numpy as np
@@ -390,28 +391,17 @@ class BaseWrapper(BaseEstimator):
             hist = self.model_.fit(x=X, y=y, **fit_args)
 
         if not warm_start or not hasattr(self, "history_"):
-            self.history_ = dict()
-            # a serialization roundtrip will mutate
-            # Keras metrics shorthand names,
-            # which would result in having both `mse`
-            # and `mean_squared_error` as keys (for example)
-            # to avoid this, we normalize to the full-name
-            # But metric_name raises a ValueError for unknown metrics,
-            # including user-defined metrics
-            # in this case, we save the name as-is by ignoring the exception
-            for key, val in hist.history.items():
-                try:
-                    key = metric_name(key)
-                except ValueError:
-                    pass
-                self.history_[key] = [val]
-        else:
-            for key, val in hist.history.items():
-                if key in self.history_:
-                    self.history_[key] += [val]
-                    continue
+            self.history_ = defaultdict(list)
+
+        for key, val in hist.history.items():
+            try:
                 key = metric_name(key)
-                self.history_[key] += [val]
+            except ValueError as e:
+                # Keras puts keys like "val_accuracy" and "loss" and
+                # "val_loss" in hist.history.
+                if "Unknown metric function" not in str(e):
+                    raise e
+            self.history_[key] += [val]
 
         # return self to allow fit_transform and such to work
         return self
