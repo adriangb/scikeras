@@ -15,6 +15,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.preprocessing import FunctionTransformer
+from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
@@ -33,11 +34,7 @@ from scikeras._utils import (
     unflatten_params,
 )
 from scikeras.utils import loss_name, metric_name
-from scikeras.utils.transformers import (
-    BaseKerasTransformer,
-    ClassifierLabelEncoder,
-    RegressorTargetEncoder,
-)
+from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
 
 
 class BaseWrapper(BaseEstimator):
@@ -114,6 +111,7 @@ class BaseWrapper(BaseEstimator):
         "y_ndim_",
         "model_",
         "history_",
+        "target_type_",
     }
 
     _routing_prefixes = {
@@ -482,7 +480,7 @@ class BaseWrapper(BaseEstimator):
             y_dtype_ = y.dtype
             y_ndim_ = y.ndim
             if reset:
-                self.target_type_ = target_type_
+                self.target_type_ = type_of_target(y)
                 self.y_dtype_ = y_dtype_
                 self.y_ndim_ = y_ndim_
             else:
@@ -533,7 +531,7 @@ class BaseWrapper(BaseEstimator):
         return X, y
 
     @property
-    def target_encoder(self) -> BaseKerasTransformer:
+    def target_encoder(self):
         """Retrieve a transformer for targets / ``y``.
 
         Metadata will be collected from `get_metadata` if
@@ -541,14 +539,14 @@ class BaseWrapper(BaseEstimator):
 
         Returns
         -------
-        BaseKerasTransformer
-            Transformer implementing the BaseKerasTransformer
+        target_encoder
+            Transformer implementing the sklearn transformer
             interface.
         """
         return FunctionTransformer()
 
     @property
-    def feature_encoder(self) -> BaseKerasTransformer:
+    def feature_encoder(self):
         """Retrieve a transformer for features / ``X``.
 
         Metadata will be collected from `get_metadata` if
@@ -556,8 +554,8 @@ class BaseWrapper(BaseEstimator):
 
         Returns
         -------
-        BaseKerasTransformer
-            Transformer implementing the BaseKerasTransformer
+        feature_encoder
+            Transformer implementing the sklearn transformer
             interface.
         """
         return FunctionTransformer()
@@ -871,7 +869,7 @@ class KerasClassifier(BaseWrapper):
         return sklearn_accuracy_score(y_true, y_pred, **kwargs)
 
     @property
-    def target_encoder(self) -> BaseKerasTransformer:
+    def target_encoder(self):
         """Retrieve a transformer for targets / ``y``.
 
         For ``KerasClassifier.predict_proba`` to
@@ -884,8 +882,8 @@ class KerasClassifier(BaseWrapper):
 
         Returns
         -------
-        BaseKerasTransformer
-            Transformer implementing the BaseKerasTransformer
+        target_encoder
+            Transformer implementing the sklearn transformer
             interface.
         """
         return ClassifierLabelEncoder(loss=self.loss)
@@ -995,7 +993,7 @@ class KerasRegressor(BaseWrapper):
         return sklearn_r2_score(y_true, y_pred, **kwargs)
 
     @property
-    def target_encoder(self) -> BaseKerasTransformer:
+    def target_encoder(self):
         """Retrieve a transformer for targets / ``y``.
 
         Metadata will be collected from `get_metadata` if
@@ -1003,8 +1001,8 @@ class KerasRegressor(BaseWrapper):
 
         Returns
         -------
-        BaseKerasTransformer
-            Transformer implementing the BaseKerasTransformer
+        target_encoder
+            Transformer implementing the sklearn transformer
             interface.
         """
         return RegressorTargetEncoder()
