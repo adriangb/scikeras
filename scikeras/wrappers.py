@@ -15,7 +15,6 @@ from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.preprocessing import FunctionTransformer
-from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
@@ -115,7 +114,6 @@ class BaseWrapper(BaseEstimator):
         "y_ndim_",
         "model_",
         "history_",
-        "target_type_",
     }
 
     _routing_prefixes = {
@@ -481,7 +479,6 @@ class BaseWrapper(BaseEstimator):
             y = check_array(
                 y, ensure_2d=False, allow_nd=False, dtype=_check_array_dtype(y)
             )
-            target_type_ = type_of_target(y)
             y_dtype_ = y.dtype
             y_ndim_ = y.ndim
             if reset:
@@ -891,7 +888,7 @@ class KerasClassifier(BaseWrapper):
             Transformer implementing the BaseKerasTransformer
             interface.
         """
-        return ClassifierLabelEncoder(loss=self.loss, target_type=self.target_type_)
+        return ClassifierLabelEncoder(loss=self.loss)
 
     def partial_fit(self, X, y, classes=None, sample_weight=None):
         """
