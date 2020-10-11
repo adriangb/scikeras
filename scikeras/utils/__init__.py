@@ -4,12 +4,16 @@ from typing import Callable, Union
 import numpy as np
 
 from tensorflow.keras.losses import Loss
-from tensorflow.keras.losses import get as get_loss
-from tensorflow.keras.losses import serialize as serialize_loss
+from tensorflow.keras.losses import get as keras_loss_get
 from tensorflow.keras.metrics import Metric
-from tensorflow.keras.metrics import get as get_metric
-from tensorflow.keras.metrics import serialize as serialize_metric
+from tensorflow.keras.metrics import get as keras_metric_get
 
+
+def _camel2snake(s: str) -> str:
+    """from [1]
+    [1]:https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
+    """
+    return "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")
 
 def loss_name(loss: Union[str, Loss, Callable]) -> str:
     """Retrieves a loss's full name (eg: "mean_squared_error").
@@ -25,41 +29,38 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     str
         [description]
 
+    Notes
+    -----
+    The result of this function will always be in snake case, not camel case.
+
     Examples
     --------
     >>> loss_name("BinaryCrossentropy")
-    'BinaryCrossentropy'
+    'binary_crossentropy'
     >>> loss_name("binary_crossentropy")
     'binary_crossentropy'
     >>> import tensorflow.keras.losses as losses
     >>> loss_name(losses.BinaryCrossentropy)
-    'BinaryCrossentropy'
+    'binary_crossentropy'
     >>> loss_name(losses.binary_crossentropy)
     'binary_crossentropy'
 
     Raises
     ------
-    ValueError
-        In case of an unknown loss.
+    TypeError
+        If the wrong type is passed.
+
     """
     if isclass(loss):
-        loss = loss()  # get_loss accepts instances, not classes
+        loss = loss()
     if not (isinstance(loss, (str, Loss)) or callable(loss)):
         raise TypeError(
-            "`loss` must be a string, a function, an instance of tf.keras.losses.Loss"
-            " or a class inheriting from tf.keras.losses.Loss"
+            "`loss` must be a string, a function or an instance of tf.keras.losses.Loss"
         )
-    try:
-        loss = serialize_loss(get_loss(loss))
-    except ValueError:
-        # Error messages change slightly across TF versions
-        # And errors are different for unknown strings vs. unknown objects
-        # We homogenize them to a single error message
-        raise ValueError(f"Unable to determine name for loss: {loss}")
-    if isinstance(loss, dict):
-        # classes are serialized as dicts
-        return loss["class_name"]
-    return loss  # for functions (serialize returns a string)
+    fn_or_cls = keras_loss_get(loss)
+    if isinstance(fn_or_cls, Loss):
+        return _camel2snake(fn_or_cls.__class__.__name__)
+    return fn_or_cls.__name__
 
 
 def metric_name(metric: Union[str, Metric, Callable]) -> str:

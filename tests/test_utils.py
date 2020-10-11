@@ -15,20 +15,16 @@ class CustomLoss(losses_module.Loss):
     "loss,expected,raises",
     [
         ("categorical_crossentropy", "categorical_crossentropy", None),
-        ("CategoricalCrossentropy", "CategoricalCrossentropy", None),
+        ("CategoricalCrossentropy", "categorical_crossentropy", None),
         (losses_module.categorical_crossentropy, "categorical_crossentropy", None),
-        (losses_module.CategoricalCrossentropy, "CategoricalCrossentropy", None),
-        (losses_module.CategoricalCrossentropy(), "CategoricalCrossentropy", None),
+        (losses_module.CategoricalCrossentropy, "categorical_crossentropy", None),
+        (losses_module.CategoricalCrossentropy(), "categorical_crossentropy", None),
         (object(), "", pytest.raises(TypeError, match="`loss` must be a")),
         (object, "", pytest.raises(TypeError, match="`loss` must be a")),
         (list(), "", pytest.raises(TypeError, match="`loss` must be a")),
-        (
-            "unknown_loss",
-            "",
-            pytest.raises(ValueError, match="Unable to determine name"),
-        ),
-        (CustomLoss, "CustomLoss", None),
-        (CustomLoss(), "CustomLoss", None),
+        ("unknown_loss", "", pytest.raises(ValueError, match="Unknown loss function"),),
+        (CustomLoss, "custom_loss", None),
+        (CustomLoss(), "custom_loss", None),
     ],
 )
 def test_loss_name(loss, expected, raises):
