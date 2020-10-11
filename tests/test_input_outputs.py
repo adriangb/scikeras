@@ -318,7 +318,7 @@ def test_incompatible_output_dimensions():
 
     clf = KerasClassifier(model=build_fn_clf)
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError, match="input of size"):
         clf.fit(X, y)
 
 

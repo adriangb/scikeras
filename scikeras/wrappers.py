@@ -4,6 +4,7 @@ import inspect
 import os
 import warnings
 
+from collections import defaultdict
 from typing import Any, Dict, Tuple, Union
 
 import numpy as np
@@ -390,28 +391,17 @@ class BaseWrapper(BaseEstimator):
             hist = self.model_.fit(x=X, y=y, **fit_args)
 
         if not warm_start or not hasattr(self, "history_"):
-            self.history_ = dict()
-            # a serialization roundtrip will mutate
-            # Keras metrics shorthand names,
-            # which would result in having both `mse`
-            # and `mean_squared_error` as keys (for example)
-            # to avoid this, we normalize to the full-name
-            # But metric_name raises a ValueError for unknown metrics,
-            # including user-defined metrics
-            # in this case, we save the name as-is by ignoring the exception
-            for key, val in hist.history.items():
-                try:
-                    key = metric_name(key)
-                except ValueError:
-                    pass
-                self.history_[key] = [val]
-        else:
-            for key, val in hist.history.items():
-                if key in self.history_:
-                    self.history_[key] += [val]
-                    continue
+            self.history_ = defaultdict(list)
+
+        for key, val in hist.history.items():
+            try:
                 key = metric_name(key)
-                self.history_[key] += [val]
+            except ValueError as e:
+                # Keras puts keys like "val_accuracy" and "loss" and
+                # "val_loss" in hist.history.
+                if "Unknown metric function" not in str(e):
+                    raise e
+            self.history_[key] += [val]
 
         # return self to allow fit_transform and such to work
         return self
@@ -423,7 +413,7 @@ class BaseWrapper(BaseEstimator):
         """
         # check if this is a multi-output model
         if self.model_n_outputs_ != len(self.model_.outputs):
-            raise RuntimeError(
+            raise ValueError(
                 "Detected an input of size"
                 f" {y[0].shape[0]}, but {self.model_} has"
                 f" {self.model_.outputs} outputs"
@@ -431,19 +421,19 @@ class BaseWrapper(BaseEstimator):
         # check that if the user gave us a loss function it ended up in
         # the actual model
         default_val = inspect.signature(self.__init__).parameters["loss"].default
-        try:
+        if all(
+            isinstance(x, (str, losses_module.Loss, type))
+            for x in [self.loss, self.model_.loss]
+        ):  # filter out loss list/dicts/etc.
             if default_val is not None:
                 default_val = loss_name(default_val)
             given = loss_name(self.loss)
             got = loss_name(self.model_.loss)
-        except (ValueError, TypeError):
-            # unknown loss (ex: list of loss functions or custom loss)
-            return
-        if given != default_val and got != given:
-            raise ValueError(
-                f"loss={self.loss} but model compiled with {self.model_.loss}."
-                " Data may not match loss function!"
-            )
+            if given != default_val and got != given:
+                raise ValueError(
+                    f"loss={self.loss} but model compiled with {self.model_.loss}."
+                    " Data may not match loss function!"
+                )
 
     def _validate_data(
         self, X, y=None, reset: bool = False
@@ -674,7 +664,8 @@ class BaseWrapper(BaseEstimator):
             if zeros.sum() == zeros.size:
                 raise ValueError(
                     "No training samples had any weight; only zeros were passed in sample_weight."
-                    " That means there's nothing to train on by definition, so training can not be completed."
+                    " That means there's nothing to train on by definition, so training can not be completed.\n\n"
+                    "To resolve this error, have at least one non-zero sample_weight"
                 )
             if np.any(zeros):
                 X = X[~zeros]
