@@ -255,25 +255,3 @@ def test_target_classes_change_incremental_fit():
     ):
         y[0] = 10
         est.partial_fit(X, y)
-
-
-def test_loss_mismatch():
-    """Test that users are warned that their data-encoding may not match
-    their model's loss function if they pass `loss=xyz`
-    but self-compile their model with another loss.
-    """
-    X = np.array([[1, 2], [2, 3]])
-    y = np.array([1, 3])
-
-    def force_loss(hidden_layer_sizes, meta, compile_kwargs):
-        model = dynamic_classifier(hidden_layer_sizes, meta, compile_kwargs)
-        model.compile(loss="categorical_crossentropy")
-        return model
-
-    est = KerasClassifier(
-        model=force_loss, hidden_layer_sizes=(100,), loss="binary_crossentropy",
-    )
-    with pytest.raises(
-        ValueError, match=" but model compiled with ",
-    ):
-        est.fit(X, y)
