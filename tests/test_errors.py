@@ -188,7 +188,7 @@ def test_target_dtype_changes_incremental_fit():
     est.fit(X, y)
     est.partial_fit(X, y.astype(np.uint8))
     with pytest.raises(
-        ValueError, match=" and casting from ",
+        ValueError, match="Got `y` with dtype",
     ):
         est.partial_fit(X, y.astype(np.float64))
 
@@ -213,7 +213,7 @@ def test_target_shape_changes_incremental_fit_clf():
     est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
     est.fit(X, y)
     with pytest.raises(
-        ValueError, match="The number of features ",  # raised by transformers
+        ValueError, match="The fitted data had ",  # raised by transformers
     ):
         est.partial_fit(X, np.column_stack([y, y]))
 
@@ -225,7 +225,7 @@ def test_target_shape_changes_incremental_fit_reg():
     est = KerasRegressor(model=dynamic_regressor, hidden_layer_sizes=(100,))
     est.fit(X, y)
     with pytest.raises(
-        ValueError, match="Detected `y` to have ",
+        ValueError, match="Detected `y` to map to ",
     ):
         est.partial_fit(X, np.column_stack([y, y]))
 
@@ -238,7 +238,7 @@ def test_X_dtype_changes_incremental_fit():
     est.fit(X, y)
     est.partial_fit(X.astype(np.uint8), y)
     with pytest.raises(
-        ValueError, match=" and casting from ",
+        ValueError, match="Got `X` with dtype",
     ):
         est.partial_fit(X.astype(np.float64), y)
 

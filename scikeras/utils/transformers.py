@@ -1,7 +1,5 @@
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Union
-
 import numpy as np
+import tensorflow as tf
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import make_pipeline
@@ -10,36 +8,19 @@ from sklearn.utils.multiclass import type_of_target
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 
 
-class Ensure2DTransformer(TransformerMixin, BaseEstimator):
-    """Transforms from 1D -> 2D and back.
-    """
-
-    def fit(self, X: np.ndarray) -> "Ensure2DTransformer":
-        self.should_transform_ = X.ndim == 1
+class Ensure2DTransformer(BaseEstimator, TransformerMixin):
+    def fit(self, X):
+        self.ndim_ = X.ndim
         return self
 
-    def transform(self, X: np.ndarray) -> np.ndarray:
-        if self.should_transform_:
-            if X.ndim != 1:
-                raise ValueError(
-                    "Expected a 1D array for `X`." f" Got a {X.ndim}D array instead."
-                )
-            X = X.reshape(-1, 1)
+    def transform(self, X):
+        if self.ndim_ == 1:
+            return X.reshape(-1, 1)
         return X
 
-    def inverse_transform(self, X: np.ndarray) -> np.ndarray:
-        if self.should_transform_:
-            if X.ndim != 2:
-                raise ValueError(
-                    f"Expected a 2D array for `X`, but got a"
-                    f" {X.ndim}D array instead."
-                )
-            if X.shape[1] != 1:
-                raise ValueError(
-                    f"Expected `X.shape[1] == 1`"
-                    f" but got `X.shape[1] == {X.shape}` instead."
-                )
-            X = np.squeeze(X, axis=1)
+    def inverse_transform(self, X):
+        if self.ndim_ == 1 and X.ndim == 2:
+            return np.squeeze(X, axis=1)
         return X
 
 
@@ -53,19 +34,20 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
     def fit(self, X: np.ndarray) -> "ClassifierLabelEncoder":
         y = X  # rename for clarity, the input is always expected to be a target `y`
         target_type = type_of_target(y)
+        keras_dtype = np.dtype(tf.keras.backend.floatx())
         encoders = {
             "binary": make_pipeline(
-                Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
+                Ensure2DTransformer(), OrdinalEncoder(dtype=keras_dtype),
             ),
             "multiclass": make_pipeline(
-                Ensure2DTransformer(), OrdinalEncoder(dtype=np.float32),
+                Ensure2DTransformer(), OrdinalEncoder(dtype=keras_dtype),
             ),
             "multiclass-multioutput": FunctionTransformer(),
             "multilabel-indicator": FunctionTransformer(),
         }
         if is_categorical_crossentropy(self.loss):
             encoders["multiclass"] = make_pipeline(
-                Ensure2DTransformer(), OneHotEncoder(sparse=False, dtype=np.float32),
+                Ensure2DTransformer(), OneHotEncoder(sparse=False, dtype=keras_dtype),
             )
         if target_type not in encoders:
             raise ValueError(
@@ -84,7 +66,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             target_type = "multiclass-onehot"
 
         self.n_outputs_ = 1
-        self.model_n_outputs_ = 1
+        self.n_outputs_expected_ = 1
         self.y_dtype_ = y.dtype
         self._target_type = target_type
 
@@ -102,7 +84,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
 
     def transform(self, X: np.ndarray) -> np.ndarray:
         y = X  # rename for clarity, the input is always expected to be a target `y`
-        # no need to validate n_outputs_ or model_n_outputs_, those are hardcoded
+        # no need to validate n_outputs_ or n_outputs_expected_, those are hardcoded
         # self.classes_ and self.n_classes_ are validated by the transformers themselves
         return self.final_encoder_.transform(y)
 
@@ -116,25 +98,24 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                 # result from a single sigmoid output
                 # reformat so that we have 2 columns
                 y = np.column_stack([1 - y, y])
-            y_ = np.argmax(y, axis=1).reshape(-1, 1)
-            class_predictions = self.final_encoder_.inverse_transform(y_)
+            class_predictions = np.argmax(y, axis=1).reshape(-1, 1)
+            class_predictions = self.final_encoder_.inverse_transform(class_predictions)
         elif self._target_type == "multiclass":
             # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
             # array(['apple', 'orange'])
             idx = np.argmax(y, axis=-1)
             if not is_categorical_crossentropy(self.loss):
-                y_ = idx.reshape(-1, 1)
+                class_predictions = idx.reshape(-1, 1)
             else:
-                y_ = np.zeros(y.shape, dtype=int)
-                y_[np.arange(y.shape[0]), idx] = 1
-            class_predictions = self.final_encoder_.inverse_transform(y_)
+                class_predictions = np.zeros(y.shape, dtype=int)
+                class_predictions[:, idx] = 1
+            class_predictions = self.final_encoder_.inverse_transform(class_predictions)
         elif self._target_type == "multiclass-onehot":
             # array([.8, .1, .1], [.1, .8, .1]) ->
             # array([[1, 0, 0], [0, 1, 0]])
             idx = np.argmax(y, axis=-1)
-            y_ = np.zeros(y.shape, dtype=int)
-            y_[np.arange(y.shape[0]), idx] = 1
-            class_predictions = y_
+            class_predictions = np.zeros(y.shape, dtype=int)
+            class_predictions[:, idx] = 1
         elif self._target_type == "multilabel-indicator":
             class_predictions = np.around(y)
         else:
@@ -158,7 +139,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             "classes_": self.classes_,
             "n_classes_": self.n_classes_,
             "n_outputs_": self.n_outputs_,
-            "model_n_outputs_": self.model_n_outputs_,
+            "n_outputs_expected_": self.n_outputs_expected_,
         }
 
 
@@ -170,7 +151,7 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         y = X  # rename for clarity, the input is always expected to be a target `y`
         self.y_dtype_ = y.dtype
         self.n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
-        self.model_n_outputs_ = 1
+        self.n_outputs_expected_ = 1
         return self
 
     def transform(self, X: np.ndarray) -> np.ndarray:
@@ -178,9 +159,10 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         if n_outputs_ != self.n_outputs_:
             raise ValueError(
-                f"Detected `y` to have {n_outputs_},"
-                f" but this {self.__class__.__name__} expects"
-                f" {self.n_outputs_} for `y`."
+                f"Detected `y` to map to {n_outputs_} outputs"
+                f" with `y.shape = {y.shape}",
+                f" but this {self.__class__.__name__} has"
+                f" {self.n_outputs_} outputs.",
             )
         return y
 
@@ -193,5 +175,5 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
     def get_metadata(self):
         return {
             "n_outputs_": self.n_outputs_,
-            "model_n_outputs_": self.model_n_outputs_,
+            "n_outputs_expected_": self.n_outputs_expected_,
         }
