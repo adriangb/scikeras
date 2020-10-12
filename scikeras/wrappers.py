@@ -656,7 +656,7 @@ class BaseWrapper(BaseEstimator):
             # because the predictions differ by a small margin).
             # To get around this, we manually delete these samples here
             zeros = sample_weight == 0
-            if zeros.sum() == zeros.size:
+            if zeros.all():
                 raise ValueError(
                     "No training samples had any weight; only zeros were passed in sample_weight."
                     " That means there's nothing to train on by definition, so training can not be completed.\n\n"
