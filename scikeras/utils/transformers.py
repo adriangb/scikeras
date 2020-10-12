@@ -138,13 +138,14 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         elif self._target_type == "multilabel-indicator":
             class_predictions = np.around(y)
         else:
-            raise NotImplementedError(
-                f"Class-predictions are not clearly defined for."
-                " 'multiclass-multioutput' target types."
-                "\n\nTo implement support, subclass KerasClassifier and override"
-                " `target_transformer` with a transformer that supports this"
-                " label type."
-            )
+            if not return_proba:
+                raise NotImplementedError(
+                    f"Class-predictions are not clearly defined for"
+                    " 'multiclass-multioutput' target types."
+                    "\n\nTo implement support, subclass KerasClassifier and override"
+                    " `target_transformer` with a transformer that supports this"
+                    " label type."
+                )
 
         if return_proba:
             return y
