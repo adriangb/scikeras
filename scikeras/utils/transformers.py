@@ -8,7 +8,7 @@ from sklearn.utils.multiclass import type_of_target
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 
 
-class Ensure2DTransformer(BaseEstimator, TransformerMixin):
+class TargetReshaper(BaseEstimator, TransformerMixin):
     def fit(self, X):
         self.ndim_ = X.ndim
         return self
@@ -37,17 +37,17 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         keras_dtype = np.dtype(tf.keras.backend.floatx())
         encoders = {
             "binary": make_pipeline(
-                Ensure2DTransformer(), OrdinalEncoder(dtype=keras_dtype),
+                TargetReshaper(), OrdinalEncoder(dtype=keras_dtype),
             ),
             "multiclass": make_pipeline(
-                Ensure2DTransformer(), OrdinalEncoder(dtype=keras_dtype),
+                TargetReshaper(), OrdinalEncoder(dtype=keras_dtype),
             ),
             "multiclass-multioutput": FunctionTransformer(),
             "multilabel-indicator": FunctionTransformer(),
         }
         if is_categorical_crossentropy(self.loss):
             encoders["multiclass"] = make_pipeline(
-                Ensure2DTransformer(), OneHotEncoder(sparse=False, dtype=keras_dtype),
+                TargetReshaper(), OneHotEncoder(sparse=False, dtype=keras_dtype),
             )
         if target_type not in encoders:
             raise ValueError(
