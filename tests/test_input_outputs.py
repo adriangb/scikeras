@@ -1,3 +1,4 @@
+from re import S
 from typing import Any, Dict
 
 import numpy as np
@@ -426,13 +427,21 @@ def test_single_output_multilabel_indicator():
     """Tests a target that a multilabel-indicator
     target can be used without errors.
     """
-    clf = KerasClassifier(
-        model=dynamic_classifier,
-        hidden_layer_sizes=(100,),
-        loss="categorical_crossentropy",
-    )
     X = np.random.random(size=(100, 2))
     y = np.random.randint(0, 1, size=(100, 3))
     y[0, :] = 1  # i.e. not "one hot encoded"
+
+    def build_fn():
+        model = Sequential()
+        model.add(Dense(10, input_shape=(2,), activation="relu"))
+        model.add(Dense(3, activation="sigmoid"))
+        return model
+
+    clf = KerasClassifier(model=build_fn, loss="categorical_crossentropy",)
+    # check that there are no errors
     clf.fit(X, y)
-    clf.predict(X, y)
+    clf.predict(X)
+    # check the target type
+    assert clf.target_type_ == "multilabel-indicator"
+    # check classes
+    np.testing.assert_equal(clf.classes_, np.arange(3))

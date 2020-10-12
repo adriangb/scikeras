@@ -135,8 +135,13 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             y_ = np.zeros(y.shape, dtype=int)
             y_[np.arange(y.shape[0]), idx] = 1
             class_predictions = y_
-        elif self._target_type in ("multilabel-indicator", "multiclass-multioutput"):
-            class_predictions = None
+        elif self._target_type == "multilabel-indicator":
+            class_predictions = np.around(y)
+        else:
+            raise NotImplementedError(
+                "Class-predictions are not clearly defined for"
+                " 'multiclass-multioutput' target types."
+            )
 
         if return_proba:
             return y
