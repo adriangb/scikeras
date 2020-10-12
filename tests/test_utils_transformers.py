@@ -1,15 +1,15 @@
 import numpy as np
 import pytest
 
-from scikeras.utils.transformers import ClassifierLabelEncoder, Ensure2DTransformer
+from scikeras.utils.transformers import ClassifierLabelEncoder, TargetReshaper
 
 
-class TestEnsure2DTransformer:
+class TestTargetReshaper:
     @pytest.mark.parametrize(
         "X", [np.array([1, 1]), np.array([1, 1]).reshape(-1, 1), np.array([[[1], [1]]])]
     )
     def test_basic_func(self, X):
-        tf = Ensure2DTransformer()
+        tf = TargetReshaper()
         tf.fit(X)
         X_t = tf.transform(X)
         assert len(X_t.shape) >= 2
@@ -17,7 +17,7 @@ class TestEnsure2DTransformer:
         assert X_inv.shape == X.shape
 
     def test_almost_1d(self):
-        tf = Ensure2DTransformer()
+        tf = TargetReshaper()
         X = np.random.uniform(size=(100, 1))
         tf.fit_transform(X)
 
