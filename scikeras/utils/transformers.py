@@ -76,31 +76,28 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             )
         self.final_encoder_ = encoders[target_type].fit(y)
 
-        if target_type == "multilabel-indicator" and np.all(np.sum(y, axis=1) == 1):
+        if (
+            target_type == "multilabel-indicator"
+            and y.min() == 0
+            and (y.sum(axis=1) == 1).all()
+        ):
             target_type = "multiclass-onehot"
-            self.n_outputs_ = None
-            self.model_n_outputs_ = None
-            self.y_dtype_ = y.dtype
-        else:
-            self.n_outputs_ = 1
-            self.model_n_outputs_ = 1
-            self.y_dtype_ = y.dtype
 
-        self._target_type = target_type
-
-        if target_type in ["binary", "multiclass"]:
-            self.classes_ = self.final_encoder_[1].categories_[0]
-            self.n_classes_ = self.classes_.size
-        elif target_type == "multiclass-onehot":  # one-hot encoded multiclass
-            self.classes_ = np.arange(0, y.shape[1])
-            self.n_classes_ = y.shape[1]
-        else:
-            self.classes_ = None
-            self.n_classes_ = None
         self.n_outputs_ = 1
         self.model_n_outputs_ = 1
         self.y_dtype_ = y.dtype
         self._target_type = target_type
+
+        if target_type in ("binary", "multiclass"):
+            self.classes_ = self.final_encoder_[1].categories_[0]
+            self.n_classes_ = self.classes_.size
+        elif target_type in ("multiclass-onehot", "multilabel-indicator"):
+            self.classes_ = np.arange(0, y.shape[1])
+            self.n_classes_ = y.shape[1]
+        elif target_type == "multiclass-multioutput":
+            self.classes_ = [np.unique(y[:, j]) for j in range(y.shape[1])]
+            self.n_classes_ = len(self.n_classes_)
+
         return self
 
     def transform(self, X: np.ndarray) -> np.ndarray:
@@ -115,21 +112,12 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         y = X  # rename for clarity, the input is always expected to be a target `y`
         if self._target_type == "binary":
             # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
-            if self.n_classes_ == 1:
-                # special case: single input label for sigmoid output
-                # may give more predicted classes than inputs for
-                # small sample sizes!
-                # don't even bother inverse transforming, just fill.
-                class_predictions = np.full(
-                    shape=(y.shape[0], 1), fill_value=self.classes_[0]
-                )
-            else:
-                if y.shape == 1 or (y.shape[1] == 1 and self.n_classes_ == 2):
-                    # result from a single sigmoid output
-                    # reformat so that we have 2 columns
-                    y = np.column_stack([1 - y, y])
-                y_ = np.argmax(y, axis=1).reshape(-1, 1)
-                class_predictions = self.final_encoder_.inverse_transform(y_)
+            if y.ndim == 1 or (y.shape[1] == 1 and self.n_classes_ == 2):
+                # result from a single sigmoid output
+                # reformat so that we have 2 columns
+                y = np.column_stack([1 - y, y])
+            y_ = np.argmax(y, axis=1).reshape(-1, 1)
+            class_predictions = self.final_encoder_.inverse_transform(y_)
         elif self._target_type == "multiclass":
             # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
             # array(['apple', 'orange'])
@@ -147,7 +135,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             y_ = np.zeros(y.shape, dtype=int)
             y_[np.arange(y.shape[0]), idx] = 1
             class_predictions = y_
-        else:
+        elif self._target_type in ("multilabel-indicator", "multiclass-multioutput"):
             class_predictions = None
 
         if return_proba:
