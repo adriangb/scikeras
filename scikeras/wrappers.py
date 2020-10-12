@@ -411,9 +411,9 @@ class BaseWrapper(BaseEstimator):
         This is in place to avoid cryptic TF errors.
         """
         # check if this is a multi-output model
-        if self.model_n_outputs_ != len(self.model_.outputs):
+        if self.n_outputs_expected_ != len(self.model_.outputs):
             raise ValueError(
-                "Detected an input of size"
+                "Detected a Keras model input of size"
                 f" {y[0].shape[0]}, but {self.model_} has"
                 f" {self.model_.outputs} outputs"
             )
@@ -1017,7 +1017,6 @@ class KerasRegressor(BaseWrapper):
         advisable to use the same loss/metric when optimizing the model.
         """
         # Ensure input dytpes match
-        # y_pred will always be float32 so we cast y_true to float32
         y_true = tf.cast(y_true, dtype=y_pred.dtype)
         # Calculate R^2
         ss_res = tf.math.reduce_sum(tf.math.squared_difference(y_true, y_pred), axis=0)

@@ -321,7 +321,7 @@ class TestPrebuiltModel:
                 "n_classes_": n_classes_,
                 "target_type_": "multiclass",
                 "n_features_in_": x_train.shape[1],
-                "model_n_outputs_": 1,
+                "n_outputs_expected_": 1,
             }
             keras_model = build_fn(
                 meta=meta,
@@ -357,7 +357,7 @@ class TestPrebuiltModel:
                 "n_classes_": n_classes_,
                 "target_type_": "multiclass",
                 "n_features_in_": x_train.shape[1],
-                "model_n_outputs_": 1,
+                "n_outputs_expected_": 1,
             }
             keras_model = build_fn(
                 meta=meta,
