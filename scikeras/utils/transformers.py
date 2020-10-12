@@ -95,8 +95,8 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             self.classes_ = np.arange(0, y.shape[1])
             self.n_classes_ = y.shape[1]
         elif target_type == "multiclass-multioutput":
-            self.classes_ = [np.unique(y[:, j]) for j in range(y.shape[1])]
-            self.n_classes_ = len(self.n_classes_)
+            self.classes_ = None
+            self.n_classes_ = None
 
         return self
 
@@ -139,8 +139,11 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             class_predictions = np.around(y)
         else:
             raise NotImplementedError(
-                "Class-predictions are not clearly defined for"
+                f"Class-predictions are not clearly defined for."
                 " 'multiclass-multioutput' target types."
+                "\n\nTo implement support, subclass KerasClassifier and override"
+                " `target_transformer` with a transformer that supports this"
+                " label type."
             )
 
         if return_proba:
@@ -175,17 +178,16 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         if n_outputs_ != self.n_outputs_:
             raise ValueError(
                 f"Detected `y` to have {n_outputs_},"
-                f" but this {self} expects"
+                f" but this {self.__class__.__name__} expects"
                 f" {self.n_outputs_} for `y`."
             )
         return y
 
     def inverse_transform(self, X: np.ndarray) -> np.ndarray:
         y = X  # rename for clarity, the input is always expected to be a target `y`
-        if np.can_cast(self.y_dtype_, np.float32):
-            return np.squeeze(y.astype(np.float32, copy=False))
-        else:
+        if self.y_dtype_ == np.float64 and y.dtype == np.float32:
             return np.squeeze(y.astype(np.float64, copy=False))
+        return np.squeeze(y)
 
     def get_metadata(self):
         return {
