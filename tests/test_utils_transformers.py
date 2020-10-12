@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from scikeras.utils.transformers import Ensure2DTransformer
+from scikeras.utils.transformers import ClassifierLabelEncoder, Ensure2DTransformer
 
 
 class TestEnsure2DTransformer:
@@ -60,3 +60,26 @@ class TestEnsure2DTransformer:
         tf.inverse_transform(np.array([[[1], [1]]]))
         # 2D with shape[1] != 1 raises an error as well
         tf.inverse_transform(np.array([1, 2, 3]).T)
+
+
+class TestClassifierLabelEncoder:
+    def test_multiclass_multioutput(self):
+        c = ClassifierLabelEncoder()
+        y = np.column_stack(np.array([1, 2, 3]))
+        c.fit(y)
+        # classes_ and n_classes_ should be undefined/None
+        assert c.classes_ is None
+        assert c.n_classes_ is None
+        # transform works and returns input array
+        y_tf = c.transform(y)
+        np.testing.assert_equal(y_tf, y)
+        # inverse_tf with return_proba = True should work and return
+        # the input array untouched
+        y_probs = np.random.random(size=(3, 6))
+        y_probs_new = c.inverse_transform(y_probs, return_proba=True)
+        np.testing.assert_equal(y_probs, y_probs_new)
+        # inverse_tf with return_proba = False raises a NotImplementedError
+        with pytest.raises(
+            NotImplementedError, match="Class-predictions are not clearly"
+        ):
+            c.inverse_transform(y_probs)
