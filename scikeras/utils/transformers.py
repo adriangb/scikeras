@@ -1,24 +1,45 @@
+from typing import Union
+
 import numpy as np
 import tensorflow as tf
 
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.exceptions import NotFittedError
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder
 from sklearn.utils.multiclass import type_of_target
+from tensorflow.keras.losses import Loss
 from tensorflow.python.keras.losses import is_categorical_crossentropy
 
 
 class TargetReshaper(BaseEstimator, TransformerMixin):
+    """Convert 1D targets to 2D and back.
+
+    For use in pipelines with transformers that only accept
+    2D inputs, like OneHotEncoder and OrdinalEncoder.
+
+    Attributes
+    ----------
+    ndim_ : int
+        Dimensions of `X` that the transformer was trained on.
+    """
+
     def fit(self, X):
         self.ndim_ = X.ndim
         return self
 
-    def transform(self, X):
-        if self.ndim_ == 1:
+    @staticmethod
+    def transform(X):
+        if X.ndim == 1:
             return X.reshape(-1, 1)
         return X
 
     def inverse_transform(self, X):
+        if not hasattr(self, "ndim_"):
+            raise NotFittedError(
+                f"This {self.__class__.__name__} is not initialized."
+                " You must call `fit` before using `inverse_transform`."
+            )
         if self.ndim_ == 1 and X.ndim == 2:
             return np.squeeze(X, axis=1)
         return X
@@ -28,7 +49,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
     """Default target transformer for KerasClassifier.
     """
 
-    def __init__(self, loss=None):
+    def __init__(self, loss: Union[None, str, Loss] = None):
         self.loss = loss
 
     def fit(self, X: np.ndarray) -> "ClassifierLabelEncoder":
@@ -55,6 +76,11 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                 "\n\nTo implement support, subclass KerasClassifier and override"
                 " `target_transformer` with a transformer that supports this"
                 " label type."
+                "\n\nFor information on sklearn target types, see:"
+                " * https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html"
+                " * https://scikit-learn.org/stable/modules/multiclass.html"
+                "\n\nFor information on the SciKeras data transformation interface, see:"
+                " * https://scikeras.readthedocs.io/en/latest/advanced.html#data-transforms"
             )
         self.final_encoder_ = encoders[target_type].fit(y)
 
@@ -67,7 +93,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
 
         self.n_outputs_ = 1
         self.n_outputs_expected_ = 1
-        self.y_dtype_ = y.dtype
+        self._y_dtype = y.dtype
         self._target_type = target_type
 
         if target_type in ("binary", "multiclass"):
@@ -126,12 +152,17 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                     "\n\nTo implement support, subclass KerasClassifier and override"
                     " `target_transformer` with a transformer that supports this"
                     " label type."
+                    "\n\nFor information on sklearn target types, see:"
+                    " * https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html"
+                    " * https://scikit-learn.org/stable/modules/multiclass.html"
+                    "\n\nFor information on the SciKeras data transformation interface, see:"
+                    " * https://scikeras.readthedocs.io/en/latest/advanced.html#data-transforms"
                 )
 
         if return_proba:
             return y
         return np.squeeze(np.column_stack(class_predictions)).astype(
-            self.y_dtype_, copy=False
+            self._y_dtype, copy=False
         )
 
     def get_metadata(self):
@@ -149,7 +180,7 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X: np.ndarray) -> "RegressorTargetEncoder":
         y = X  # rename for clarity, the input is always expected to be a target `y`
-        self.y_dtype_ = y.dtype
+        self._y_dtype = y.dtype
         self.n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         self.n_outputs_expected_ = 1
         return self
@@ -168,7 +199,7 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
 
     def inverse_transform(self, X: np.ndarray) -> np.ndarray:
         y = X  # rename for clarity, the input is always expected to be a target `y`
-        if self.y_dtype_ == np.float64 and y.dtype == np.float32:
+        if self._y_dtype == np.float64 and y.dtype == np.float32:
             return np.squeeze(y.astype(np.float64, copy=False))
         return np.squeeze(y)
 
