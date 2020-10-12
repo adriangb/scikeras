@@ -1,6 +1,8 @@
 import numpy as np
 import pytest
 
+from sklearn.exceptions import NotFittedError
+
 from scikeras.utils.transformers import ClassifierLabelEncoder, TargetReshaper
 
 
@@ -20,6 +22,18 @@ class TestTargetReshaper:
         tf = TargetReshaper()
         X = np.random.uniform(size=(100, 1))
         tf.fit_transform(X)
+
+    @pytest.mark.parametrize(
+        "X",
+        [
+            np.random.uniform(size=(100,)),  # 1D
+            np.random.uniform(size=(100,)).reshape(-1, 1),  # 2D
+        ],
+    )
+    def test_inverse_transform_not_fitted(self, X):
+        tf = TargetReshaper()
+        with pytest.raises(NotFittedError, match="is not initialized"):
+            tf.inverse_transform(X)
 
 
 class TestClassifierLabelEncoder:
