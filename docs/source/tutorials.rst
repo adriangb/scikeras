@@ -7,9 +7,7 @@ The following are examples and notebooks on how to use SciKeras.
 
 * `Basic Usage <https://nbviewer.jupyter.org/github/adriangb/scikeras/blob/master/notebooks/Basic_Usage.ipynb>`_ - Explores the basics of the SciKeras API. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/Basic_Usage.ipynb>`_
 
-* `MLPClassifier <https://github.com/adriangb/scikeras/blob/master/notebooks/MLPClassifier.ipynb>`_ - Create a drop-in replacement for sklearn's MLPClassifier. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MLPClassifier.ipynb>`_
-
-* `MLPRegressor <https://github.com/adriangb/scikeras/blob/master/notebooks/MLPRegressor.ipynb>`_ - Create a drop-in replacement for sklearn's MLPRegressor. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MLPRegressor.ipynb>`_
+* `MLPClassifier and MLPRegressor <https://github.com/adriangb/scikeras/blob/master/notebooks/MLPClassifier.ipynb>`_ - Create a drop-in replacement for sklearn's neural_net estimators. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MLPClassifier_MLPRegressor.ipynb>`_
 
 * `Ensemble <https://github.com/adriangb/scikeras/blob/master/notebooks/Ensemble.ipynb>`_ - Use SciKeras in a sklearn ensemble. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/Ensemble.ipynb>`_
 
