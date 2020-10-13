@@ -694,3 +694,25 @@ def test_compile_model_from_params():
         )
         with pytest.raises(ValueError, match=" but model compiled with "):
             estimator.fit(X, y)
+
+
+def test_subclassed_model_no_params():
+    """Test that we can define a subclassed model with no __init__ params.
+    """
+
+    class MLPClassifier(KerasClassifier):
+        def __init__(self):
+            super().__init__()
+
+        def _keras_build_fn(self):
+            model = Sequential()
+            model.add(Dense(2, activation="relu", input_shape=(2,)))
+            model.add(Dense(1, activation="sigmoid"))
+            model.compile(loss="binary_crossentropy")
+            return model
+
+    clf = MLPClassifier()
+    X = np.random.random(size=(100, 2))
+    y = np.random.randint(0, 1, size=(100,))
+    clf.fit(X, y)
+    clf.predict(X)
