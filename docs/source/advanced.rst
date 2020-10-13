@@ -197,11 +197,42 @@ To override the default transformers, simply override
 :py:func:`scikeras.wrappers.BaseWrappers.target_transformer` or
 :py:func:`scikeras.wrappers.BaseWrappers.function_transformer` for ``y`` and ``X`` respectively.
 
-This said, note that if you are trying to use outputs of uneven length or
-other more complex scenarios, SciKeras may be able to handle them but the rest
-of the Scikit-Learn ecosystem likely will not.
+SciKeras uses :py:func:`sklearn.utils.multiclass.type_of_target` to categorize the target
+type, and implements basic handling of the following cases out of the box:
 
-For a complete example, see the multi-input and multi-output examples in the
++--------------------------+--------------+----------------+----------------+---------------+
+| type_of_target(y)        | Example y    | No. of Outputs | No. of classes | SciKeras      |
+|                          |              |                |                | Supported     |
++==========================+==============+================+================+===============+
+| "multiclass"             | [1, 2, 3]    | 1              | >2             | Yes           |
++--------------------------+--------------+----------------+----------------+---------------+
+| "binary"                 | [1, 0, 1]    | 1              | 1 or 2         | Yes           |
++--------------------------+--------------+----------------+----------------+---------------+
+| "mulilabel-indicator"    | [[1, 1],     | 1 or >1        | 2 per target   | Single output |
+|                          |              |                |                |               |
+|                          | [0, 2],      |                |                | only          |
+|                          |              |                |                |               |
+|                          | [1, 1]]      |                |                |               |
++--------------------------+--------------+----------------+----------------+---------------+
+| "multiclass-multioutput" | [[1, 1],     | >1             | >=2 per target | No            |
+|                          |              |                |                |               |
+|                          | [3, 2],      |                |                |               |
+|                          |              |                |                |               |
+|                          | [2, 3]]      |                |                |               |
++--------------------------+--------------+----------------+----------------+---------------+
+| "continuous"             | [.1, .3, .9] | 1              | continuous     | Yes           |
++--------------------------+--------------+----------------+----------------+---------------+
+| "continuous-multioutput" | [[.1, .1],   | >1             | continuous     | Yes           |
+|                          |              |                |                |               |
+|                          | [.3, .2],    |                |                |               |
+|                          |              |                |                |               |
+|                          | [.2, .9]]    |                |                |               |
++--------------------------+--------------+----------------+----------------+---------------+
+
+If you find that your target is classified as ``"multiclass-multioutput"`` or ``"unknown"``, you will have to
+implement your own data processing routine.
+
+For a complete examples implementing custom data processing, see the multi-input and multi-output examples in the
 :ref:`tutorials` section.
 
 Routed parameters
