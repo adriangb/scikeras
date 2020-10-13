@@ -416,11 +416,11 @@ class BaseWrapper(BaseEstimator):
             )
         # check that if the user gave us a loss function it ended up in
         # the actual model
-        try:
-            default_val = inspect.signature(self.__init__).parameters["loss"].default
-        except KeyError:
+        init_params = inspect.signature(self.__init__).parameters
+        if "loss" not in init_params:
             # subclassed model does not have the `loss` parameter in it's signature
             return
+        default_val = init_params["loss"].default
         if all(
             isinstance(x, (str, losses_module.Loss, type))
             for x in [self.loss, self.model_.loss]
