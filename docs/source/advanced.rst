@@ -175,8 +175,8 @@ Raw dictionary of parameters passed to :py:func:`~scikeras.wrappers.BaseWrapper.
 This is basically the same as calling :py:func:`~scikeras.wrappers.BaseWrapper.get_params`.
 
 
-Multiple inputs or outputs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Data Transformers
+^^^^^^^^^^^^^^^^^
 
 In some cases, the input actually consists of multiple inputs. E.g.,
 in a text classification task, you might have an array that contains
