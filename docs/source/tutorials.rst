@@ -13,9 +13,7 @@ The following are examples and notebooks on how to use SciKeras.
 
 * `Using SciKeras with Dask <https://github.com/adriangb/scikeras/tree/master/examples/rnn_classifer>`_ - Using Dask to parallelize grid search across GPUs.
 
-* `Multi-input <https://github.com/adriangb/scikeras/blob/master/notebooks/MultiInput.ipynb>`_ - Use SciKeras with a multi input Keras Model. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MultiInput.ipynb>`_
-
-* `Multi-output <https://github.com/adriangb/scikeras/blob/master/notebooks/MultiOutput.ipynb>`_ - Use SciKeras with a multi output Keras Model. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MultiOutput.ipynb>`_
+* `DataTransformers <https://github.com/adriangb/scikeras/blob/master/notebooks/DataTransformers.ipynb>`_ - Use SciKeras data transformers to handle multi input, multi output and multidimensional Keras Model. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/DataTransformers.ipynb>`_
 
 * `Benchmarks SciKeras vs pure Keras <https://github.com/adriangb/scikeras/blob/master/examples/benchmarks/mnist.py>`_ - Compares the performance of SciKeras and using pure Keras on MNIST.
 

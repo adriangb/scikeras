@@ -232,7 +232,7 @@ type, and implements basic handling of the following cases out of the box:
 If you find that your target is classified as ``"multiclass-multioutput"`` or ``"unknown"``, you will have to
 implement your own data processing routine.
 
-For a complete examples implementing custom data processing, see the multi-input and multi-output examples in the
+For a complete examples implementing custom data processing, see the examples in the
 :ref:`tutorials` section.
 
 Routed parameters
