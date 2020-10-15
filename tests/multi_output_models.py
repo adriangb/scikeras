@@ -9,31 +9,31 @@ from scikeras.wrappers import KerasClassifier
 
 
 class MultiLabelTransformer(ClassifierLabelEncoder):
-    def fit(self, X: np.ndarray) -> "MultiLabelTransformer":
-        self._target_type = type_of_target(X)
+    def fit(self, y: np.ndarray) -> "MultiLabelTransformer":
+        self._target_type = type_of_target(y)
         if self._target_type != "multilabel-indicator":
-            return super().fit(X)
+            return super().fit(y)
         # y = array([1, 1, 1, 0], [0, 0, 1, 1])
         # each col will be processed as multiple binary classifications
-        self.n_outputs_ = self.n_outputs_expected_ = X.shape[1]
-        self.y_dtype_ = X.dtype
-        self.classes_ = [np.array([0, 1])] * X.shape[1]
-        self.n_classes_ = [2] * X.shape[1]
+        self.n_outputs_ = self.n_outputs_expected_ = y.shape[1]
+        self.y_dtype_ = y.dtype
+        self.classes_ = [np.array([0, 1])] * y.shape[1]
+        self.n_classes_ = [2] * y.shape[1]
         return self
 
-    def transform(self, X: np.ndarray) -> List[np.ndarray]:
+    def transform(self, y: np.ndarray) -> List[np.ndarray]:
         if self._target_type != "multilabel-indicator":
-            return super().transform(X)
-        return np.split(X, X.shape[1], axis=1)
+            return super().transform(y)
+        return np.split(y, y.shape[1], axis=1)
 
     def inverse_transform(
-        self, X: List[np.ndarray], return_proba: bool = False
+        self, y: List[np.ndarray], return_proba: bool = False
     ) -> np.ndarray:
         if self._target_type != "multilabel-indicator":
-            return super().inverse_transform(X, return_proba=return_proba)
+            return super().inverse_transform(y, return_proba=return_proba)
         if not return_proba:
-            X = [np.argmax(X_, axis=1).astype(self.y_dtype_, copy=False) for X_ in X]
-        return np.squeeze(np.column_stack(X))
+            y = [np.argmax(y_, axis=1).astype(self.y_dtype_, copy=False) for y_ in y]
+        return np.squeeze(np.column_stack(y))
 
 
 class MultiOutputClassifier(KerasClassifier):

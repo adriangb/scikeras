@@ -561,12 +561,10 @@ class TestHistory:
 
     def test_partial_fit_shorthand_metric_name(self):
         """Test that metrics get stored in the `history_` attribute
-        by their long name (and not shorthand) and that they
-        survive a pickle round trip.
+        by their long name (and not shorthand).
         """
-        estimator = KerasRegressor(
+        est = KerasRegressor(
             model=force_compile_shorthand,
-            run_eagerly=True,
             loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=(100,),
             metrics=["mae"],  # shorthand
@@ -574,18 +572,28 @@ class TestHistory:
         X, y = load_boston(return_X_y=True)
         X = X[:100]
         y = y[:100]
-        estimator.fit(X, y)
-        assert estimator.model_.metrics_names[1] == "mae"
-        assert "mean_absolute_error" in estimator.history_
-        assert "mae" not in estimator.history_
-        assert len(estimator.history_["mean_absolute_error"]) == 1
-        estimator.partial_fit(X, y)  # check partial_fit before pickle
-        assert len(estimator.history_["mean_absolute_error"]) == 2
-        estimator = pickle.loads(pickle.dumps(estimator))
-        estimator.partial_fit(X, y)  # check partial_fit after pickle
-        assert "mean_absolute_error" in estimator.history_
-        assert "mae" not in estimator.history_
-        assert len(estimator.history_["mean_absolute_error"]) == 3
+        est.fit(X, y)
+        assert "mae" not in est.history_ and "mean_absolute_error" in est.history_
+
+    def test_partial_fit_metric_name_pickle_roundtrip(self):
+        """Test that metrics names in the `history_` attribute
+        do not change after a pickle roundtrip.
+        """
+        est = KerasRegressor(
+            model=force_compile_shorthand,
+            loss=KerasRegressor.r_squared,
+            model__hidden_layer_sizes=(100,),
+            metrics=["mae", "mean_squared_error"],
+        )
+        X, y = load_boston(return_X_y=True)
+        X = X[:100]
+        y = y[:100]
+        est.fit(X, y)
+        hist_keys = est.history_.keys()
+        est = pickle.loads(pickle.dumps(est))
+        est.partial_fit(X, y)
+        hist_keys_new = est.history_.keys()
+        assert hist_keys == hist_keys_new
 
 
 def test_compile_model_from_params():
@@ -598,7 +606,7 @@ def test_compile_model_from_params():
     data = load_boston()
     X, y = data.data[:100], data.target[:100]
 
-    losses = (losses_module.MeanAbsoluteError, losses_module.MeanSquaredError)
+    other_loss = losses_module.MeanAbsoluteError
 
     # build_fn that does not compile
     def build_fn(my_loss=None):
@@ -613,65 +621,62 @@ def test_compile_model_from_params():
 
     # Calling with loss=None (or other default)
     # and compiling within build_fn must work
-    for loss in losses:
-        loss_obj = loss()
-        estimator = KerasRegressor(
-            model=build_fn,
-            # compile_with_loss != None overrides loss
-            my_loss=loss_obj,
-        )
-        estimator.fit(X, y)
-        assert estimator.model_.loss is loss_obj
+    loss_obj = other_loss()
+    estimator = KerasRegressor(
+        model=build_fn,
+        # compile_with_loss != None overrides loss
+        my_loss=loss_obj,
+    )
+    estimator.fit(X, y)
+    assert estimator.model_.loss is loss_obj
 
     # Passing a value for loss AND compiling with
     # the SAME loss should succeed, and the final loss
     # should be the user-supplied loss
-    for loss in losses:
-        loss_obj = loss()
-        estimator = KerasRegressor(
-            model=build_fn,
-            loss=loss(),
-            # compile_with_loss != None overrides loss
-            my_loss=loss_obj,
-        )
-        estimator.fit(X, y)
-        assert estimator.model_.loss is loss_obj
+    loss_obj = other_loss()
+    estimator = KerasRegressor(
+        model=build_fn,
+        loss=other_loss(),
+        # compile_with_loss != None overrides loss
+        my_loss=loss_obj,
+    )
+    estimator.fit(X, y)
+    assert estimator.model_.loss is loss_obj
 
     # Passing a non-default value for loss AND compiling with
     # a DIFFERENT loss should raise a ValueError
-    for loss in losses:
-        loss_obj = loss()
-        estimator = KerasRegressor(
-            model=build_fn,
-            loss=losses_module.CosineSimilarity(),
-            # compile_with_loss != None overrides loss
-            my_loss=loss_obj,
-        )
-        with pytest.raises(ValueError, match=" but model compiled with "):
-            estimator.fit(X, y)
+    loss_obj = other_loss()
+    estimator = KerasRegressor(
+        model=build_fn,
+        loss=losses_module.CosineSimilarity(),
+        # compile_with_loss != None overrides loss
+        my_loss=loss_obj,
+    )
+    with pytest.raises(ValueError, match=" but model compiled with "):
+        estimator.fit(X, y)
 
     # This should apply even if the default is != None
     class DefaultLossNotNone(KerasRegressor):
         def __init__(self, *args, loss=losses_module.CosineSimilarity(), **kwargs):
             super().__init__(*args, **kwargs, loss=loss)
 
-    for loss in losses:
-        loss_obj = loss()
-        estimator = DefaultLossNotNone(model=build_fn, my_loss=loss_obj,)
-        estimator.fit(X, y)
-        assert estimator.model_.loss is loss_obj
+    loss_obj = other_loss()
+    estimator = DefaultLossNotNone(model=build_fn, my_loss=loss_obj,)
+    estimator.fit(X, y)
+    assert estimator.model_.loss is loss_obj
 
-    for loss in losses:
-        loss_obj = loss()
-        estimator = DefaultLossNotNone(
-            model=build_fn, loss=losses_module.CategoricalHinge(), my_loss=loss_obj,
-        )
-        with pytest.raises(ValueError, match=" but model compiled with "):
-            estimator.fit(X, y)
+    loss_obj = other_loss()
+    estimator = DefaultLossNotNone(
+        model=build_fn, loss=losses_module.CategoricalHinge(), my_loss=loss_obj,
+    )
+    with pytest.raises(ValueError, match=" but model compiled with "):
+        estimator.fit(X, y)
 
 
 def test_subclassed_model_no_params():
-    """Test that we can define a subclassed model with no __init__ params.
+    """Test that we can define a subclassed model with no `__init__ `params
+    and that wrappers do not fail on introspection of the child class'
+    `__init__`.
     """
 
     class MLPClassifier(KerasClassifier):

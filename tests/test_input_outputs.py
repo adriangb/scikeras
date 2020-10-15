@@ -24,11 +24,6 @@ TEST_SAMPLES = 5
 NUM_CLASSES = 2
 
 
-class MultiInputTransformer(FunctionTransformer):
-    def get_metadata(self):
-        return dict()
-
-
 class FunctionalAPIMultiInputClassifier(KerasClassifier):
     """Tests Functional API Classifier with 2 inputs.
     """
@@ -57,7 +52,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
 
     @property
     def feature_encoder(self):
-        return MultiInputTransformer(func=lambda X: [X[:, 0], X[:, 1:4]],)
+        return FunctionTransformer(func=lambda X: [X[:, 0], X[:, 1:4]],)
 
 
 class FunctionAPIMultiLabelClassifier(MultiOutputClassifier):

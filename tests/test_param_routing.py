@@ -14,27 +14,45 @@ from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
 
+keras_classifier_base_meta_set = {
+    "X_dtype_",
+    "y_dtype_",
+    "classes_",
+    "target_type_",
+    "n_classes_",
+    "n_features_in_",
+    "X_shape_",
+    "n_outputs_expected_",
+    "y_ndim_",
+    "n_outputs_",
+}
+
+keras_regressor_base_meta_set = {
+    "X_shape_",
+    "n_outputs_expected_",
+    "X_dtype_",
+    "n_outputs_",
+    "y_dtype_",
+    "y_ndim_",
+    "n_features_in_",
+    "target_type_",
+}
+
+
 @pytest.mark.parametrize(
-    "wrapper, builder",
-    [(KerasClassifier, dynamic_classifier), (KerasRegressor, dynamic_regressor),],
+    "wrapper, builder, expected_meta",
+    [
+        (KerasClassifier, dynamic_classifier, keras_classifier_base_meta_set,),
+        (KerasRegressor, dynamic_regressor, keras_regressor_base_meta_set,),
+    ],
 )
-def test_routing_basic(wrapper, builder):
+def test_routing_basic(wrapper, builder, expected_meta):
     n, d = 20, 3
     n_classes = 3
     X = np.random.uniform(size=(n, d)).astype(float)
     y = np.random.choice(n_classes, size=n).astype(int)
 
     foo_val = object()
-
-    # build once to get expected meta-parameters
-    expected_meta = (
-        wrapper(model=builder, model__hidden_layer_sizes=(100,)).fit(X, y)._meta
-    )
-    expected_meta = expected_meta - {
-        "model_",
-        "history_",
-        "is_fitted_",
-    }
 
     def build_fn(hidden_layer_sizes, foo, compile_kwargs, params, meta):
         assert set(params.keys()) == set(est.get_params().keys())
@@ -55,10 +73,13 @@ def test_routing_basic(wrapper, builder):
 
 
 @pytest.mark.parametrize(
-    "wrapper, builder",
-    [(KerasClassifier, dynamic_classifier), (KerasRegressor, dynamic_regressor),],
+    "wrapper, builder, expected_meta",
+    [
+        (KerasClassifier, dynamic_classifier, keras_classifier_base_meta_set,),
+        (KerasRegressor, dynamic_regressor, keras_regressor_base_meta_set,),
+    ],
 )
-def test_routing_kwargs(wrapper, builder):
+def test_routing_kwargs(wrapper, builder, expected_meta):
     """Tests that special parameters are passed if
     build_fn accepts kwargs.
     """
@@ -66,16 +87,6 @@ def test_routing_kwargs(wrapper, builder):
     n_classes = 3
     X = np.random.uniform(size=(n, d)).astype(float)
     y = np.random.choice(n_classes, size=n).astype(int)
-
-    # build once to get expected meta-parameters
-    expected_meta = (
-        wrapper(model=builder, model__hidden_layer_sizes=(100,)).fit(X, y)._meta
-    )
-    expected_meta = expected_meta - {
-        "model_",
-        "history_",
-        "is_fitted_",
-    }
 
     def build_fn(*args, **kwargs):
         assert len(args) == 0, "No *args should be passed to `build_fn`"
@@ -95,10 +106,13 @@ def test_routing_kwargs(wrapper, builder):
 
 
 @pytest.mark.parametrize(
-    "wrapper_class,build_fn",
-    [(KerasClassifier, dynamic_classifier), (KerasRegressor, dynamic_regressor),],
+    "wrapper_class, build_fn, base_meta_set",
+    [
+        (KerasClassifier, dynamic_classifier, keras_classifier_base_meta_set,),
+        (KerasRegressor, dynamic_regressor, keras_regressor_base_meta_set,),
+    ],
 )
-def test_estimator_conserves_meta(wrapper_class, build_fn):
+def test_estimator_conserves_meta(wrapper_class, build_fn, base_meta_set):
     """Check that wrappers does not remove any meta parameters.
     """
     n, d = 20, 3
@@ -109,7 +123,7 @@ def test_estimator_conserves_meta(wrapper_class, build_fn):
     # with user kwargs
     clf = wrapper_class(model=build_fn, model__hidden_layer_sizes=(100,))
     clf.fit(X, y)
-    assert wrapper_class._meta.issubset(set(clf.get_metadata().keys()))
+    assert base_meta_set.issubset(set(clf.get_metadata().keys()))
     # without user kwargs
     def build_fn_no_args(meta, compile_kwargs):
         return build_fn(
@@ -118,7 +132,7 @@ def test_estimator_conserves_meta(wrapper_class, build_fn):
 
     clf = wrapper_class(model=build_fn_no_args)
     clf.fit(X, y)
-    assert wrapper_class._meta.issubset(set(clf.get_metadata().keys()))
+    assert base_meta_set.issubset(set(clf.get_metadata().keys()))
 
 
 def test_model_params_property():
