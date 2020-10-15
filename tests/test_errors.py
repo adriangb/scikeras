@@ -107,7 +107,7 @@ def test_build_fn_deprecation():
     """
     clf = KerasClassifier(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
     with pytest.warns(UserWarning, match="`build_fn` will be renamed to `model`"):
-        clf.fit(np.array([[0], [1]]), np.array([0, 1]))
+        clf.fit([[0], [1]], [0, 1])
 
 
 @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
@@ -122,16 +122,16 @@ def test_build_fn_and_init_signature_do_not_agree(wrapper):
     # all attempts to pass `bar` should fail
     est = wrapper(model=no_bar, model__bar=42)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit(np.array([[0], [1]]), np.array([0, 1]))
+        est.fit([[0], [1]], [0, 1])
     est = wrapper(model=no_bar, bar=42)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit(np.array([[0], [1]]), np.array([0, 1]))
+        est.fit([[0], [1]], [0, 1])
     est = wrapper(model=no_bar, model__bar=42, foo=43)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit(np.array([[0], [1]]), np.array([0, 1]))
+        est.fit([[0], [1]], [0, 1])
     est = wrapper(model=no_bar, bar=42, foo=43)
     with pytest.raises(TypeError, match="got an unexpected keyword argument"):
-        est.fit(np.array([[0], [1]]), np.array([0, 1]))
+        est.fit([[0], [1]], [0, 1])
 
 
 @pytest.mark.parametrize("loss", [None, [None]])
@@ -151,7 +151,7 @@ def test_no_loss(loss, compile):
 
     est = KerasRegressor(model=get_model, loss=loss, compile=compile)
     with pytest.raises(ValueError, match="must provide a loss function"):
-        est.fit(np.array([[0], [1]]), np.array([0, 1]))
+        est.fit([[0], [1]], [0, 1])
 
 
 @pytest.mark.parametrize("compile", [True, False])
@@ -168,16 +168,11 @@ def test_no_optimizer(compile):
             model.compile(**compile_kwargs)
         return model
 
-    est = KerasRegressor(
-        model=get_model,
-        loss="sparse_categorical_crossentropy",
-        compile=compile,
-        optimizer=None,
-    )
+    est = KerasRegressor(model=get_model, loss="mse", compile=compile, optimizer=None,)
     with pytest.raises(
         ValueError, match="Could not interpret optimizer identifier"  # Keras error
     ):
-        est.fit(np.array([[0], [1]]), np.array([0, 1]))
+        est.fit([[0], [1]], [0, 1])
 
 
 def test_target_dtype_changes_incremental_fit():
@@ -213,7 +208,8 @@ def test_target_shape_changes_incremental_fit_clf():
     est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
     est.fit(X, y)
     with pytest.raises(
-        ValueError, match="The fitted data had ",  # raised by transformers
+        ValueError,
+        match="The number of features in X is different to the number",  # raised by transformers
     ):
         est.partial_fit(X, np.column_stack([y, y]))
 
@@ -225,7 +221,7 @@ def test_target_shape_changes_incremental_fit_reg():
     est = KerasRegressor(model=dynamic_regressor, hidden_layer_sizes=(100,))
     est.fit(X, y)
     with pytest.raises(
-        ValueError, match="Detected `y` to map to ",
+        ValueError, match="Detected `y` to have ",
     ):
         est.partial_fit(X, np.column_stack([y, y]))
 

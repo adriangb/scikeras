@@ -176,7 +176,6 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
     """
 
     def fit(self, y: np.ndarray) -> "RegressorTargetEncoder":
-        y = y  # rename for clarity, the input is always expected to be a target `y`
         self._y_dtype = y.dtype
         self.n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         self.n_outputs_expected_ = 1
@@ -186,7 +185,7 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         if n_outputs_ != self.n_outputs_:
             raise ValueError(
-                f"Detected `y` to map to {n_outputs_} outputs"
+                f"Detected `y` to have {n_outputs_} outputs"
                 f" with `y.shape = {y.shape}",
                 f" but this {self.__class__.__name__} has"
                 f" {self.n_outputs_} outputs.",
