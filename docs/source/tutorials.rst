@@ -11,10 +11,10 @@ The following are examples and notebooks on how to use SciKeras.
 
 * `Meta Estimators <https://github.com/adriangb/scikeras/blob/master/notebooks/Meta_Estimators.ipynb>`_ - Use SciKeras in sklearn ensembles. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/Meta_Estimators.ipynb>`_
 
-* `Using SciKeras with Dask <https://github.com/adriangb/scikeras/tree/master/examples/rnn_classifer>`_ - Using Dask to parallelize grid search across GPUs.
+* `Using SciKeras with Dask <https://github.com/adriangb/scikeras/tree/master/notebooks/Dask.ipynb>`_ - Using Dask to parallelize grid search across GPUs.
 
 * `DataTransformers <https://github.com/adriangb/scikeras/blob/master/notebooks/DataTransformers.ipynb>`_ - Use SciKeras data transformers to handle multi input, multi output and multidimensional Keras Model. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/DataTransformers.ipynb>`_
 
-* `Benchmarks SciKeras vs pure Keras <https://github.com/adriangb/scikeras/blob/master/examples/benchmarks/mnist.py>`_ - Compares the performance of SciKeras and using pure Keras on MNIST.
+* `Benchmarking SciKeras vs pure Keras <https://github.com/adriangb/scikeras/blob/master/notebooks/Benchmarks.ipynb>`_ - Compares the performance of SciKeras and using pure Keras on MNIST. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/Benchmarks.ipynb>`_
 
 * `Advanced Usage <https://nbviewer.jupyter.org/github/adriangb/scikeras/blob/master/notebooks/Advanced_Usage.ipynb>`_ - Dives deep into the inner works of SciKeras. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/Advanced_Usage.ipynb>`_
