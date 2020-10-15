@@ -21,28 +21,28 @@ class TargetReshaper(BaseEstimator, TransformerMixin):
     Attributes
     ----------
     ndim_ : int
-        Dimensions of `X` that the transformer was trained on.
+        Dimensions of `y` that the transformer was trained on.
     """
 
-    def fit(self, X):
-        self.ndim_ = X.ndim
+    def fit(self, y):
+        self.ndim_ = y.ndim
         return self
 
     @staticmethod
-    def transform(X):
-        if X.ndim == 1:
-            return X.reshape(-1, 1)
-        return X
+    def transform(y):
+        if y.ndim == 1:
+            return y.reshape(-1, 1)
+        return y
 
-    def inverse_transform(self, X):
+    def inverse_transform(self, y):
         if not hasattr(self, "ndim_"):
             raise NotFittedError(
                 f"This {self.__class__.__name__} is not initialized."
                 " You must call `fit` before using `inverse_transform`."
             )
-        if self.ndim_ == 1 and X.ndim == 2:
-            return np.squeeze(X, axis=1)
-        return X
+        if self.ndim_ == 1 and y.ndim == 2:
+            return np.squeeze(y, axis=1)
+        return y
 
 
 class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
@@ -52,8 +52,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, loss: Union[None, str, Loss] = None):
         self.loss = loss
 
-    def fit(self, X: np.ndarray) -> "ClassifierLabelEncoder":
-        y = X  # rename for clarity, the input is always expected to be a target `y`
+    def fit(self, y: np.ndarray) -> "ClassifierLabelEncoder":
         target_type = type_of_target(y)
         keras_dtype = np.dtype(tf.keras.backend.floatx())
         encoders = {
@@ -108,16 +107,14 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X: np.ndarray) -> np.ndarray:
-        y = X  # rename for clarity, the input is always expected to be a target `y`
+    def transform(self, y: np.ndarray) -> np.ndarray:
         # no need to validate n_outputs_ or n_outputs_expected_, those are hardcoded
         # self.classes_ and self.n_classes_ are validated by the transformers themselves
         return self.final_encoder_.transform(y)
 
     def inverse_transform(
-        self, X: np.ndarray, return_proba: bool = False
+        self, y: np.ndarray, return_proba: bool = False
     ) -> np.ndarray:
-        y = X  # rename for clarity, the input is always expected to be a target `y`
         if self._target_type == "binary":
             # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
             if y.ndim == 1 or (y.shape[1] == 1 and self.n_classes_ == 2):
@@ -178,15 +175,14 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
     """Default target transformer for KerasRegressor.
     """
 
-    def fit(self, X: np.ndarray) -> "RegressorTargetEncoder":
-        y = X  # rename for clarity, the input is always expected to be a target `y`
+    def fit(self, y: np.ndarray) -> "RegressorTargetEncoder":
+        y = y  # rename for clarity, the input is always expected to be a target `y`
         self._y_dtype = y.dtype
         self.n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         self.n_outputs_expected_ = 1
         return self
 
-    def transform(self, X: np.ndarray) -> np.ndarray:
-        y = X
+    def transform(self, y: np.ndarray) -> np.ndarray:
         n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         if n_outputs_ != self.n_outputs_:
             raise ValueError(
@@ -197,8 +193,7 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
             )
         return y
 
-    def inverse_transform(self, X: np.ndarray) -> np.ndarray:
-        y = X  # rename for clarity, the input is always expected to be a target `y`
+    def inverse_transform(self, y: np.ndarray) -> np.ndarray:
         if self._y_dtype == np.float64 and y.dtype == np.float32:
             return np.squeeze(y.astype(np.float64, copy=False))
         return np.squeeze(y)
