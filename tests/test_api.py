@@ -462,7 +462,6 @@ class TestPartialFit:
         estimator = KerasRegressor(
             model=dynamic_regressor,
             loss=KerasRegressor.r_squared,
-            metrics="mean_squared_error",
             model__hidden_layer_sizes=[100,],
             epochs=epochs,
         )
