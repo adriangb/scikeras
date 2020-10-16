@@ -450,6 +450,33 @@ class TestPartialFit:
                 "mean_squared_error",
             }
 
+    def test_partial_fit_single_epoch(self):
+        """Test that partial_fit trains for a single epoch,
+        independently of what epoch value is passed to the constructor.
+        """
+        data = load_boston()
+        X, y = data.data[:100], data.target[:100]
+        epochs = 9
+        partial_fit_iter = 4
+
+        estimator = KerasRegressor(
+            model=dynamic_regressor,
+            loss=KerasRegressor.r_squared,
+            metrics="mean_squared_error",
+            model__hidden_layer_sizes=[100,],
+            epochs=epochs,
+        )
+
+        # Check that each partial_fit call trains for 1 epoch
+        for k in range(1, partial_fit_iter):
+            estimator = estimator.partial_fit(X, y)
+            assert len(estimator.history_["loss"]) == k
+
+        # Check that fit calls still train for the number of
+        # epochs specified in the constructor
+        estimator = estimator.fit(X, y)
+        assert len(estimator.history_["loss"]) == epochs
+
     @pytest.mark.parametrize(
         "config", ["CNNClassifier", "CNNClassifierF"],
     )

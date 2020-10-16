@@ -120,6 +120,7 @@ class BaseWrapper(BaseEstimator):
         "n_outputs_",
         "model_n_outputs_",
         "_user_params",
+        "_epochs",
     }
 
     _routing_prefixes = {
@@ -387,6 +388,7 @@ class BaseWrapper(BaseEstimator):
         params = self.get_params()
         fit_args = route_params(params, destination="fit", pass_filter=self._fit_kwargs)
         fit_args["sample_weight"] = sample_weight
+        fit_args["epochs"] = self._epochs
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
@@ -575,7 +577,7 @@ class BaseWrapper(BaseEstimator):
             X=X, y=y, sample_weight=sample_weight, warm_start=self.warm_start
         )
 
-    def _fit(self, X, y, sample_weight=None, warm_start=False):
+    def _fit(self, X, y, sample_weight=None, warm_start=False, epochs=None):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
 
         Arguments:
@@ -595,6 +597,8 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
+        # Handle epochs
+        self._epochs = epochs or self.epochs
         # Handle random state
         if isinstance(self.random_state, np.random.RandomState):
             # Keras needs an integer
@@ -688,7 +692,7 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        return self._fit(X, y, sample_weight=sample_weight, warm_start=True)
+        return self._fit(X, y, sample_weight=sample_weight, warm_start=True, epochs=1)
 
     def predict(self, X):
         """Returns predictions for the given test data.
