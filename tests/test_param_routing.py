@@ -114,13 +114,6 @@ def test_no_extra_meta(wrapper_class, build_fn):
     assert set(clf.get_meta().keys()) == wrapper_class._meta - {"_user_params"}
 
 
-def test_model_params_property():
-    """Check that the `_model_params` property works as expected.
-    """
-    clf = KerasRegressor(model="test", model__hidden_layer_sizes=(100,))
-    assert clf._model_params == {"hidden_layer_sizes"}
-
-
 @pytest.mark.parametrize("dest", ["fit", "compile", "predict"])
 def test_routing_sets(dest):
     accepted_params = set(inspect.signature(getattr(Model, dest)).parameters.keys()) - {
