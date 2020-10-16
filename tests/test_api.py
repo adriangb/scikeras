@@ -561,7 +561,8 @@ class TestHistory:
 
     def test_partial_fit_shorthand_metric_name(self):
         """Test that metrics get stored in the `history_` attribute
-        by their long name (and not shorthand).
+        by their long name (and not shorthand) even if the user
+        compiles their model with a shorthand name.
         """
         est = KerasRegressor(
             model=force_compile_shorthand,
@@ -574,26 +575,6 @@ class TestHistory:
         y = y[:100]
         est.fit(X, y)
         assert "mae" not in est.history_ and "mean_absolute_error" in est.history_
-
-    def test_partial_fit_metric_name_pickle_roundtrip(self):
-        """Test that metrics names in the `history_` attribute
-        do not change after a pickle roundtrip.
-        """
-        est = KerasRegressor(
-            model=force_compile_shorthand,
-            loss=KerasRegressor.r_squared,
-            model__hidden_layer_sizes=(100,),
-            metrics=["mae", "mean_squared_error"],
-        )
-        X, y = load_boston(return_X_y=True)
-        X = X[:100]
-        y = y[:100]
-        est.fit(X, y)
-        hist_keys = est.history_.keys()
-        est = pickle.loads(pickle.dumps(est))
-        est.partial_fit(X, y)
-        hist_keys_new = est.history_.keys()
-        assert hist_keys == hist_keys_new
 
 
 def test_compile_model_from_params():
