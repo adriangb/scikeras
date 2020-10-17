@@ -299,7 +299,7 @@ class BaseWrapper(BaseEstimator):
         if has_param(final_build_fn, "meta") or accepts_kwargs(final_build_fn):
             # build_fn accepts `meta`, add it
             meta = route_params(
-                self.get_metadata(), destination=None, pass_filter=self._meta,
+                self.metadata_, destination=None, pass_filter=self._meta,
             )
             build_params["meta"] = meta
         if has_param(final_build_fn, "compile_kwargs") or accepts_kwargs(
@@ -781,8 +781,9 @@ class BaseWrapper(BaseEstimator):
 
         return self.scorer(y, y_pred, sample_weight=sample_weight, **score_args)
 
-    def get_metadata(self) -> Dict[str, Any]:
-        """Get meta parameters (parameters created by fit, like
+    @property
+    def metadata_(self) -> Dict[str, Any]:
+        """Meta parameters (parameters created by fit, like
         n_features_in_ or target_type_).
 
         Returns
@@ -790,15 +791,18 @@ class BaseWrapper(BaseEstimator):
         Dict[str, Any]
             Dictionary of meta parameters
         """
-        return {
-            k: v
-            for k, v in self.__dict__.items()
-            if (
-                k not in type(self)().__dict__
-                and k not in self.get_params()
-                and (k.startswith("_") or k.endswith("_"))
+        if not hasattr(self, "_random_state"):
+            # Checking `_random_state` is somewhat arbitrary
+            # Ideally, we would check `model_`, but this property
+            # is accessed internally between when `_random_state`
+            # is generated and when `model_` is generated
+            # so we choose to check `_random_state` (the first attribute)
+            # generated when `fit` is called) instead
+            raise NotFittedError(
+                "The `metadata_` attribute cannot be accessed"
+                " on an unfitted estimator. You must first call `fit`."
             )
-        }
+        return {k: self.__dict__[k] for k in self._meta if k in self.__dict__}
 
     def set_params(self, **params) -> "BaseWrapper":
         """Override BaseEstimator.set_params to allow setting of routed params.
