@@ -385,7 +385,7 @@ class BaseWrapper(BaseEstimator):
                 # "val_loss" in hist.history.
                 if "Unknown metric function" not in str(e):
                     raise e
-            self.history_[key] += [val]
+            self.history_[key] += val
 
         # return self to allow fit_transform and such to work
         return self
