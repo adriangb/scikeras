@@ -16,7 +16,7 @@ class MultiLabelTransformer(ClassifierLabelEncoder):
         # y = array([1, 1, 1, 0], [0, 0, 1, 1])
         # each col will be processed as multiple binary classifications
         self.n_outputs_ = self.n_outputs_expected_ = y.shape[1]
-        self.y_dtype_ = y.dtype
+        self._y_dtype = y.dtype
         self.classes_ = [np.array([0, 1])] * y.shape[1]
         self.n_classes_ = [2] * y.shape[1]
         return self
@@ -32,7 +32,7 @@ class MultiLabelTransformer(ClassifierLabelEncoder):
         if self._target_type != "multilabel-indicator":
             return super().inverse_transform(y, return_proba=return_proba)
         if not return_proba:
-            y = [np.argmax(y_, axis=1).astype(self.y_dtype_, copy=False) for y_ in y]
+            y = [np.argmax(y_, axis=1).astype(self._y_dtype, copy=False) for y_ in y]
         return np.squeeze(np.column_stack(y))
 
 
