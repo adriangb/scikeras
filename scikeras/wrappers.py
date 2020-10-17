@@ -185,15 +185,6 @@ class BaseWrapper(BaseEstimator):
     def __name__(self):
         return self.__class__.__name__
 
-    @property
-    def _model_params(self):
-        return {
-            k[len("model__") :]
-            for k in self.get_params()
-            if "model__" == k[: len("model__")]
-            or k in getattr(self, "_user_params", set())
-        }
-
     def _check_model_param(self):
         """Checks `model` and returns model building
         function to use.
