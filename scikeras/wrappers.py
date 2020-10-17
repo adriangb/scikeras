@@ -353,7 +353,7 @@ class BaseWrapper(BaseEstimator):
 
         return model
 
-    def _fit_keras_model(self, X, y, sample_weight, warm_start):
+    def _fit_keras_model(self, X, y, sample_weight, warm_start, epochs):
         """Fits the Keras model.
 
         This method will process all arguments and call the Keras
@@ -370,6 +370,8 @@ class BaseWrapper(BaseEstimator):
             warm_start : bool
                 If ``warm_start`` is True, don't don't overwrite
                 the ``history_`` attribute and append to it instead.
+            epochs : int
+                Number of epochs for which the model will be trained.
         Returns:
             self : object
                 a reference to the instance that can be chain called
@@ -387,6 +389,7 @@ class BaseWrapper(BaseEstimator):
         params = self.get_params()
         fit_args = route_params(params, destination="fit", pass_filter=self._fit_kwargs)
         fit_args["sample_weight"] = sample_weight
+        fit_args["epochs"] = epochs
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
@@ -572,10 +575,14 @@ class BaseWrapper(BaseEstimator):
             ValueError : In case of invalid shape for `y` argument.
         """
         return self._fit(
-            X=X, y=y, sample_weight=sample_weight, warm_start=self.warm_start
+            X=X,
+            y=y,
+            sample_weight=sample_weight,
+            warm_start=self.warm_start,
+            epochs=self.epochs,
         )
 
-    def _fit(self, X, y, sample_weight=None, warm_start=False):
+    def _fit(self, X, y, sample_weight, warm_start, epochs):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
 
         Arguments:
@@ -586,8 +593,11 @@ class BaseWrapper(BaseEstimator):
                 True labels for `X`.
             sample_weight : array-like of shape (n_samples,), default=None
                 Sample weights. The Keras Model must support this.
-            warm_start : bool, default False
+            warm_start : bool
                 If ``warm_start`` is True, don't rebuild the model.
+            epochs : int
+                Number of passes over the entire dataset for which to train the
+                model.
         Returns:
             self : object
                 a reference to the instance that can be chain called
@@ -665,7 +675,7 @@ class BaseWrapper(BaseEstimator):
 
         # fit model
         return self._fit_keras_model(
-            X, y, sample_weight=sample_weight, warm_start=warm_start
+            X, y, sample_weight=sample_weight, warm_start=warm_start, epochs=epochs
         )
 
     def partial_fit(self, X, y, sample_weight=None):
@@ -688,7 +698,7 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        return self._fit(X, y, sample_weight=sample_weight, warm_start=True)
+        return self._fit(X, y, sample_weight=sample_weight, warm_start=True, epochs=1)
 
     def predict(self, X):
         """Returns predictions for the given test data.
