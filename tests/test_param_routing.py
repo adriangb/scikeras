@@ -25,6 +25,8 @@ keras_classifier_base_meta_set = {
     "n_outputs_expected_",
     "y_ndim_",
     "n_outputs_",
+    "feature_encoder_",
+    "target_encoder_",
 }
 
 keras_regressor_base_meta_set = {
@@ -36,6 +38,8 @@ keras_regressor_base_meta_set = {
     "y_ndim_",
     "n_features_in_",
     "target_type_",
+    "feature_encoder_",
+    "target_encoder_",
 }
 
 
@@ -103,36 +107,6 @@ def test_routing_kwargs(wrapper, builder, expected_meta):
 
     est = wrapper(model=build_fn, model__hidden_layer_sizes=(100,))
     est.fit(X, y)
-
-
-@pytest.mark.parametrize(
-    "wrapper_class, build_fn, base_meta_set",
-    [
-        (KerasClassifier, dynamic_classifier, keras_classifier_base_meta_set,),
-        (KerasRegressor, dynamic_regressor, keras_regressor_base_meta_set,),
-    ],
-)
-def test_estimator_conserves_meta(wrapper_class, build_fn, base_meta_set):
-    """Check that wrappers does not remove any meta parameters.
-    """
-    n, d = 20, 3
-    n_classes = 3
-    X = np.random.uniform(size=(n, d)).astype(float)
-    y = np.random.choice(n_classes, size=n).astype(int)
-
-    # with user kwargs
-    clf = wrapper_class(model=build_fn, model__hidden_layer_sizes=(100,))
-    clf.fit(X, y)
-    assert base_meta_set.issubset(set(clf.metadata_.keys()))
-    # without user kwargs
-    def build_fn_no_args(meta, compile_kwargs):
-        return build_fn(
-            hidden_layer_sizes=(100,), meta=meta, compile_kwargs=compile_kwargs,
-        )
-
-    clf = wrapper_class(model=build_fn_no_args)
-    clf.fit(X, y)
-    assert base_meta_set.issubset(set(clf.metadata_.keys()))
 
 
 def test_model_params_property():
