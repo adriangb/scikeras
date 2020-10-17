@@ -109,33 +109,6 @@ def test_routing_kwargs(wrapper, builder, expected_meta):
     est.fit(X, y)
 
 
-@pytest.mark.parametrize(
-    "wrapper_class,build_fn",
-    [(KerasClassifier, dynamic_classifier), (KerasRegressor, dynamic_regressor),],
-)
-def test_no_extra_meta(wrapper_class, build_fn):
-    """Check that wrappers do not create any unexpected meta parameters.
-    """
-    n, d = 20, 3
-    n_classes = 3
-    X = np.random.uniform(size=(n, d)).astype(float)
-    y = np.random.choice(n_classes, size=n).astype(int)
-
-    # with user kwargs
-    clf = wrapper_class(model=build_fn, model__hidden_layer_sizes=(100,))
-    clf.fit(X, y)
-    assert set(clf.get_meta().keys()) == wrapper_class._meta
-    # without user kwargs
-    def build_fn_no_args(meta, compile_kwargs):
-        return build_fn(
-            hidden_layer_sizes=(100,), meta=meta, compile_kwargs=compile_kwargs,
-        )
-
-    clf = wrapper_class(model=build_fn_no_args)
-    clf.fit(X, y)
-    assert set(clf.get_meta().keys()) == wrapper_class._meta - {"_user_params"}
-
-
 @pytest.mark.parametrize("dest", ["fit", "compile", "predict"])
 def test_routing_sets(dest):
     accepted_params = set(inspect.signature(getattr(Model, dest)).parameters.keys()) - {
