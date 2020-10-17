@@ -102,18 +102,6 @@ class BaseWrapper(BaseEstimator):
         "random_state",
     }
 
-    _meta = {
-        # public attributes created by wrappers within `fit`
-        "n_features_in_",
-        "X_dtype_",
-        "y_dtype_",
-        "X_shape_",
-        "y_ndim_",
-        "model_",
-        "history_",
-        "target_type_",
-    }
-
     _routing_prefixes = {
         "model",
         "fit",
@@ -298,10 +286,7 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs = None
         if has_param(final_build_fn, "meta") or accepts_kwargs(final_build_fn):
             # build_fn accepts `meta`, add it
-            meta = route_params(
-                self.metadata_, destination=None, pass_filter=self._meta,
-            )
-            build_params["meta"] = meta
+            build_params["meta"] = self._get_metadata()
         if has_param(final_build_fn, "compile_kwargs") or accepts_kwargs(
             final_build_fn
         ):
@@ -591,18 +576,15 @@ class BaseWrapper(BaseEstimator):
     def _initialize(
         self, X: np.ndarray, y: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray]:
-        self._meta = self.__class__._meta.copy()  # avoid modifying mutable class attr
 
         self.target_encoder_ = self.target_encoder.fit(y)
         target_metadata = getattr(
             self.target_encoder_, "get_metadata", lambda: dict()
         )()
         vars(self).update(**target_metadata)
-        self._meta.update(set(target_metadata.keys()))
         self.feature_encoder_ = self.feature_encoder.fit(X)
         feature_meta = getattr(self.feature_encoder, "get_metadata", lambda: dict())()
         vars(self).update(**feature_meta)
-        self._meta.update(set(feature_meta.keys()))
 
         self.model_ = self._build_keras_model()
 
@@ -769,8 +751,7 @@ class BaseWrapper(BaseEstimator):
 
         return self.scorer(y, y_pred, sample_weight=sample_weight, **score_args)
 
-    @property
-    def metadata_(self) -> Dict[str, Any]:
+    def _get_metadata(self) -> Dict[str, Any]:
         """Meta parameters (parameters created by fit, like
         n_features_in_ or target_type_).
 
@@ -779,18 +760,11 @@ class BaseWrapper(BaseEstimator):
         Dict[str, Any]
             Dictionary of meta parameters
         """
-        if not hasattr(self, "_random_state"):
-            # Checking `_random_state` is somewhat arbitrary
-            # Ideally, we would check `model_`, but this property
-            # is accessed internally between when `_random_state`
-            # is generated and when `model_` is generated
-            # so we choose to check `_random_state` (the first attribute)
-            # generated when `fit` is called) instead
-            raise NotFittedError(
-                "The `metadata_` attribute cannot be accessed"
-                " on an unfitted estimator. You must first call `fit`."
-            )
-        return {k: self.__dict__[k] for k in self._meta if k in self.__dict__}
+        return {
+            k: v
+            for k, v in self.__dict__.items()
+            if (len(k) > 1 and k[-1] == "_" and [-2] != "_" and k[0] != "_")
+        }
 
     def set_params(self, **params) -> "BaseWrapper":
         """Override BaseEstimator.set_params to allow setting of routed params.
