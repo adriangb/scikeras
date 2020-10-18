@@ -662,7 +662,7 @@ def test_compile_model_from_params():
     with pytest.raises(ValueError, match=" but model compiled with "):
         estimator.fit(X, y)
 
-    # This should apply even if the default is != None
+    # The ValueError should appear even if the default is != None
     class DefaultLossNotNone(KerasRegressor):
         def __init__(self, *args, loss=losses_module.CosineSimilarity(), **kwargs):
             super().__init__(*args, **kwargs, loss=loss)
@@ -681,7 +681,8 @@ def test_compile_model_from_params():
 
 
 def test_subclassed_model_no_params():
-    """Test that we can define a subclassed model with no `__init__ `params
+    """Test that we can define a subclassed model with no `__init__` params
+    (i.e., a fully self-contined sklearn style estimator)
     and that wrappers do not fail on introspection of the child class'
     `__init__`.
     """

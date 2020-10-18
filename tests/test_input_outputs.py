@@ -55,7 +55,7 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
         return FunctionTransformer(func=lambda X: [X[:, 0], X[:, 1:4]],)
 
 
-class FunctionAPIMultiLabelClassifier(MultiOutputClassifier):
+class FunctionalAPIMultiLabelClassifier(MultiOutputClassifier):
     """Tests Functional API Classifier with multiple binary outputs.
     """
 
@@ -82,7 +82,7 @@ class FunctionAPIMultiLabelClassifier(MultiOutputClassifier):
         return model
 
 
-class FunctionAPIMultiOutputRegressor(KerasRegressor):
+class FunctionalAPIMultiOutputRegressor(KerasRegressor):
     """Tests Functional API Regressor with multiple outputs.
     """
 
@@ -163,7 +163,7 @@ def test_multi_output():
 def test_multi_label_clasification():
     """Compares to scikit-learn RandomForestClassifier classifier.
     """
-    clf_keras = FunctionAPIMultiLabelClassifier()
+    clf_keras = FunctionalAPIMultiLabelClassifier()
     clf_sklearn = RandomForestClassifier()
     # taken from https://scikit-learn.org/stable/modules/multiclass.html
     y = [[2, 3, 4], [2], [0, 1, 3], [0, 1, 2, 3, 4], [0, 1, 2]]
@@ -187,7 +187,7 @@ def test_multi_label_clasification():
 def test_multi_output_regression():
     """Compares to scikit-learn RandomForestRegressor.
     """
-    reg_keras = FunctionAPIMultiOutputRegressor()
+    reg_keras = FunctionalAPIMultiOutputRegressor()
     reg_sklearn = RandomForestRegressor()
     # taken from https://scikit-learn.org/stable/modules/multiclass.html
     (X, _), (_, _) = get_test_data(

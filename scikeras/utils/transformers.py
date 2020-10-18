@@ -79,9 +79,9 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                 " * https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html"
                 " * https://scikit-learn.org/stable/modules/multiclass.html"
                 "\n\nFor information on the SciKeras data transformation interface, see:"
-                " * https://scikeras.readthedocs.io/en/latest/advanced.html#data-transforms"
+                " * https://scikeras.readthedocs.io/en/latest/advanced.html#data-transformers"
             )
-        self.final_encoder_ = encoders[target_type].fit(y)
+        self._final_encoder = encoders[target_type].fit(y)
 
         if (
             target_type == "multilabel-indicator"
@@ -96,7 +96,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         self._target_type = target_type
 
         if target_type in ("binary", "multiclass"):
-            self.classes_ = self.final_encoder_[1].categories_[0]
+            self.classes_ = self._final_encoder[1].categories_[0]
             self.n_classes_ = self.classes_.size
         elif target_type in ("multiclass-onehot", "multilabel-indicator"):
             self.classes_ = np.arange(0, y.shape[1])
@@ -110,7 +110,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
     def transform(self, y: np.ndarray) -> np.ndarray:
         # no need to validate n_outputs_ or n_outputs_expected_, those are hardcoded
         # self.classes_ and self.n_classes_ are validated by the transformers themselves
-        return self.final_encoder_.transform(y)
+        return self._final_encoder.transform(y)
 
     def inverse_transform(
         self, y: np.ndarray, return_proba: bool = False
@@ -122,7 +122,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                 # reformat so that we have 2 columns
                 y = np.column_stack([1 - y, y])
             class_predictions = np.argmax(y, axis=1).reshape(-1, 1)
-            class_predictions = self.final_encoder_.inverse_transform(class_predictions)
+            class_predictions = self._final_encoder.inverse_transform(class_predictions)
         elif self._target_type == "multiclass":
             # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
             # array(['apple', 'orange'])
@@ -132,7 +132,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             else:
                 class_predictions = np.zeros(y.shape, dtype=int)
                 class_predictions[:, idx] = 1
-            class_predictions = self.final_encoder_.inverse_transform(class_predictions)
+            class_predictions = self._final_encoder.inverse_transform(class_predictions)
         elif self._target_type == "multiclass-onehot":
             # array([.8, .1, .1], [.1, .8, .1]) ->
             # array([[1, 0, 0], [0, 1, 0]])

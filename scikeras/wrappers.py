@@ -576,12 +576,10 @@ class BaseWrapper(BaseEstimator):
     ) -> Tuple[np.ndarray, np.ndarray]:
 
         self.target_encoder_ = self.target_encoder.fit(y)
-        target_metadata = getattr(
-            self.target_encoder_, "get_metadata", lambda: dict()
-        )()
+        target_metadata = getattr(self.target_encoder_, "get_metadata", dict)()
         vars(self).update(**target_metadata)
         self.feature_encoder_ = self.feature_encoder.fit(X)
-        feature_meta = getattr(self.feature_encoder, "get_metadata", lambda: dict())()
+        feature_meta = getattr(self.feature_encoder, "get_metadata", dict)()
         vars(self).update(**feature_meta)
 
         self.model_ = self._build_keras_model()
