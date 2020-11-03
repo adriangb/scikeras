@@ -556,6 +556,27 @@ class TestPartialFit:
         assert any(x > 0.5 for x in rel_errors)
         # the rel_error is often higher than 0.5 but the tests are random
 
+    def test_partial_fit_classes_param(self):
+        """Test use of `partial_fit` with the `classes` parameter
+        and incomplete classes in the first pass.
+        """
+        clf = KerasClassifier(
+            model=dynamic_classifier,
+            loss="sparse_categorical_crossentropy",
+            model__hidden_layer_sizes=[100,],
+        )
+        X1 = np.array([[1, 2, 3], [4, 5, 6]]).T
+        y1 = np.array([1, 2, 2])
+        X2 = X1
+        y2 = np.array([2, 3, 3])
+        classes = np.unique(np.concatenate([y1, y2]))
+        clf.partial_fit(X=X1, y=y1, classes=classes)
+        clf.score(X1, y1)
+        clf.score(X2, y2)
+        clf.partial_fit(X=X2, y=y2)
+        clf.score(X1, y1)
+        clf.score(X2, y2)
+
 
 def force_compile_shorthand(hidden_layer_sizes, meta, compile_kwargs, params):
     model = dynamic_regressor(
