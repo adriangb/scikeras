@@ -506,6 +506,41 @@ class TestPartialFit:
         estimator = estimator.fit(X, y)
         assert len(estimator.history_["loss"]) == epochs
 
+    @pytest.mark.parametrize("warm_start", [True, False])
+    def test_current_epoch_property(self, warm_start):
+        """Test the public current_epoch property
+        that tracks the overall training epochs.
+
+        The warm_start parameter should have
+        NO impact on this behavior.
+        """
+        data = load_boston()
+        X, y = data.data[:100], data.target[:100]
+        epochs = 2
+        partial_fit_iter = 4
+
+        estimator = KerasRegressor(
+            model=dynamic_regressor,
+            loss=KerasRegressor.r_squared,
+            model__hidden_layer_sizes=[100,],
+            epochs=epochs,
+            warm_start=warm_start,
+        )
+
+        # Check that each partial_fit call trains for 1 epoch
+        for k in range(1, partial_fit_iter):
+            estimator.partial_fit(X, y)
+            assert estimator.current_epoch == k
+
+        # Check that fit calls still train for the number of
+        # epochs specified in the constructor
+        estimator.fit(X, y)
+        assert estimator.current_epoch == epochs
+
+        # partial_fit is able to resume from a non-zero epoch
+        estimator.partial_fit(X, y)
+        assert estimator.current_epoch == epochs + 1
+
     @pytest.mark.parametrize(
         "config", ["CNNClassifier", "CNNClassifierF"],
     )
