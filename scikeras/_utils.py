@@ -251,6 +251,16 @@ def _class_from_strings(items: Union[str, dict, tuple, list], class_getter: Call
     """
     if isinstance(items, str):
         item = items
+        if class_getter is tf.keras.metrics.get and item in (
+            "acc",
+            "accuracy",
+            "ce",
+            "crossentropy",
+        ):
+            # Keras matches "acc" and others in this list to the right function
+            # based on the Model's loss function, output shape, etc.
+            # We pass them through here to let Keras deal with these.
+            return item
         got = class_getter(item)
         if hasattr(got, "__class__") and type(got).__module__.startswith("tensorflow"):
             # optimizers.get returns instances instead of classes
