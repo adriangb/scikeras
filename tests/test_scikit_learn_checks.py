@@ -54,9 +54,10 @@ def test_fully_compliant_estimators(estimator, check):
         "check_classifiers_classes",
         "check_methods_subset_invariance",
         "check_no_attributes_set_in_init",
+        "check_class_weight_classifiers",
     ):
         # These tests have bugs that are fixed in 0.23.0
-        pytest.skip("This test is broken in sklearn<0.23.0")
+        pytest.skip("This test is broken in sklearn<=0.23.0")
     check(estimator)
 
 

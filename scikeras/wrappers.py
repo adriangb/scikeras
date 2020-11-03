@@ -5,7 +5,7 @@ import os
 import warnings
 
 from collections import defaultdict
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Iterable, Tuple, Union
 
 import numpy as np
 import tensorflow as tf
@@ -15,6 +15,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.preprocessing import FunctionTransformer
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
@@ -170,6 +171,35 @@ class BaseWrapper(BaseEstimator):
         if not hasattr(self, "history_"):
             return 0
         return len(self.history_["loss"])
+
+    def _validate_sample_weight(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        sample_weight: Union[None, np.ndarray, Iterable],
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Validate that the passed sample_weight and ensure it is a Numpy array.
+        """
+        sample_weight = _check_sample_weight(
+            sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
+        )
+        # Scikit-Learn expects a 0 in sample_weight to mean
+        # "ignore the sample", but because of how Keras applies
+        # sample_weight to the loss function, this doesn't
+        # exactly work out (as in, sklearn estimator checks fail
+        # because the predictions differ by a small margin).
+        # To get around this, we manually delete these samples here
+        zeros = sample_weight == 0
+        if zeros.sum() == zeros.size:
+            raise ValueError(
+                "No training samples had any weight; only zeros were passed in sample_weight."
+                " That means there's nothing to train on by definition, so training can not be completed."
+            )
+        if np.any(zeros):
+            X = X[~zeros]
+            y = y[~zeros]
+            sample_weight = sample_weight[~zeros]
+        return X, y, sample_weight
 
     def _check_model_param(self):
         """Checks `model` and returns model building
@@ -471,7 +501,7 @@ class BaseWrapper(BaseEstimator):
             y_dtype_ = y.dtype
             y_ndim_ = y.ndim
             if reset:
-                self.target_type_ = type_of_target(y)
+                self.target_type_ = self._type_of_target(y)
                 self.y_dtype_ = y_dtype_
                 self.y_ndim_ = y_ndim_
             else:
@@ -520,6 +550,9 @@ class BaseWrapper(BaseEstimator):
         if y is None:
             return X
         return X, y
+
+    def _type_of_target(self, y: np.ndarray) -> str:
+        return type_of_target(y)
 
     @property
     def target_encoder(self):
@@ -641,32 +674,12 @@ class BaseWrapper(BaseEstimator):
         else:
             X, y = self._validate_data(X, y)
 
+        X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
+
         y = self.target_encoder_.transform(y)
         X = self.feature_encoder_.transform(X)
 
         self._check_model_compatibility(y)
-
-        if sample_weight is not None:
-            sample_weight = _check_sample_weight(
-                sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
-            )
-            # Scikit-Learn expects a 0 in sample_weight to mean
-            # "ignore the sample", but because of how Keras applies
-            # sample_weight to the loss function, this doesn't
-            # exactly work out (as in, sklearn estimator checks fail
-            # because the predictions differ by a small margin).
-            # To get around this, we manually delete these samples here
-            zeros = sample_weight == 0
-            if zeros.all():
-                raise ValueError(
-                    "No training samples had any weight; only zeros were passed in sample_weight."
-                    " That means there's nothing to train on by definition, so training can not be completed.\n\n"
-                    "To resolve this error, have at least one non-zero sample_weight"
-                )
-            if np.any(zeros):
-                X = X[~zeros]
-                y = y[~zeros]
-                sample_weight = sample_weight[~zeros]
 
         # fit model
         return self._fit_keras_model(
@@ -843,9 +856,68 @@ class KerasClassifier(BaseWrapper):
             sparse tensors",
             "check_no_attributes_set_in_init": "can only \
             pass if all params are hardcoded in __init__",
+            "check_class_weight_classifiers": "fails without \
+            >20 epochs, tested seperately",
         },
         **BaseWrapper._tags,
     }
+
+    def __init__(
+        self,
+        model=None,
+        *,
+        build_fn=None,  # for backwards compatibility
+        warm_start=False,
+        random_state=None,
+        optimizer="rmsprop",
+        loss=None,
+        metrics=None,
+        batch_size=None,
+        verbose=1,
+        callbacks=None,
+        validation_split=0.0,
+        shuffle=True,
+        run_eagerly=False,
+        epochs=1,
+        class_weight=None,
+        **kwargs,
+    ):
+        super().__init__(
+            model=model,
+            build_fn=build_fn,
+            warm_start=warm_start,
+            random_state=random_state,
+            optimizer=optimizer,
+            loss=loss,
+            metrics=metrics,
+            batch_size=batch_size,
+            verbose=verbose,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            shuffle=shuffle,
+            run_eagerly=run_eagerly,
+            epochs=epochs,
+            **kwargs,
+        )
+        self.class_weight = class_weight
+
+    def _validate_sample_weight(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        sample_weight: Union[None, np.ndarray, Iterable],
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        X, y, sample_weight = super()._validate_sample_weight(X, y, sample_weight)
+        if self.class_weight is not None:
+            sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
+        return X, y, sample_weight
+
+    def _type_of_target(self, y: np.ndarray) -> str:
+        target_type = type_of_target(y)
+        if target_type == "binary" and self.classes_ is not None:
+            # check that this is not a multiclass problem missing categories
+            target_type = type_of_target(self.classes_)
+        return target_type
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
@@ -883,7 +955,34 @@ class KerasClassifier(BaseWrapper):
             Transformer implementing the sklearn transformer
             interface.
         """
-        return ClassifierLabelEncoder(loss=self.loss)
+        categories = "auto" if self.classes_ is None else [self.classes_]
+        return ClassifierLabelEncoder(loss=self.loss, categories=categories)
+
+    def fit(self, X, y, sample_weight=None):
+        """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
+        Arguments:
+            X : array-like, shape `(n_samples, n_features)`
+                Training samples where `n_samples` is the number of samples
+                and `n_features` is the number of features.
+            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
+                True labels for `X`.
+            sample_weight : array-like of shape (n_samples,), default=None
+                Sample weights. The Keras Model must support this.
+        Returns:
+            self : object
+                a reference to the instance that can be chain called
+                (ex: instance.fit(X,y).transform(X) )
+        Raises:
+            ValueError : In case of invalid shape for `y` argument.
+        """
+        self.classes_ = None
+        return self._fit(
+            X=X,
+            y=y,
+            sample_weight=sample_weight,
+            warm_start=self.warm_start,
+            epochs=self.epochs,
+        )
 
     def partial_fit(self, X, y, classes=None, sample_weight=None):
         """
@@ -911,6 +1010,9 @@ class KerasClassifier(BaseWrapper):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
+        self.classes_ = (
+            classes if classes is not None else getattr(self, "classes_", None)
+        )
         return super().partial_fit(X, y, sample_weight=sample_weight)
 
     def predict_proba(self, X):

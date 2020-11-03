@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 
 from sklearn.base import clone
-from sklearn.datasets import make_classification
+from sklearn.datasets import make_blobs, make_classification
+from sklearn.model_selection import train_test_split
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
@@ -199,3 +200,35 @@ def test_build_fn_default_params():
     est = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(200,))
     params = est.get_params()
     assert params["model__hidden_layer_sizes"] == (200,)
+
+
+def test_class_weight_param():
+    """Backport of sklearn.utils.estimator_checks.check_class_weight_classifiers
+    for sklearn <= 0.23.0.
+    """
+    clf = KerasClassifier(
+        model=dynamic_classifier,
+        model__hidden_layer_sizes=(100,),
+        epochs=50,
+        random_state=0,
+    )
+    problems = (2, 3)
+    for n_centers in problems:
+        # create a very noisy dataset
+        X, y = make_blobs(centers=n_centers, random_state=0, cluster_std=20)
+        X_train, X_test, y_train, _ = train_test_split(
+            X, y, test_size=0.5, random_state=0
+        )
+
+        n_centers = len(np.unique(y_train))
+
+        if n_centers == 2:
+            class_weight = {0: 1000, 1: 0.0001}
+        else:
+            class_weight = {0: 1000, 1: 0.0001, 2: 0.0001}
+
+        clf.set_params(class_weight=class_weight)
+
+        clf.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+        assert np.mean(y_pred == 0) > 0.87
