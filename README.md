@@ -22,4 +22,4 @@ Documentation is available on [ReadTheDocs](https://scikeras.readthedocs.io/en/l
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+See [CONTRIBUTING.md](https://github.com/adriangb/scikeras/blob/master/CONTRIBUTING.md)
