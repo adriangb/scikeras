@@ -58,6 +58,8 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         self.categories = categories
 
     def _type_of_target(self, y: np.ndarray) -> str:
+        """Determine the type of target accounting for the self.categories param.
+        """
         target_type = type_of_target(y)
         if target_type == "binary" and self.categories != "auto":
             # check that this is not a multiclass problem missing categories
