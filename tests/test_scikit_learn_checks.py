@@ -30,7 +30,9 @@ from .testing_utils import basic_checks, parametrize_with_checks
             # applicable to real world datasets
             batch_size=100,
             optimizer="adam",
-            model__hidden_layer_sizes=[],
+            model__hidden_layer_sizes=[100,],
+            random_state=0,
+            epochs=50,
         ),
         KerasRegressor(
             model=dynamic_regressor,
@@ -43,7 +45,9 @@ from .testing_utils import basic_checks, parametrize_with_checks
             batch_size=100,
             optimizer="adam",
             loss=KerasRegressor.r_squared,
-            model__hidden_layer_sizes=[],
+            model__hidden_layer_sizes=[100,],
+            random_state=0,
+            epochs=50,
         ),
     ],
     ids=["KerasClassifier", "KerasRegressor"],
@@ -54,9 +58,10 @@ def test_fully_compliant_estimators(estimator, check):
         "check_classifiers_classes",
         "check_methods_subset_invariance",
         "check_no_attributes_set_in_init",
+        "check_class_weight_classifiers",
     ):
         # These tests have bugs that are fixed in 0.23.0
-        pytest.skip("This test is broken in sklearn<0.23.0")
+        pytest.skip("This test is broken in sklearn<=0.23.0")
     check(estimator)
 
 

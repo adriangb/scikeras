@@ -209,7 +209,7 @@ def test_class_weight_param():
     clf = KerasClassifier(
         build_fn=dynamic_classifier,
         model__hidden_layer_sizes=(100,),
-        epochs=1000,
+        epochs=20,
         random_state=0,
     )
     problems = (2, 3)
