@@ -374,7 +374,7 @@ class BaseWrapper(BaseEstimator):
         else:
             hist = self.model_.fit(x=X, y=y, **fit_args)
 
-        if not warm_start or not hasattr(self, "history_"):
+        if not warm_start or not hasattr(self, "history_") or initial_epoch == 0:
             self.history_ = defaultdict(list)
 
         for key, val in hist.history.items():
