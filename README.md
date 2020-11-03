@@ -1,6 +1,6 @@
 # Scikit-Learn Wrapper for Keras
 
-[![Build Status](https://secure.travis-ci.org/adriangb/scikeras.png?branch=master)](https://travis-ci.org/github/adriangb/scikeras)
+![Build Status](https://github.com/adriangb/scikeras/workflows/Tests/badge.svg)
 [![Coverage Status](https://codecov.io/gh/adriangb/scikeras/branch/master/graph/badge.svg)](https://codecov.io/gh/adriangb/scikeras)
 [![Docs Status](https://readthedocs.org/projects/docs/badge/?version=latest)](https://scikeras.readthedocs.io/en/latest/?badge=latest)
 
