@@ -1,3 +1,4 @@
+from re import S
 from typing import Any, Dict
 
 import numpy as np
@@ -5,14 +6,15 @@ import pytest
 import tensorflow as tf
 
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.preprocessing import FunctionTransformer, MultiLabelBinarizer
 from tensorflow.python.keras.layers import Concatenate, Dense, Input
 from tensorflow.python.keras.models import Model, Sequential
 from tensorflow.python.keras.testing_utils import get_test_data
 
-from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
+from .multi_output_models import MultiOutputClassifier
 
 
 # Defaults
@@ -43,50 +45,17 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
         cat_out = Dense(n_classes_, activation="softmax")(x3)
 
         model = Model([inp1, inp2], [cat_out])
-        losses = ["categorical_crossentropy"]
+        losses = ["sparse_categorical_crossentropy"]
         model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
 
         return model
 
-    @staticmethod
-    def preprocess_X(X):
-        """To support multiple inputs, a custom method must be defined.
-        """
-        return [X[:, 0], X[:, 1:4]], dict()
+    @property
+    def feature_encoder(self):
+        return FunctionTransformer(func=lambda X: [X[:, 0], X[:, 1:4]],)
 
 
-class FunctionalAPIMultiOutputClassifier(KerasClassifier):
-    """Tests Functional API Classifier with 2 outputs of different type.
-    """
-
-    def _keras_build_fn(
-        self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
-    ) -> Model:
-        # get params
-        n_features_in_ = meta["n_features_in_"]
-        n_classes_ = meta["n_classes_"]
-
-        inp = Input((n_features_in_,))
-
-        x1 = Dense(100)(inp)
-
-        binary_out = Dense(1, activation="sigmoid")(x1)
-        cat_out = Dense(n_classes_[1], activation="softmax")(x1)
-
-        model = Model([inp], [binary_out, cat_out])
-        losses = ["binary_crossentropy", "categorical_crossentropy"]
-        model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
-
-        return model
-
-    def score(self, X, y):
-        """Taken from sklearn.multiouput.MultiOutputClassifier
-        """
-        y_pred = self.predict(X)
-        return np.mean(np.all(y == y_pred, axis=1))
-
-
-class FunctionAPIMultiLabelClassifier(KerasClassifier):
+class FunctionalAPIMultiLabelClassifier(MultiOutputClassifier):
     """Tests Functional API Classifier with multiple binary outputs.
     """
 
@@ -113,7 +82,7 @@ class FunctionAPIMultiLabelClassifier(KerasClassifier):
         return model
 
 
-class FunctionAPIMultiOutputRegressor(KerasRegressor):
+class FunctionalAPIMultiOutputRegressor(KerasRegressor):
     """Tests Functional API Regressor with multiple outputs.
     """
 
@@ -155,13 +124,30 @@ def test_multi_input():
 def test_multi_output():
     """Compares to scikit-learn RandomForestClassifier classifier.
     """
-    clf_keras = FunctionalAPIMultiOutputClassifier()
+
+    def get_model(meta: Dict[str, Any]) -> Model:
+        # get params
+        n_features_in_ = meta["n_features_in_"]
+
+        inp = Input((n_features_in_,))
+
+        x1 = Dense(100)(inp)
+
+        out = [Dense(1, activation="sigmoid")(x1) for _ in range(meta["n_outputs_"])]
+
+        model = Model([inp], out)
+        losses = "binary_crossentropy"
+        model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
+
+        return model
+
+    clf_keras = MultiOutputClassifier(model=get_model)
     clf_sklearn = RandomForestClassifier()
 
     # generate data
     X = np.random.rand(10, 4)
     y1 = np.random.randint(0, 2, size=(10, 1))
-    y2 = np.random.randint(0, 11, size=(10, 1))
+    y2 = np.random.randint(0, 2, size=(10, 1))
     y = np.hstack([y1, y2])
 
     clf_keras.fit(X, y)
@@ -177,7 +163,7 @@ def test_multi_output():
 def test_multi_label_clasification():
     """Compares to scikit-learn RandomForestClassifier classifier.
     """
-    clf_keras = FunctionAPIMultiLabelClassifier()
+    clf_keras = FunctionalAPIMultiLabelClassifier()
     clf_sklearn = RandomForestClassifier()
     # taken from https://scikit-learn.org/stable/modules/multiclass.html
     y = [[2, 3, 4], [2], [0, 1, 3], [0, 1, 2, 3, 4], [0, 1, 2]]
@@ -201,7 +187,7 @@ def test_multi_label_clasification():
 def test_multi_output_regression():
     """Compares to scikit-learn RandomForestRegressor.
     """
-    reg_keras = FunctionAPIMultiOutputRegressor()
+    reg_keras = FunctionalAPIMultiOutputRegressor()
     reg_sklearn = RandomForestRegressor()
     # taken from https://scikit-learn.org/stable/modules/multiclass.html
     (X, _), (_, _) = get_test_data(
@@ -223,46 +209,113 @@ def test_multi_output_regression():
     assert y_pred_keras.shape == y_pred_sklearn.shape
 
 
+@pytest.mark.parametrize(
+    "y, y_type",
+    [
+        (np.array([1, 2, 3]), "multiclass"),  # ordinal, numeric, sorted
+        (np.array([2, 1, 3]), "multiclass"),  # ordinal, numeric, sorted
+        (
+            np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+            "multilabel-indicator",
+        ),  # one-hot encoded
+        (np.array(["a", "b", "c"]), "multiclass"),  # categorical
+    ],
+)
+def test_KerasClassifier_loss_invariance(y, y_type):
+    """Test that KerasClassifier can use both
+    categorical_crossentropy and sparse_categorical_crossentropy
+    with either one-hot encoded targets or sparse targets.
+    """
+    X = np.arange(0, y.shape[0]).reshape(-1, 1)
+    clf_1 = KerasClassifier(
+        model=dynamic_classifier,
+        hidden_layer_sizes=(100,),
+        loss="categorical_crossentropy",
+        random_state=0,
+    )
+    clf_1.fit(X, y)
+    clf_1.partial_fit(X, y)
+    y_1 = clf_1.predict(X)
+    if y_type != "multilabel-indicator":
+        # sparse_categorical_crossentropy is not compatible with
+        # one-hot encoded targets, and one-hot encoded targets are not used in sklearn
+        # This is a use case that does not natively succeed in Keras or skelarn estimators
+        # and thus SciKeras does not intend to auto-convert data to support it
+        clf_2 = KerasClassifier(
+            model=dynamic_classifier,
+            hidden_layer_sizes=(100,),
+            loss="sparse_categorical_crossentropy",
+            random_state=0,
+        )
+        clf_2.fit(X, y)
+        y_2 = clf_1.predict(X)
+
+        np.testing.assert_equal(y_1, y_2)
+
+
+@pytest.mark.parametrize(
+    "y, y_type",
+    [
+        (np.array([1, 2, 3]), "multiclass"),  # ordinal, numeric, sorted
+        (np.array([2, 1, 3]), "multiclass"),  # ordinal, numeric, sorted
+        (
+            np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+            "multilabel-indicator",
+        ),  # one-hot encoded
+        (np.array(["a", "b", "c"]), "multiclass"),  # categorical
+    ],
+)
+@pytest.mark.parametrize(
+    "loss", ["categorical_crossentropy", "sparse_categorical_crossentropy"]
+)
+def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
+    """Test that KerasClassifier can use both
+    categorical_crossentropy and sparse_categorical_crossentropy
+    with either one-hot encoded targets or sparse targets.
+    """
+    if y_type == "multilabel-indicator" and loss == "sparse_categorical_crossentropy":
+        return  # not compatible, see test_KerasClassifier_loss_invariance
+    X1, y1 = np.array([[1, 2, 3]]).T, np.array([1, 2, 3])
+    clf = KerasClassifier(
+        model=dynamic_classifier, hidden_layer_sizes=(100,), loss=loss, random_state=0,
+    )
+    clf.fit(X1, y1)
+    tfs = clf.target_encoder_
+    X2, y2 = X1, np.array([1, 1, 1])  # only 1 out or 3 classes
+    clf.partial_fit(X2, y2)
+    tfs_new = clf.target_encoder_
+    assert tfs_new is tfs  # same transformer was re-used
+    assert set(clf.classes_) == set(y1)
+
+
 def test_incompatible_output_dimensions():
     """Compares to the scikit-learn RandomForestRegressor classifier.
     """
     # create dataset with 4 outputs
     X = np.random.rand(10, 20)
-    y = np.random.randint(low=0, high=3, size=(10, 4))
+    y = np.random.randint(low=0, high=3, size=(10,))
 
     # create a model with 2 outputs
     def build_fn_clf(meta: Dict[str, Any], compile_kwargs: Dict[str, Any],) -> Model:
-        """Builds a Sequential based classifier."""
-        model = Sequential()
-        model.add(Dense(20, input_shape=(20,), activation="relu"))
-        model.add(Dense(np.unique(y).size, activation="relu"))
-        model.compile(
-            optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"],
-        )
+        # get params
+        n_features_in_ = meta["n_features_in_"]
+
+        inp = Input((n_features_in_,))
+
+        x1 = Dense(100)(inp)
+
+        binary_out = Dense(1, activation="sigmoid")(x1)
+        cat_out = Dense(2, activation="softmax")(x1)
+
+        model = Model([inp], [binary_out, cat_out])
+        model.compile(loss=["binary_crossentropy", "categorical_crossentropy"])
+
         return model
 
     clf = KerasClassifier(model=build_fn_clf)
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError, match="input of size"):
         clf.fit(X, y)
-
-
-def test_BaseWrapper_postprocess_y():
-    """Checks BaseWrapper.postprocess_y.
-
-    This method is overriden in KerasRegressor and KerasClassifier
-    and so it is not tested by any other checks.
-
-    It is provided as a convenience method so that subclassed models
-    with multiple outputs don't have to implement it just to convert
-    the list output from Keras to a Numpy array (that's all it does).
-    """
-    y_array = np.array([0])
-    y_list = [0]
-    y_postprocessed = BaseWrapper.postprocess_y(y_list)[0]
-    np.testing.assert_equal(y_postprocessed, y_array)
-    extra_args = BaseWrapper.postprocess_y(y_array)[1]
-    assert len(extra_args) == 0
 
 
 @pytest.mark.parametrize(
@@ -363,3 +416,27 @@ def test_mixed_dtypes(y_dtype, X_dtype, run_eagerly):
         assert y_hat.dtype == np.dtype(y_dtype)
     else:
         assert y_hat.dtype.kind == "f"
+
+
+def test_single_output_multilabel_indicator():
+    """Tests a target that a multilabel-indicator
+    target can be used without errors.
+    """
+    X = np.random.random(size=(100, 2))
+    y = np.random.randint(0, 1, size=(100, 3))
+    y[0, :] = 1  # i.e. not "one hot encoded"
+
+    def build_fn():
+        model = Sequential()
+        model.add(Dense(10, input_shape=(2,), activation="relu"))
+        model.add(Dense(3, activation="sigmoid"))
+        return model
+
+    clf = KerasClassifier(model=build_fn, loss="categorical_crossentropy",)
+    # check that there are no errors
+    clf.fit(X, y)
+    clf.predict(X)
+    # check the target type
+    assert clf.target_type_ == "multilabel-indicator"
+    # check classes
+    np.testing.assert_equal(clf.classes_, np.arange(3))
