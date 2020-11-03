@@ -1,4 +1,4 @@
-from typing import Union
+from typing import List, Union
 
 import numpy as np
 import tensorflow as tf
@@ -49,25 +49,43 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
     """Default target transformer for KerasClassifier.
     """
 
-    def __init__(self, loss: Union[None, str, Loss] = None):
+    def __init__(
+        self,
+        loss: Union[None, str, Loss] = None,
+        categories: Union[str, List[np.ndarray]] = "auto",
+    ):
         self.loss = loss
+        self.categories = categories
+
+    def _type_of_target(self, y: np.ndarray) -> str:
+        target_type = type_of_target(y)
+        if target_type == "binary" and self.categories != "auto":
+            # check that this is not a multiclass problem missing categories
+            # if not "auto", categories is expected to be a list with a single np.ndarray
+            target_type = type_of_target(self.categories[0])
+        return target_type
 
     def fit(self, y: np.ndarray) -> "ClassifierLabelEncoder":
-        target_type = type_of_target(y)
+        target_type = self._type_of_target(y)
         keras_dtype = np.dtype(tf.keras.backend.floatx())
         encoders = {
             "binary": make_pipeline(
-                TargetReshaper(), OrdinalEncoder(dtype=keras_dtype),
+                TargetReshaper(),
+                OrdinalEncoder(dtype=keras_dtype, categories=self.categories),
             ),
             "multiclass": make_pipeline(
-                TargetReshaper(), OrdinalEncoder(dtype=keras_dtype),
+                TargetReshaper(),
+                OrdinalEncoder(dtype=keras_dtype, categories=self.categories),
             ),
             "multiclass-multioutput": FunctionTransformer(),
             "multilabel-indicator": FunctionTransformer(),
         }
         if is_categorical_crossentropy(self.loss):
             encoders["multiclass"] = make_pipeline(
-                TargetReshaper(), OneHotEncoder(sparse=False, dtype=keras_dtype),
+                TargetReshaper(),
+                OneHotEncoder(
+                    sparse=False, dtype=keras_dtype, categories=self.categories
+                ),
             )
         if target_type not in encoders:
             raise ValueError(

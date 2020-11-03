@@ -462,7 +462,7 @@ class BaseWrapper(BaseEstimator):
             y_dtype_ = y.dtype
             y_ndim_ = y.ndim
             if reset:
-                self.target_type_ = type_of_target(y)
+                self.target_type_ = self._type_of_target(y)
                 self.y_dtype_ = y_dtype_
                 self.y_ndim_ = y_ndim_
             else:
@@ -511,6 +511,9 @@ class BaseWrapper(BaseEstimator):
         if y is None:
             return X
         return X, y
+
+    def _type_of_target(self, y: np.ndarray) -> str:
+        return type_of_target(y)
 
     @property
     def target_encoder(self):
@@ -823,6 +826,13 @@ class KerasClassifier(BaseWrapper):
         **BaseWrapper._tags,
     }
 
+    def _type_of_target(self, y: np.ndarray) -> str:
+        target_type = type_of_target(y)
+        if target_type == "binary" and self.classes_ is not None:
+            # check that this is not a multiclass problem missing categories
+            target_type = type_of_target(self.classes_)
+        return target_type
+
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
         """Accuracy score based on true and predicted target values.
@@ -859,7 +869,34 @@ class KerasClassifier(BaseWrapper):
             Transformer implementing the sklearn transformer
             interface.
         """
-        return ClassifierLabelEncoder(loss=self.loss)
+        categories = "auto" if self.classes_ is None else [self.classes_]
+        return ClassifierLabelEncoder(loss=self.loss, categories=categories)
+
+    def fit(self, X, y, sample_weight=None):
+        """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
+        Arguments:
+            X : array-like, shape `(n_samples, n_features)`
+                Training samples where `n_samples` is the number of samples
+                and `n_features` is the number of features.
+            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
+                True labels for `X`.
+            sample_weight : array-like of shape (n_samples,), default=None
+                Sample weights. The Keras Model must support this.
+        Returns:
+            self : object
+                a reference to the instance that can be chain called
+                (ex: instance.fit(X,y).transform(X) )
+        Raises:
+            ValueError : In case of invalid shape for `y` argument.
+        """
+        self.classes_ = None
+        return self._fit(
+            X=X,
+            y=y,
+            sample_weight=sample_weight,
+            warm_start=self.warm_start,
+            epochs=self.epochs,
+        )
 
     def partial_fit(self, X, y, classes=None, sample_weight=None):
         """
@@ -887,6 +924,9 @@ class KerasClassifier(BaseWrapper):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
+        self.classes_ = (
+            classes if classes is not None else getattr(self, "classes_", None)
+        )
         return super().partial_fit(X, y, sample_weight=sample_weight)
 
     def predict_proba(self, X):
