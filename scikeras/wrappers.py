@@ -5,7 +5,7 @@ import os
 import warnings
 
 from collections import defaultdict
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Iterable, Tuple, Union
 
 import numpy as np
 import tensorflow as tf
@@ -15,6 +15,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.preprocessing import FunctionTransformer
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
@@ -164,6 +165,35 @@ class BaseWrapper(BaseEstimator):
     @property
     def __name__(self):
         return self.__class__.__name__
+
+    def _validate_sample_weight(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        sample_weight: Union[None, np.ndarray, Iterable],
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Validate that the passed sample_weight and ensure it is a Numpy array.
+        """
+        sample_weight = _check_sample_weight(
+            sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
+        )
+        # Scikit-Learn expects a 0 in sample_weight to mean
+        # "ignore the sample", but because of how Keras applies
+        # sample_weight to the loss function, this doesn't
+        # exactly work out (as in, sklearn estimator checks fail
+        # because the predictions differ by a small margin).
+        # To get around this, we manually delete these samples here
+        zeros = sample_weight == 0
+        if zeros.sum() == zeros.size:
+            raise ValueError(
+                "No training samples had any weight; only zeros were passed in sample_weight."
+                " That means there's nothing to train on by definition, so training can not be completed."
+            )
+        if np.any(zeros):
+            X = X[~zeros]
+            y = y[~zeros]
+            sample_weight = sample_weight[~zeros]
+        return X, y, sample_weight
 
     def _check_model_param(self):
         """Checks `model` and returns model building
@@ -632,32 +662,12 @@ class BaseWrapper(BaseEstimator):
         else:
             X, y = self._validate_data(X, y)
 
+        X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
+
         y = self.target_encoder_.transform(y)
         X = self.feature_encoder_.transform(X)
 
         self._check_model_compatibility(y)
-
-        if sample_weight is not None:
-            sample_weight = _check_sample_weight(
-                sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
-            )
-            # Scikit-Learn expects a 0 in sample_weight to mean
-            # "ignore the sample", but because of how Keras applies
-            # sample_weight to the loss function, this doesn't
-            # exactly work out (as in, sklearn estimator checks fail
-            # because the predictions differ by a small margin).
-            # To get around this, we manually delete these samples here
-            zeros = sample_weight == 0
-            if zeros.all():
-                raise ValueError(
-                    "No training samples had any weight; only zeros were passed in sample_weight."
-                    " That means there's nothing to train on by definition, so training can not be completed.\n\n"
-                    "To resolve this error, have at least one non-zero sample_weight"
-                )
-            if np.any(zeros):
-                X = X[~zeros]
-                y = y[~zeros]
-                sample_weight = sample_weight[~zeros]
 
         # fit model
         return self._fit_keras_model(
@@ -822,9 +832,61 @@ class KerasClassifier(BaseWrapper):
             sparse tensors",
             "check_no_attributes_set_in_init": "can only \
             pass if all params are hardcoded in __init__",
+            "check_class_weight_classifiers": "fails without \
+            >20 epochs, tested seperately",
         },
         **BaseWrapper._tags,
     }
+
+    def __init__(
+        self,
+        model=None,
+        *,
+        build_fn=None,  # for backwards compatibility
+        warm_start=False,
+        random_state=None,
+        optimizer="rmsprop",
+        loss=None,
+        metrics=None,
+        batch_size=None,
+        verbose=1,
+        callbacks=None,
+        validation_split=0.0,
+        shuffle=True,
+        run_eagerly=False,
+        epochs=1,
+        class_weight=None,
+        **kwargs,
+    ):
+        super().__init__(
+            model=model,
+            build_fn=build_fn,
+            warm_start=warm_start,
+            random_state=random_state,
+            optimizer=optimizer,
+            loss=loss,
+            metrics=metrics,
+            batch_size=batch_size,
+            verbose=verbose,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            shuffle=shuffle,
+            run_eagerly=run_eagerly,
+            epochs=epochs,
+            **kwargs,
+        )
+        self.class_weight = class_weight
+
+    def _validate_sample_weight(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        sample_weight: Union[None, np.ndarray, Iterable],
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        X, y, sample_weight = super()._validate_sample_weight(X, y, sample_weight)
+        if self.class_weight is not None:
+            sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
+        return X, y, sample_weight
 
     def _type_of_target(self, y: np.ndarray) -> str:
         target_type = type_of_target(y)
