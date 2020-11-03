@@ -7,7 +7,7 @@ The following are examples and notebooks on how to use SciKeras.
 
 * `Basic Usage <https://nbviewer.jupyter.org/github/adriangb/scikeras/blob/master/notebooks/Basic_Usage.ipynb>`_ - Explores the basics of the SciKeras API. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/Basic_Usage.ipynb>`_
 
-* `MLPClassifier and MLPRegressor <https://github.com/adriangb/scikeras/blob/master/notebooks/MLPClassifier.ipynb>`_ - Create a drop-in replacement for sklearn's neural_net estimators. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MLPClassifier_MLPRegressor.ipynb>`_
+* `MLPClassifier and MLPRegressor <https://github.com/adriangb/scikeras/blob/master/notebooks/MLPClassifier_MLPRegressor.ipynb>`_ - Create a drop-in replacement for sklearn's neural_net estimators. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MLPClassifier_MLPRegressor.ipynb>`_
 
 * `Meta Estimators <https://github.com/adriangb/scikeras/blob/master/notebooks/Meta_Estimators.ipynb>`_ - Use SciKeras in sklearn ensembles. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/Meta_Estimators.ipynb>`_
 
