@@ -218,7 +218,7 @@ class TestMetricsParam:
         est.fit(X, y)
         assert len(est.history_[metric]) == 1
 
- 
+
 def test_class_weight_param():
     """Backport of sklearn.utils.estimator_checks.check_class_weight_classifiers
     for sklearn <= 0.23.0.
