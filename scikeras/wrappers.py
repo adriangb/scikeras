@@ -365,7 +365,7 @@ class BaseWrapper(BaseEstimator):
         params = self.get_params()
         fit_args = route_params(params, destination="fit", pass_filter=self._fit_kwargs)
         fit_args["sample_weight"] = sample_weight
-        fit_args["epochs"] = epochs
+        fit_args["epochs"] = initial_epoch + epochs
         fit_args["initial_epoch"] = initial_epoch
 
         if self._random_state is not None:
