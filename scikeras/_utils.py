@@ -4,19 +4,13 @@ import random
 import warnings
 
 from inspect import isclass
-from typing import Any, Callable, Dict, Iterable, List, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Union
 
 import numpy as np
 import tensorflow as tf
 
-from sklearn.base import BaseEstimator, TransformerMixin
-from tensorflow.keras import losses as losses_module
-from tensorflow.keras import metrics as metrics_module
-from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.layers import deserialize as deserialize_layer
 from tensorflow.keras.layers import serialize as serialize_layer
-from tensorflow.keras.metrics import deserialize as deserialize_metric
-from tensorflow.keras.models import Model
 from tensorflow.python.keras.saving import saving_utils
 
 
@@ -57,26 +51,6 @@ class TFRandomState:
         random.setstate(self.orig_random_state)
         np.random.set_state(self.orig_np_random_state)
         tf.random.set_seed(None)  # TODO: can we revert instead of unset?
-
-
-class LabelDimensionTransformer(TransformerMixin, BaseEstimator):
-    """Transforms from 1D -> 2D and back.
-
-    Used when applying LabelTransformer -> OneHotEncoder.
-    """
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        if len(X.shape) == 1:
-            X = X.reshape(-1, 1)
-        return X
-
-    def inverse_transform(self, X):
-        if X.shape[1] == 1:
-            X = np.squeeze(X, axis=1)
-        return X
 
 
 def unpack_keras_model(model, training_config, weights):
@@ -130,29 +104,6 @@ def make_model_picklable(model_obj):
         The input model, but directly picklable.
     """
     model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
-
-
-def get_metric_full_name(name: str) -> str:
-    """Get aliases for Keras losses and metrics.
-
-    See: https://github.com/tensorflow/tensorflow/pull/42097
-
-    Parameters
-    ----------
-    name : str
-        Full name or shorthand for Keras metric. Ex: "mse".
-
-    Returns
-    -------
-    str
-        Full name for Keras metric. Ex: "mean_squared_error".
-    """
-    # deserialize returns the actual function, then get it's name
-    # to keep a single consistent name for the metric
-    if name == "loss":
-        # may be passed "loss" from training history
-        return name
-    return getattr(deserialize_metric(name), "__name__")
 
 
 def _windows_upcast_ints(
@@ -300,6 +251,16 @@ def _class_from_strings(items: Union[str, dict, tuple, list], class_getter: Call
     """
     if isinstance(items, str):
         item = items
+        if class_getter is tf.keras.metrics.get and item in (
+            "acc",
+            "accuracy",
+            "ce",
+            "crossentropy",
+        ):
+            # Keras matches "acc" and others in this list to the right function
+            # based on the Model's loss function, output shape, etc.
+            # We pass them through here to let Keras deal with these.
+            return item
         got = class_getter(item)
         if hasattr(got, "__class__") and type(got).__module__.startswith("tensorflow"):
             # optimizers.get returns instances instead of classes

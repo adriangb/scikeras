@@ -4,21 +4,12 @@ import numpy as np
 import pytest
 
 from sklearn.base import clone
-from tensorflow.python.keras.testing_utils import get_test_data
+from sklearn.datasets import make_blobs, make_classification
+from sklearn.model_selection import train_test_split
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
-
-
-# Defaults
-INPUT_DIM = 5
-HIDDEN_DIM = 5
-TRAIN_SAMPLES = 10
-TEST_SAMPLES = 5
-NUM_CLASSES = 2
-BATCH_SIZE = 5
-EPOCHS = 1
 
 
 class TestRandomState:
@@ -40,12 +31,7 @@ class TestRandomState:
         """Tests that the random_state parameter correctly
         engages deterministric training and prediction.
         """
-        (X, y), (_, _) = get_test_data(
-            train_samples=TRAIN_SAMPLES,
-            test_samples=TEST_SAMPLES,
-            input_shape=(INPUT_DIM,),
-            num_classes=NUM_CLASSES,
-        )
+        X, y = make_classification()
 
         # With seed
         estimator.set_params(random_state=random_state)
@@ -83,12 +69,7 @@ class TestRandomState:
         """Tests that the random state context management correctly
         handles TF related env variables.
         """
-        (X, y), (_, _) = get_test_data(
-            train_samples=TRAIN_SAMPLES,
-            test_samples=TEST_SAMPLES,
-            input_shape=(INPUT_DIM,),
-            num_classes=NUM_CLASSES,
-        )
+        X, y = make_classification()
 
         if "random_state" in estimator.get_params():
             estimator.set_params(random_state=None)
@@ -219,3 +200,52 @@ def test_build_fn_default_params():
     est = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(200,))
     params = est.get_params()
     assert params["model__hidden_layer_sizes"] == (200,)
+
+
+class TestMetricsParam:
+    @pytest.mark.parametrize("metric", ("accuracy", "sparse_categorical_accuracy"))
+    def test_metrics(self, metric):
+        """Test the metrics param.
+        
+        Specifically test ``accuracy``, which Keras automatically
+        matches to the loss function and hence should be passed through
+        as a string and not as a retrieved function.
+        """
+        est = KerasClassifier(
+            model=dynamic_classifier, model__hidden_layer_sizes=(100,), metrics=[metric]
+        )
+        X, y = make_classification()
+        est.fit(X, y)
+        assert len(est.history_[metric]) == 1
+
+
+def test_class_weight_param():
+    """Backport of sklearn.utils.estimator_checks.check_class_weight_classifiers
+    for sklearn <= 0.23.0.
+    """
+    clf = KerasClassifier(
+        model=dynamic_classifier,
+        model__hidden_layer_sizes=(100,),
+        epochs=50,
+        random_state=0,
+    )
+    problems = (2, 3)
+    for n_centers in problems:
+        # create a very noisy dataset
+        X, y = make_blobs(centers=n_centers, random_state=0, cluster_std=20)
+        X_train, X_test, y_train, _ = train_test_split(
+            X, y, test_size=0.5, random_state=0
+        )
+
+        n_centers = len(np.unique(y_train))
+
+        if n_centers == 2:
+            class_weight = {0: 1000, 1: 0.0001}
+        else:
+            class_weight = {0: 1000, 1: 0.0001, 2: 0.0001}
+
+        clf.set_params(class_weight=class_weight)
+
+        clf.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+        assert np.mean(y_pred == 0) > 0.87

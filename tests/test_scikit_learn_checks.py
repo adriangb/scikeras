@@ -14,12 +14,13 @@ from tensorflow.keras import Model, Sequential, layers
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
+from .multi_output_models import MultiOutputClassifier
 from .testing_utils import basic_checks, parametrize_with_checks
 
 
 @parametrize_with_checks(
     estimators=[
-        KerasClassifier(
+        MultiOutputClassifier(
             model=dynamic_classifier,
             # Set batch size to a large number
             # (larger than X.shape[0] is the goal)
@@ -53,9 +54,10 @@ def test_fully_compliant_estimators(estimator, check):
         "check_classifiers_classes",
         "check_methods_subset_invariance",
         "check_no_attributes_set_in_init",
+        "check_class_weight_classifiers",
     ):
         # These tests have bugs that are fixed in 0.23.0
-        pytest.skip("This test is broken in sklearn<0.23.0")
+        pytest.skip("This test is broken in sklearn<=0.23.0")
     check(estimator)
 
 

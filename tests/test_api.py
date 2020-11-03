@@ -17,10 +17,13 @@ from sklearn.ensemble import (
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from tensorflow.keras import losses as losses_module
+from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
@@ -46,7 +49,7 @@ def build_fn_clf(
     model.add(keras.layers.Dense(n_classes_))
     model.add(keras.layers.Activation("softmax"))
     model.compile(
-        optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"]
+        optimizer="sgd", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
     )
     return model
 
@@ -171,7 +174,7 @@ def build_fn_clscs(
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
     model.add(Dense(n_classes_, activation="softmax"))
-    model.compile("adam", loss="categorical_crossentropy", metrics=["accuracy"])
+    model.compile("adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     return model
 
 
@@ -190,7 +193,7 @@ def build_fn_clscf(
         z = Dense(size, activation="relu")(z)
     y = Dense(n_classes_, activation="softmax")(z)
     model = Model(inputs=x, outputs=y)
-    model.compile("adam", loss="categorical_crossentropy", metrics=["accuracy"])
+    model.compile("adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     return model
 
 
@@ -318,7 +321,7 @@ class TestPrebuiltModel:
                 "n_classes_": n_classes_,
                 "target_type_": "multiclass",
                 "n_features_in_": x_train.shape[1],
-                "model_n_outputs_": 1,
+                "n_outputs_expected_": 1,
             }
             keras_model = build_fn(
                 meta=meta,
@@ -354,7 +357,7 @@ class TestPrebuiltModel:
                 "n_classes_": n_classes_,
                 "target_type_": "multiclass",
                 "n_features_in_": x_train.shape[1],
-                "model_n_outputs_": 1,
+                "n_outputs_expected_": 1,
             }
             keras_model = build_fn(
                 meta=meta,
@@ -407,6 +410,12 @@ def test_warm_start():
         model = estimator.model_
 
 
+@register_keras_serializable(name="CustomMetric")
+class CustomMetric(metrics_module.MeanAbsoluteError):
+    def __reduce__(self):
+        return metrics_module.deserialize, (metrics_module.serialize(self),)
+
+
 class TestPartialFit:
     def test_partial_fit(self):
         data = load_boston()
@@ -426,6 +435,27 @@ class TestPartialFit:
         model = estimator.model_
         estimator.partial_fit(X, y)
         assert estimator.model_ is model, "Model memory address should remain constant"
+
+    def test_partial_fit_history_metric_names(self):
+        data = load_boston()
+        X, y = data.data[:100], data.target[:100]
+        estimator = KerasRegressor(
+            model=dynamic_regressor,
+            loss=KerasRegressor.r_squared,
+            model__hidden_layer_sizes=[100,],
+            metrics=["mse", CustomMetric(name="custom_metric")],
+        )
+        estimator.partial_fit(X, y)
+        # Make custom metric names are preserved
+        # and shorthand metric names are saved by their full name
+        for _ in range(2):
+            estimator = pickle.loads(pickle.dumps(estimator))
+            estimator = estimator.partial_fit(X, y)
+            assert set(estimator.history_.keys()) == {
+                "loss",
+                "mean_squared_error",
+                "custom_metric",
+            }
 
     def test_partial_fit_history_len(self):
         # history_ records the history from this partial_fit call
@@ -449,6 +479,67 @@ class TestPartialFit:
                 "loss",
                 "mean_squared_error",
             }
+
+    def test_partial_fit_single_epoch(self):
+        """Test that partial_fit trains for a single epoch,
+        independently of what epoch value is passed to the constructor.
+        """
+        data = load_boston()
+        X, y = data.data[:100], data.target[:100]
+        epochs = 9
+        partial_fit_iter = 4
+
+        estimator = KerasRegressor(
+            model=dynamic_regressor,
+            loss=KerasRegressor.r_squared,
+            model__hidden_layer_sizes=[100,],
+            epochs=epochs,
+        )
+
+        # Check that each partial_fit call trains for 1 epoch
+        for k in range(1, partial_fit_iter):
+            estimator = estimator.partial_fit(X, y)
+            assert len(estimator.history_["loss"]) == k
+
+        # Check that fit calls still train for the number of
+        # epochs specified in the constructor
+        estimator = estimator.fit(X, y)
+        assert len(estimator.history_["loss"]) == epochs
+
+    @pytest.mark.parametrize("warm_start", [True, False])
+    def test_current_epoch_property(self, warm_start):
+        """Test the public current_epoch property
+        that tracks the overall training epochs.
+
+        The warm_start parameter should have
+        NO impact on this behavior.
+        """
+        data = load_boston()
+        X, y = data.data[:100], data.target[:100]
+        epochs = 2
+        partial_fit_iter = 4
+
+        estimator = KerasRegressor(
+            model=dynamic_regressor,
+            loss=KerasRegressor.r_squared,
+            model__hidden_layer_sizes=[100,],
+            epochs=epochs,
+            warm_start=warm_start,
+        )
+
+        # Check that each partial_fit call trains for 1 epoch
+        for k in range(1, partial_fit_iter):
+            estimator.partial_fit(X, y)
+            assert estimator.current_epoch == k
+
+        # Check that fit calls still train for the number of
+        # epochs specified in the constructor
+        estimator.fit(X, y)
+        assert estimator.current_epoch == epochs
+
+        # partial_fit is able to resume from a non-zero epoch
+        estimator.partial_fit(X, y)
+        assert estimator.current_epoch == epochs + 1
 
     @pytest.mark.parametrize(
         "config", ["CNNClassifier", "CNNClassifierF"],
@@ -500,19 +591,72 @@ class TestPartialFit:
         assert any(x > 0.5 for x in rel_errors)
         # the rel_error is often higher than 0.5 but the tests are random
 
+    def test_partial_fit_classes_param(self):
+        """Test use of `partial_fit` with the `classes` parameter
+        and incomplete classes in the first pass.
+        """
+        clf = KerasClassifier(
+            model=dynamic_classifier,
+            loss="sparse_categorical_crossentropy",
+            model__hidden_layer_sizes=[100,],
+        )
+        X1 = np.array([[1, 2, 3], [4, 5, 6]]).T
+        y1 = np.array([1, 2, 2])
+        X2 = X1
+        y2 = np.array([2, 3, 3])
+        classes = np.unique(np.concatenate([y1, y2]))
+        clf.partial_fit(X=X1, y=y1, classes=classes)
+        clf.score(X1, y1)
+        clf.score(X2, y2)
+        clf.partial_fit(X=X2, y=y2)
+        clf.score(X1, y1)
+        clf.score(X2, y2)
 
-def test_history():
-    """Test that history_'s keys are strings and values are lists.
-    """
-    data = load_boston()
-    X, y = data.data[:100], data.target[:100]
-    estimator = KerasRegressor(model=dynamic_regressor, model__hidden_layer_sizes=[])
 
-    estimator.partial_fit(X, y)
+def force_compile_shorthand(hidden_layer_sizes, meta, compile_kwargs, params):
+    model = dynamic_regressor(
+        hidden_layer_sizes=hidden_layer_sizes, meta=meta, compile_kwargs=compile_kwargs
+    )
+    model.compile(
+        optimizer=compile_kwargs["optimizer"],
+        loss=compile_kwargs["loss"],
+        metrics=params["metrics"],
+    )
+    return model
 
-    assert isinstance(estimator.history_, dict)
-    assert all(isinstance(k, str) for k in estimator.history_.keys())
-    assert all(isinstance(v, list) for v in estimator.history_.values())
+
+class TestHistory:
+    def test_history(self):
+        """Test that history_'s keys are strings and values are lists.
+        """
+        data = load_boston()
+        X, y = data.data[:100], data.target[:100]
+        estimator = KerasRegressor(
+            model=dynamic_regressor, model__hidden_layer_sizes=[]
+        )
+
+        estimator.partial_fit(X, y)
+
+        assert isinstance(estimator.history_, dict)
+        assert all(isinstance(k, str) for k in estimator.history_.keys())
+        assert all(isinstance(v, list) for v in estimator.history_.values())
+
+    def test_partial_fit_shorthand_metric_name(self):
+        """Test that metrics get stored in the `history_` attribute
+        by their long name (and not shorthand) even if the user
+        compiles their model with a shorthand name.
+        """
+        est = KerasRegressor(
+            model=force_compile_shorthand,
+            loss=KerasRegressor.r_squared,
+            model__hidden_layer_sizes=(100,),
+            metrics=["mae"],  # shorthand
+        )
+        X, y = load_boston(return_X_y=True)
+        X = X[:100]
+        y = y[:100]
+        est.fit(X, y)
+        assert "mae" not in est.history_ and "mean_absolute_error" in est.history_
 
 
 def test_compile_model_from_params():
@@ -525,35 +669,93 @@ def test_compile_model_from_params():
     data = load_boston()
     X, y = data.data[:100], data.target[:100]
 
-    losses = ("mean_squared_error", "mean_absolute_error")
+    other_loss = losses_module.MeanAbsoluteError
 
     # build_fn that does not compile
-    def build_fn(compile_with_loss=None):
+    def build_fn(my_loss=None):
         model = Sequential()
         model.add(keras.layers.Dense(X.shape[1], input_shape=(X.shape[1],)))
         model.add(keras.layers.Activation("relu"))
         model.add(keras.layers.Dense(1))
         model.add(keras.layers.Activation("linear"))
-        if compile_with_loss:
-            model.compile(loss=compile_with_loss)
+        if my_loss is not None:
+            model.compile(loss=my_loss)
         return model
 
-    for loss in losses:
-        estimator = KerasRegressor(
-            model=build_fn,
-            loss=loss,
-            # compile_with_loss=None returns an un-compiled model
-            compile_with_loss=None,
-        )
-        estimator.fit(X, y)
-        assert estimator.model_.loss.__name__ == loss
+    # Calling with loss=None (or other default)
+    # and compiling within build_fn must work
+    loss_obj = other_loss()
+    estimator = KerasRegressor(
+        model=build_fn,
+        # compile_with_loss != None overrides loss
+        my_loss=loss_obj,
+    )
+    estimator.fit(X, y)
+    assert estimator.model_.loss is loss_obj
 
-    for myloss in losses:
-        estimator = KerasRegressor(
-            model=build_fn,
-            loss="binary_crossentropy",
-            # compile_with_loss != None overrides loss
-            compile_with_loss=myloss,
-        )
+    # Passing a value for loss AND compiling with
+    # the SAME loss should succeed, and the final loss
+    # should be the user-supplied loss
+    loss_obj = other_loss()
+    estimator = KerasRegressor(
+        model=build_fn,
+        loss=other_loss(),
+        # compile_with_loss != None overrides loss
+        my_loss=loss_obj,
+    )
+    estimator.fit(X, y)
+    assert estimator.model_.loss is loss_obj
+
+    # Passing a non-default value for loss AND compiling with
+    # a DIFFERENT loss should raise a ValueError
+    loss_obj = other_loss()
+    estimator = KerasRegressor(
+        model=build_fn,
+        loss=losses_module.CosineSimilarity(),
+        # compile_with_loss != None overrides loss
+        my_loss=loss_obj,
+    )
+    with pytest.raises(ValueError, match=" but model compiled with "):
         estimator.fit(X, y)
-        assert estimator.model_.loss == myloss
+
+    # The ValueError should appear even if the default is != None
+    class DefaultLossNotNone(KerasRegressor):
+        def __init__(self, *args, loss=losses_module.CosineSimilarity(), **kwargs):
+            super().__init__(*args, **kwargs, loss=loss)
+
+    loss_obj = other_loss()
+    estimator = DefaultLossNotNone(model=build_fn, my_loss=loss_obj,)
+    estimator.fit(X, y)
+    assert estimator.model_.loss is loss_obj
+
+    loss_obj = other_loss()
+    estimator = DefaultLossNotNone(
+        model=build_fn, loss=losses_module.CategoricalHinge(), my_loss=loss_obj,
+    )
+    with pytest.raises(ValueError, match=" but model compiled with "):
+        estimator.fit(X, y)
+
+
+def test_subclassed_model_no_params():
+    """Test that we can define a subclassed model with no `__init__` params
+    (i.e., a fully self-contined sklearn style estimator)
+    and that wrappers do not fail on introspection of the child class'
+    `__init__`.
+    """
+
+    class MLPClassifier(KerasClassifier):
+        def __init__(self):
+            super().__init__()
+
+        def _keras_build_fn(self):
+            model = Sequential()
+            model.add(Dense(2, activation="relu", input_shape=(2,)))
+            model.add(Dense(1, activation="sigmoid"))
+            model.compile(loss="binary_crossentropy")
+            return model
+
+    clf = MLPClassifier()
+    X = np.random.random(size=(100, 2))
+    y = np.random.randint(0, 1, size=(100,))
+    clf.fit(X, y)
+    clf.predict(X)
