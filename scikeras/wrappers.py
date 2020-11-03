@@ -830,7 +830,7 @@ class KerasClassifier(BaseWrapper):
             "check_no_attributes_set_in_init": "can only \
             pass if all params are hardcoded in __init__",
             "check_class_weight_classifiers": "fails without \
-            >20 epochs",
+            >20 epochs, tested seperately",
         },
         **BaseWrapper._tags,
     }
