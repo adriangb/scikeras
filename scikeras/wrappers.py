@@ -172,6 +172,8 @@ class BaseWrapper(BaseEstimator):
         y: np.ndarray,
         sample_weight: Union[None, np.ndarray, Iterable],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Validate that the passed sample_weight and ensure it is a Numpy array.
+        """
         sample_weight = _check_sample_weight(
             sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
         )
