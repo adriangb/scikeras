@@ -529,13 +529,17 @@ class TestPartialFit:
 
         # Check that each partial_fit call trains for 1 epoch
         for k in range(1, partial_fit_iter):
-            estimator = estimator.partial_fit(X, y)
+            estimator.partial_fit(X, y)
             assert estimator.current_epoch == k
 
         # Check that fit calls still train for the number of
         # epochs specified in the constructor
-        estimator = estimator.fit(X, y)
+        estimator.fit(X, y)
         assert estimator.current_epoch == epochs
+
+        # partial_fit is able to resume from a non-zero epoch
+        estimator.partial_fit(X, y)
+        assert estimator.current_epoch == epochs + 1
 
     @pytest.mark.parametrize(
         "config", ["CNNClassifier", "CNNClassifierF"],
