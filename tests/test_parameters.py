@@ -199,3 +199,20 @@ def test_build_fn_default_params():
     est = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(200,))
     params = est.get_params()
     assert params["model__hidden_layer_sizes"] == (200,)
+
+
+class TestMetricsParam:
+    @pytest.mark.parametrize("metric", ("accuracy", "sparse_categorical_accuracy"))
+    def test_metrics(self, metric):
+        """Test the metrics param.
+        
+        Specifically test ``accuracy``, which Keras automatically
+        matches to the loss function and hence should be passed through
+        as a string and not as a retrieved function.
+        """
+        est = KerasClassifier(
+            model=dynamic_classifier, model__hidden_layer_sizes=(100,), metrics=[metric]
+        )
+        X, y = make_classification()
+        est.fit(X, y)
+        assert len(est.history_[metric]) == 1
