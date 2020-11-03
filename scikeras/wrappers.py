@@ -165,6 +165,12 @@ class BaseWrapper(BaseEstimator):
     def __name__(self):
         return self.__class__.__name__
 
+    @property
+    def current_epoch(self) -> int:
+        if not hasattr(self, "history_"):
+            return 0
+        return len(self.history_)
+
     def _check_model_param(self):
         """Checks `model` and returns model building
         function to use.
@@ -321,7 +327,7 @@ class BaseWrapper(BaseEstimator):
 
         return model
 
-    def _fit_keras_model(self, X, y, sample_weight, warm_start, epochs):
+    def _fit_keras_model(self, X, y, sample_weight, warm_start, epochs, initial_epoch):
         """Fits the Keras model.
 
         This method will process all arguments and call the Keras
@@ -340,6 +346,8 @@ class BaseWrapper(BaseEstimator):
                 the ``history_`` attribute and append to it instead.
             epochs : int
                 Number of epochs for which the model will be trained.
+            initial_epoch : int
+                Epoch at which to begin training.
         Returns:
             self : object
                 a reference to the instance that can be chain called
@@ -358,6 +366,7 @@ class BaseWrapper(BaseEstimator):
         fit_args = route_params(params, destination="fit", pass_filter=self._fit_kwargs)
         fit_args["sample_weight"] = sample_weight
         fit_args["epochs"] = epochs
+        fit_args["initial_epoch"] = initial_epoch
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
@@ -566,6 +575,7 @@ class BaseWrapper(BaseEstimator):
             sample_weight=sample_weight,
             warm_start=self.warm_start,
             epochs=self.epochs,
+            initial_epoch=0,
         )
 
     def _initialized(self):
@@ -586,7 +596,7 @@ class BaseWrapper(BaseEstimator):
 
         return X, y
 
-    def _fit(self, X, y, sample_weight, warm_start, epochs):
+    def _fit(self, X, y, sample_weight, warm_start, epochs, initial_epoch):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
 
         Arguments:
@@ -602,6 +612,8 @@ class BaseWrapper(BaseEstimator):
             epochs : int
                 Number of passes over the entire dataset for which to train the
                 model.
+            initial_epoch : int
+                Epoch at which to begin training.
         Returns:
             self : object
                 a reference to the instance that can be chain called
@@ -658,7 +670,12 @@ class BaseWrapper(BaseEstimator):
 
         # fit model
         return self._fit_keras_model(
-            X, y, sample_weight=sample_weight, warm_start=warm_start, epochs=epochs
+            X,
+            y,
+            sample_weight=sample_weight,
+            warm_start=warm_start,
+            epochs=epochs,
+            initial_epoch=initial_epoch,
         )
 
     def partial_fit(self, X, y, sample_weight=None):
@@ -681,7 +698,14 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        return self._fit(X, y, sample_weight=sample_weight, warm_start=True, epochs=1)
+        return self._fit(
+            X,
+            y,
+            sample_weight=sample_weight,
+            warm_start=True,
+            epochs=1,
+            initial_epoch=self.current_epoch,
+        )
 
     def predict(self, X):
         """Returns predictions for the given test data.
