@@ -169,7 +169,7 @@ class BaseWrapper(BaseEstimator):
     def current_epoch(self) -> int:
         if not hasattr(self, "history_"):
             return 0
-        return len(self.history_)
+        return len(self.history_["loss"])
 
     def _check_model_param(self):
         """Checks `model` and returns model building
@@ -382,7 +382,7 @@ class BaseWrapper(BaseEstimator):
                 key = metric_name(key)
             except ValueError as e:
                 # Keras puts keys like "val_accuracy" and "loss" and
-                # "val_loss" in hist.history.
+                # "val_loss" in hist.history
                 if "Unknown metric function" not in str(e):
                     raise e
             self.history_[key] += val
