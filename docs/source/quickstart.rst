@@ -23,6 +23,8 @@ it on a toy classification dataset using SciKeras
     y = y.astype(np.int64)
 
     def get_model(hidden_layer_dim, meta):
+        # note that meta is a special argument that will be
+        # handed a dict containing input metadata
         n_features_in_ = meta["n_features_in_"]
         X_shape_ = meta["X_shape_"]
         n_classes_ = meta["n_classes_"]
