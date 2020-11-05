@@ -174,9 +174,9 @@ class BaseWrapper(BaseEstimator):
 
     def _validate_sample_weight(
         self,
-        X: Union[np.ndarray, None],
-        y: Union[np.ndarray, None],
-        sample_weight: Union[None, np.ndarray, Iterable],
+        X: np.ndarray,
+        y: Union[None, np.ndarray],
+        sample_weight: Union[np.ndarray, Iterable],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Validate that the passed sample_weight and ensure it is a Numpy array.
         """
@@ -196,8 +196,7 @@ class BaseWrapper(BaseEstimator):
                 " That means there's nothing to train on by definition, so training can not be completed."
             )
         if np.any(zeros):
-            if X is not None:
-                X = X[~zeros]
+            X = X[~zeros]
             if y is not None:
                 y = y[~zeros]
             sample_weight = sample_weight[~zeros]
