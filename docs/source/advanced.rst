@@ -275,6 +275,15 @@ Example: multiple losses with routed parameters
         loss__1__label_smoothing=0.5,  # overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)
     )
 
+
+Custom Scorers
+--------------
+
+SciKeras uses :func:`sklearn.metrics.accuracy_score` and :func:`sklearn.metrics.accuracy_score`
+as the scoring functions for :class:`scikeras.wrappers.KerasClassifier`
+and :class:`scikeras.wrappers.KerasRegressor` respectively. To override these scoring functions,
+
+
 .. _Keras Callbacks docs: https://www.tensorflow.org/api_docs/python/tf/keras/callbacks
 
 .. _Keras Metrics docs: https://www.tensorflow.org/api_docs/python/tf/keras/metrics
