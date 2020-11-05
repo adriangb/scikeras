@@ -611,7 +611,7 @@ class BaseWrapper(BaseEstimator):
     def _initialized(self):
         return hasattr(self, "model_")
 
-    def initialize(
+    def _initialize(
         self, X: np.ndarray, y: Union[np.ndarray, None] = None
     ) -> Tuple[np.ndarray, np.ndarray]:
 
@@ -758,6 +758,12 @@ class BaseWrapper(BaseEstimator):
             y_pred: array-like, shape `(n_samples,)`
                 Predictions.
         """
+        # check if fitted
+        if not self._initialized():
+            raise NotFittedError(
+                "Estimator needs to be fit before `predict` " "can be called"
+            )
+
         # basic input checks
         X, _ = self._validate_data(X=X, y=None)
 
@@ -1052,6 +1058,12 @@ class KerasClassifier(BaseWrapper):
                 will return an array of shape `(n_samples, 2)`
                 (instead of `(n_sample, 1)` as in Keras).
         """
+        # check if fitted
+        if not self._initialized():
+            raise NotFittedError(
+                "Estimator needs to be fit before `predict` " "can be called"
+            )
+
         # basic input checks
         X, _ = self._validate_data(X=X, y=None)
 
