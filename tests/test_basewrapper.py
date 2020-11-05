@@ -15,6 +15,7 @@ class AutoEncoderTransformer(BaseWrapper, TransformerMixin):
     """
 
     def transform(self, X):
+        self.fit(X)
         return self.predict(X)
 
 
@@ -64,6 +65,7 @@ class TestAutoencoder:
 
         # Training
         autoencoder.fit(x_train, x_train)
-        roundtrip_imgs = decoder.fit_transform(encoder.fit_transform(x_test))
+        decoder.fit(encoder.fit_transform(x_train))
+        roundtrip_imgs = decoder.transform(encoder.transform(x_test))
         mse = mean_squared_error(roundtrip_imgs, x_test)
         assert mse <= 0.05  # 0.05 comes from experimentation
