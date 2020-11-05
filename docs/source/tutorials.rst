@@ -15,4 +15,6 @@ The following are examples and notebooks on how to use SciKeras.
 
 * `Data Transformers <https://github.com/adriangb/scikeras/blob/master/notebooks/DataTransformers.ipynb>`_ - Use SciKeras data transformers to handle multi input, multi output and multidimensional Keras Model. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/DataTransformers.ipynb>`_
 
+* `Transfer Learning <https://github.com/adriangb/scikeras/blob/master/notebooks/Transfer_Learning.ipynb>`_ - Employ transfer learning to classify images using an ImageNet model. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/Transfer_Learning.ipynb>`_
+
 * `Benchmarking SciKeras vs pure Keras <https://github.com/adriangb/scikeras/blob/master/notebooks/Benchmarks.ipynb>`_ - Compares the performance of SciKeras and using pure Keras on MNIST. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/Benchmarks.ipynb>`_
