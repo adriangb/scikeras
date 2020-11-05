@@ -2,11 +2,20 @@
 """
 import numpy as np
 
+from sklearn.base import TransformerMixin
 from sklearn.metrics import mean_squared_error
 from tensorflow import keras
 from tensorflow.keras import layers
 
 from scikeras.wrappers import BaseWrapper
+
+
+class AutoEncoderTransformer(BaseWrapper, TransformerMixin):
+    """A mixin that enables the transform and fit_transform methods.
+    """
+
+    def transform(self, X):
+        return self.predict(X)
 
 
 class TestAutoencoder:
@@ -46,14 +55,15 @@ class TestAutoencoder:
         autoencoder = BaseWrapper(
             model=autoencoder_model, **compile_params, **fit_params
         )
-        encoder = BaseWrapper(model=encoder_model, **compile_params, **fit_params)
-        decoder = BaseWrapper(model=decoder_model, **compile_params, **fit_params)
+        encoder = AutoEncoderTransformer(
+            model=encoder_model, **compile_params, **fit_params
+        )
+        decoder = AutoEncoderTransformer(
+            model=decoder_model, **compile_params, **fit_params
+        )
 
         # Training
         autoencoder.fit(x_train, x_train)
-        encoder.fit(X=x_train)
-        encoded_img = encoder.predict(x_test)
-        decoder.fit(X=encoded_img)
-        roundtrip_imgs = decoder.predict(encoder.predict(x_test))
+        roundtrip_imgs = decoder.fit_transform(encoder.fit_transform(x_test))
         mse = mean_squared_error(roundtrip_imgs, x_test)
         assert mse <= 0.05  # 0.05 comes from experimentation
