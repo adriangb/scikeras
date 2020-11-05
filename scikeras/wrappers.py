@@ -455,7 +455,7 @@ class BaseWrapper(BaseEstimator):
                     )
 
     def _validate_data(
-        self, X=None, y=None, reset: bool = False
+        self, X, y=None, reset: bool = False
     ) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
         """Validate input arrays and set or check their meta-parameters.
         Parameters
@@ -581,15 +581,15 @@ class BaseWrapper(BaseEstimator):
         """
         return FunctionTransformer()
 
-    def fit(self, X, y, sample_weight=None):
+    def fit(self, X, y=None, sample_weight=None):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
 
         Arguments:
             X : array-like, shape `(n_samples, n_features)`
                 Training samples where `n_samples` is the number of samples
                 and `n_features` is the number of features.
-            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
-                True labels for `X`.
+            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`, by default None
+                True labels for `X`. None if there is no target, like in Encoders/Transformers.
             sample_weight : array-like of shape (n_samples,), default=None
                 Sample weights. The Keras Model must support this.
         Returns:
@@ -611,8 +611,8 @@ class BaseWrapper(BaseEstimator):
     def _initialized(self):
         return hasattr(self, "model_")
 
-    def _initialize(
-        self, X: np.ndarray, y: np.ndarray
+    def initialize(
+        self, X: np.ndarray, y: Union[np.ndarray, None] = None
     ) -> Tuple[np.ndarray, np.ndarray]:
 
         self.target_encoder_ = self.target_encoder.fit(y)
@@ -667,7 +667,7 @@ class BaseWrapper(BaseEstimator):
         # Data checks
         if not ((self.warm_start or warm_start) and self._initialized()):
             X, y = self._validate_data(X, y, reset=True)
-            self._initialize(X, y)
+            self.initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
 
