@@ -774,7 +774,9 @@ class BaseWrapper(BaseEstimator):
         """
         # validate sample weights
         if sample_weight is not None:
-            sample_weight = self._validate_sample_weight(sample_weight, X)
+            X, y, sample_weight = self._validate_sample_weight(
+                X=X, y=y, sample_weight=sample_weight
+            )
 
         # validate y
         y = check_array(y, ensure_2d=False)
