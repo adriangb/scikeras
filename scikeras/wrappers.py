@@ -174,8 +174,8 @@ class BaseWrapper(BaseEstimator):
 
     def _validate_sample_weight(
         self,
-        X: np.ndarray,
-        y: np.ndarray,
+        X: Union[np.ndarray, None],
+        y: Union[np.ndarray, None],
         sample_weight: Union[None, np.ndarray, Iterable],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Validate that the passed sample_weight and ensure it is a Numpy array.
@@ -196,8 +196,10 @@ class BaseWrapper(BaseEstimator):
                 " That means there's nothing to train on by definition, so training can not be completed."
             )
         if np.any(zeros):
-            X = X[~zeros]
-            y = y[~zeros]
+            if X is not None:
+                X = X[~zeros]
+            if y is not None:
+                y = y[~zeros]
             sample_weight = sample_weight[~zeros]
         return X, y, sample_weight
 
@@ -417,9 +419,6 @@ class BaseWrapper(BaseEstimator):
                     raise e
             self.history_[key] += val
 
-        # return self to allow fit_transform and such to work
-        return self
-
     def _check_model_compatibility(self, y: np.ndarray) -> None:
         """Checks that the model output number and y shape match.
 
@@ -456,7 +455,7 @@ class BaseWrapper(BaseEstimator):
                     )
 
     def _validate_data(
-        self, X, y=None, reset: bool = False
+        self, X=None, y=None, reset: bool = False
     ) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
         """Validate input arrays and set or check their meta-parameters.
         Parameters
@@ -698,22 +697,25 @@ class BaseWrapper(BaseEstimator):
         else:
             X, y = self._validate_data(X, y)
 
-        X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
+        if sample_weight is not None:
+            X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
 
         y = self.target_encoder_.transform(y)
         X = self.feature_encoder_.transform(X)
 
         self._check_model_compatibility(y)
 
-        # fit model
-        return self._fit_keras_model(
-            X,
-            y,
-            sample_weight=sample_weight,
-            warm_start=warm_start,
-            epochs=epochs,
-            initial_epoch=initial_epoch,
-        )
+        # fit model if a target was given
+        if y is not None:
+            self._fit_keras_model(
+                X,
+                y,
+                sample_weight=sample_weight,
+                warm_start=warm_start,
+                epochs=epochs,
+                initial_epoch=initial_epoch,
+            )
+        return self
 
     def partial_fit(self, X, y, sample_weight=None):
         """
@@ -756,12 +758,6 @@ class BaseWrapper(BaseEstimator):
             y_pred: array-like, shape `(n_samples,)`
                 Predictions.
         """
-        # check if fitted
-        if not self._initialized():
-            raise NotFittedError(
-                "Estimator needs to be fit before `predict` " "can be called"
-            )
-
         # basic input checks
         X, _ = self._validate_data(X=X, y=None)
 
@@ -1056,12 +1052,6 @@ class KerasClassifier(BaseWrapper):
                 will return an array of shape `(n_samples, 2)`
                 (instead of `(n_sample, 1)` as in Keras).
         """
-        # check if fitted
-        if not self._initialized():
-            raise NotFittedError(
-                "Estimator needs to be fit before `predict` " "can be called"
-            )
-
         # basic input checks
         X, _ = self._validate_data(X=X, y=None)
 
