@@ -11,7 +11,7 @@ from scikeras.wrappers import BaseWrapper
 
 
 class AutoEncoderTransformer(BaseWrapper, TransformerMixin):
-    """A mixin that enables the transform and fit_transform methods.
+    """Enables the ``transform`` and ``fit_transform`` methods.
     """
 
     def transform(self, X):
