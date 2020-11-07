@@ -4,9 +4,9 @@ from typing import Any, Dict
 
 import numpy as np
 import pytest
+import tensorflow as tf
 
 from sklearn.base import clone
-import tensorflow as tf
 from sklearn.datasets import load_boston, make_regression
 from tensorflow.python import keras
 from tensorflow.python.keras.layers import Dense, Input
