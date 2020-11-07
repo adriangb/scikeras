@@ -14,6 +14,7 @@ from sklearn.ensemble import (
     BaggingClassifier,
     BaggingRegressor,
 )
+from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -759,3 +760,35 @@ def test_subclassed_model_no_params():
     y = np.random.randint(0, 1, size=(100,))
     clf.fit(X, y)
     clf.predict(X)
+
+
+class TestInitialize:
+    """Test the ``initialize`` method.
+    """
+
+    def test_prebuilt_model(self):
+        """Test that when using a prebuilt model,
+        initialize allows direct use of the model for inference.
+        """
+        # Define a simple model
+        inp = keras.layers.Input((1,))
+        out = keras.layers.Dense(1)(inp)
+        m1 = keras.Model(inp, out)
+        m1.compile(loss="mae", optimizer="adam")
+        # Create some test data
+        X, y = np.random.random((100, 1)), np.random.random((100,))
+        # Fit the model
+        m1.fit(X, y)
+        # Save Keras prediction
+        y_pred_keras = m1.predict(X)
+        # Wrap with SciKeras
+        reg = KerasRegressor(model=m1)
+        # Without calling initialize, a NotFittedError is raised
+        with pytest.raises(NotFittedError):
+            reg.predict(X)
+        # Call initialize
+        reg.initialize(X, y)
+        # Save predictions from wrapped model
+        y_pred_scikeras = reg.predict(X)
+        # Check that predictions match
+        np.testing.assert_allclose(y_pred_keras.reshape(-1,), y_pred_scikeras)

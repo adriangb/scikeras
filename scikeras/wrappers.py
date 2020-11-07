@@ -516,39 +516,37 @@ class BaseWrapper(BaseEstimator):
                         f"`y` has {y_ndim_} dimensions, but this {self.__name__}"
                         f" is expecting {self.y_ndim_} dimensions in `y`."
                     )
-        X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
-        X_dtype_ = X.dtype
-        X_shape_ = X.shape
-        n_features_in_ = X.shape[1]
-        if reset:
-            self.X_dtype_ = X_dtype_
-            self.X_shape_ = X_shape_
-            self.n_features_in_ = n_features_in_
-        else:
-            if not np.can_cast(X_dtype_, self.X_dtype_):
-                raise ValueError(
-                    f"Got `X` with dtype {X_dtype_},"
-                    f" but this {self.__name__} expected {self.X_dtype_}"
-                    f" and casting from {X_dtype_} to {self.X_dtype_} is not safe!"
-                )
-            if len(X_shape_) != len(self.X_shape_):
-                raise ValueError(
-                    f"`X` has {len(X_shape_)} dimensions, but this {self.__name__}"
-                    f" is expecting {len(self.X_shape_)} dimensions in `X`."
-                )
-            # The following check is a backport from
-            # sklearn.base.BaseEstimator._check_n_features
-            # since this method is not available in sklearn <= 0.22.0
-            if n_features_in_ != self.n_features_in_:
-                raise ValueError(
-                    "X has {} features, but {} is expecting {} features "
-                    "as input.".format(
-                        n_features_in_, self.__class__.__name__, self.n_features_in_
+        if X is not None:
+            X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
+            X_dtype_ = X.dtype
+            X_shape_ = X.shape
+            n_features_in_ = X.shape[1]
+            if reset:
+                self.X_dtype_ = X_dtype_
+                self.X_shape_ = X_shape_
+                self.n_features_in_ = n_features_in_
+            else:
+                if not np.can_cast(X_dtype_, self.X_dtype_):
+                    raise ValueError(
+                        f"Got `X` with dtype {X_dtype_},"
+                        f" but this {self.__name__} expected {self.X_dtype_}"
+                        f" and casting from {X_dtype_} to {self.X_dtype_} is not safe!"
                     )
-                )
-
-        if y is None:
-            return X
+                if len(X_shape_) != len(self.X_shape_):
+                    raise ValueError(
+                        f"`X` has {len(X_shape_)} dimensions, but this {self.__name__}"
+                        f" is expecting {len(self.X_shape_)} dimensions in `X`."
+                    )
+                # The following check is a backport from
+                # sklearn.base.BaseEstimator._check_n_features
+                # since this method is not available in sklearn <= 0.22.0
+                if n_features_in_ != self.n_features_in_:
+                    raise ValueError(
+                        "X has {} features, but {} is expecting {} features "
+                        "as input.".format(
+                            n_features_in_, self.__class__.__name__, self.n_features_in_
+                        )
+                    )
         return X, y
 
     def _type_of_target(self, y: np.ndarray) -> str:
@@ -618,6 +616,21 @@ class BaseWrapper(BaseEstimator):
         self, X: np.ndarray, y: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray]:
 
+        # Handle random state
+        if isinstance(self.random_state, np.random.RandomState):
+            # Keras needs an integer
+            # we sample an integer and use that as a seed
+            # Given the same RandomState, the seed will always be
+            # the same, thus giving reproducible results
+            state = self.random_state.get_state()
+            self._random_state = self.random_state.randint(low=1)
+            self.random_state.set_state(state)
+        else:
+            # int or None
+            self._random_state = self.random_state
+
+        X, y = self._validate_data(X, y, reset=True)
+
         self.target_encoder_ = self.target_encoder.fit(y)
         target_metadata = getattr(self.target_encoder_, "get_metadata", dict)()
         vars(self).update(**target_metadata)
@@ -628,6 +641,9 @@ class BaseWrapper(BaseEstimator):
         self.model_ = self._build_keras_model()
 
         return X, y
+
+    def initialize(self, X: np.ndarray, y: Union[np.ndarray, None] = None) -> None:
+        self._initialize(X, y)
 
     def _fit(self, X, y, sample_weight, warm_start, epochs, initial_epoch):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
@@ -654,23 +670,9 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        # Handle random state
-        if isinstance(self.random_state, np.random.RandomState):
-            # Keras needs an integer
-            # we sample an integer and use that as a seed
-            # Given the same RandomState, the seed will always be
-            # the same, thus giving reproducible results
-            state = self.random_state.get_state()
-            self._random_state = self.random_state.randint(low=1)
-            self.random_state.set_state(state)
-        else:
-            # int or None
-            self._random_state = self.random_state
-
         # Data checks
         if not ((self.warm_start or warm_start) and self._initialized()):
-            X, y = self._validate_data(X, y, reset=True)
-            self._initialize(X, y)
+            X, y = self._initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
 
@@ -739,7 +741,7 @@ class BaseWrapper(BaseEstimator):
             )
 
         # basic input checks
-        X = self._validate_data(X=X, y=None)
+        X, _ = self._validate_data(X=X, y=None)
 
         # pre process X
         X = self.feature_encoder_.transform(X)
@@ -1039,7 +1041,7 @@ class KerasClassifier(BaseWrapper):
             )
 
         # basic input checks
-        X = self._validate_data(X=X, y=None)
+        X, _ = self._validate_data(X=X, y=None)
 
         # pre process X
         X = self.feature_encoder_.transform(X)
