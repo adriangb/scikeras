@@ -5,7 +5,9 @@ from typing import Any, Dict
 import numpy as np
 import pytest
 
-from sklearn.datasets import load_boston
+from sklearn.base import clone
+import tensorflow as tf
+from sklearn.datasets import load_boston, make_regression
 from tensorflow.python import keras
 from tensorflow.python.keras.layers import Dense, Input
 from tensorflow.python.keras.models import Model
@@ -123,3 +125,54 @@ def test_run_eagerly():
         model__hidden_layer_sizes=(100,),
     )
     check_pickle(estimator, load_boston)
+
+
+def _weights_close(model1, model2):
+    w1 = [x.numpy() for x in model1.model_.weights]
+    w2 = [x.numpy() for x in model2.model_.weights]
+    assert len(w1) == len(w2)
+    for _1, _2 in zip(w1, w2):
+        assert np.allclose(_1, _2, rtol=0.01)
+    return True
+
+
+def _reload(model, epoch=None):
+    tmp = pickle.loads(pickle.dumps(model))
+    assert tmp is not model
+    if epoch:
+        assert tmp.current_epoch == model.current_epoch == epoch
+    return tmp
+
+
+def test_partial_fit_pickle(optim="adam"):
+    """
+    This test is implemented to make sure model pickling does not affect
+    training.
+
+    (this is essentially what Dask-ML does for search)
+    """
+    from scikeras._utils import TFRandomState
+    X, y = make_regression(n_features=8, n_samples=100)
+
+    m1 = KerasRegressor(model=dynamic_regressor, optimizer=optim)
+    m2 = clone(m1)
+
+    # Make sure start from same model
+    with TFRandomState(42):
+        m1.partial_fit(X, y)
+    with TFRandomState(42):
+        m2.partial_fit(X, y)
+    assert _weights_close(m1, m2)
+
+    # Train; make sure pickling doesn't affect it
+    for k in range(4):
+        with TFRandomState(42):
+            m1.partial_fit(X, y)
+        with TFRandomState(42):
+            m2 = _reload(m2, epoch=k + 1).partial_fit(X, y)
+
+        # Make sure the same model is produced
+        assert _weights_close(m1, m2)
+
+        # Make sure predictions are the same
+        assert np.allclose(m1.predict(X), m2.predict(X))
