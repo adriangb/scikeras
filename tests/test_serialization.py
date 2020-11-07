@@ -144,7 +144,8 @@ def _reload(model, epoch=None):
     return tmp
 
 
-def test_partial_fit_pickle(optim="adam"):
+@pytest.mark.parametrize("optim", ["adam", "sgd"])
+def test_partial_fit_pickle(optim):
     """
     This test is implemented to make sure model pickling does not affect
     training.
@@ -165,7 +166,6 @@ def test_partial_fit_pickle(optim="adam"):
     for k in range(4):
         m1.partial_fit(X, y)
         m2 = _reload(m2, epoch=k + 1).partial_fit(X, y)
-        # m2.partial_fit(X, y)
 
         # Make sure the same model is produced
         assert _weights_close(m1, m2)
