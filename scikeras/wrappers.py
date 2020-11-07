@@ -704,16 +704,14 @@ class BaseWrapper(BaseEstimator):
 
         self._check_model_compatibility(y)
 
-        # fit model if a target was given
-        if y is not None:
-            self._fit_keras_model(
-                X,
-                y,
-                sample_weight=sample_weight,
-                warm_start=warm_start,
-                epochs=epochs,
-                initial_epoch=initial_epoch,
-            )
+        self._fit_keras_model(
+            X,
+            y,
+            sample_weight=sample_weight,
+            warm_start=warm_start,
+            epochs=epochs,
+            initial_epoch=initial_epoch,
+        )
         return self
 
     def partial_fit(self, X, y, sample_weight=None):

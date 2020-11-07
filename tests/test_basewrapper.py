@@ -15,13 +15,12 @@ class AutoEncoderTransformer(BaseWrapper, TransformerMixin):
     """
 
     def transform(self, X):
-        self.fit(X)
         return self.predict(X)
 
 
 class TestAutoencoder:
     def test_simple_autoencoder_mnist(self):
-        """Tests an autoencoder following .
+        """Tests an autoencoder following.
         """
         # Data
         (x_train, _), (x_test, _) = keras.datasets.mnist.load_data()
@@ -65,7 +64,8 @@ class TestAutoencoder:
 
         # Training
         autoencoder.fit(x_train, x_train)
-        decoder.fit(encoder.fit_transform(x_train))
+        encoder.initialize(x_train)
+        decoder.initialize(encoder.transform(x_train))
         roundtrip_imgs = decoder.transform(encoder.transform(x_test))
         mse = mean_squared_error(roundtrip_imgs, x_test)
         assert mse <= 0.05  # 0.05 comes from experimentation
