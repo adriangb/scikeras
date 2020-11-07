@@ -418,6 +418,8 @@ class BaseWrapper(BaseEstimator):
                     raise e
             self.history_[key] += val
 
+        return self
+
     def _check_model_compatibility(self, y: np.ndarray) -> None:
         """Checks that the model output number and y shape match.
 
@@ -580,15 +582,15 @@ class BaseWrapper(BaseEstimator):
         """
         return FunctionTransformer()
 
-    def fit(self, X, y=None, sample_weight=None):
+    def fit(self, X, y, sample_weight=None):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
 
         Arguments:
             X : array-like, shape `(n_samples, n_features)`
                 Training samples where `n_samples` is the number of samples
                 and `n_features` is the number of features.
-            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`, by default None
-                True labels for `X`. None if there is no target, like in Encoders/Transformers.
+            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
+                True labels for `X`.
             sample_weight : array-like of shape (n_samples,), default=None
                 Sample weights. The Keras Model must support this.
         Returns:
@@ -704,7 +706,7 @@ class BaseWrapper(BaseEstimator):
 
         self._check_model_compatibility(y)
 
-        self._fit_keras_model(
+        return self._fit_keras_model(
             X,
             y,
             sample_weight=sample_weight,
@@ -712,7 +714,6 @@ class BaseWrapper(BaseEstimator):
             epochs=epochs,
             initial_epoch=initial_epoch,
         )
-        return self
 
     def partial_fit(self, X, y, sample_weight=None):
         """
