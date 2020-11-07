@@ -151,25 +151,21 @@ def test_partial_fit_pickle(optim="adam"):
 
     (this is essentially what Dask-ML does for search)
     """
-    from scikeras._utils import TFRandomState
     X, y = make_regression(n_features=8, n_samples=100)
 
-    m1 = KerasRegressor(model=dynamic_regressor, optimizer=optim)
+    m1 = KerasRegressor(model=dynamic_regressor, optimizer=optim, random_state=42)
     m2 = clone(m1)
 
     # Make sure start from same model
-    with TFRandomState(42):
-        m1.partial_fit(X, y)
-    with TFRandomState(42):
-        m2.partial_fit(X, y)
+    m1.partial_fit(X, y)
+    m2.partial_fit(X, y)
     assert _weights_close(m1, m2)
 
     # Train; make sure pickling doesn't affect it
     for k in range(4):
-        with TFRandomState(42):
-            m1.partial_fit(X, y)
-        with TFRandomState(42):
-            m2 = _reload(m2, epoch=k + 1).partial_fit(X, y)
+        m1.partial_fit(X, y)
+        m2 = _reload(m2, epoch=k + 1).partial_fit(X, y)
+        # m2.partial_fit(X, y)
 
         # Make sure the same model is produced
         assert _weights_close(m1, m2)
