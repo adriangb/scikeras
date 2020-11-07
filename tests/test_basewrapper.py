@@ -64,8 +64,8 @@ class TestAutoencoder:
 
         # Training
         autoencoder.fit(x_train, x_train)
-        encoder.initialize(x_train)
-        decoder.initialize(encoder.transform(x_train))
+        train_encoded = encoder.initialize(x_train).transform(x_train)
+        decoder.initialize(train_encoded)
         roundtrip_imgs = decoder.transform(encoder.transform(x_test))
         mse = mean_squared_error(roundtrip_imgs, x_test)
-        assert mse <= 0.05  # 0.05 comes from experimentation
+        assert mse <= 0.05  # 0.05 is empirically determined
