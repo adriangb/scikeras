@@ -642,7 +642,9 @@ class BaseWrapper(BaseEstimator):
 
         return X, y
 
-    def initialize(self, X: np.ndarray, y: Union[np.ndarray, None] = None) -> None:
+    def initialize(
+        self, X: np.ndarray, y: Union[np.ndarray, None] = None
+    ) -> "BaseModel":
         """Initialize the model without any fitting.
 
         You only need to call this model if you explicitly do not want to do any fitting
@@ -656,8 +658,14 @@ class BaseWrapper(BaseEstimator):
                 and `n_features` is the number of features.
         y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`, optional
             True labels for `X`, by default None.
+        
+        Returns
+        -------
+        BaseModel
+            A reference to the BaseModel instance for chained calling.
         """
         self._initialize(X, y)
+        return self  # to allow chained calls like initialize(...).predict(...)
 
     def _fit(self, X, y, sample_weight, warm_start, epochs, initial_epoch):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
