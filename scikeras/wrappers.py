@@ -341,21 +341,6 @@ class BaseWrapper(BaseEstimator):
                 compile_kwargs = self._get_compile_kwargs()
             model.compile(**compile_kwargs)
 
-        if not getattr(model, "loss", None) or (
-            isinstance(model.loss, list)
-            and not any(callable(loss) or isinstance(loss, str) for loss in model.loss)
-        ):
-            raise ValueError(
-                "No valid loss function found."
-                " You must provide a loss function to train."
-                "\n\nTo resolve this issue, do one of the following:"
-                "\n 1. Provide a loss function via the loss parameter."
-                "\n 2. Compile your model with a loss function inside the"
-                " model-building method."
-                "\n\nSee https://www.tensorflow.org/api_docs/python/tf/keras/losses"
-                " for more information on Keras losses."
-            )
-
         return model
 
     def _fit_keras_model(self, X, y, sample_weight, warm_start, epochs, initial_epoch):
@@ -387,6 +372,22 @@ class BaseWrapper(BaseEstimator):
             ValueError : In case sample_weight != None and the Keras model's
                         `fit` method does not support that parameter.
         """
+        # Make sure model has a loss function
+        if not getattr(self.model_, "loss", None) or (
+            isinstance(self.model_, list)
+            and not any(callable(loss) or isinstance(loss, str) for loss in self.model_)
+        ):
+            raise ValueError(
+                "No valid loss function found."
+                " You must provide a loss function to train."
+                "\n\nTo resolve this issue, do one of the following:"
+                "\n 1. Provide a loss function via the loss parameter."
+                "\n 2. Compile your model with a loss function inside the"
+                " model-building method."
+                "\n\nSee https://www.tensorflow.org/api_docs/python/tf/keras/losses"
+                " for more information on Keras losses."
+            )
+
         if os.name == "nt":
             # see tensorflow/probability#886
             X = _windows_upcast_ints(X)
