@@ -792,7 +792,7 @@ class TestInitialize:
         with pytest.raises(NotFittedError):
             reg.predict(X)
         # Call initialize
-        reg.initialize(X, y)
+        reg.initialize(X, y)  # TODO: test with just X, just y and neither
         # Save predictions from wrapped model
         y_pred_scikeras = reg.predict(X)
         # Check that predictions match

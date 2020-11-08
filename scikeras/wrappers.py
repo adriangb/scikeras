@@ -375,7 +375,9 @@ class BaseWrapper(BaseEstimator):
         # Make sure model has a loss function
         if not getattr(self.model_, "loss", None) or (
             isinstance(self.model_, list)
-            and not any(callable(loss) or isinstance(loss, str) for loss in self.model_)
+            and not any(
+                callable(loss) or isinstance(loss, str) for loss in self.model_.loss
+            )
         ):
             raise ValueError(
                 "No valid loss function found."
