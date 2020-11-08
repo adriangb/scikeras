@@ -781,8 +781,13 @@ class TestInitialize:
         m1.fit(X, y)
         # Save Keras prediction
         y_pred_keras = m1.predict(X)
+        # Extract the weights into a copy of the model
+        weights = m1.get_weights()
+        m2 = keras.models.clone_model(m1)
+        m2.set_weights(weights)
+        m2.compile()  # No loss, inference models shouldn't need a loss!
         # Wrap with SciKeras
-        reg = KerasRegressor(model=m1)
+        reg = KerasRegressor(model=m2)
         # Without calling initialize, a NotFittedError is raised
         with pytest.raises(NotFittedError):
             reg.predict(X)
