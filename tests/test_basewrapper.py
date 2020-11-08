@@ -14,9 +14,11 @@ class AutoEncoderTransformer(BaseWrapper, TransformerMixin):
     """Enables the ``transform`` and ``fit_transform`` methods.
     """
 
+    def fit(self, X):
+        self.initialize(X)
+        return self
+
     def transform(self, X):
-        if not self.initialized():
-            self.initialize(X)
         return self.predict(X)
 
 
@@ -66,6 +68,6 @@ class TestAutoencoder:
 
         # Training
         autoencoder.fit(x_train, x_train)
-        roundtrip_imgs = decoder.transform(encoder.transform(x_test))
+        roundtrip_imgs = decoder.fit_transform(encoder.fit_transform(x_test))
         mse = mean_squared_error(roundtrip_imgs, x_test)
         assert mse <= 0.05  # 0.05 is empirically determined
