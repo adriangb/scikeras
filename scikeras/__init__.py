@@ -8,7 +8,7 @@ from tensorflow.python.keras import metrics as _metrics  # noqa
 
 
 _metrics.log_cosh = (
-    _metrics.metrics.logcosh
+    _metrics.logcosh
 )  # See https://github.com/tensorflow/tensorflow/pull/42097
 
 from scikeras import _saving_utils as saving_utils  # noqa
