@@ -1,6 +1,6 @@
 import pickle
 
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import numpy as np
 import pytest
@@ -8,9 +8,9 @@ import tensorflow as tf
 
 from sklearn.base import clone
 from sklearn.datasets import load_boston, make_regression
-from tensorflow.python import keras
-from tensorflow.python.keras.layers import Dense, Input
-from tensorflow.python.keras.models import Model
+from tensorflow import keras
+from tensorflow.keras.layers import Dense, Input
+from tensorflow.keras.models import Model
 
 from scikeras.wrappers import KerasRegressor
 
@@ -35,7 +35,7 @@ def check_pickle(estimator, loader):
 # ---------------------- Custom Loss Test ----------------------
 
 
-@keras.utils.generic_utils.register_keras_serializable()
+@keras.utils.register_keras_serializable()
 class CustomLoss(keras.losses.MeanSquaredError):
     """Dummy custom loss."""
 
@@ -60,7 +60,7 @@ def build_fn_custom_model_registered(
     """Dummy custom Model subclass that is registered to be serializable.
     """
 
-    @keras.utils.generic_utils.register_keras_serializable()
+    @keras.utils.register_keras_serializable()
     class CustomModelRegistered(Model):
         pass
 
@@ -144,7 +144,19 @@ def _reload(model, epoch=None):
     return tmp
 
 
-@pytest.mark.parametrize("optim", ["adam", "sgd"])
+@pytest.mark.parametrize(
+    "optim",
+    [
+        pytest.param(
+            "adam",
+            marks=pytest.mark.xfail(
+                reason="https://github.com/tensorflow/tensorflow/issues/44670",
+                raises=AssertionError,
+            ),
+        ),
+        "sgd",
+    ],
+)
 def test_partial_fit_pickle(optim):
     """
     This test is implemented to make sure model pickling does not affect
@@ -172,3 +184,82 @@ def test_partial_fit_pickle(optim):
 
         # Make sure predictions are the same
         assert np.allclose(m1.predict(X), m2.predict(X))
+
+
+@pytest.mark.parametrize(
+    "loss",
+    [
+        keras.losses.binary_crossentropy,
+        keras.losses.BinaryCrossentropy(),
+        keras.losses.mean_absolute_error,
+        keras.losses.MeanAbsoluteError(),
+    ],
+)
+def test_pickle_loss(loss):
+    y1 = np.random.randint(0, 2, size=(100,)).astype(np.float32)
+    y2 = np.random.randint(0, 2, size=(100,)).astype(np.float32)
+    v1 = loss(y1, y2)
+    loss = pickle.loads(pickle.dumps(loss))
+    v2 = loss(y1, y2)
+    np.testing.assert_almost_equal(v1, v2)
+
+
+@pytest.mark.parametrize(
+    "metric",
+    [
+        keras.metrics.binary_crossentropy,
+        keras.metrics.BinaryCrossentropy(),
+        keras.metrics.mean_absolute_error,
+        keras.metrics.MeanAbsoluteError(),
+    ],
+)
+def test_pickle_loss(metric):
+    y1 = np.random.randint(0, 2, size=(100,)).astype(np.float32)
+    y2 = np.random.randint(0, 2, size=(100,)).astype(np.float32)
+    v1 = metric(y1, y2)
+    metric = pickle.loads(pickle.dumps(metric))
+    v2 = metric(y1, y2)
+    np.testing.assert_almost_equal(v1, v2)
+
+
+@pytest.mark.parametrize(
+    "opt_cls",
+    [
+        pytest.param(
+            keras.optimizers.Adam,
+            marks=pytest.mark.xfail(
+                reason="https://github.com/tensorflow/tensorflow/issues/44670",
+                raises=AssertionError,
+            ),
+        ),
+        pytest.param(
+            keras.optimizers.RMSprop,
+            marks=pytest.mark.xfail(
+                reason="https://github.com/tensorflow/tensorflow/issues/44670",
+                raises=AssertionError,
+            ),
+        ),
+        keras.optimizers.SGD,
+    ],
+)
+def test_pickle_optimizer(opt_cls):
+    # Minimize a variable subject to two different
+    # loss functions
+    opt = opt_cls()
+    var1 = tf.Variable(10.0)
+    loss1 = lambda: (var1 ** 2) / 2.0
+    opt.minimize(loss1, [var1]).numpy()
+    loss2 = lambda: (var1 ** 2) / 1.0
+    opt.minimize(loss2, [var1]).numpy()
+    val_no_pickle = var1.numpy()
+    # Do the same with a roundtrip pickle in the middle
+    opt = opt_cls()
+    var1 = tf.Variable(10.0)
+    loss1 = lambda: (var1 ** 2) / 2.0
+    opt.minimize(loss1, [var1]).numpy()
+    loss2 = lambda: (var1 ** 2) / 1.0
+    opt = pickle.loads(pickle.dumps(opt))
+    opt.minimize(loss2, [var1]).numpy()
+    val_pickle = var1.numpy()
+    # Check that the final values are the same
+    np.testing.assert_equal(val_no_pickle, val_pickle)
