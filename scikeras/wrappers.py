@@ -22,14 +22,13 @@ from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
-from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
+from tensorflow.keras.utils import register_keras_serializable
 
 from scikeras._utils import (
     TFRandomState,
     _class_from_strings,
     accepts_kwargs,
     has_param,
-    make_model_picklable,
     route_params,
     unflatten_params,
 )
@@ -216,12 +215,6 @@ class BaseWrapper(BaseEstimator):
         epochs: int = 1,
         **kwargs,
     ):
-
-        # ensure prebuilt model can be serialized
-        if isinstance(model, Model):
-            make_model_picklable(model)
-        if isinstance(build_fn, Model):
-            make_model_picklable(build_fn)
 
         # Parse hardcoded params
         self.model = model
@@ -424,9 +417,6 @@ class BaseWrapper(BaseEstimator):
                 model = final_build_fn(**build_params)
         else:
             model = final_build_fn(**build_params)
-
-        # make serializable
-        make_model_picklable(model)
 
         # compile model if user gave us an un-compiled model
         if not (hasattr(model, "loss") and hasattr(model, "optimizer")):

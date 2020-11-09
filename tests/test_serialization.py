@@ -105,11 +105,10 @@ def build_fn_custom_model_unregistered(
 
 
 def test_custom_model_unregistered():
-    """Test that an unregistered subclassed Model raises an error.
+    """Test that pickling an unregistered subclassed model works.
     """
     estimator = KerasRegressor(model=build_fn_custom_model_unregistered)
-    with pytest.raises(ValueError, match="Unknown layer"):
-        check_pickle(estimator, load_boston)
+    check_pickle(estimator, load_boston)
 
 
 # ---------------- Model Compiled with `run_eagerly` --------------------
