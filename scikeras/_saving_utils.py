@@ -9,17 +9,16 @@ import numpy as np
 from tensorflow import io as tf_io
 from tensorflow import keras
 from tensorflow.keras.models import load_model
-from tensorflow.python.lib import io as tf_io
 from tensorflow.python.platform import gfile
 
 
-def walk(dir):
+def walk(top):
     """Recursive directory tree generator for directories.
 
-  Similar to os.walk, but supports TF RAM based filesystems.
+    Similar to os.walk, but supports TF RAM based filesystems.
 
-  Backported from TF Nightly > 2.3.1; this func is broken in <=2.3.1.
-  """
+    Backported from TF Nightly > 2.3.1; this func is broken in <=2.3.1.
+    """
 
     def _make_full_path(parent, item):
         # Since `os.path.join` discards paths before one that starts with the path
@@ -29,7 +28,6 @@ def walk(dir):
             return "".join([os.path.join(parent, ""), item])
         return os.path.join(parent, item)
 
-    top = str(Path(dir))
     listing = tf_io.gfile.listdir(top)
 
     files = []
@@ -61,13 +59,9 @@ def unpack_keras_model(packed_keras_model):
     b = BytesIO(packed_keras_model)
     with zipfile.ZipFile(b, "r", zipfile.ZIP_DEFLATED) as zf:
         for path in zf.namelist():
-            if not tf_io.file_io.file_exists_v2(
-                os.path.dirname(os.path.join(temp_ram_location, path))
-            ):
-                tf_io.file_io.recursive_create_dir_v2(
-                    os.path.dirname(os.path.join(temp_ram_location, path))
-                )
-            with gfile.GFile(os.path.join(temp_ram_location, path), "wb+") as f:
+            dest = os.path.join(temp_ram_location, path)
+            tf_io.gfile.makedirs(os.path.dirname(dest))
+            with gfile.GFile(dest, "wb") as f:
                 f.write(zf.read(path))
     return load_model(temp_ram_location)
 
