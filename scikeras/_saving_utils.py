@@ -29,6 +29,12 @@ def _temp_create_all_weights(self, var_list):
     self._create_all_weights = self._create_all_weights_orig
 
 
+def _restore_optimizer_weights(optimizer, weights) -> None:
+    optimizer._restored_weights = weights
+    optimizer._create_all_weights_orig = optimizer._create_all_weights
+    optimizer._create_all_weights = MethodType(_temp_create_all_weights, optimizer)
+
+
 def unpack_keras_model(packed_keras_model, optimizer_weights):
     """Reconstruct a model from the result of __reduce__
     """
@@ -42,11 +48,7 @@ def unpack_keras_model(packed_keras_model, optimizer_weights):
             with tf_io.gfile.GFile(dest, "wb") as f:
                 f.write(zf.read(path))
     model: keras.Model = load_model(temp_ram_location)
-    model.optimizer._restored_weights = optimizer_weights
-    model.optimizer._create_all_weights_orig = model.optimizer._create_all_weights
-    model.optimizer._create_all_weights = MethodType(
-        _temp_create_all_weights, model.optimizer
-    )
+    _restore_optimizer_weights(model.optimizer, optimizer_weights)
     return model
 
 
@@ -73,9 +75,7 @@ def unpack_keras_optimizer(opt_serialized, weights):
     """Reconstruct optimizer.
     """
     optimizer: keras.optimizers.Optimizer = keras.optimizers.deserialize(opt_serialized)
-    optimizer._restored_weights = weights
-    optimizer._create_all_weights_orig = optimizer._create_all_weights
-    optimizer._create_all_weights = MethodType(_temp_create_all_weights, optimizer)
+    _restore_optimizer_weights(optimizer, weights)
     return optimizer
 
 
