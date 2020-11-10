@@ -33,11 +33,11 @@ def unpack_keras_model(packed_keras_model, optimizer_weights):
     """Reconstruct a model from the result of __reduce__
     """
     save_folder = f"tmp/saving/{id(packed_keras_model)}"
-    temp_ram_location = os.path.join(ram_prefix, save_folder)
+    temp_ram_location = ram_prefix + "/" + save_folder
     b = BytesIO(packed_keras_model)
     with zipfile.ZipFile(b, "r", zipfile.ZIP_DEFLATED) as zf:
         for path in zf.namelist():
-            dest = os.path.join(temp_ram_location, path)
+            dest = temp_ram_location + "/" + path
             tf_io.gfile.makedirs(os.path.dirname(dest))
             with tf_io.gfile.GFile(dest, "wb") as f:
                 f.write(zf.read(path))
@@ -54,7 +54,7 @@ def pack_keras_model(model):
     """Support for Pythons's Pickle protocol.
     """
     save_folder = f"tmp/saving/{id(model)}"
-    temp_ram_location = os.path.join(ram_prefix, save_folder)
+    temp_ram_location = ram_prefix + "/" + save_folder
     model.save(temp_ram_location)
     b = BytesIO()
     with zipfile.ZipFile(b, "w", zipfile.ZIP_DEFLATED) as zf:
