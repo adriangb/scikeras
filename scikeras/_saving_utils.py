@@ -3,6 +3,7 @@ import zipfile
 
 from io import BytesIO
 from types import MethodType
+from uuid import uuid4 as uuid
 
 import numpy as np
 
@@ -38,8 +39,8 @@ def _restore_optimizer_weights(optimizer, weights) -> None:
 def unpack_keras_model(packed_keras_model, optimizer_weights):
     """Reconstruct a model from the result of __reduce__
     """
-    save_folder = f"tmp/saving/{id(packed_keras_model)}"
-    temp_ram_location = ram_prefix + "/" + save_folder
+    save_folder = f"tmp/saving/{uuid()}"
+    temp_ram_location = ram_prefix + save_folder
     b = BytesIO(packed_keras_model)
     with zipfile.ZipFile(b, "r", zipfile.ZIP_DEFLATED) as zf:
         for path in zf.namelist():
@@ -48,6 +49,7 @@ def unpack_keras_model(packed_keras_model, optimizer_weights):
             with tf_io.gfile.GFile(dest, "wb") as f:
                 f.write(zf.read(path))
     model: keras.Model = load_model(temp_ram_location)
+    # tf_io.gfile.rmtree(temp_ram_location)
     _restore_optimizer_weights(model.optimizer, optimizer_weights)
     return model
 
@@ -55,8 +57,8 @@ def unpack_keras_model(packed_keras_model, optimizer_weights):
 def pack_keras_model(model):
     """Support for Pythons's Pickle protocol.
     """
-    save_folder = f"tmp/saving/{id(model)}"
-    temp_ram_location = ram_prefix + "/" + save_folder
+    save_folder = f"tmp/saving/{uuid()}"
+    temp_ram_location = ram_prefix + save_folder
     model.save(temp_ram_location)
     b = BytesIO()
     with zipfile.ZipFile(b, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -65,6 +67,7 @@ def pack_keras_model(model):
                 with tf_io.gfile.GFile(filename, "rb") as f:
                     zf.writestr(os.path.relpath(filename, temp_ram_location), f.read())
     b.seek(0)
+    # tf_io.gfile.rmtree(temp_ram_location)
     return (
         unpack_keras_model,
         (np.asarray(memoryview(b.read())), model.optimizer.get_weights()),
