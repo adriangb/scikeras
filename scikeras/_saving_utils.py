@@ -12,7 +12,7 @@ from tensorflow import keras
 from tensorflow.keras.models import load_model
 
 
-ram_prefix = "ram://"
+ram_prefix = f"ram:{os.path.sep}{os.path.sep}"
 
 
 def _temp_create_all_weights(self, var_list):
@@ -39,12 +39,12 @@ def _restore_optimizer_weights(optimizer, weights) -> None:
 def unpack_keras_model(packed_keras_model, optimizer_weights):
     """Reconstruct a model from the result of __reduce__
     """
-    save_folder = f"tmp/saving/{uuid()}"
+    save_folder = os.path.join("tmp", "loading", str(uuid()))
     temp_ram_location = ram_prefix + save_folder
     b = BytesIO(packed_keras_model)
     with zipfile.ZipFile(b, "r", zipfile.ZIP_DEFLATED) as zf:
         for path in zf.namelist():
-            dest = temp_ram_location + "/" + path
+            dest = os.path.join(temp_ram_location, path)
             tf_io.gfile.makedirs(os.path.dirname(dest))
             with tf_io.gfile.GFile(dest, "wb") as f:
                 f.write(zf.read(path))
@@ -57,7 +57,7 @@ def unpack_keras_model(packed_keras_model, optimizer_weights):
 def pack_keras_model(model):
     """Support for Pythons's Pickle protocol.
     """
-    save_folder = f"tmp/saving/{uuid()}"
+    save_folder = os.path.join("tmp", "saving", str(uuid()))
     temp_ram_location = ram_prefix + save_folder
     model.save(temp_ram_location)
     b = BytesIO()
