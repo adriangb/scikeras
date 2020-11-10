@@ -2,56 +2,34 @@ import os
 import zipfile
 
 from io import BytesIO
-from pathlib import Path
+from types import MethodType
 
 import numpy as np
 
 from tensorflow import io as tf_io
 from tensorflow import keras
 from tensorflow.keras.models import load_model
-from tensorflow.python.platform import gfile
-
-
-def walk(top):
-    """Recursive directory tree generator for directories.
-
-    Similar to os.walk, but supports TF RAM based filesystems.
-
-    Backported from TF Nightly > 2.3.1; this func is broken in <=2.3.1.
-    """
-
-    def _make_full_path(parent, item):
-        # Since `os.path.join` discards paths before one that starts with the path
-        # separator (https://docs.python.org/3/library/os.path.html#os.path.join),
-        # we have to manually handle that case as `/` is a valid character on GCS.
-        if item[0] == os.sep:
-            return "".join([os.path.join(parent, ""), item])
-        return os.path.join(parent, item)
-
-    listing = tf_io.gfile.listdir(top)
-
-    files = []
-    subdirs = []
-    for item in listing:
-        full_path = _make_full_path(top, item)
-        if tf_io.gfile.isdir(full_path):
-            subdirs.append(item)
-        else:
-            files.append(item)
-
-    here = (top, subdirs, files)
-
-    yield here
-
-    for subdir in subdirs:
-        for subitem in walk(_make_full_path(top, subdir)):
-            yield subitem
 
 
 ram_prefix = "ram://"
 
 
-def unpack_keras_model(packed_keras_model):
+def _temp_create_all_weights(self, var_list):
+    """A hack to restore weights in optimizers that use slots.
+
+    See https://tensorflow.org/api_docs/python/tf/keras/optimizers/Optimizer#slots_2
+    """
+    self._create_all_weights_orig(var_list)
+    try:
+        self.set_weights(self._restored_weights)
+    except ValueError:
+        # Weights don't match, eg. when optimizer was pickled before any training
+        pass
+    del self._restored_weights
+    self._create_all_weights = self._create_all_weights_orig
+
+
+def unpack_keras_model(packed_keras_model, optimizer_weights):
     """Reconstruct a model from the result of __reduce__
     """
     save_folder = f"tmp/saving/{id(packed_keras_model)}"
@@ -61,9 +39,15 @@ def unpack_keras_model(packed_keras_model):
         for path in zf.namelist():
             dest = os.path.join(temp_ram_location, path)
             tf_io.gfile.makedirs(os.path.dirname(dest))
-            with gfile.GFile(dest, "wb") as f:
+            with tf_io.gfile.GFile(dest, "wb") as f:
                 f.write(zf.read(path))
-    return load_model(temp_ram_location)
+    model: keras.Model = load_model(temp_ram_location)
+    model.optimizer._restored_weights = optimizer_weights
+    model.optimizer._create_all_weights_orig = model.optimizer._create_all_weights
+    model.optimizer._create_all_weights = MethodType(
+        _temp_create_all_weights, model.optimizer
+    )
+    return model
 
 
 def pack_keras_model(model):
@@ -74,18 +58,24 @@ def pack_keras_model(model):
     model.save(temp_ram_location)
     b = BytesIO()
     with zipfile.ZipFile(b, "w", zipfile.ZIP_DEFLATED) as zf:
-        for _, _, filenames in walk(temp_ram_location):
+        for _, _, filenames in tf_io.gfile.walk(temp_ram_location):
             for filename in filenames:
-                with gfile.GFile(filename, "rb") as f:
+                with tf_io.gfile.GFile(filename, "rb") as f:
                     zf.writestr(os.path.relpath(filename, temp_ram_location), f.read())
     b.seek(0)
-    return unpack_keras_model, (np.asarray(memoryview(b.read())),)
+    return (
+        unpack_keras_model,
+        (np.asarray(memoryview(b.read())), model.optimizer.get_weights()),
+    )
 
 
-def unpack_keras_optimizer(opt_serialized):
+def unpack_keras_optimizer(opt_serialized, weights):
     """Reconstruct optimizer.
     """
     optimizer: keras.optimizers.Optimizer = keras.optimizers.deserialize(opt_serialized)
+    optimizer._restored_weights = weights
+    optimizer._create_all_weights_orig = optimizer._create_all_weights
+    optimizer._create_all_weights = MethodType(_temp_create_all_weights, optimizer)
     return optimizer
 
 
@@ -93,7 +83,8 @@ def pack_keras_optimizer(optimizer: keras.optimizers.Optimizer):
     """Support for Pythons's Pickle protocol in Keras Optimizers.
     """
     opt_serialized = keras.optimizers.serialize(optimizer)
-    return unpack_keras_optimizer, (opt_serialized,)
+    weights = optimizer.get_weights()
+    return unpack_keras_optimizer, (opt_serialized, weights)
 
 
 def unpack_keras_metric(metric_serialized):

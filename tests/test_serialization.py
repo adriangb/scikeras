@@ -144,17 +144,7 @@ def _reload(model, epoch=None):
 
 
 @pytest.mark.parametrize(
-    "optim",
-    [
-        pytest.param(
-            "adam",
-            marks=pytest.mark.xfail(
-                reason="https://github.com/tensorflow/tensorflow/issues/44670",
-                raises=AssertionError,
-            ),
-        ),
-        "sgd",
-    ],
+    "optim", ["adam", "sgd", keras.optimizers.Adam(), keras.optimizers.SGD(),],
 )
 def test_partial_fit_pickle(optim):
     """
@@ -167,6 +157,9 @@ def test_partial_fit_pickle(optim):
 
     m1 = KerasRegressor(model=dynamic_regressor, optimizer=optim, random_state=42)
     m2 = clone(m1)
+
+    # Ensure we can roundtrip before training
+    m2 = _reload(m2)
 
     # Make sure start from same model
     m1.partial_fit(X, y)
@@ -222,24 +215,7 @@ def test_pickle_loss(metric):
 
 
 @pytest.mark.parametrize(
-    "opt_cls",
-    [
-        pytest.param(
-            keras.optimizers.Adam,
-            marks=pytest.mark.xfail(
-                reason="https://github.com/tensorflow/tensorflow/issues/44670",
-                raises=AssertionError,
-            ),
-        ),
-        pytest.param(
-            keras.optimizers.RMSprop,
-            marks=pytest.mark.xfail(
-                reason="https://github.com/tensorflow/tensorflow/issues/44670",
-                raises=AssertionError,
-            ),
-        ),
-        keras.optimizers.SGD,
-    ],
+    "opt_cls", [keras.optimizers.Adam, keras.optimizers.RMSprop, keras.optimizers.SGD,],
 )
 def test_pickle_optimizer(opt_cls):
     # Minimize a variable subject to two different
