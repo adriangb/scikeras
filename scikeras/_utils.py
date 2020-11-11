@@ -9,10 +9,6 @@ from typing import Any, Callable, Dict, Iterable, List, Union
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.keras.layers import deserialize as deserialize_layer
-from tensorflow.keras.layers import serialize as serialize_layer
-from tensorflow.python.keras.saving import saving_utils
-
 
 class TFRandomState:
     def __init__(self, seed):
