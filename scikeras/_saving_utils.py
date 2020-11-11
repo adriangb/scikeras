@@ -1,14 +1,25 @@
 import os
-import tarfile
 import tempfile
+import zipfile
 
 from io import BytesIO
 from types import MethodType
+from uuid import uuid4 as uuid
 
 import numpy as np
 
+from tensorflow import io as tf_io
 from tensorflow import keras
 from tensorflow.keras.models import load_model
+
+
+def _get_temp_folder():
+    if os.name == "nt":
+        # the RAM-based filesystem is not fully supported on
+        # Windows yet, we save to a temp folder on disk instead
+        return tempfile.mkdtemp()
+    else:
+        return f"ram://{tempfile.mkdtemp()}"
 
 
 def _temp_create_all_weights(self, var_list):
@@ -35,11 +46,24 @@ def _restore_optimizer_weights(optimizer, weights) -> None:
 def unpack_keras_model(packed_keras_model, optimizer_weights):
     """Reconstruct a model from the result of __reduce__
     """
+    temp_dir = _get_temp_folder()
     b = BytesIO(packed_keras_model)
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        with tarfile.open(fileobj=b, mode="r:gz") as tar:
-            tar.extractall(tmpdirname)
-            model: keras.Model = load_model(tmpdirname)
+    with zipfile.ZipFile(b, "r", zipfile.ZIP_DEFLATED) as zf:
+        for path in zf.namelist():
+            dest = os.path.join(temp_dir, path)
+            tf_io.gfile.makedirs(os.path.dirname(dest))
+            with tf_io.gfile.GFile(dest, "wb") as f:
+                f.write(zf.read(path))
+    model: keras.Model = load_model(temp_dir)
+    for root, _, filenames in tf_io.gfile.walk(temp_dir):
+        for filename in filenames:
+            if filename.startswith("ram://"):
+                # Currently, tf.io.gfile.walk returns
+                # the entire path for the ram:// filesystem
+                dest = filename
+            else:
+                dest = os.path.join(root, filename)
+            tf_io.gfile.remove(dest)
     _restore_optimizer_weights(model.optimizer, optimizer_weights)
     return model
 
@@ -47,17 +71,25 @@ def unpack_keras_model(packed_keras_model, optimizer_weights):
 def pack_keras_model(model):
     """Support for Pythons's Pickle protocol.
     """
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        model.save(tmpdirname)
-        b = BytesIO()
-        with tarfile.open(fileobj=b, mode="w:gz") as tar:
-            tar.add(tmpdirname, arcname=os.path.sep)
-        b.seek(0)
-    model_np = np.asarray(memoryview(b.read()))
-    optimizer_weights = model.optimizer.get_weights()
+    temp_dir = _get_temp_folder()
+    model.save(temp_dir)
+    b = BytesIO()
+    with zipfile.ZipFile(b, "w", zipfile.ZIP_DEFLATED) as zf:
+        for root, _, filenames in tf_io.gfile.walk(temp_dir):
+            for filename in filenames:
+                if filename.startswith("ram://"):
+                    # Currently, tf.io.gfile.walk returns
+                    # the entire path for the ram:// filesystem
+                    dest = filename
+                else:
+                    dest = os.path.join(root, filename)
+                with tf_io.gfile.GFile(dest, "rb") as f:
+                    zf.writestr(os.path.relpath(dest, temp_dir), f.read())
+                tf_io.gfile.remove(dest)
+    b.seek(0)
     return (
         unpack_keras_model,
-        (model_np, optimizer_weights),
+        (np.asarray(memoryview(b.read())), model.optimizer.get_weights()),
     )
 
 
