@@ -7,7 +7,6 @@ from types import MethodType
 
 import numpy as np
 
-from tensorflow import io as tf_io
 from tensorflow import keras
 from tensorflow.keras.models import load_model
 
@@ -49,7 +48,6 @@ def pack_keras_model(model):
     """Support for Pythons's Pickle protocol.
     """
     with tempfile.TemporaryDirectory() as tmpdirname:
-        # directory and contents have been removed
         model.save(tmpdirname)
         b = BytesIO()
         with tarfile.open(fileobj=b, mode="w:gz") as tar:
