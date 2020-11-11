@@ -40,6 +40,8 @@ def _temp_create_all_weights(self, var_list):
 def _restore_optimizer_weights(optimizer, weights) -> None:
     optimizer._restored_weights = weights
     optimizer._create_all_weights_orig = optimizer._create_all_weights
+    # MethodType is used to "bind" the _temp_create_all_weights method
+    # to the "live" optimizer object
     optimizer._create_all_weights = MethodType(_temp_create_all_weights, optimizer)
 
 
