@@ -373,10 +373,8 @@ class BaseWrapper(BaseEstimator):
                         `fit` method does not support that parameter.
         """
         # Make sure model has a loss function
-        loss = getattr(self.model_, "loss", None)
+        loss = self.model_.loss
         no_loss = False
-        if loss is None:
-            no_loss = True
         if isinstance(loss, list) and not any(
             callable(loss_) or isinstance(loss_, str) for loss_ in loss
         ):
