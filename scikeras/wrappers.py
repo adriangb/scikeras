@@ -373,12 +373,19 @@ class BaseWrapper(BaseEstimator):
                         `fit` method does not support that parameter.
         """
         # Make sure model has a loss function
-        if not getattr(self.model_, "loss", None) or (
-            isinstance(self.model_, list)
-            and not any(
-                callable(loss) or isinstance(loss, str) for loss in self.model_.loss
-            )
+        loss = getattr(self.model_, "loss", None)
+        no_loss = False
+        if loss is None:
+            no_loss = True
+        if isinstance(loss, list) and not any(
+            callable(loss_) or isinstance(loss_, str) for loss_ in loss
         ):
+            no_loss = True
+        if isinstance(loss, dict) and not any(
+            callable(loss_) or isinstance(loss_, str) for loss_ in loss.values()
+        ):
+            no_loss = True
+        if no_loss:
             raise ValueError(
                 "No valid loss function found."
                 " You must provide a loss function to train."
