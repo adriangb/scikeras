@@ -797,3 +797,5 @@ class TestInitialize:
         y_pred_scikeras = reg.predict(X)
         # Check that predictions match
         np.testing.assert_allclose(y_pred_keras.reshape(-1,), y_pred_scikeras)
+        # Check that we are still using the same model object
+        assert reg.model_ is m2
