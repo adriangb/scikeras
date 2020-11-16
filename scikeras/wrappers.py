@@ -619,7 +619,8 @@ class BaseWrapper(BaseEstimator):
             initial_epoch=0,
         )
 
-    def initialized(self):
+    @property
+    def initialized_(self):
         return hasattr(self, "model_")
 
     def _initialize(
@@ -703,7 +704,7 @@ class BaseWrapper(BaseEstimator):
             ValueError : In case of invalid shape for `y` argument.
         """
         # Data checks
-        if not ((self.warm_start or warm_start) and self.initialized()):
+        if not ((self.warm_start or warm_start) and self.initialized_):
             X, y = self._initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
@@ -767,7 +768,7 @@ class BaseWrapper(BaseEstimator):
                 Predictions.
         """
         # check if fitted
-        if not self.initialized():
+        if not self.initialized_:
             raise NotFittedError(
                 "Estimator needs to be fit before `predict` " "can be called"
             )
@@ -1069,7 +1070,7 @@ class KerasClassifier(BaseWrapper):
                 (instead of `(n_sample, 1)` as in Keras).
         """
         # check if fitted
-        if not self.initialized():
+        if not self.initialized_:
             raise NotFittedError(
                 "Estimator needs to be fit before `predict` " "can be called"
             )
