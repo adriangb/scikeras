@@ -54,7 +54,12 @@ class TestAutoencoder:
 
         # Wrap model
         compile_params = {"optimizer": "adam", "loss": "binary_crossentropy"}
-        fit_params = {"epochs": 20, "batch_size": 256, "shuffle": True}
+        fit_params = {
+            "epochs": 5,
+            "batch_size": 256,
+            "shuffle": True,
+            "random_state": 0,
+        }
 
         autoencoder = BaseWrapper(
             model=autoencoder_model, **compile_params, **fit_params
@@ -68,6 +73,13 @@ class TestAutoencoder:
 
         # Training
         autoencoder.fit(x_train, x_train)
-        roundtrip_imgs = decoder.fit_transform(encoder.fit_transform(x_test))
+
+        # Test shape of output images
+        encoded_images = encoder.fit_transform(x_test)
+        assert encoded_images.shape == (x_test.shape[0], 32)
+        roundtrip_imgs = decoder.fit_transform(encoded_images)
+        assert roundtrip_imgs.shape == x_test.shape
+
+        # Test MSE or reconstructed images
         mse = mean_squared_error(roundtrip_imgs, x_test)
-        assert mse <= 0.05  # 0.05 is empirically determined
+        assert mse <= 0.02  # 0.02 is empirically determined
