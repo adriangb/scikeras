@@ -55,7 +55,6 @@ class TestAutoencoder:
         # Wrap model
         compile_params = {"optimizer": "adam", "loss": "binary_crossentropy"}
         fit_params = {
-            "epochs": 5,
             "batch_size": 256,
             "shuffle": True,
             "random_state": 0,
@@ -71,15 +70,24 @@ class TestAutoencoder:
             model=decoder_model, **compile_params, **fit_params
         )
 
-        # Training
-        autoencoder.fit(x_train, x_train)
+        # Initialize autoencoder
+        autoencoder.initialize(x_train, x_train)
 
         # Test shape of output images
-        encoded_images = encoder.fit_transform(x_test)
-        assert encoded_images.shape == (x_test.shape[0], 32)
+        encoded_images = encoder.fit_transform(x_train)
+        assert encoded_images.shape == (x_train.shape[0], 32)
         roundtrip_imgs = decoder.fit_transform(encoded_images)
-        assert roundtrip_imgs.shape == x_test.shape
+        assert roundtrip_imgs.shape == x_train.shape
 
-        # Test MSE or reconstructed images
-        mse = mean_squared_error(roundtrip_imgs, x_test)
-        assert mse <= 0.02  # 0.02 is empirically determined
+        # Get current MSE of reconstruction
+        roundtrip_imgs = decoder.transform(encoder.transform(x_test))
+        mse_untrained = mean_squared_error(roundtrip_imgs, x_test)
+
+        # Train for 1 epoch
+        autoencoder.partial_fit(x_train, x_train)
+
+        # Test that training is working by checking that the
+        # MSE decreases by at least 5x
+        roundtrip_imgs = decoder.transform(encoder.transform(x_test))
+        mse_trained = mean_squared_error(roundtrip_imgs, x_test)
+        assert mse_trained < mse_untrained * 0.2
