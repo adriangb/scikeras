@@ -5,6 +5,7 @@ import os
 import warnings
 
 from collections import defaultdict
+from copy import Error
 from typing import Any, Dict, Iterable, Tuple, Union
 
 import numpy as np
@@ -391,6 +392,8 @@ class BaseWrapper(BaseEstimator):
                 "\n 1. Provide a loss function via the loss parameter."
                 "\n 2. Compile your model with a loss function inside the"
                 " model-building method."
+                "\n\nSee https://scikeras.readthedocs.io/en/latest/advanced.html#compilation-of-model"
+                " for more information on compiling SciKeras models."
                 "\n\nSee https://www.tensorflow.org/api_docs/python/tf/keras/losses"
                 " for more information on Keras losses."
             )
@@ -524,37 +527,36 @@ class BaseWrapper(BaseEstimator):
                         f"`y` has {y_ndim_} dimensions, but this {self.__name__}"
                         f" is expecting {self.y_ndim_} dimensions in `y`."
                     )
-        if X is not None:
-            X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
-            X_dtype_ = X.dtype
-            X_shape_ = X.shape
-            n_features_in_ = X.shape[1]
-            if reset:
-                self.X_dtype_ = X_dtype_
-                self.X_shape_ = X_shape_
-                self.n_features_in_ = n_features_in_
-            else:
-                if not np.can_cast(X_dtype_, self.X_dtype_):
-                    raise ValueError(
-                        f"Got `X` with dtype {X_dtype_},"
-                        f" but this {self.__name__} expected {self.X_dtype_}"
-                        f" and casting from {X_dtype_} to {self.X_dtype_} is not safe!"
+        X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
+        X_dtype_ = X.dtype
+        X_shape_ = X.shape
+        n_features_in_ = X.shape[1]
+        if reset:
+            self.X_dtype_ = X_dtype_
+            self.X_shape_ = X_shape_
+            self.n_features_in_ = n_features_in_
+        else:
+            if not np.can_cast(X_dtype_, self.X_dtype_):
+                raise ValueError(
+                    f"Got `X` with dtype {X_dtype_},"
+                    f" but this {self.__name__} expected {self.X_dtype_}"
+                    f" and casting from {X_dtype_} to {self.X_dtype_} is not safe!"
+                )
+            if len(X_shape_) != len(self.X_shape_):
+                raise ValueError(
+                    f"`X` has {len(X_shape_)} dimensions, but this {self.__name__}"
+                    f" is expecting {len(self.X_shape_)} dimensions in `X`."
+                )
+            # The following check is a backport from
+            # sklearn.base.BaseEstimator._check_n_features
+            # since this method is not available in sklearn <= 0.22.0
+            if n_features_in_ != self.n_features_in_:
+                raise ValueError(
+                    "X has {} features, but {} is expecting {} features "
+                    "as input.".format(
+                        n_features_in_, self.__class__.__name__, self.n_features_in_
                     )
-                if len(X_shape_) != len(self.X_shape_):
-                    raise ValueError(
-                        f"`X` has {len(X_shape_)} dimensions, but this {self.__name__}"
-                        f" is expecting {len(self.X_shape_)} dimensions in `X`."
-                    )
-                # The following check is a backport from
-                # sklearn.base.BaseEstimator._check_n_features
-                # since this method is not available in sklearn <= 0.22.0
-                if n_features_in_ != self.n_features_in_:
-                    raise ValueError(
-                        "X has {} features, but {} is expecting {} features "
-                        "as input.".format(
-                            n_features_in_, self.__class__.__name__, self.n_features_in_
-                        )
-                    )
+                )
         return X, y
 
     def _type_of_target(self, y: np.ndarray) -> str:
