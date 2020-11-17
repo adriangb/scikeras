@@ -5,7 +5,6 @@ import os
 import warnings
 
 from collections import defaultdict
-from copy import Error
 from typing import Any, Dict, Iterable, Tuple, Union
 
 import numpy as np
