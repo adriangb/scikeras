@@ -175,8 +175,8 @@ class BaseWrapper(BaseEstimator):
     def _validate_sample_weight(
         self,
         X: np.ndarray,
-        y: np.ndarray,
-        sample_weight: Union[None, np.ndarray, Iterable],
+        y: Union[None, np.ndarray],
+        sample_weight: Union[np.ndarray, Iterable],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Validate that the passed sample_weight and ensure it is a Numpy array.
         """
@@ -197,7 +197,8 @@ class BaseWrapper(BaseEstimator):
             )
         if np.any(zeros):
             X = X[~zeros]
-            y = y[~zeros]
+            if y is not None:
+                y = y[~zeros]
             sample_weight = sample_weight[~zeros]
         return X, y, sample_weight
 
@@ -340,21 +341,6 @@ class BaseWrapper(BaseEstimator):
                 compile_kwargs = self._get_compile_kwargs()
             model.compile(**compile_kwargs)
 
-        if not getattr(model, "loss", None) or (
-            isinstance(model.loss, list)
-            and not any(callable(loss) or isinstance(loss, str) for loss in model.loss)
-        ):
-            raise ValueError(
-                "No valid loss function found."
-                " You must provide a loss function to train."
-                "\n\nTo resolve this issue, do one of the following:"
-                "\n 1. Provide a loss function via the loss parameter."
-                "\n 2. Compile your model with a loss function inside the"
-                " model-building method."
-                "\n\nSee https://www.tensorflow.org/api_docs/python/tf/keras/losses"
-                " for more information on Keras losses."
-            )
-
         return model
 
     def _fit_keras_model(self, X, y, sample_weight, warm_start, epochs, initial_epoch):
@@ -386,6 +372,31 @@ class BaseWrapper(BaseEstimator):
             ValueError : In case sample_weight != None and the Keras model's
                         `fit` method does not support that parameter.
         """
+        # Make sure model has a loss function
+        loss = self.model_.loss
+        no_loss = False
+        if isinstance(loss, list) and not any(
+            callable(loss_) or isinstance(loss_, str) for loss_ in loss
+        ):
+            no_loss = True
+        if isinstance(loss, dict) and not any(
+            callable(loss_) or isinstance(loss_, str) for loss_ in loss.values()
+        ):
+            no_loss = True
+        if no_loss:
+            raise ValueError(
+                "No valid loss function found."
+                " You must provide a loss function to train."
+                "\n\nTo resolve this issue, do one of the following:"
+                "\n 1. Provide a loss function via the loss parameter."
+                "\n 2. Compile your model with a loss function inside the"
+                " model-building method."
+                "\n\nSee https://scikeras.readthedocs.io/en/latest/advanced.html#compilation-of-model"
+                " for more information on compiling SciKeras models."
+                "\n\nSee https://www.tensorflow.org/api_docs/python/tf/keras/losses"
+                " for more information on Keras losses."
+            )
+
         if os.name == "nt":
             # see tensorflow/probability#886
             X = _windows_upcast_ints(X)
@@ -417,7 +428,6 @@ class BaseWrapper(BaseEstimator):
                     raise e
             self.history_[key] += val
 
-        # return self to allow fit_transform and such to work
         return self
 
     def _check_model_compatibility(self, y: np.ndarray) -> None:
@@ -546,9 +556,6 @@ class BaseWrapper(BaseEstimator):
                         n_features_in_, self.__class__.__name__, self.n_features_in_
                     )
                 )
-
-        if y is None:
-            return X
         return X, y
 
     def _type_of_target(self, y: np.ndarray) -> str:
@@ -611,12 +618,28 @@ class BaseWrapper(BaseEstimator):
             initial_epoch=0,
         )
 
-    def _initialized(self):
+    @property
+    def initialized_(self):
         return hasattr(self, "model_")
 
     def _initialize(
-        self, X: np.ndarray, y: np.ndarray
+        self, X: np.ndarray, y: Union[np.ndarray, None] = None
     ) -> Tuple[np.ndarray, np.ndarray]:
+
+        # Handle random state
+        if isinstance(self.random_state, np.random.RandomState):
+            # Keras needs an integer
+            # we sample an integer and use that as a seed
+            # Given the same RandomState, the seed will always be
+            # the same, thus giving reproducible results
+            state = self.random_state.get_state()
+            self._random_state = self.random_state.randint(low=1)
+            self.random_state.set_state(state)
+        else:
+            # int or None
+            self._random_state = self.random_state
+
+        X, y = self._validate_data(X, y, reset=True)
 
         self.target_encoder_ = self.target_encoder.fit(y)
         target_metadata = getattr(self.target_encoder_, "get_metadata", dict)()
@@ -628,6 +651,31 @@ class BaseWrapper(BaseEstimator):
         self.model_ = self._build_keras_model()
 
         return X, y
+
+    def initialize(
+        self, X: np.ndarray, y: Union[np.ndarray, None] = None
+    ) -> "BaseModel":
+        """Initialize the model without any fitting.
+
+        You only need to call this model if you explicitly do not want to do any fitting
+        (for example with a pretrained model). You should _not_ call this
+        right before calling ``fit``, calling ``fit`` will do this automatically.
+
+        Parameters
+        ----------
+        X : array-like, shape `(n_samples, n_features)`
+                Training samples where `n_samples` is the number of samples
+                and `n_features` is the number of features.
+        y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`, optional
+            True labels for `X`, by default None.
+        
+        Returns
+        -------
+        BaseModel
+            A reference to the BaseModel instance for chained calling.
+        """
+        self._initialize(X, y)
+        return self  # to allow chained calls like initialize(...).predict(...)
 
     def _fit(self, X, y, sample_weight, warm_start, epochs, initial_epoch):
         """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
@@ -654,34 +702,20 @@ class BaseWrapper(BaseEstimator):
         Raises:
             ValueError : In case of invalid shape for `y` argument.
         """
-        # Handle random state
-        if isinstance(self.random_state, np.random.RandomState):
-            # Keras needs an integer
-            # we sample an integer and use that as a seed
-            # Given the same RandomState, the seed will always be
-            # the same, thus giving reproducible results
-            state = self.random_state.get_state()
-            self._random_state = self.random_state.randint(low=1)
-            self.random_state.set_state(state)
-        else:
-            # int or None
-            self._random_state = self.random_state
-
         # Data checks
-        if not ((self.warm_start or warm_start) and self._initialized()):
-            X, y = self._validate_data(X, y, reset=True)
-            self._initialize(X, y)
+        if not ((self.warm_start or warm_start) and self.initialized_):
+            X, y = self._initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
 
-        X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
+        if sample_weight is not None:
+            X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
 
         y = self.target_encoder_.transform(y)
         X = self.feature_encoder_.transform(X)
 
         self._check_model_compatibility(y)
 
-        # fit model
         return self._fit_keras_model(
             X,
             y,
@@ -733,13 +767,13 @@ class BaseWrapper(BaseEstimator):
                 Predictions.
         """
         # check if fitted
-        if not self._initialized():
+        if not self.initialized_:
             raise NotFittedError(
                 "Estimator needs to be fit before `predict` " "can be called"
             )
 
         # basic input checks
-        X = self._validate_data(X=X, y=None)
+        X, _ = self._validate_data(X=X, y=None)
 
         # pre process X
         X = self.feature_encoder_.transform(X)
@@ -775,7 +809,9 @@ class BaseWrapper(BaseEstimator):
         """
         # validate sample weights
         if sample_weight is not None:
-            sample_weight = _check_sample_weight(sample_weight, X)
+            X, y, sample_weight = self._validate_sample_weight(
+                X=X, y=y, sample_weight=sample_weight
+            )
 
         # validate y
         y = check_array(y, ensure_2d=False)
@@ -1033,13 +1069,13 @@ class KerasClassifier(BaseWrapper):
                 (instead of `(n_sample, 1)` as in Keras).
         """
         # check if fitted
-        if not self._initialized():
+        if not self.initialized_:
             raise NotFittedError(
                 "Estimator needs to be fit before `predict` " "can be called"
             )
 
         # basic input checks
-        X = self._validate_data(X=X, y=None)
+        X, _ = self._validate_data(X=X, y=None)
 
         # pre process X
         X = self.feature_encoder_.transform(X)

@@ -15,4 +15,6 @@ The following are examples and notebooks on how to use SciKeras.
 
 * `Data Transformers <https://github.com/adriangb/scikeras/blob/master/notebooks/DataTransformers.ipynb>`_ - Use SciKeras data transformers to handle multi input, multi output and multidimensional Keras Model. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/DataTransformers.ipynb>`_
 
+* `Autoencoder/Transformer Example <https://github.com/adriangb/scikeras/blob/master/notebooks/Autoencoders.ipynb>`_ - Learn how to make a Keras Autoencoder into a Scikit-Learn transformer. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/Autoencoders.ipynb>`_
+
 * `Benchmarking SciKeras vs pure Keras <https://github.com/adriangb/scikeras/blob/master/notebooks/Benchmarks.ipynb>`_ - Compares the performance of SciKeras and using pure Keras on MNIST. `Run in Google Colab 💻 <https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/Benchmarks.ipynb>`_
