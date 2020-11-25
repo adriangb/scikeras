@@ -67,7 +67,7 @@ class BaseWrapper(BaseEstimator):
         If False, subsequent ``fit`` calls will reset the entire model.
         This has no impact on ``partial_fit``, which always trains
         for a single epoch starting from the current epoch.
-    
+
     Attributes
     ----------
     model_ : tf.keras.Model
@@ -114,6 +114,17 @@ class BaseWrapper(BaseEstimator):
     n_features_in_ : int
         The number of features seen during `fit`.
     """
+
+    model_: tf.keras.Model
+    history_: Dict[str, List[Any]]
+    initialized_: bool
+    n_outputs_expected_: int
+    target_type_: str
+    y_shape_: Tuple[int]
+    y_dtype_: np.dtype
+    X_shape_: Tuple[int]
+    X_dtype_: np.dtype
+    n_features_in_: int
 
     _tags = {
         "poor_score": True,
@@ -1021,7 +1032,6 @@ class KerasClassifier(BaseWrapper):
     please see the see the
     [tf.keras.Model documentation](https://www.tensorflow.org/api_docs/python/tf/keras/Model).
 
-
     Parameters
     ----------
     model: callable function or class instance
@@ -1047,7 +1057,7 @@ class KerasClassifier(BaseWrapper):
         as ``n_samples / (n_classes * np.bincount(y))``.
         Note that these weights will be multiplied with sample_weight (passed
         through the fit method) if sample_weight is specified.
-    
+
     Attributes
     ----------
     model_ : tf.keras.Model
@@ -1102,6 +1112,11 @@ class KerasClassifier(BaseWrapper):
     n_classes_ : int
         The number of classes seen during `fit`.
     """
+
+    n_outputs_: int
+    n_outputs_expected_: int
+    classes_: Iterable[Any]
+    n_classes_: int
 
     _estimator_type = "classifier"
     _tags = {
@@ -1334,7 +1349,6 @@ class KerasRegressor(BaseWrapper):
     please see the see the
     [tf.keras.Model documentation](https://www.tensorflow.org/api_docs/python/tf/keras/Model).
 
-
     Parameters
     ----------
     model: callable function or class instance
@@ -1403,6 +1417,9 @@ class KerasRegressor(BaseWrapper):
     n_outputs_expected_ : int
         Number of outputs the Keras Model is expected to have.
     """
+
+    n_outputs_: int
+    n_outputs_expected_: int
 
     _estimator_type = "regressor"
     _tags = {

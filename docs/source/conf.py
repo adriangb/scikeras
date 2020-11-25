@@ -14,7 +14,8 @@ import os
 import sys
 
 
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.append(os.path.abspath("../.."))
+
 
 # -- Project information -----------------------------------------------------
 
@@ -103,7 +104,6 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 import inspect
 import subprocess
 
-from functools import partial
 from operator import attrgetter
 
 
@@ -144,8 +144,10 @@ def _linkcode_resolve(domain, info, package, url_fmt, revision):
         # Python 2 only
         class_name = class_name.encode("utf-8")
     module = __import__(info["module"], fromlist=[class_name])
-    obj = attrgetter(info["fullname"])(module)
-
+    try:
+        obj = attrgetter(info["fullname"])(module)
+    except AttributeError:
+        return ""
     try:
         fn = inspect.getsourcefile(obj)
     except Exception:

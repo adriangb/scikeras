@@ -4,6 +4,10 @@
 SciKeras API
 ============
 
+
+Wrappers
+========
+
 .. autosummary::
    :template: class.rst
    :toctree: generated/
@@ -13,7 +17,6 @@ SciKeras API
    scikeras.wrappers.KerasRegressor
 
 
-=========
 Utilities
 =========
 
