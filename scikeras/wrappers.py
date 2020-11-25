@@ -52,10 +52,16 @@ class BaseWrapper(BaseEstimator):
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
-    optimizer : Union[string, tf.keras.Optimizer, optimizer-class]
+    optimizer : Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]], default "rmsprop"
         This can be a string for Keras' built in optimizers,
-        an instance of  tf.keras.Optimizer 
-        or a class inheriting from  tf.keras.Optimizer.
+        an instance of tf.keras.optimizers.Optimizer
+        or a class inheriting from tf.keras.optimizers.Optimizer.
+        Only strings and classes support parameter routing.
+    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+        The loss function to use for training.
+        This can be a string for Keras' built in losses,
+        an instance of tf.keras.losses.Loss 
+        or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None, meaning random initialization
         Set the Tensorflow random number generators to a
@@ -1059,10 +1065,16 @@ class KerasClassifier(BaseWrapper):
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
-    optimizer : Union[string, tf.keras.Optimizer, optimizer-class]
+    optimizer : Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]], default "rmsprop"
         This can be a string for Keras' built in optimizers,
-        an instance of  tf.keras.Optimizer 
-        or a class inheriting from  tf.keras.Optimizer.
+        an instance of tf.keras.optimizers.Optimizer
+        or a class inheriting from tf.keras.optimizers.Optimizer.
+        Only strings and classes support parameter routing.
+    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+        The loss function to use for training.
+        This can be a string for Keras' built in losses,
+        an instance of tf.keras.losses.Loss 
+        or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None, meaning random initialization
         Set the Tensorflow random number generators to a
@@ -1401,10 +1413,16 @@ class KerasRegressor(BaseWrapper):
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
-    optimizer : Union[string, tf.keras.Optimizer, optimizer-class]
+    optimizer : Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]], default "rmsprop"
         This can be a string for Keras' built in optimizers,
-        an instance of  tf.keras.Optimizer 
-        or a class inheriting from  tf.keras.Optimizer.
+        an instance of tf.keras.optimizers.Optimizer
+        or a class inheriting from tf.keras.optimizers.Optimizer.
+        Only strings and classes support parameter routing.
+    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+        The loss function to use for training.
+        This can be a string for Keras' built in losses,
+        an instance of tf.keras.losses.Loss 
+        or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None, meaning random initialization
         Set the Tensorflow random number generators to a
