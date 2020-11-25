@@ -767,8 +767,8 @@ class BaseWrapper(BaseEstimator):
         )
 
     def partial_fit(self, X, y, sample_weight=None) -> "BaseWrapper":
-        """
-        Partially fit a model.
+        """Fit the estimator for a single epoch, preserving the current
+        training history and model parameters.
 
         Parameters
         ----------
