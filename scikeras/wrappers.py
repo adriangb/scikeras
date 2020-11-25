@@ -1054,16 +1054,22 @@ class KerasClassifier(BaseWrapper):
 
     Parameters
     ----------
-    model: callable function or class instance
+    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None, \
+            meaning this subclass must implement ``_keras_build_fn``.
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
+    optimizer : Union[string, tf.keras.Optimizer, optimizer-class]
+        This can be a string for Keras' built in optimizers,
+        an instance of  tf.keras.Optimizer 
+        or a class inheriting from  tf.keras.Optimizer.
+        Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None, meaning random initialization
         Set the Tensorflow random number generators to a
         reproducible deterministic state using this seed.
         Pass an int for reproducible results across multiple
         function calls.
-    warm_start : bool, default False
+    warm_start : bool, default False.
         If True, subsequent calls to ``fit`` will _not_ reset
         the model parameters but _will_ reset the epoch to zero.
         If False, subsequent ``fit`` calls will reset the entire model.
@@ -1390,16 +1396,22 @@ class KerasRegressor(BaseWrapper):
 
     Parameters
     ----------
-    model: callable function or class instance
+    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None, \
+            meaning this subclass must implement ``_keras_build_fn``.
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
+    optimizer : Union[string, tf.keras.Optimizer, optimizer-class]
+        This can be a string for Keras' built in optimizers,
+        an instance of  tf.keras.Optimizer 
+        or a class inheriting from  tf.keras.Optimizer.
+        Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None, meaning random initialization
         Set the Tensorflow random number generators to a
         reproducible deterministic state using this seed.
         Pass an int for reproducible results across multiple
         function calls.
-    warm_start : bool, default False
+    warm_start : bool, default False.
         If True, subsequent calls to ``fit`` will _not_ reset
         the model parameters but _will_ reset the epoch to zero.
         If False, subsequent ``fit`` calls will reset the entire model.
