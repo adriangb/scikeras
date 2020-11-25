@@ -5,7 +5,7 @@ import os
 import warnings
 
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, Union
 
 import numpy as np
 import tensorflow as tf
@@ -47,7 +47,8 @@ class BaseWrapper(BaseEstimator):
 
     Parameters
     ----------
-    model : Union[Callable[..., tf.keras.Model], tf.keras.Model]
+    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None, \
+            meaning this subclass must implement ``_keras_build_fn``.
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
@@ -56,18 +57,17 @@ class BaseWrapper(BaseEstimator):
         an instance of  tf.keras.Optimizer 
         or a class inheriting from  tf.keras.Optimizer.
         Only strings and classes support parameter routing.
-    random_state : int, RandomState instance, default=None
+    random_state : Union[int, np.random.RandomState, None], default None, meaning random initialization
         Set the Tensorflow random number generators to a
         reproducible deterministic state using this seed.
         Pass an int for reproducible results across multiple
         function calls.
-    warm_start : bool
+    warm_start : bool, default False.
         If True, subsequent calls to ``fit`` will _not_ reset
         the model parameters but _will_ reset the epoch to zero.
         If False, subsequent ``fit`` calls will reset the entire model.
         This has no impact on ``partial_fit``, which always trains
         for a single epoch starting from the current epoch.
-        By default, False.
 
     Attributes
     ----------
@@ -185,21 +185,40 @@ class BaseWrapper(BaseEstimator):
 
     def __init__(
         self,
-        model=None,
+        model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
         *,
-        build_fn=None,  # for backwards compatibility
-        warm_start=False,
-        random_state=None,
-        optimizer="rmsprop",
-        loss=None,
-        metrics=None,
-        batch_size=None,
-        verbose=1,
-        callbacks=None,
-        validation_split=0.0,
-        shuffle=True,
-        run_eagerly=False,
-        epochs=1,
+        build_fn: Union[
+            None, Callable[..., tf.keras.Model], tf.keras.Model
+        ] = None,  # for backwards compatibility
+        warm_start: bool = False,
+        random_state: Union[int, np.random.RandomState, None] = None,
+        optimizer: Union[
+            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
+        ] = "rmsprop",
+        loss: Union[
+            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
+        ] = None,
+        metrics: Union[
+            List[
+                Union[
+                    str,
+                    tf.keras.metrics.Metric,
+                    Type[tf.keras.metrics.Metric],
+                    Callable,
+                ]
+            ],
+            None,
+        ] = None,
+        batch_size: Union[int, None] = None,
+        verbose: int = 1,
+        callbacks: Union[
+            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
+            None,
+        ] = None,
+        validation_split: float = 0.0,
+        shuffle: bool = True,
+        run_eagerly: bool = False,
+        epochs: int = 1,
         **kwargs,
     ):
 
@@ -761,8 +780,8 @@ class BaseWrapper(BaseEstimator):
                 Training samples where ``n_samples`` is the number of samples
                 and `n_features` is the number of features.
         y : Union[array-like, sparse matrix, dataframe]of shape \
-            ``(n_samples,)`` or ``(n_samples, n_outputs)``, optional
-            True labels for `X`, by default None.
+            ``(n_samples,)`` or ``(n_samples, n_outputs)``, default None
+            True labels for `X`.
         
         Returns
         -------
@@ -1039,18 +1058,18 @@ class KerasClassifier(BaseWrapper):
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
-    random_state : int, RandomState instance, default=None
+    random_state : Union[int, np.random.RandomState, None], default None, meaning random initialization
         Set the Tensorflow random number generators to a
         reproducible deterministic state using this seed.
         Pass an int for reproducible results across multiple
         function calls.
-    warm_start : bool, by default False
+    warm_start : bool, default False
         If True, subsequent calls to ``fit`` will _not_ reset
         the model parameters but _will_ reset the epoch to zero.
         If False, subsequent ``fit`` calls will reset the entire model.
         This has no impact on ``partial_fit``, which always trains
         for a single epoch starting from the current epoch.
-    class_weight : dict or 'balanced', default=None
+    class_weight : Union[Dict[Any, float], str, None], default None
         Weights associated with classes in the form ``{class_label: weight}``.
         If not given, all classes are supposed to have weight one.
         The "balanced" mode uses the values of y to automatically adjust
@@ -1137,22 +1156,41 @@ class KerasClassifier(BaseWrapper):
 
     def __init__(
         self,
-        model=None,
+        model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
         *,
-        build_fn=None,  # for backwards compatibility
-        warm_start=False,
-        random_state=None,
-        optimizer="rmsprop",
-        loss=None,
-        metrics=None,
-        batch_size=None,
-        verbose=1,
-        callbacks=None,
-        validation_split=0.0,
-        shuffle=True,
-        run_eagerly=False,
-        epochs=1,
-        class_weight=None,
+        build_fn: Union[
+            None, Callable[..., tf.keras.Model], tf.keras.Model
+        ] = None,  # for backwards compatibility
+        warm_start: bool = False,
+        random_state: Union[int, np.random.RandomState, None] = None,
+        optimizer: Union[
+            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
+        ] = "rmsprop",
+        loss: Union[
+            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
+        ] = None,
+        metrics: Union[
+            List[
+                Union[
+                    str,
+                    tf.keras.metrics.Metric,
+                    Type[tf.keras.metrics.Metric],
+                    Callable,
+                ]
+            ],
+            None,
+        ] = None,
+        batch_size: Union[int, None] = None,
+        verbose: int = 1,
+        callbacks: Union[
+            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
+            None,
+        ] = None,
+        validation_split: float = 0.0,
+        shuffle: bool = True,
+        run_eagerly: bool = False,
+        epochs: int = 1,
+        class_weight: Union[Dict[Any, float], str, None] = None,
         **kwargs,
     ):
         super().__init__(
@@ -1356,12 +1394,12 @@ class KerasRegressor(BaseWrapper):
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
-    random_state : int, RandomState instance, default=None
+    random_state : Union[int, np.random.RandomState, None], default None, meaning random initialization
         Set the Tensorflow random number generators to a
         reproducible deterministic state using this seed.
         Pass an int for reproducible results across multiple
         function calls.
-    warm_start : bool, by default False
+    warm_start : bool, default False
         If True, subsequent calls to ``fit`` will _not_ reset
         the model parameters but _will_ reset the epoch to zero.
         If False, subsequent ``fit`` calls will reset the entire model.
