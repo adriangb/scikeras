@@ -45,7 +45,6 @@ class BaseWrapper(BaseEstimator):
     please see the see the
     [tf.keras.Model documentation](https://www.tensorflow.org/api_docs/python/tf/keras/Model).
 
-
     Parameters
     ----------
     model : {Callable, tf.keras.Model}
@@ -68,6 +67,52 @@ class BaseWrapper(BaseEstimator):
         If False, subsequent ``fit`` calls will reset the entire model.
         This has no impact on ``partial_fit``, which always trains
         for a single epoch starting from the current epoch.
+    
+    Attributes
+    ----------
+    model_ : tf.keras.Model
+        The instantiated and compiled Keras Model. For pre-built models, this
+        will just be a reference to the passed Model instance.
+    history_ : Dict[str, List[Any]]
+        Dictionary of the format ``{metric_str_name: [epoch_0_data, epoch_1_data, ..., epoch_n_data]}``.
+    initialized_ : bool
+        True if this estimator has been initialized (i.e. ``predict`` can be called upon it).
+        Note that this does not guarantee that the model is "fitted": if ``BaseWrapper.initialize``
+        was called instead of ``fit`` the model wil likely have random weights.
+    target_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the target ``y``.
+    feature_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the features/input ``X``.
+    n_outputs_expected_ : int
+        The number of outputs the Keras Model is expected to have, as determined by ``target_transformer_``.
+    target_type_ : str
+        One of:
+        * 'continuous': `y` is an array-like of floats that are not all
+          integers, and is 1d or a column vector.
+        * 'continuous-multioutput': `y` is a 2d array of floats that are
+          not all integers, and both dimensions are of size > 1.
+        * 'binary': `y` contains <= 2 discrete values and is 1d or a column
+          vector.
+        * 'multiclass': `y` contains more than two discrete values, is not a
+          sequence of sequences, and is 1d or a column vector.
+        * 'multiclass-multioutput': `y` is a 2d array that contains more
+          than two discrete values, is not a sequence of sequences, and both
+          dimensions are of size > 1.
+        * 'multilabel-indicator': `y` is a label indicator matrix, an array
+          of two dimensions with at least two columns, and at most 2 unique
+          values.
+        * 'unknown': `y` is array-like but none of the above, such as a 3d
+          array, sequence of sequences, or an array of non-sequence objects.
+    y_shape_ : Tuple[int]
+        Shape of the target ``y`` that the estimator was fitted on.
+    y_dtype_ : np.dtype
+        Dtype of the target ``y`` that the estimator was fitted on.
+    X_shape_ : Tuple[int]
+        Shape of the input ``X`` that the estimator was fitted on.
+    X_dtype_ : np.dtype
+        Dtype of the input ``X`` that the estimator was fitted on.
+    n_features_in_ : int
+        The number of features seen during `fit`.
     """
 
     _tags = {
@@ -1002,6 +1047,60 @@ class KerasClassifier(BaseWrapper):
         as ``n_samples / (n_classes * np.bincount(y))``.
         Note that these weights will be multiplied with sample_weight (passed
         through the fit method) if sample_weight is specified.
+    
+    Attributes
+    ----------
+    model_ : tf.keras.Model
+        The instantiated and compiled Keras Model. For pre-built models, this
+        will just be a reference to the passed Model instance.
+    history_ : Dict[str, List[Any]]
+        Dictionary of the format ``{metric_str_name: [epoch_0_data, epoch_1_data, ..., epoch_n_data]}``.
+    initialized_ : bool
+        True if this estimator has been initialized (i.e. ``predict`` can be called upon it).
+        Note that this does not guarantee that the model is "fitted": if ``BaseWrapper.initialize``
+        was called instead of ``fit`` the model wil likely have random weights.
+    target_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the target ``y``.
+    feature_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the features/input ``X``.
+    n_outputs_expected_ : int
+        The number of outputs the Keras Model is expected to have, as determined by ``target_transformer_``.
+    target_type_ : str
+        One of:
+        * 'continuous': `y` is an array-like of floats that are not all
+          integers, and is 1d or a column vector.
+        * 'continuous-multioutput': `y` is a 2d array of floats that are
+          not all integers, and both dimensions are of size > 1.
+        * 'binary': `y` contains <= 2 discrete values and is 1d or a column
+          vector.
+        * 'multiclass': `y` contains more than two discrete values, is not a
+          sequence of sequences, and is 1d or a column vector.
+        * 'multiclass-multioutput': `y` is a 2d array that contains more
+          than two discrete values, is not a sequence of sequences, and both
+          dimensions are of size > 1.
+        * 'multilabel-indicator': `y` is a label indicator matrix, an array
+          of two dimensions with at least two columns, and at most 2 unique
+          values.
+        * 'unknown': `y` is array-like but none of the above, such as a 3d
+          array, sequence of sequences, or an array of non-sequence objects.
+    y_shape_ : Tuple[int]
+        Shape of the target ``y`` that the estimator was fitted on.
+    y_dtype_ : np.dtype
+        Dtype of the target ``y`` that the estimator was fitted on.
+    X_shape_ : Tuple[int]
+        Shape of the input ``X`` that the estimator was fitted on.
+    X_dtype_ : np.dtype
+        Dtype of the input ``X`` that the estimator was fitted on.
+    n_features_in_ : int
+        The number of features seen during `fit`.
+    n_outputs_ : int
+        Dimensions of ``y`` that the transformer was trained on.
+    n_outputs_expected_ : int
+        Number of outputs the Keras Model is expected to have.
+    classes_ : Iterable
+        The classes seen during `fit`.
+    n_classes_ : int
+        The number of classes seen during `fit`.
     """
 
     _estimator_type = "classifier"
@@ -1253,6 +1352,56 @@ class KerasRegressor(BaseWrapper):
         If False, subsequent ``fit`` calls will reset the entire model.
         This has no impact on ``partial_fit``, which always trains
         for a single epoch starting from the current epoch.
+
+    Attributes
+    ----------
+    model_ : tf.keras.Model
+        The instantiated and compiled Keras Model. For pre-built models, this
+        will just be a reference to the passed Model instance.
+    history_ : Dict[str, List[Any]]
+        Dictionary of the format ``{metric_str_name: [epoch_0_data, epoch_1_data, ..., epoch_n_data]}``.
+    initialized_ : bool
+        True if this estimator has been initialized (i.e. ``predict`` can be called upon it).
+        Note that this does not guarantee that the model is "fitted": if ``BaseWrapper.initialize``
+        was called instead of ``fit`` the model wil likely have random weights.
+    target_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the target ``y``.
+    feature_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the features/input ``X``.
+    n_outputs_expected_ : int
+        The number of outputs the Keras Model is expected to have, as determined by ``target_transformer_``.
+    target_type_ : str
+        One of:
+        * 'continuous': `y` is an array-like of floats that are not all
+          integers, and is 1d or a column vector.
+        * 'continuous-multioutput': `y` is a 2d array of floats that are
+          not all integers, and both dimensions are of size > 1.
+        * 'binary': `y` contains <= 2 discrete values and is 1d or a column
+          vector.
+        * 'multiclass': `y` contains more than two discrete values, is not a
+          sequence of sequences, and is 1d or a column vector.
+        * 'multiclass-multioutput': `y` is a 2d array that contains more
+          than two discrete values, is not a sequence of sequences, and both
+          dimensions are of size > 1.
+        * 'multilabel-indicator': `y` is a label indicator matrix, an array
+          of two dimensions with at least two columns, and at most 2 unique
+          values.
+        * 'unknown': `y` is array-like but none of the above, such as a 3d
+          array, sequence of sequences, or an array of non-sequence objects.
+    y_shape_ : Tuple[int]
+        Shape of the target ``y`` that the estimator was fitted on.
+    y_dtype_ : np.dtype
+        Dtype of the target ``y`` that the estimator was fitted on.
+    X_shape_ : Tuple[int]
+        Shape of the input ``X`` that the estimator was fitted on.
+    X_dtype_ : np.dtype
+        Dtype of the input ``X`` that the estimator was fitted on.
+    n_features_in_ : int
+        The number of features seen during `fit`.
+    n_outputs_ : int
+        Dimensions of ``y`` that the transformer was trained on.
+    n_outputs_expected_ : int
+        Number of outputs the Keras Model is expected to have.
     """
 
     _estimator_type = "regressor"

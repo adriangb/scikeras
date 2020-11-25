@@ -1,8 +1,6 @@
 from inspect import isclass
 from typing import Callable, Union
 
-import numpy as np
-
 from tensorflow.keras.losses import Loss
 from tensorflow.keras.losses import get as keras_loss_get
 from tensorflow.keras.metrics import Metric

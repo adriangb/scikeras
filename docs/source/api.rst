@@ -11,3 +11,15 @@ SciKeras API
    scikeras.wrappers.BaseWrapper
    scikeras.wrappers.KerasClassifier
    scikeras.wrappers.KerasRegressor
+
+
+=========
+Utilities
+=========
+
+.. autosummary::
+   :template: module.rst
+   :toctree: generated/
+   :recursive:
+   
+   scikeras.utils
