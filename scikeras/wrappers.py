@@ -1248,7 +1248,7 @@ class KerasClassifier(BaseWrapper):
             and ``n_features`` is the number of features.
         y : Union[array-like, sparse matrix, dataframe] of shape ``(n_samples,)`` or ``(n_samples, n_outputs)``
             True labels for ``X``.
-        sample_weight : {array-like, dataframe} of ``(n_samples,)``, default=None
+        sample_weight : Union[array-like, dataframe] of ``(n_samples,)``, default=None
             Sample weights. The Keras Model must support this.
 
         Returns
