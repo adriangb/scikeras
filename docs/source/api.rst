@@ -6,7 +6,7 @@ SciKeras API
 
 
 Wrappers
-========
+============
 
 .. autosummary::
    :template: class.rst
@@ -21,8 +21,7 @@ Utilities
 =========
 
 .. autosummary::
-   :template: module.rst
    :toctree: generated/
-   :recursive:
    
    scikeras.utils
+   scikeras.utils.transformers

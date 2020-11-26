@@ -26,7 +26,7 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     Returns
     -------
     str
-        [description]
+        String name of the loss.
 
     Notes
     -----
@@ -47,8 +47,7 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     Raises
     ------
     TypeError
-        If the wrong type is passed.
-
+        If loss is not a string, tf.keras.losses.Loss instance or a callable.
     """
     if isclass(loss):
         loss = loss()
@@ -95,15 +94,16 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
 
     Raises
     ------
-    ValueError
-        In case of an unknown metric.
+    TypeError
+        If metric is not a string, a tf.keras.metrics.Metric instance a class
+        inheriting from tf.keras.metrics.Metric.
     """
     if isclass(metric):
         metric = metric()  # get_metric accepts instances, not classes
     if not (isinstance(metric, (str, Metric)) or callable(metric)):
         raise TypeError(
             "`metric` must be a string, a function, an instance of"
-            " tf.keras.metrics.Metric or a type inheriting from"
+            " `tf.keras.metrics.Metric` or a type inheriting from"
             " `tf.keras.metrics.Metric`"
         )
     fn_or_cls = keras_metric_get(metric)

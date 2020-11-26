@@ -21,11 +21,11 @@ class TargetReshaper(BaseEstimator, TransformerMixin):
     Attributes
     ----------
     ndim_ : int
-        Dimensions of `y` that the transformer was trained on.
+        Dimensions of y that the transformer was trained on.
     """
 
     def fit(self, y: np.ndarray) -> "TargetReshaper":
-        """Fit the transformer to a target ``y``.
+        """Fit the transformer to a target y.
 
         Returns
         -------
@@ -37,12 +37,12 @@ class TargetReshaper(BaseEstimator, TransformerMixin):
 
     @staticmethod
     def transform(y: np.ndarray) -> np.ndarray:
-        """Makes 1D ``y`` 2D.
+        """Makes 1D y 2D.
 
         Parameters
         ----------
         y : np.ndarray
-            Target ``y`` to be transformed.
+            Target y to be transformed.
 
         Returns
         -------
@@ -54,7 +54,7 @@ class TargetReshaper(BaseEstimator, TransformerMixin):
         return y
 
     def inverse_transform(self, y: np.ndarray) -> np.ndarray:
-        """Revert the transformation of ``transform``.
+        """Revert the transformation of transform.
 
         Parameters
         ----------
@@ -72,7 +72,7 @@ class TargetReshaper(BaseEstimator, TransformerMixin):
         if not hasattr(self, "ndim_"):
             raise NotFittedError(
                 f"This {self.__class__.__name__} is not initialized."
-                " You must call `fit` before using `inverse_transform`."
+                " You must call ``fit`` before using ``inverse_transform``."
             )
         if self.ndim_ == 1 and y.ndim == 2:
             return np.squeeze(y, axis=1)
@@ -84,23 +84,23 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    loss : Union[None, str, Loss]
+    loss : Union[None, str, Loss], default None
         Keras Model's loss function. Used to automatically
         one-hot encode the target if the loss function is
-        categorical crossentropy. By default None
-    categories : Union[str, List[np.ndarray]]
+        categorical crossentropy.
+    categories : Union[str, List[np.ndarray]], default "auto"
         All of the categories present in the target for the entire
         dataset. "auto" will infer the categories from the
-        data passed to ``fit``. By default "auto"
+        data passed to fit.
 
     Attributes
     ----------
     classes_ : Iterable
-        The classes seen during `fit`.
+        The classes seen during fit.
     n_classes_ : int
-        The number of classes seen during `fit`.
+        The number of classes seen during fit.
     n_outputs_ : int
-        Dimensions of ``y`` that the transformer was trained on.
+        Dimensions of y that the transformer was trained on.
     n_outputs_expected_ : int
         Number of outputs the Keras Model is expected to have.
     """
@@ -124,10 +124,10 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         return target_type
 
     def fit(self, y: np.ndarray) -> "ClassifierLabelEncoder":
-        """Fit the estimator to the target ``y``.
+        """Fit the estimator to the target y.
 
         For all targets, this transforms classes into ordinal numbers.
-        If the loss function is ``categorical_crossentropy``, the target
+        If the loss function is categorical_crossentropy, the target
         will be one-hot encoded.
 
         Parameters
@@ -165,7 +165,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             raise ValueError(
                 f"Unknown label type: {target_type}."
                 "\n\nTo implement support, subclass KerasClassifier and override"
-                " `target_transformer` with a transformer that supports this"
+                " ``target_transformer`` with a transformer that supports this"
                 " label type."
                 "\n\nFor information on sklearn target types, see:"
                 " * https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html"
@@ -200,9 +200,9 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, y: np.ndarray) -> np.ndarray:
-        """Transform the target ``y`` to the format expected by the Keras Model.
+        """Transform the target y to the format expected by the Keras Model.
 
-        If the loss function is ``categorical_crossentropy``, the target
+        If the loss function is categorical_crossentropy, the target
         will be one-hot encoded.
         For other types of target, this transforms classes into ordinal numbers.
 
@@ -218,21 +218,21 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
     def inverse_transform(
         self, y: np.ndarray, return_proba: bool = False
     ) -> np.ndarray:
-        """Restore the data types, shape and classes of the input ```y``
+        """Restore the data types, shape and classes of the input y
         to the output of the Keras Model.
 
         Parameters
         ----------
         y : np.ndarray
             Raw probability predictions from the Keras Model.
-        return_proba : bool, optional
-            If ``True``, return the prediction probabilites themselves.
-            If ``False``, return the class predictions. By default False.
+        return_proba : bool, default False
+            If True, return the prediction probabilites themselves.
+            If False, return the class predictions.
 
         Returns
         -------
         np.ndarray
-            Class predictions (of the same shape as the ``y`` to ``fit``/``transform``), \
+            Class predictions (of the same shape as the y to fit/transform), \
             or class prediction probabilities.
         """
         if self._target_type == "binary":
@@ -267,7 +267,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                     f"Class-predictions are not clearly defined for"
                     " 'multiclass-multioutput' target types."
                     "\n\nTo implement support, subclass KerasClassifier and override"
-                    " `target_transformer` with a transformer that supports this"
+                    " ``target_transformer`` with a transformer that supports this"
                     " label type."
                     "\n\nFor information on sklearn target types, see:"
                     " * https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html"
@@ -292,7 +292,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         Returns
         -------
         Dict[str, Any]
-             Dictionary of meta-parameters generated when this transfromer
+            Dictionary of meta-parameters generated when this transfromer
             was fitted.
         """
         return {
@@ -305,19 +305,20 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
 
 class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
     """Default target transformer for KerasRegressor.
+
     Attributes
     ----------
     n_outputs_ : int
-        Dimensions of `y` that the transformer was trained on.
+        Dimensions of y that the transformer was trained on.
     n_outputs_expected_ : int
         Number of outputs the Keras Model is expected to have.
     """
 
     def fit(self, y: np.ndarray) -> "RegressorTargetEncoder":
-        """Fit the transformer to the target ``y``.
+        """Fit the transformer to the target y.
 
         For RegressorTargetEncoder, this just records the dimensions
-        of ``y`` as the expected number of outputs and saves the dytpe.
+        of y as the expected number of outputs and saves the dytpe.
 
         Returns
         -------
@@ -330,28 +331,28 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, y: np.ndarray) -> np.ndarray:
-        """Transform the target ``y`` to the format expected by the Keras Model.
+        """Transform the target y to the format expected by the Keras Model.
 
         For RegressorTargetEncoder, this simply checks that the shape passed to
-        ``fit`` matches the shape passed to ``transform``.
+        fit matches the shape passed to transform.
 
         Returns
         -------
         np.ndarray
-            Untouched input ``y``.
+            Untouched input y.
         """
         n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         if n_outputs_ != self.n_outputs_:
             raise ValueError(
-                f"Detected `y` to have {n_outputs_} outputs"
-                f" with `y.shape = {y.shape}",
+                f"Detected ``y`` to have {n_outputs_} outputs"
+                f" with ``y.shape = {y.shape}``",
                 f" but this {self.__class__.__name__} has"
                 f" {self.n_outputs_} outputs.",
             )
         return y
 
     def inverse_transform(self, y: np.ndarray) -> np.ndarray:
-        """Restore the data types and shape of the input ```y``
+        """Restore the data types and shape of the input y
         to the output of the Keras Model.
 
         Parameters
@@ -379,7 +380,7 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         Returns
         -------
         Dict[str, Any]
-             Dictionary of meta-parameters generated when this transfromer
+            Dictionary of meta-parameters generated when this transfromer
             was fitted.
         """
         return {

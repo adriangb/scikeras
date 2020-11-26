@@ -63,14 +63,14 @@ class BaseWrapper(BaseEstimator):
         an instance of tf.keras.losses.Loss 
         or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
-    random_state : Union[int, np.random.RandomState, None], default None, meaning random initialization
+    random_state : Union[int, np.random.RandomState, None], default None
         Set the Tensorflow random number generators to a
         reproducible deterministic state using this seed.
         Pass an int for reproducible results across multiple
         function calls.
     warm_start : bool, default False
         If True, subsequent calls to fit will _not_ reset
-        the model parameters but _will_ reset the epoch to zero.
+        the model parameters but *will* reset the epoch to zero.
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.
@@ -693,7 +693,7 @@ class BaseWrapper(BaseEstimator):
 
         Returns
         -------
-        feature_encoder: sklearn transformer
+        sklearn transformer
             Transformer implementing the sklearn transformer
             interface.
         """
@@ -729,7 +729,16 @@ class BaseWrapper(BaseEstimator):
         )
 
     @property
-    def initialized_(self):
+    def initialized_(self) -> bool:
+        """Checks if the estimator is intialized.
+
+        Returns
+        -------
+        bool
+            True if the estimator is initialized (i.e., it can
+            be used for inference or is ready to train),
+            otherwise False.
+        """
         return hasattr(self, "model_")
 
     def _initialize(
@@ -762,9 +771,7 @@ class BaseWrapper(BaseEstimator):
 
         return X, y
 
-    def initialize(
-        self, X: np.ndarray, y: Union[np.ndarray, None] = None
-    ) -> "BaseWrapper":
+    def initialize(self, X, y=None) -> "BaseWrapper":
         """Initialize the model without any fitting.
 
         You only need to call this model if you explicitly do not want to do any fitting
@@ -1075,7 +1082,7 @@ class KerasClassifier(BaseWrapper):
         function calls.
     warm_start : bool, default False
         If True, subsequent calls to fit will _not_ reset
-        the model parameters but _will_ reset the epoch to zero.
+        the model parameters but *will* reset the epoch to zero.
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.
@@ -1426,7 +1433,7 @@ class KerasRegressor(BaseWrapper):
 
     warm_start : bool, default False
         If True, subsequent calls to fit will _not_ reset
-        the model parameters but _will_ reset the epoch to zero.
+        the model parameters but *will* reset the epoch to zero.
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.

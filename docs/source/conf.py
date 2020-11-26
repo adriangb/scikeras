@@ -14,8 +14,7 @@ import os
 import sys
 
 
-sys.path.append(os.path.abspath("../.."))
-
+sys.path.insert(0, "../../scikeras")
 
 # -- Project information -----------------------------------------------------
 
@@ -29,6 +28,19 @@ release = __version__
 
 
 # -- General configuration ---------------------------------------------------
+
+
+def maybe_skip_member(app, what, name, obj, skip, options) -> bool:
+    """Skip all private members, including __init__
+    """
+    if name.startswith("_"):
+        return True
+    return skip
+
+
+def setup(app):
+    app.connect("autodoc-skip-member", maybe_skip_member)
+
 
 #  on_rtd is whether we are on readthedocs.org, this line of code grabbed
 #  from docs.readthedocs.org
@@ -64,6 +76,7 @@ intersphinx_mapping = {
 # this is needed for some reason...
 # see https://github.com/numpy/numpydoc/issues/69
 numpydoc_class_members_toctree = False
+numpydoc_show_class_members = False
 
 autodoc_typehints = "description"
 
@@ -73,7 +86,7 @@ templates_path = ["templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ["build"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"

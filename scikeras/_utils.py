@@ -159,19 +159,20 @@ def route_params(
 
 
 def has_param(func: Callable, param: str) -> bool:
-    """[summary]
+    """Check if func has a parameter named param.
 
     Parameters
     ----------
     func : Callable
-        [description]
+        Function to inspect.
     param : str
-        [description]
+        Parameter name.
 
     Returns
     -------
     bool
-        [description]
+        True if the parameter is part of func's signature,
+        False otherwise.
     """
     return any(
         p.name == param
