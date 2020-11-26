@@ -295,27 +295,27 @@ class BaseWrapper(BaseEstimator):
         return X, y, sample_weight
 
     def _check_model_param(self):
-        """Checks `model` and returns model building
+        """Checks ``model`` and returns model building
         function to use.
 
         Raises
         ------
-            ValueError: if `self.model` is not valid.
+            ValueError: if ``self.model`` is not valid.
         """
         model = self.model
         build_fn = self.build_fn
         if model is None and build_fn is not None:
             model = build_fn
             warnings.warn(
-                "`build_fn` will be renamed to `model` in a future release,"
-                " at which point use of `build_fn` will raise an Error instead."
+                "``build_fn`` will be renamed to ``model`` in a future release,"
+                " at which point use of ``build_fn`` will raise an Error instead."
             )
         if model is None:
             # no model, use this class' _keras_build_fn
             if not hasattr(self, "_keras_build_fn"):
                 raise ValueError(
-                    "If not using the `build_fn` param, "
-                    "you must implement `_keras_build_fn`"
+                    "If not using the ``build_fn`` param, "
+                    "you must implement ``_keras_build_fn``"
                 )
             final_build_fn = self._keras_build_fn
         elif isinstance(model, Model):
@@ -326,14 +326,14 @@ class BaseWrapper(BaseEstimator):
         elif inspect.isfunction(model):
             if hasattr(self, "_keras_build_fn"):
                 raise ValueError(
-                    "This class cannot implement `_keras_build_fn` if"
+                    "This class cannot implement ``_keras_build_fn`` if"
                     " using the `model` parameter"
                 )
             # a callable method/function
             final_build_fn = model
         else:
             raise TypeError(
-                "`model` must be a callable, a Keras Model instance or None"
+                "``model`` must be a callable, a Keras Model instance or None"
             )
 
         return final_build_fn

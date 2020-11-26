@@ -53,8 +53,8 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
         loss = loss()
     if not (isinstance(loss, (str, Loss)) or callable(loss)):
         raise TypeError(
-            "`loss` must be a string, a function, an instance of tf.keras.losses.Loss"
-            " or a type inheriting from `tf.keras.losses.Loss`"
+            "``loss`` must be a string, a function, an instance of ``tf.keras.losses.Loss``"
+            " or a type inheriting from ``tf.keras.losses.Loss``"
         )
     fn_or_cls = keras_loss_get(loss)
     if isinstance(fn_or_cls, Loss):
@@ -102,9 +102,9 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
         metric = metric()  # get_metric accepts instances, not classes
     if not (isinstance(metric, (str, Metric)) or callable(metric)):
         raise TypeError(
-            "`metric` must be a string, a function, an instance of"
-            " `tf.keras.metrics.Metric` or a type inheriting from"
-            " `tf.keras.metrics.Metric`"
+            "``metric`` must be a string, a function, an instance of"
+            " ``tf.keras.metrics.Metric`` or a type inheriting from"
+            " ``tf.keras.metrics.Metric``"
         )
     fn_or_cls = keras_metric_get(metric)
     if isinstance(fn_or_cls, Metric):
