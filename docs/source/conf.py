@@ -39,11 +39,12 @@ on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",
+    "numpydoc",
     "sphinx.ext.linkcode",
     "sphinx.ext.autosummary",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.autodoc.typehints",
 ]
 autosummary_generate = True
 autodoc_default_options = {
@@ -60,9 +61,14 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
 }
 
+# this is needed for some reason...
+# see https://github.com/numpy/numpydoc/issues/69
+numpydoc_class_members_toctree = False
+
+autodoc_typehints = "description"
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+templates_path = ["templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
