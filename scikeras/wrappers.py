@@ -5,7 +5,7 @@ import os
 import warnings
 
 from collections import defaultdict
-from typing import Any, Dict, Iterable, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, Union
 
 import numpy as np
 import tensorflow as tf
@@ -39,22 +39,88 @@ from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetE
 
 
 class BaseWrapper(BaseEstimator):
-    """Base class for the Keras scikit-learn wrapper.
+    """Implementation of the scikit-learn classifier API for Keras.
 
-    Warning: This class should not be used directly.
-    Use descendant classes instead.
+    Below are a list of SciKeras specific parameters. For details on other parameters,
+    please see the see the
+    [tf.keras.Model documentation](https://www.tensorflow.org/api_docs/python/tf/keras/Model).
 
-    Arguments:
-        build_fn: callable function or class instance
-            Used to build the Keras Model. When called,
-            must return a compiled instance of a Keras Model
-            to be used by `fit`, `predict`, etc.
-        random_state : int, RandomState instance, default=None
-            Set the Tensorflow random number generators to a
-            reproducible deterministic state using this seed.
-            Pass an int for reproducible results across multiple
-            function calls.
-        For all other parameters see tf.keras.Model documentation.
+    Parameters
+    ----------
+    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+        Used to build the Keras Model. When called,
+        must return a compiled instance of a Keras Model
+        to be used by `fit`, `predict`, etc.
+        If None, you must implement ``_keras_build_fn``.
+    optimizer : Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]], default "rmsprop"
+        This can be a string for Keras' built in optimizers,
+        an instance of tf.keras.optimizers.Optimizer
+        or a class inheriting from tf.keras.optimizers.Optimizer.
+        Only strings and classes support parameter routing.
+    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+        The loss function to use for training.
+        This can be a string for Keras' built in losses,
+        an instance of tf.keras.losses.Loss 
+        or a class inheriting from tf.keras.losses.Loss .
+        Only strings and classes support parameter routing.
+    random_state : Union[int, np.random.RandomState, None], default None
+        Set the Tensorflow random number generators to a
+        reproducible deterministic state using this seed.
+        Pass an int for reproducible results across multiple
+        function calls.
+    warm_start : bool, default False
+        If True, subsequent calls to fit will _not_ reset
+        the model parameters but *will* reset the epoch to zero.
+        If False, subsequent fit calls will reset the entire model.
+        This has no impact on partial_fit, which always trains
+        for a single epoch starting from the current epoch.
+
+    Attributes
+    ----------
+    model_ : tf.keras.Model
+        The instantiated and compiled Keras Model. For pre-built models, this
+        will just be a reference to the passed Model instance.
+    history_ : Dict[str, List[Any]]
+        Dictionary of the format ``{metric_str_name: [epoch_0_data, epoch_1_data, ..., epoch_n_data]}``.
+    initialized_ : bool
+        True if this estimator has been initialized (i.e. predict can be called upon it).
+        Note that this does not guarantee that the model is "fitted": if ``BaseWrapper.initialize``
+        was called instead of fit the model wil likely have random weights.
+    target_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the target y.
+    feature_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the features/input X.
+    n_outputs_expected_ : int
+        The number of outputs the Keras Model is expected to have, as determined by ``target_transformer_``.
+    target_type_ : str
+        One of:
+
+        * 'continuous': y is an array-like of floats that are not all
+          integers, and is 1d or a column vector.
+        * 'continuous-multioutput': y is a 2d array of floats that are
+          not all integers, and both dimensions are of size > 1.
+        * 'binary': y contains <= 2 discrete values and is 1d or a column
+          vector.
+        * 'multiclass': y contains more than two discrete values, is not a
+          sequence of sequences, and is 1d or a column vector.
+        * 'multiclass-multioutput': y is a 2d array that contains more
+          than two discrete values, is not a sequence of sequences, and both
+          dimensions are of size > 1.
+        * 'multilabel-indicator': y is a label indicator matrix, an array
+          of two dimensions with at least two columns, and at most 2 unique
+          values.
+        * 'unknown': y is array-like but none of the above, such as a 3d
+          array, sequence of sequences, or an array of non-sequence objects.
+    y_shape_ : Tuple[int]
+        Shape of the target y that the estimator was fitted on.
+    y_dtype_ : np.dtype
+        Dtype of the target y that the estimator was fitted on.
+    X_shape_ : Tuple[int]
+        Shape of the input X that the estimator was fitted on.
+    X_dtype_ : np.dtype
+        Dtype of the input X that the estimator was fitted on.
+    n_features_in_ : int
+        The number of features seen during `fit`.
     """
 
     _tags = {
@@ -115,21 +181,40 @@ class BaseWrapper(BaseEstimator):
 
     def __init__(
         self,
-        model=None,
+        model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
         *,
-        build_fn=None,  # for backwards compatibility
-        warm_start=False,
-        random_state=None,
-        optimizer="rmsprop",
-        loss=None,
-        metrics=None,
-        batch_size=None,
-        verbose=1,
-        callbacks=None,
-        validation_split=0.0,
-        shuffle=True,
-        run_eagerly=False,
-        epochs=1,
+        build_fn: Union[
+            None, Callable[..., tf.keras.Model], tf.keras.Model
+        ] = None,  # for backwards compatibility
+        warm_start: bool = False,
+        random_state: Union[int, np.random.RandomState, None] = None,
+        optimizer: Union[
+            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
+        ] = "rmsprop",
+        loss: Union[
+            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
+        ] = None,
+        metrics: Union[
+            List[
+                Union[
+                    str,
+                    tf.keras.metrics.Metric,
+                    Type[tf.keras.metrics.Metric],
+                    Callable,
+                ]
+            ],
+            None,
+        ] = None,
+        batch_size: Union[int, None] = None,
+        verbose: int = 1,
+        callbacks: Union[
+            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
+            None,
+        ] = None,
+        validation_split: float = 0.0,
+        shuffle: bool = True,
+        run_eagerly: bool = False,
+        epochs: int = 1,
         **kwargs,
     ):
 
@@ -168,6 +253,13 @@ class BaseWrapper(BaseEstimator):
 
     @property
     def current_epoch(self) -> int:
+        """Returns the current training epoch.
+
+        Returns
+        -------
+        int
+            Current training epoch.
+        """
         if not hasattr(self, "history_"):
             return 0
         return len(self.history_["loss"])
@@ -203,26 +295,27 @@ class BaseWrapper(BaseEstimator):
         return X, y, sample_weight
 
     def _check_model_param(self):
-        """Checks `model` and returns model building
+        """Checks ``model`` and returns model building
         function to use.
 
-        Raises:
-            ValueError: if `self.model` is not valid.
+        Raises
+        ------
+            ValueError: if ``self.model`` is not valid.
         """
         model = self.model
         build_fn = self.build_fn
         if model is None and build_fn is not None:
             model = build_fn
             warnings.warn(
-                "`build_fn` will be renamed to `model` in a future release,"
-                " at which point use of `build_fn` will raise an Error instead."
+                "``build_fn`` will be renamed to ``model`` in a future release,"
+                " at which point use of ``build_fn`` will raise an Error instead."
             )
         if model is None:
             # no model, use this class' _keras_build_fn
             if not hasattr(self, "_keras_build_fn"):
                 raise ValueError(
-                    "If not using the `build_fn` param, "
-                    "you must implement `_keras_build_fn`"
+                    "If not using the ``build_fn`` param, "
+                    "you must implement ``_keras_build_fn``"
                 )
             final_build_fn = self._keras_build_fn
         elif isinstance(model, Model):
@@ -233,14 +326,14 @@ class BaseWrapper(BaseEstimator):
         elif inspect.isfunction(model):
             if hasattr(self, "_keras_build_fn"):
                 raise ValueError(
-                    "This class cannot implement `_keras_build_fn` if"
+                    "This class cannot implement ``_keras_build_fn`` if"
                     " using the `model` parameter"
                 )
             # a callable method/function
             final_build_fn = model
         else:
             raise TypeError(
-                "`model` must be a callable, a Keras Model instance or None"
+                "``model`` must be a callable, a Keras Model instance or None"
             )
 
         return final_build_fn
@@ -295,9 +388,10 @@ class BaseWrapper(BaseEstimator):
         This method will process all arguments and call the model building
         function with appropriate arguments.
 
-        Returns:
-            model : tensorflow.keras.Model
-                Instantiated and compiled keras Model.
+        Returns
+        -------
+        tensorflow.keras.Model
+            Instantiated and compiled keras Model.
         """
         # dynamically build model, i.e. final_build_fn builds a Keras model
 
@@ -343,34 +437,38 @@ class BaseWrapper(BaseEstimator):
 
         return model
 
-    def _fit_keras_model(self, X, y, sample_weight, warm_start, epochs, initial_epoch):
+    def _fit_keras_model(
+        self,
+        X: Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]],
+        y: Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]],
+        sample_weight: Union[np.ndarray, None],
+        warm_start,
+        epochs,
+        initial_epoch,
+    ):
         """Fits the Keras model.
 
-        This method will process all arguments and call the Keras
-        model's `fit` method with appropriate arguments.
+        Parameters
+        ----------
+        X : Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]]
+            Training samples, as accepted by tf.keras.Model
+        y : Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]]
+            Target data, as accepted by tf.keras.Model
+        sample_weight : Union[np.ndarray, None]
+            Sample weights. Ignored by Keras if None.
+        warm_start : bool
+            If True, don't don't overwrite
+            the history_ attribute and append to it instead.
+        epochs : int
+            Number of epochs for which the model will be trained.
+        initial_epoch : int
+            Epoch at which to begin training.
 
-        Arguments:
-            X : array-like, shape `(n_samples, n_features)`
-                Training samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
-            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
-                True labels for `X`.
-            sample_weight : array-like of shape (n_samples,)
-                Sample weights. The Keras Model must support this.
-            warm_start : bool
-                If ``warm_start`` is True, don't don't overwrite
-                the ``history_`` attribute and append to it instead.
-            epochs : int
-                Number of epochs for which the model will be trained.
-            initial_epoch : int
-                Epoch at which to begin training.
-        Returns:
-            self : object
-                a reference to the instance that can be chain called
-                (ex: instance.fit(X,y).transform(X) )
-        Raises:
-            ValueError : In case sample_weight != None and the Keras model's
-                        `fit` method does not support that parameter.
+        Returns
+        -------
+        BaseWrapper
+            A reference to the instance that can be chain called
+            (ex: instance.fit(X,y).transform(X) )
         """
         # Make sure model has a loss function
         loss = self.model_.loss
@@ -466,24 +564,27 @@ class BaseWrapper(BaseEstimator):
                     )
 
     def _validate_data(
-        self, X, y=None, reset: bool = False
+        self, X=None, y=None, reset: bool = False
     ) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
         """Validate input arrays and set or check their meta-parameters.
+
         Parameters
         ----------
-        X : {array-like, sparse matrix, dataframe} of shape \
-                (n_samples, n_features)
-            The input samples.
-        y : array-like of shape (n_samples,), default=None
-            The targets. If None, `check_array` is called on `X` and
-            `check_X_y` is called otherwise.
+        X : Union[array-like, sparse matrix, dataframe] of shape \
+           (n_samples, n_features)
+            The input samples. If None, ``check_array`` is called on y and
+            ``check_X_y`` is called otherwise.
+        y : Union[array-like, sparse matrix, dataframe] of shape \
+            (n_samples,), default=None
+            The targets. If None, ``check_array`` is called on X and
+            ``check_X_y`` is called otherwise.
         reset : bool, default=False
             If True, override all meta attributes.
             If False, verify that they haven't changed.
 
         Returns
         -------
-        out : Tuple[np.ndarray, Union[np.ndarray, None]]
+        Tuple[np.ndarray, Union[np.ndarray, None]]
             The validated input.
         """
 
@@ -497,7 +598,7 @@ class BaseWrapper(BaseEstimator):
                 # instead of float64 (sklearns default)
                 return tf.keras.backend.floatx()
 
-        if y is not None:
+        if X is not None and y is not None:
             X, y = check_X_y(
                 X,
                 y,
@@ -505,6 +606,8 @@ class BaseWrapper(BaseEstimator):
                 multi_output=True,  # allow y to be 2D
                 dtype=None,
             )
+
+        if y is not None:
             y = check_array(
                 y, ensure_2d=False, allow_nd=False, dtype=_check_array_dtype(y)
             )
@@ -517,45 +620,46 @@ class BaseWrapper(BaseEstimator):
             else:
                 if not np.can_cast(y_dtype_, self.y_dtype_):
                     raise ValueError(
-                        f"Got `y` with dtype {y_dtype_},"
+                        f"Got y with dtype {y_dtype_},"
                         f" but this {self.__name__} expected {self.y_dtype_}"
                         f" and casting from {y_dtype_} to {self.y_dtype_} is not safe!"
                     )
                 if self.y_ndim_ != y_ndim_:
                     raise ValueError(
-                        f"`y` has {y_ndim_} dimensions, but this {self.__name__}"
-                        f" is expecting {self.y_ndim_} dimensions in `y`."
+                        f"y has {y_ndim_} dimensions, but this {self.__name__}"
+                        f" is expecting {self.y_ndim_} dimensions in y."
                     )
-        X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
-        X_dtype_ = X.dtype
-        X_shape_ = X.shape
-        n_features_in_ = X.shape[1]
-        if reset:
-            self.X_dtype_ = X_dtype_
-            self.X_shape_ = X_shape_
-            self.n_features_in_ = n_features_in_
-        else:
-            if not np.can_cast(X_dtype_, self.X_dtype_):
-                raise ValueError(
-                    f"Got `X` with dtype {X_dtype_},"
-                    f" but this {self.__name__} expected {self.X_dtype_}"
-                    f" and casting from {X_dtype_} to {self.X_dtype_} is not safe!"
-                )
-            if len(X_shape_) != len(self.X_shape_):
-                raise ValueError(
-                    f"`X` has {len(X_shape_)} dimensions, but this {self.__name__}"
-                    f" is expecting {len(self.X_shape_)} dimensions in `X`."
-                )
-            # The following check is a backport from
-            # sklearn.base.BaseEstimator._check_n_features
-            # since this method is not available in sklearn <= 0.22.0
-            if n_features_in_ != self.n_features_in_:
-                raise ValueError(
-                    "X has {} features, but {} is expecting {} features "
-                    "as input.".format(
-                        n_features_in_, self.__class__.__name__, self.n_features_in_
+        if X is not None:
+            X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
+            X_dtype_ = X.dtype
+            X_shape_ = X.shape
+            n_features_in_ = X.shape[1]
+            if reset:
+                self.X_dtype_ = X_dtype_
+                self.X_shape_ = X_shape_
+                self.n_features_in_ = n_features_in_
+            else:
+                if not np.can_cast(X_dtype_, self.X_dtype_):
+                    raise ValueError(
+                        f"Got X with dtype {X_dtype_},"
+                        f" but this {self.__name__} expected {self.X_dtype_}"
+                        f" and casting from {X_dtype_} to {self.X_dtype_} is not safe!"
                     )
-                )
+                if len(X_shape_) != len(self.X_shape_):
+                    raise ValueError(
+                        f"X has {len(X_shape_)} dimensions, but this {self.__name__}"
+                        f" is expecting {len(self.X_shape_)} dimensions in X."
+                    )
+                # The following check is a backport from
+                # sklearn.base.BaseEstimator._check_n_features
+                # since this method is not available in sklearn <= 0.22.0
+                if n_features_in_ != self.n_features_in_:
+                    raise ValueError(
+                        "X has {} features, but {} is expecting {} features "
+                        "as input.".format(
+                            n_features_in_, self.__class__.__name__, self.n_features_in_
+                        )
+                    )
         return X, y
 
     def _type_of_target(self, y: np.ndarray) -> str:
@@ -563,10 +667,12 @@ class BaseWrapper(BaseEstimator):
 
     @property
     def target_encoder(self):
-        """Retrieve a transformer for targets / ``y``.
+        """Retrieve a transformer for targets / y.
 
-        Metadata will be collected from `get_metadata` if
+        Metadata will be collected from ``get_metadata`` if
         the transformer implements that method.
+        Override this method to implement a custom data transformer
+        for the target.
 
         Returns
         -------
@@ -578,36 +684,40 @@ class BaseWrapper(BaseEstimator):
 
     @property
     def feature_encoder(self):
-        """Retrieve a transformer for features / ``X``.
+        """Retrieve a transformer for features / X.
 
-        Metadata will be collected from `get_metadata` if
+        Metadata will be collected from ``get_metadata`` if
         the transformer implements that method.
+        Override this method to implement a custom data transformer
+        for the features.
 
         Returns
         -------
-        feature_encoder
+        sklearn transformer
             Transformer implementing the sklearn transformer
             interface.
         """
         return FunctionTransformer()
 
-    def fit(self, X, y, sample_weight=None):
-        """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
+    def fit(self, X, y, sample_weight=None) -> "BaseWrapper":
+        """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
 
-        Arguments:
-            X : array-like, shape `(n_samples, n_features)`
-                Training samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
-            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
-                True labels for `X`.
-            sample_weight : array-like of shape (n_samples,), default=None
-                Sample weights. The Keras Model must support this.
-        Returns:
-            self : object
-                a reference to the instance that can be chain called
-                (ex: instance.fit(X,y).transform(X) )
-        Raises:
-            ValueError : In case of invalid shape for `y` argument.
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe]of shape (n_samples, n_features)
+            Training samples, where n_samples is the number of samples
+            and n_features is the number of features.
+        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for X.
+        sample_weight : array-like of shape (n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
+
+        Returns
+        -------
+        BaseWrapper
+            A reference to the instance that can be chain called
+            (ex: instance.fit(X,y).transform(X) )
         """
         return self._fit(
             X=X,
@@ -619,7 +729,16 @@ class BaseWrapper(BaseEstimator):
         )
 
     @property
-    def initialized_(self):
+    def initialized_(self) -> bool:
+        """Checks if the estimator is intialized.
+
+        Returns
+        -------
+        bool
+            True if the estimator is initialized (i.e., it can
+            be used for inference or is ready to train),
+            otherwise False.
+        """
         return hasattr(self, "model_")
 
     def _initialize(
@@ -652,9 +771,7 @@ class BaseWrapper(BaseEstimator):
 
         return X, y
 
-    def initialize(
-        self, X: np.ndarray, y: Union[np.ndarray, None] = None
-    ) -> "BaseModel":
+    def initialize(self, X, y=None) -> "BaseWrapper":
         """Initialize the model without any fitting.
 
         You only need to call this model if you explicitly do not want to do any fitting
@@ -663,44 +780,49 @@ class BaseWrapper(BaseEstimator):
 
         Parameters
         ----------
-        X : array-like, shape `(n_samples, n_features)`
-                Training samples where `n_samples` is the number of samples
+        X : Union[array-like, sparse matrix, dataframe]of shape (n_samples, n_features)
+                Training samples where n_samples is the number of samples
                 and `n_features` is the number of features.
-        y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`, optional
-            True labels for `X`, by default None.
+        y : Union[array-like, sparse matrix, dataframe]of shape \
+            (n_samples,) or (n_samples, n_outputs), default None
+            True labels for X.
         
         Returns
         -------
-        BaseModel
-            A reference to the BaseModel instance for chained calling.
+        BaseWrapper
+            A reference to the BaseWrapper instance for chained calling.
         """
         self._initialize(X, y)
         return self  # to allow chained calls like initialize(...).predict(...)
 
-    def _fit(self, X, y, sample_weight, warm_start, epochs, initial_epoch):
-        """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
+    def _fit(
+        self, X, y, sample_weight, warm_start: bool, epochs: int, initial_epoch: int,
+    ) -> "BaseWrapper":
+        """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
 
-        Arguments:
-            X : array-like, shape `(n_samples, n_features)`
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe]of shape (n_samples, n_features)
                 Training samples where `n_samples` is the number of samples
                 and `n_features` is the number of features.
-            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
-                True labels for `X`.
-            sample_weight : array-like of shape (n_samples,), default=None
-                Sample weights. The Keras Model must support this.
-            warm_start : bool
-                If ``warm_start`` is True, don't rebuild the model.
-            epochs : int
-                Number of passes over the entire dataset for which to train the
-                model.
-            initial_epoch : int
-                Epoch at which to begin training.
-        Returns:
-            self : object
-                a reference to the instance that can be chain called
-                (ex: instance.fit(X,y).transform(X) )
-        Raises:
-            ValueError : In case of invalid shape for `y` argument.
+        y :Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for X.
+        sample_weight : array-like of shape (n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
+        warm_start : bool
+            If True, don't rebuild the model.
+        epochs : int
+            Number of passes over the entire dataset for which to train the
+            model.
+        initial_epoch : int
+            Epoch at which to begin training.
+
+        Returns
+        -------
+        BaseWrapper
+            A reference to the instance that can be chain called
+            (ex: instance.fit(X,y).transform(X) )
         """
         # Data checks
         if not ((self.warm_start or warm_start) and self.initialized_):
@@ -725,25 +847,27 @@ class BaseWrapper(BaseEstimator):
             initial_epoch=initial_epoch,
         )
 
-    def partial_fit(self, X, y, sample_weight=None):
-        """
-        Partially fit a model.
+    def partial_fit(self, X, y, sample_weight=None) -> "BaseWrapper":
+        """Fit the estimator for a single epoch, preserving the current
+        training history and model parameters.
 
-        Arguments:
-            X : array-like, shape `(n_samples, n_features)`
-                Training samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
-            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
-                True labels for `X`.
-            sample_weight : array-like of shape (n_samples,), default=None
-                Sample weights. The Keras Model must support this.
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+            Training samples where n_samples is the number of samples
+            and n_features is the number of features.
+        y : Union[array-like, sparse matrix, dataframe] of shape \
+            (n_samples,) or (n_samples, n_outputs)
+            True labels for X.
+        sample_weight : array-like of shape (n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
 
-        Returns:
-            self : object
-                a reference to the instance that can be chain called
-                (ex: instance.partial_fit(X, y).transform(X) )
-        Raises:
-            ValueError : In case of invalid shape for `y` argument.
+        Returns
+        -------
+        BaseWrapper
+            A reference to the instance that can be chain called
+            (ex: instance.partial_fit(X, y).transform(X) )
         """
         return self._fit(
             X,
@@ -757,14 +881,16 @@ class BaseWrapper(BaseEstimator):
     def predict(self, X):
         """Returns predictions for the given test data.
 
-        Arguments:
-            X: array-like, shape `(n_samples, n_features)`
-                Test samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+            Training samples where n_samples is the number of samples
+            and n_features is the number of features.
 
-        Returns:
-            y_pred: array-like, shape `(n_samples,)`
-                Predictions.
+        Returns
+        -------
+        array-like
+            Predictions, of shape shape (n_samples,) or (n_samples, n_outputs).
         """
         # check if fitted
         if not self.initialized_:
@@ -791,21 +917,51 @@ class BaseWrapper(BaseEstimator):
         y_pred = self.target_encoder_.inverse_transform(y_pred)
         return y_pred
 
-    def score(self, X, y, sample_weight=None):
-        """Returns the mean accuracy on the given test data and labels.
+    @staticmethod
+    def scorer(X, y, **kwargs) -> float:
+        """Scoring function for model.
 
-        Arguments:
-            X: array-like, shape `(n_samples, n_features)`
-                Test samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
-            y: array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
-                True labels for `X`.
-            sample_weight : array-like of shape (n_samples,), default=None
-                Sample weights. The Keras Model must support this.
+        This is not implemented in BaseWrapper, it exists
+        as a stub for documentation.
 
-        Returns:
-            score: float
-                Mean accuracy of predictions on `X` wrt. `y`.
+        Parameters
+        ----------
+        y_true : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            True labels.
+        y_pred : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            Predicted labels.
+        **kwargs: dict
+            Extra parameters passed to the scorer.
+
+        Returns
+        -------
+        float
+            Score for the test data set.
+        """
+        raise NotImplementedError("Scoring is not implemented on BaseWrapper.")
+
+    def score(self, X, y, sample_weight=None) -> float:
+        """Returns the score on the given test data and labels.
+
+        No default scoring function is implemented in BaseWrapper,
+        you must subclass and implement one.
+
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+            Test input samples, where n_samples is the number of samples
+            and n_features is the number of features.
+        y : Union[array-like, sparse matrix, dataframe] of shape \
+            (n_samples,) or (n_samples, n_outputs)
+            True labels for X.
+        sample_weight : array-like of shape (n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
+
+        Returns
+        -------
+        float
+            Score for the test data set.
         """
         # validate sample weights
         if sample_weight is not None:
@@ -814,7 +970,7 @@ class BaseWrapper(BaseEstimator):
             )
 
         # validate y
-        y = check_array(y, ensure_2d=False)
+        _, y = self._validate_data(X=None, y=y)
 
         # compute Keras model score
         y_pred = self.predict(X)
@@ -841,7 +997,23 @@ class BaseWrapper(BaseEstimator):
         }
 
     def set_params(self, **params) -> "BaseWrapper":
-        """Override BaseEstimator.set_params to allow setting of routed params.
+        """Set the parameters of this estimator.
+    
+        The method works on simple estimators as well as on nested objects
+        (such as pipelines). The latter have parameters of the form
+        ``<component>__<parameter>`` so that it's possible to update each
+        component of a nested object.
+        This also supports routed parameters, eg: ``classifier__optimizer__learning_rate``.
+
+        Parameters
+        ----------
+        **params : dict
+            Estimator parameters.
+    
+        Returns
+        -------
+        BaseWrapper
+            Estimator instance.
         """
         passthrough = dict()
         for param, value in params.items():
@@ -880,6 +1052,103 @@ class BaseWrapper(BaseEstimator):
 
 class KerasClassifier(BaseWrapper):
     """Implementation of the scikit-learn classifier API for Keras.
+
+    Below are a list of SciKeras specific parameters. For details on other parameters,
+    please see the see the
+    [tf.keras.Model documentation](https://www.tensorflow.org/api_docs/python/tf/keras/Model).
+
+    Parameters
+    ----------
+    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+        Used to build the Keras Model. When called,
+        must return a compiled instance of a Keras Model
+        to be used by `fit`, `predict`, etc.
+        If None, you must implement ``_keras_build_fn``.
+    optimizer : Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]], default "rmsprop"
+        This can be a string for Keras' built in optimizers,
+        an instance of tf.keras.optimizers.Optimizer
+        or a class inheriting from tf.keras.optimizers.Optimizer.
+        Only strings and classes support parameter routing.
+    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+        The loss function to use for training.
+        This can be a string for Keras' built in losses,
+        an instance of tf.keras.losses.Loss 
+        or a class inheriting from tf.keras.losses.Loss .
+        Only strings and classes support parameter routing.
+    random_state : Union[int, np.random.RandomState, None], default None
+        Set the Tensorflow random number generators to a
+        reproducible deterministic state using this seed.
+        Pass an int for reproducible results across multiple
+        function calls.
+    warm_start : bool, default False
+        If True, subsequent calls to fit will _not_ reset
+        the model parameters but *will* reset the epoch to zero.
+        If False, subsequent fit calls will reset the entire model.
+        This has no impact on partial_fit, which always trains
+        for a single epoch starting from the current epoch.
+    class_weight : Union[Dict[Any, float], str, None], default None
+        Weights associated with classes in the form ``{class_label: weight}``.
+        If not given, all classes are supposed to have weight one.
+        The "balanced" mode uses the values of y to automatically adjust
+        weights inversely proportional to class frequencies in the input data
+        as ``n_samples / (n_classes * np.bincount(y))``.
+        Note that these weights will be multiplied with sample_weight (passed
+        through the fit method) if sample_weight is specified.
+
+    Attributes
+    ----------
+    model_ : tf.keras.Model
+        The instantiated and compiled Keras Model. For pre-built models, this
+        will just be a reference to the passed Model instance.
+    history_ : Dict[str, List[Any]]
+        Dictionary of the format ``{metric_str_name: [epoch_0_data, epoch_1_data, ..., epoch_n_data]}``.
+    initialized_ : bool
+        True if this estimator has been initialized (i.e. predict can be called upon it).
+        Note that this does not guarantee that the model is "fitted": if ``BaseWrapper.initialize``
+        was called instead of fit the model wil likely have random weights.
+    target_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the target y.
+    feature_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the features/input X.
+    n_outputs_expected_ : int
+        The number of outputs the Keras Model is expected to have, as determined by ``target_transformer_``.
+    target_type_ : str
+        One of:
+
+        * 'continuous': y is an array-like of floats that are not all
+          integers, and is 1d or a column vector.
+        * 'continuous-multioutput': y is a 2d array of floats that are
+          not all integers, and both dimensions are of size > 1.
+        * 'binary': y contains <= 2 discrete values and is 1d or a column
+          vector.
+        * 'multiclass': y contains more than two discrete values, is not a
+          sequence of sequences, and is 1d or a column vector.
+        * 'multiclass-multioutput': y is a 2d array that contains more
+          than two discrete values, is not a sequence of sequences, and both
+          dimensions are of size > 1.
+        * 'multilabel-indicator': y is a label indicator matrix, an array
+          of two dimensions with at least two columns, and at most 2 unique
+          values.
+        * 'unknown': y is array-like but none of the above, such as a 3d
+          array, sequence of sequences, or an array of non-sequence objects.
+    y_shape_ : Tuple[int]
+        Shape of the target y that the estimator was fitted on.
+    y_dtype_ : np.dtype
+        Dtype of the target y that the estimator was fitted on.
+    X_shape_ : Tuple[int]
+        Shape of the input X that the estimator was fitted on.
+    X_dtype_ : np.dtype
+        Dtype of the input X that the estimator was fitted on.
+    n_features_in_ : int
+        The number of features seen during `fit`.
+    n_outputs_ : int
+        Dimensions of y that the transformer was trained on.
+    n_outputs_expected_ : int
+        Number of outputs the Keras Model is expected to have.
+    classes_ : Iterable
+        The classes seen during `fit`.
+    n_classes_ : int
+        The number of classes seen during `fit`.
     """
 
     _estimator_type = "classifier"
@@ -900,22 +1169,41 @@ class KerasClassifier(BaseWrapper):
 
     def __init__(
         self,
-        model=None,
+        model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
         *,
-        build_fn=None,  # for backwards compatibility
-        warm_start=False,
-        random_state=None,
-        optimizer="rmsprop",
-        loss=None,
-        metrics=None,
-        batch_size=None,
-        verbose=1,
-        callbacks=None,
-        validation_split=0.0,
-        shuffle=True,
-        run_eagerly=False,
-        epochs=1,
-        class_weight=None,
+        build_fn: Union[
+            None, Callable[..., tf.keras.Model], tf.keras.Model
+        ] = None,  # for backwards compatibility
+        warm_start: bool = False,
+        random_state: Union[int, np.random.RandomState, None] = None,
+        optimizer: Union[
+            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
+        ] = "rmsprop",
+        loss: Union[
+            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
+        ] = None,
+        metrics: Union[
+            List[
+                Union[
+                    str,
+                    tf.keras.metrics.Metric,
+                    Type[tf.keras.metrics.Metric],
+                    Callable,
+                ]
+            ],
+            None,
+        ] = None,
+        batch_size: Union[int, None] = None,
+        verbose: int = 1,
+        callbacks: Union[
+            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
+            None,
+        ] = None,
+        validation_split: float = 0.0,
+        shuffle: bool = True,
+        run_eagerly: bool = False,
+        epochs: int = 1,
+        class_weight: Union[Dict[Any, float], str, None] = None,
         **kwargs,
     ):
         super().__init__(
@@ -957,37 +1245,44 @@ class KerasClassifier(BaseWrapper):
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
-        """Accuracy score based on true and predicted target values.
+        """Scoring function for KerasClassifier.
+
+        KerasClassifier uses ``sklearn_accuracy_score`` by default.
+        To change this, override this method.
 
         Parameters
         ----------
-        y_true : array-like
+        y_true : array-like of shape (n_samples,) or (n_samples, n_outputs)
             True labels.
-        y_pred : array-like
+        y_pred : array-like of shape (n_samples,) or (n_samples, n_outputs)
             Predicted labels.
+        **kwargs: dict
+            Extra parameters passed to the scorer.
 
         Returns
         -------
-        score
-            float
+        float
+            Score for the test data set.
         """
         return sklearn_accuracy_score(y_true, y_pred, **kwargs)
 
     @property
     def target_encoder(self):
-        """Retrieve a transformer for targets / ``y``.
+        """Retrieve a transformer for targets / y.
 
         For ``KerasClassifier.predict_proba`` to
         work, this transformer must accept a ``return_proba``
         argument in ``inverse_transform`` with a default value
-        of ``False``.
+        of False.
 
-        Metadata will be collected from `get_metadata` if
+        Metadata will be collected from ``get_metadata`` if
         the transformer implements that method.
+        Override this method to implement a custom data transformer
+        for the target.
 
         Returns
         -------
-        target_encoder
+        sklearn-transformer
             Transformer implementing the sklearn transformer
             interface.
         """
@@ -995,21 +1290,24 @@ class KerasClassifier(BaseWrapper):
         return ClassifierLabelEncoder(loss=self.loss, categories=categories)
 
     def fit(self, X, y, sample_weight=None):
-        """Constructs a new model with `build_fn` & fit the model to `(X, y)`.
-        Arguments:
-            X : array-like, shape `(n_samples, n_features)`
-                Training samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
-            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
-                True labels for `X`.
-            sample_weight : array-like of shape (n_samples,), default=None
-                Sample weights. The Keras Model must support this.
-        Returns:
-            self : object
-                a reference to the instance that can be chain called
-                (ex: instance.fit(X,y).transform(X) )
-        Raises:
-            ValueError : In case of invalid shape for `y` argument.
+        """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
+
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+            Training samples, where n_samples is the number of samples
+            and n_features is the number of features.
+        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for X.
+        sample_weight : array-like of shape (n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
+
+        Returns
+        -------
+        BaseWrapper
+            A reference to the instance that can be chain called
+            (ex: instance.fit(X,y).transform(X) )
         """
         self.classes_ = None
         return self._fit(
@@ -1022,30 +1320,32 @@ class KerasClassifier(BaseWrapper):
         )
 
     def partial_fit(self, X, y, classes=None, sample_weight=None):
-        """
-        Partially fit a model.
+        """Fit classifier for a single epoch, preserving the current epoch
+        and all model parameters and state.
 
-        Arguments:
-            X : array-like, shape `(n_samples, n_features)`
-                Training samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
-            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
-                True labels for `X`.
-            classes: ndarray of shape (n_classes,), default=None
-                Classes across all calls to partial_fit. Can be obtained by via
-                np.unique(y_all), where y_all is the target vector of the entire dataset.
-                This argument is required for the first call to partial_fit and can be
-                omitted in the subsequent calls. Note that y doesn’t need to contain
-                all labels in classes.
-            sample_weight : array-like of shape (n_samples,), default=None
-                Sample weights. The Keras Model must support this.
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+            Training samples, where n_samples is the number of samples
+            and n_features is the number of features.
+        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for X.
+        classes: ndarray of shape (n_classes,), default=None
+            Classes across all calls to partial_fit. Can be obtained by via
+            np.unique(y_all), where y_all is the target vector of the entire dataset.
+            This argument is only needed for the first call to partial_fit and can be
+            omitted in the subsequent calls. Note that y doesn’t need to contain
+            all labels in classes. If you do not pass this argument, SciKeras
+            will use ``classes=np.all(y)`` with the y passed in the first call.
+        sample_weight : array-like of shape (n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
 
-        Returns:
-            self : object
-                a reference to the instance that can be chain called
-                (ex: instance.partial_fit(X, y).transform(X) )
-        Raises:
-            ValueError : In case of invalid shape for `y` argument.
+        Returns
+        -------
+        BaseWrapper
+            A reference to the instance that can be chain called
+            (ex: instance.fit(X,y).transform(X) )
         """
         self.classes_ = (
             classes if classes is not None else getattr(self, "classes_", None)
@@ -1055,18 +1355,20 @@ class KerasClassifier(BaseWrapper):
     def predict_proba(self, X):
         """Returns class probability estimates for the given test data.
 
-        Arguments:
-            X: array-like, shape `(n_samples, n_features)`
-                Test samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
-
-        Returns:
-            proba: array-like, shape `(n_samples, n_outputs)`
-                Class probability estimates.
-                In the case of binary classification,
-                to match the scikit-learn API,
-                will return an array of shape `(n_samples, 2)`
-                (instead of `(n_sample, 1)` as in Keras).
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+            Training samples, where n_samples is the number of samples
+            and n_features is the number of features.
+        
+        Returns
+        -------
+        array-like, shape (n_samples, n_outputs)
+            Class probability estimates.
+            In the case of binary classification,
+            to match the scikit-learn API,
+            SciKeras will return an array of shape (n_samples, 2)
+            (instead of `(n_sample, 1)` as in Keras).
         """
         # check if fitted
         if not self.initialized_:
@@ -1095,7 +1397,111 @@ class KerasClassifier(BaseWrapper):
 
 
 class KerasRegressor(BaseWrapper):
-    """Implementation of the scikit-learn regressor API for Keras.
+    """Implementation of the scikit-learn classifier API for Keras.
+
+    Below are a list of SciKeras specific parameters. For details on other parameters,
+    please see the see the
+    [tf.keras.Model documentation](https://www.tensorflow.org/api_docs/python/tf/keras/Model).
+
+    Parameters
+    ----------
+
+    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+        Used to build the Keras Model. When called,
+        must return a compiled instance of a Keras Model
+        to be used by `fit`, `predict`, etc.
+        If None, you must implement ``_keras_build_fn``.
+
+    optimizer : Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]], default "rmsprop"
+        This can be a string for Keras' built in optimizers,
+        an instance of tf.keras.optimizers.Optimizer
+        or a class inheriting from tf.keras.optimizers.Optimizer.
+        Only strings and classes support parameter routing.
+
+    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+        The loss function to use for training.
+        This can be a string for Keras' built in losses,
+        an instance of tf.keras.losses.Loss 
+        or a class inheriting from tf.keras.losses.Loss .
+        Only strings and classes support parameter routing.
+
+    random_state : Union[int, np.random.RandomState, None], default None
+        Set the Tensorflow random number generators to a
+        reproducible deterministic state using this seed.
+        Pass an int for reproducible results across multiple
+        function calls.
+
+    warm_start : bool, default False
+        If True, subsequent calls to fit will _not_ reset
+        the model parameters but *will* reset the epoch to zero.
+        If False, subsequent fit calls will reset the entire model.
+        This has no impact on partial_fit, which always trains
+        for a single epoch starting from the current epoch.
+
+    Attributes
+    ----------
+
+    model_ : tf.keras.Model
+        The instantiated and compiled Keras Model. For pre-built models, this
+        will just be a reference to the passed Model instance.
+
+    history_ : Dict[str, List[Any]]
+        Dictionary of the format ``{metric_str_name: [epoch_0_data, epoch_1_data, ..., epoch_n_data]}``.
+
+    initialized_ : bool
+        True if this estimator has been initialized (i.e. predict can be called upon it).
+        Note that this does not guarantee that the model is "fitted": if ``BaseWrapper.initialize``
+        was called instead of fit the model wil likely have random weights.
+
+    target_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the target y.
+
+    feature_encoder_ : sklearn-transformer
+        Transformer used to pre/post process the features/input X.
+
+    n_outputs_expected_ : int
+        The number of outputs the Keras Model is expected to have, as determined by ``target_transformer_``.
+
+    target_type_ : str
+        One of:
+
+        * 'continuous': y is an array-like of floats that are not all
+          integers, and is 1d or a column vector.
+        * 'continuous-multioutput': y is a 2d array of floats that are
+          not all integers, and both dimensions are of size > 1.
+        * 'binary': y contains <= 2 discrete values and is 1d or a column
+          vector.
+        * 'multiclass': y contains more than two discrete values, is not a
+          sequence of sequences, and is 1d or a column vector.
+        * 'multiclass-multioutput': y is a 2d array that contains more
+          than two discrete values, is not a sequence of sequences, and both
+          dimensions are of size > 1.
+        * 'multilabel-indicator': y is a label indicator matrix, an array
+          of two dimensions with at least two columns, and at most 2 unique
+          values.
+        * 'unknown': y is array-like but none of the above, such as a 3d
+          array, sequence of sequences, or an array of non-sequence objects.
+
+    y_shape_ : Tuple[int]
+        Shape of the target y that the estimator was fitted on.
+
+    y_dtype_ : np.dtype
+        Dtype of the target y that the estimator was fitted on.
+
+    X_shape_ : Tuple[int]
+        Shape of the input X that the estimator was fitted on.
+
+    X_dtype_ : np.dtype
+        Dtype of the input X that the estimator was fitted on.
+
+    n_features_in_ : int
+        The number of features seen during `fit`.
+
+    n_outputs_ : int
+        Dimensions of y that the transformer was trained on.
+
+    n_outputs_expected_ : int
+        Number of outputs the Keras Model is expected to have.
     """
 
     _estimator_type = "regressor"
@@ -1112,32 +1518,39 @@ class KerasRegressor(BaseWrapper):
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
-        """R^2 score based on true and predicted target values.
+        """Scoring function for KerasRegressor.
+
+        KerasRegressor uses ``sklearn_r2_score`` by default.
+        To change this, override this method.
 
         Parameters
         ----------
-        y_true : array-like
+        y_true : array-like of shape (n_samples,) or (n_samples, n_outputs)
             True labels.
-        y_pred : array-like
+        y_pred : array-like of shape (n_samples,) or (n_samples, n_outputs)
             Predicted labels.
+        **kwargs: dict
+            Extra parameters passed to the scorer.
 
         Returns
         -------
-        score
-            float
+        float
+            Score for the test data set.
         """
         return sklearn_r2_score(y_true, y_pred, **kwargs)
 
     @property
     def target_encoder(self):
-        """Retrieve a transformer for targets / ``y``.
+        """Retrieve a transformer for targets / y.
 
-        Metadata will be collected from `get_metadata` if
+        Metadata will be collected from ``get_metadata`` if
         the transformer implements that method.
+        Override this method to implement a custom data transformer
+        for the target.
 
         Returns
         -------
-        target_encoder
+        sklearn-transformer
             Transformer implementing the sklearn transformer
             interface.
         """
@@ -1149,8 +1562,12 @@ class KerasRegressor(BaseWrapper):
         """A simple Keras implementation of R^2 that can be used as a Keras
         loss function.
 
-        Since ScikitLearn's `score` uses R^2 by default, it is
-        advisable to use the same loss/metric when optimizing the model.
+        Parameters
+        ----------
+        y_true : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            True labels.
+        y_pred : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            Predicted labels.
         """
         # Ensure input dytpes match
         y_true = tf.cast(y_true, dtype=y_pred.dtype)

@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import Any, Dict, List, Union
 
 import numpy as np
 import tensorflow as tf
@@ -21,24 +21,58 @@ class TargetReshaper(BaseEstimator, TransformerMixin):
     Attributes
     ----------
     ndim_ : int
-        Dimensions of `y` that the transformer was trained on.
+        Dimensions of y that the transformer was trained on.
     """
 
-    def fit(self, y):
+    def fit(self, y: np.ndarray) -> "TargetReshaper":
+        """Fit the transformer to a target y.
+
+        Returns
+        -------
+        TargetReshaper
+            A reference to the current instance of TargetReshaper.
+        """
         self.ndim_ = y.ndim
         return self
 
     @staticmethod
-    def transform(y):
+    def transform(y: np.ndarray) -> np.ndarray:
+        """Makes 1D y 2D.
+
+        Parameters
+        ----------
+        y : np.ndarray
+            Target y to be transformed.
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array, of dimension at least 2.
+        """
         if y.ndim == 1:
             return y.reshape(-1, 1)
         return y
 
-    def inverse_transform(self, y):
+    def inverse_transform(self, y: np.ndarray) -> np.ndarray:
+        """Revert the transformation of transform.
+
+        Parameters
+        ----------
+        y : np.ndarray
+            Transformed numpy array.
+
+        Returns
+        -------
+        np.ndarray
+            If the transformer was fit to a 1D numpy array,
+            and a 2D numpy array with a singleton second dimension
+            is passed, it will be squeezed back to 1D. Otherwise, it
+            will eb left untouched.
+        """
         if not hasattr(self, "ndim_"):
             raise NotFittedError(
                 f"This {self.__class__.__name__} is not initialized."
-                " You must call `fit` before using `inverse_transform`."
+                " You must call ``fit`` before using ``inverse_transform``."
             )
         if self.ndim_ == 1 and y.ndim == 2:
             return np.squeeze(y, axis=1)
@@ -47,6 +81,28 @@ class TargetReshaper(BaseEstimator, TransformerMixin):
 
 class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
     """Default target transformer for KerasClassifier.
+
+    Parameters
+    ----------
+    loss : Union[None, str, Loss], default None
+        Keras Model's loss function. Used to automatically
+        one-hot encode the target if the loss function is
+        categorical crossentropy.
+    categories : Union[str, List[np.ndarray]], default "auto"
+        All of the categories present in the target for the entire
+        dataset. "auto" will infer the categories from the
+        data passed to fit.
+
+    Attributes
+    ----------
+    classes_ : Iterable
+        The classes seen during fit.
+    n_classes_ : int
+        The number of classes seen during fit.
+    n_outputs_ : int
+        Dimensions of y that the transformer was trained on.
+    n_outputs_expected_ : int
+        Number of outputs the Keras Model is expected to have.
     """
 
     def __init__(
@@ -68,6 +124,22 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         return target_type
 
     def fit(self, y: np.ndarray) -> "ClassifierLabelEncoder":
+        """Fit the estimator to the target y.
+
+        For all targets, this transforms classes into ordinal numbers.
+        If the loss function is categorical_crossentropy, the target
+        will be one-hot encoded.
+
+        Parameters
+        ----------
+        y : np.ndarray
+            The target data to be transformed.
+
+        Returns
+        -------
+        ClassifierLabelEncoder
+            A reference to the current instance of ClassifierLabelEncoder.
+        """
         target_type = self._type_of_target(y)
         keras_dtype = np.dtype(tf.keras.backend.floatx())
         encoders = {
@@ -93,7 +165,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             raise ValueError(
                 f"Unknown label type: {target_type}."
                 "\n\nTo implement support, subclass KerasClassifier and override"
-                " `target_transformer` with a transformer that supports this"
+                " ``target_encoder`` with a transformer that supports this"
                 " label type."
                 "\n\nFor information on sklearn target types, see:"
                 " * https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html"
@@ -128,6 +200,17 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, y: np.ndarray) -> np.ndarray:
+        """Transform the target y to the format expected by the Keras Model.
+
+        If the loss function is categorical_crossentropy, the target
+        will be one-hot encoded.
+        For other types of target, this transforms classes into ordinal numbers.
+
+        Returns
+        -------
+        np.ndarray
+            Transformed target.
+        """
         # no need to validate n_outputs_ or n_outputs_expected_, those are hardcoded
         # self.classes_ and self.n_classes_ are validated by the transformers themselves
         return self._final_encoder.transform(y)
@@ -135,6 +218,23 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
     def inverse_transform(
         self, y: np.ndarray, return_proba: bool = False
     ) -> np.ndarray:
+        """Restore the data types, shape and classes of the input y
+        to the output of the Keras Model.
+
+        Parameters
+        ----------
+        y : np.ndarray
+            Raw probability predictions from the Keras Model.
+        return_proba : bool, default False
+            If True, return the prediction probabilites themselves.
+            If False, return the class predictions.
+
+        Returns
+        -------
+        np.ndarray
+            Class predictions (of the same shape as the y to fit/transform), \
+            or class prediction probabilities.
+        """
         if self._target_type == "binary":
             # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
             if y.ndim == 1 or (y.shape[1] == 1 and self.n_classes_ == 2):
@@ -167,7 +267,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                     f"Class-predictions are not clearly defined for"
                     " 'multiclass-multioutput' target types."
                     "\n\nTo implement support, subclass KerasClassifier and override"
-                    " `target_transformer` with a transformer that supports this"
+                    " ``target_encoder`` with a transformer that supports this"
                     " label type."
                     "\n\nFor information on sklearn target types, see:"
                     " * https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html"
@@ -182,7 +282,19 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             self._y_dtype, copy=False
         )
 
-    def get_metadata(self):
+    def get_metadata(self) -> Dict[str, Any]:
+        """Returns a dictionary of meta-parameters generated when this transfromer
+        was fitted.
+
+        Used by SciKeras to bind these parameters to the SciKeras estimator itself
+        and make them available as inputs to the Keras model.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of meta-parameters generated when this transfromer
+            was fitted.
+        """
         return {
             "classes_": self.classes_,
             "n_classes_": self.n_classes_,
@@ -193,31 +305,84 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
 
 class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
     """Default target transformer for KerasRegressor.
+
+    Attributes
+    ----------
+    n_outputs_ : int
+        Dimensions of y that the transformer was trained on.
+    n_outputs_expected_ : int
+        Number of outputs the Keras Model is expected to have.
     """
 
     def fit(self, y: np.ndarray) -> "RegressorTargetEncoder":
+        """Fit the transformer to the target y.
+
+        For RegressorTargetEncoder, this just records the dimensions
+        of y as the expected number of outputs and saves the dytpe.
+
+        Returns
+        -------
+        RegressorTargetEncoder
+            A reference to the current instance of RegressorTargetEncoder.
+        """
         self._y_dtype = y.dtype
         self.n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         self.n_outputs_expected_ = 1
         return self
 
     def transform(self, y: np.ndarray) -> np.ndarray:
+        """Transform the target y to the format expected by the Keras Model.
+
+        For RegressorTargetEncoder, this simply checks that the shape passed to
+        fit matches the shape passed to transform.
+
+        Returns
+        -------
+        np.ndarray
+            Untouched input y.
+        """
         n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         if n_outputs_ != self.n_outputs_:
             raise ValueError(
-                f"Detected `y` to have {n_outputs_} outputs"
-                f" with `y.shape = {y.shape}",
+                f"Detected ``y`` to have {n_outputs_} outputs"
+                f" with ``y.shape = {y.shape}``",
                 f" but this {self.__class__.__name__} has"
                 f" {self.n_outputs_} outputs.",
             )
         return y
 
     def inverse_transform(self, y: np.ndarray) -> np.ndarray:
+        """Restore the data types and shape of the input y
+        to the output of the Keras Model.
+
+        Parameters
+        ----------
+        y : np.ndarray
+            Raw predictions from the Keras Model.
+    
+        Returns
+        -------
+        np.ndarray
+            Keras Model predictions cast to the dtype and shape of the input
+            targets.
+        """
         if self._y_dtype == np.float64 and y.dtype == np.float32:
             return np.squeeze(y.astype(np.float64, copy=False))
         return np.squeeze(y)
 
     def get_metadata(self):
+        """Returns a dictionary of meta-parameters generated when this transfromer
+        was fitted.
+
+        Used by SciKeras to bind these parameters to the SciKeras estimator itself
+        and make them available as inputs to the Keras model.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary of meta-parameters generated when this transfromer
+            was fitted.
+        """
         return {
             "n_outputs_": self.n_outputs_,
             "n_outputs_expected_": self.n_outputs_expected_,
