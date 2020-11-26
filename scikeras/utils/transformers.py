@@ -93,7 +93,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             raise ValueError(
                 f"Unknown label type: {target_type}."
                 "\n\nTo implement support, subclass KerasClassifier and override"
-                " `target_transformer` with a transformer that supports this"
+                " `target_encoder` with a transformer that supports this"
                 " label type."
                 "\n\nFor information on sklearn target types, see:"
                 " * https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html"
@@ -167,7 +167,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                     f"Class-predictions are not clearly defined for"
                     " 'multiclass-multioutput' target types."
                     "\n\nTo implement support, subclass KerasClassifier and override"
-                    " `target_transformer` with a transformer that supports this"
+                    " `target_encoder` with a transformer that supports this"
                     " label type."
                     "\n\nFor information on sklearn target types, see:"
                     " * https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html"

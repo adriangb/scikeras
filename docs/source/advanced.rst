@@ -63,9 +63,9 @@ remain uninstantiated. This is to make sure that the arguments you
 pass are not touched afterwards, which makes it possible to clone the
 wrapper instance, for example in a :py:class:`~sklearn.model_selection.GridSearchCV`.
 
-Only when the :py:func:`~scikeras.wrappers.KerasClassifier.fit` or
-:py:func:`~scikeras.wrappers.KerasRegressor.fit` method are called, are the
-different attributes of the wrapper, such as the ``model``, initialized.
+Only when the :py:func:`~scikeras.wrappers.BaseWrapper.fit` or
+:py:func:`~scikeras.wrappers.BaseWrapper.initialize` methods are called, are the
+different attributes of the wrapper, such as ``model_``, initialized.
 An initialized attribute's name always ends on an underscore; e.g., the
 initialized ``model`` is called ``model_``. (This is the same
 nomenclature as sklearn uses.) Therefore, you always know which
@@ -194,8 +194,8 @@ one for ``X`` (features) and one for ``y`` (target).
 By implementing a custom transformer, you can split a single input ``X`` into multiple inputs
 for :py:class:`tensorflow.keras.Model` or perform any other manipulation you need.
 To override the default transformers, simply override
-:py:func:`scikeras.wrappers.BaseWrappers.target_transformer` or
-:py:func:`scikeras.wrappers.BaseWrappers.function_transformer` for ``y`` and ``X`` respectively.
+:py:func:`scikeras.wrappers.BaseWrappers.target_encoder` or
+:py:func:`scikeras.wrappers.BaseWrappers.feature_encoder` for ``y`` and ``X`` respectively.
 
 SciKeras uses :py:func:`sklearn.utils.multiclass.type_of_target` to categorize the target
 type, and implements basic handling of the following cases out of the box:
