@@ -15,6 +15,7 @@ SciKeras attempts to resolve these issues by providing maintained, documented wr
 entire Scikit-Learn and Keras ecosystems. Some advantages over the TF wrappers are:
 
 * Full compatibility with the Scikit-Learn API, including grid searches, ensembles, transformers, etc.
+* Support for Keras Functional and Subclassed Models.
 * Support for pre-trained models.
 * Support for dynamically set Keras parameters depending on inputs (e.g. input shape).
 * Support for hyperparameter tuning of optimizers and losses.
@@ -31,6 +32,53 @@ pip install scikeras
 ```
 
 The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.2.0`.
+
+## Transitioning from `tf.keras.wrappers.scikit_learn`
+
+SciKeras is largely backwards compatible with the existing wrappers. For most cases, you can just change your import statement from:
+
+```python
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor  # from
+from scikeras.wrappers import KerasClassifier, KerasRegressor  # to
+```
+
+SciKeras does however have some backward incompatible changes:
+
+### Automatic one-hot encoding of targets for categorical crossentropy losses
+
+SciKeras will not longer implicitly inspect your Model's loss function to determine if
+it needs to one-hot encode your target to match the loss function. Instead, you must explicitly
+pass your loss function to the constructor:
+
+```python
+clf = KerasClassifier(loss="categorical_crossentropy")
+```
+
+### Removal of `**kwargs` from fit and predict
+
+In a future release of SciKeras, `**kwargs` will be removed from fit and predict. To future
+proof your code, you should instead declare these parameters in your constructor:
+
+```python
+clf = KerasClassifier(batch_size=32)
+```
+
+Or to declare separate values for `fit` and `predict`:
+
+```python
+clf = KerasClassifier(fit__batch_size=32, predict__batch_size=32)
+```
+
+### Renaming of `build_fn` to `model`
+
+SciKeras renamed the constructor argument `build_fn` to `model`. In a future release,
+passing `build_fn` as a _keyword_ argument will raise a `TypeError`. Passing it as a positional
+argument remains unchanged. You can make the following change to future proof your code:
+
+```python
+clf = KerasClassifier(build_fn=...)  # from
+clf = KerasClassifier(model=...)  # to
+```
 
 ## Documentation
 

@@ -699,7 +699,7 @@ class BaseWrapper(BaseEstimator):
         """
         return FunctionTransformer()
 
-    def fit(self, X, y, sample_weight=None) -> "BaseWrapper":
+    def fit(self, X, y, sample_weight=None, **kwargs) -> "BaseWrapper":
         """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
 
         Parameters
@@ -712,6 +712,11 @@ class BaseWrapper(BaseEstimator):
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.fit``.
+            This paremeter will be removed in a future release of SciKeras,
+            instead set fit arguments at initialization
+            (e.g., ``BaseWrapper(epochs=10, ...)``)
 
         Returns
         -------
@@ -719,6 +724,18 @@ class BaseWrapper(BaseEstimator):
             A reference to the instance that can be chain called
             (ex: instance.fit(X,y).transform(X) )
         """
+        for k, v in kwargs.items():
+            warnings.warn(
+                "``kwargs`` will be removed in a future release of SciKeras."
+                f"Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
+            )
+        self.set_params(
+            **{
+                (k if k.startswith("fit__") else "fit__" + k): v
+                for k, v in kwargs.items()
+            }
+        )
+
         return self._fit(
             X=X,
             y=y,
@@ -878,7 +895,7 @@ class BaseWrapper(BaseEstimator):
             initial_epoch=self.current_epoch,
         )
 
-    def predict(self, X):
+    def predict(self, X, **kwargs):
         """Returns predictions for the given test data.
 
         Parameters
@@ -886,18 +903,34 @@ class BaseWrapper(BaseEstimator):
         X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
             Training samples where n_samples is the number of samples
             and n_features is the number of features.
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.predict``.
+            This paremeter will be removed in a future release of SciKeras,
+            instead set fit arguments at initialization
+            (e.g., ``BaseWrapper(batch_size=10, ...)``)
 
         Returns
         -------
         array-like
             Predictions, of shape shape (n_samples,) or (n_samples, n_outputs).
         """
+        for k, v in kwargs.items():
+            warnings.warn(
+                "``kwargs`` will be removed in a future release of SciKeras."
+                f"Instead, set predict arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
+            )
+        self.set_params(
+            **{
+                (k if k.startswith("predict__") else "predict__" + k): v
+                for k, v in kwargs.items()
+            }
+        )
+
         # check if fitted
         if not self.initialized_:
             raise NotFittedError(
                 "Estimator needs to be fit before `predict` " "can be called"
             )
-
         # basic input checks
         X, _ = self._validate_data(X=X, y=None)
 
@@ -1289,7 +1322,7 @@ class KerasClassifier(BaseWrapper):
         categories = "auto" if self.classes_ is None else [self.classes_]
         return ClassifierLabelEncoder(loss=self.loss, categories=categories)
 
-    def fit(self, X, y, sample_weight=None):
+    def fit(self, X, y, sample_weight=None, **kwargs):
         """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
 
         Parameters
@@ -1302,6 +1335,11 @@ class KerasClassifier(BaseWrapper):
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.fit``.
+            This paremeter will be removed in a future release of SciKeras,
+            instead set fit arguments at initialization
+            (e.g., ``BaseWrapper(epochs=10, ...)``)
 
         Returns
         -------
@@ -1309,7 +1347,20 @@ class KerasClassifier(BaseWrapper):
             A reference to the instance that can be chain called
             (ex: instance.fit(X,y).transform(X) )
         """
+        for k, v in kwargs.items():
+            warnings.warn(
+                "``kwargs`` will be removed in a future release of SciKeras."
+                f"Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
+            )
+        self.set_params(
+            **{
+                (k if k.startswith("fit__") else "fit__" + k): v
+                for k, v in kwargs.items()
+            }
+        )
+
         self.classes_ = None
+
         return self._fit(
             X=X,
             y=y,
@@ -1352,7 +1403,7 @@ class KerasClassifier(BaseWrapper):
         )
         return super().partial_fit(X, y, sample_weight=sample_weight)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X, **kwargs):
         """Returns class probability estimates for the given test data.
 
         Parameters
@@ -1360,6 +1411,11 @@ class KerasClassifier(BaseWrapper):
         X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
             Training samples, where n_samples is the number of samples
             and n_features is the number of features.
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.predict``.
+            This paremeter will be removed in a future release of SciKeras,
+            instead set fit arguments at initialization
+            (e.g., ``BaseWrapper(batch_size=10, ...)``)
         
         Returns
         -------
@@ -1370,6 +1426,18 @@ class KerasClassifier(BaseWrapper):
             SciKeras will return an array of shape (n_samples, 2)
             (instead of `(n_sample, 1)` as in Keras).
         """
+        for k, v in kwargs.items():
+            warnings.warn(
+                "``kwargs`` will be removed in a future release of SciKeras."
+                f"Instead, set predict_proba arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
+            )
+        self.set_params(
+            **{
+                (k if k.startswith("predict__") else "predict__" + k): v
+                for k, v in kwargs.items()
+            }
+        )
+
         # check if fitted
         if not self.initialized_:
             raise NotFittedError(
