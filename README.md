@@ -6,16 +6,18 @@
 
 Scikit-Learn compatible wrappers for Keras Models.
 
-## Why SciKeras?
+## Why SciKeras
 
-SciKeras is derived from and API compatible with `tf.keras.wrappers.scikit_learn`. The original TensorFlow (TF) wrappers are not actively mantained, and [may be deprecated](https://github.com/tensorflow/tensorflow/pull/37201#pullrequestreview-391650001) at some point. In addition, they have many incompatibilities with both the Keras ecosystem and the Scikit-Learn ecosystem. SciKeras attempts to resolve these issues by providing mantained, documented wrappers that are fully compatible with the entire Scikit-Learn and Keras ecosystems. Some advantages over the TF wrappers are:
+SciKeras is derived from and API compatible with `tf.keras.wrappers.scikit_learn`. The original TensorFlow (TF) wrappers are not actively mantained,
+and [may be deprecated](https://github.com/tensorflow/tensorflow/pull/37201#pullrequestreview-391650001) at some point.
+In addition, they have many incompatibilities with both the Keras ecosystem and the Scikit-Learn ecosystem.
+SciKeras attempts to resolve these issues by providing maintained, documented wrappers that are fully compatible with the
+entire Scikit-Learn and Keras ecosystems. Some advantages over the TF wrappers are:
 
-* SciKeras is actively maintained.
-* Detailed [documentation](https://scikeras.readthedocs.io/en/latest/index.html).
 * Full compatibility with the Scikit-Learn API, including grid searches, ensembles, transformers, etc.
 * Support for pre-trained models.
-* Support for dynamic input/output sizes.
-* Support for hyperparameter tuning for estimators and losses.
+* Support for dynamically set Keras parameters depending on inputs (e.g. input shape).
+* Support for hyperparameter tuning of optimizers and losses.
 * Support for multi-input and multi-ouput Keras models.
 * Functional `random_state` for reproducible training.
 * Many more that you will discover as you use SciKeras!
@@ -28,7 +30,7 @@ This package is available on PyPi:
 pip install scikeras
 ```
 
-The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.1.0`.
+The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.2.0`.
 
 ## Documentation
 
