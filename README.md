@@ -80,6 +80,26 @@ clf = KerasClassifier(build_fn=...)  # from
 clf = KerasClassifier(model=...)  # to
 ```
 
+### Default arguments in `build_fn`/`model`
+
+SciKeras will no longer introspect your callable `model` for _user defined_ parameters. You
+must now "declare" them as keyword arguments to the constructor if you want them to be
+tunable parameters (i.e. settable via `set_params`):
+
+```python
+# From this:
+def get_model(my_param=123):
+    ...
+clf = KerasClassifier(get_model)
+# To this:
+def get_model(my_param=123):  # Note: you can remove the default here to avoid duplication
+    ...
+clf = KerasClassifier(get_model, my_param=123)
+```
+
+That said, if you do not need them to work with `set_params` (which is only really
+necessary if you are doing hyperparameter tuning), you do not need to make any changes.
+
 ## Documentation
 
 Documentation is available on [ReadTheDocs](https://scikeras.readthedocs.io/en/latest/).
