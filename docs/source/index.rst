@@ -37,10 +37,10 @@ Transitioning from ``tf.keras.wrappers.scikit_learn``
 
 SciKeras is largely backwards compatible with the existing wrappers. For most cases, you can just change your import statement from:
 
-.. code:: python
+.. code:: diff
 
-   from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor  # from
-   from scikeras.wrappers import KerasClassifier, KerasRegressor  # to
+   - from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+   + from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 
 SciKeras does however have some backward incompatible changes:
@@ -54,7 +54,7 @@ pass your loss function to the constructor:
 
 .. code:: python
 
-   clf = KerasClassifier(loss="categorical_crossentropy")
+   clf = KerasClassifier(loss="categorical_crossentropy")  # or loss=CategoricalCrossentropy(), etc.
 
 Removal of ``**kwargs`` from fit and predict
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -62,15 +62,18 @@ Removal of ``**kwargs`` from fit and predict
 In a future release of SciKeras, ``**kwargs`` will be removed from fit and predict. To future
 proof your code, you should instead declare these parameters in your constructor:
 
-.. code:: python
+.. code:: diff
 
-   clf = KerasClassifier(batch_size=32)
+   - clf = KerasClassifier(...)
+   + clf = KerasClassifier(..., batch_size=32)
+   - clf.fit(..., batch_size=32)
+   + clf.fit(...)
 
 Or to declare separate values for ``fit`` and ``predict``:
 
 .. code:: python
 
-   clf = KerasClassifier(fit__batch_size=32, predict__batch_size=32)
+   clf = KerasClassifier(fit__batch_size=32, predict__batch_size=10000)
 
 Renaming of ``build_fn`` to ``model``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -79,10 +82,10 @@ SciKeras renamed the constructor argument ``build_fn`` to ``model``. In a future
 passing ``build_fn`` as a _keyword_ argument will raise a ``TypeError``. Passing it as a positional
 argument remains unchanged. You can make the following change to future proof your code:
 
-.. code:: python
+.. code:: diff
 
-   clf = KerasClassifier(build_fn=...)  # from
-   clf = KerasClassifier(model=...)  # to
+   - clf = KerasClassifier(build_fn=...)
+   + clf = KerasClassifier(model=...)
 
 Default arguments in build_fn/model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -92,15 +95,13 @@ SciKeras will no longer introspect your callable `model` for *user defined* para
 You must now "declare" them as keyword arguments to the constructor if you want them to be
 tunable parameters (i.e. settable via ``set_params``):
 
-.. code:: python
-   # From this:
-   def get_model(my_param=123):
+.. code:: diff
+
+   - def get_model(my_param=123):
+   + def get_model(my_param):  # You can optionally remove the default here
       ...
-   clf = KerasClassifier(get_model)
-   # To this:
-   def get_model(my_param=123):  # Note: you can remove the default here to avoid duplication
-      ...
-   clf = KerasClassifier(get_model, my_param=123)
+   - clf = KerasClassifier(get_model)
+   + clf = KerasClassifier(get_model, my_param=123)
 
 That said, if you do not need them to work with ``set_params`` (which is only really
 necessary if you are doing hyperparameter tuning), you do not need to make any changes.
