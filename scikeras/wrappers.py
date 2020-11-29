@@ -526,8 +526,6 @@ class BaseWrapper(BaseEstimator):
                     raise e
             self.history_[key] += val
 
-        return self
-
     def _check_model_compatibility(self, y: np.ndarray) -> None:
         """Checks that the model output number and y shape match.
 
@@ -729,14 +727,13 @@ class BaseWrapper(BaseEstimator):
                 "``kwargs`` will be removed in a future release of SciKeras."
                 f"Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
             )
-        self.set_params(
-            **{
-                (k if k.startswith("fit__") else "fit__" + k): v
-                for k, v in kwargs.items()
-            }
-        )
+        kwargs = {
+            (k if k.startswith("fit__") else "fit__" + k): v for k, v in kwargs.items()
+        }
+        existing_kwargs = {k: v for k, v in self.get_params().items() if k in kwargs}
+        self.set_params(**kwargs)
 
-        return self._fit(
+        self._fit(
             X=X,
             y=y,
             sample_weight=sample_weight,
@@ -744,6 +741,13 @@ class BaseWrapper(BaseEstimator):
             epochs=self.epochs,
             initial_epoch=0,
         )
+
+        # restore original values for params overwritten by **kwargs
+        self.set_params(**existing_kwargs)
+        for k in kwargs.keys() - existing_kwargs.keys():
+            delattr(self, k)
+
+        return self
 
     @property
     def initialized_(self) -> bool:
@@ -814,7 +818,7 @@ class BaseWrapper(BaseEstimator):
 
     def _fit(
         self, X, y, sample_weight, warm_start: bool, epochs: int, initial_epoch: int,
-    ) -> "BaseWrapper":
+    ) -> None:
         """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
 
         Parameters
@@ -834,12 +838,6 @@ class BaseWrapper(BaseEstimator):
             model.
         initial_epoch : int
             Epoch at which to begin training.
-
-        Returns
-        -------
-        BaseWrapper
-            A reference to the instance that can be chain called
-            (ex: instance.fit(X,y).transform(X) )
         """
         # Data checks
         if not ((self.warm_start or warm_start) and self.initialized_):
@@ -855,7 +853,7 @@ class BaseWrapper(BaseEstimator):
 
         self._check_model_compatibility(y)
 
-        return self._fit_keras_model(
+        self._fit_keras_model(
             X,
             y,
             sample_weight=sample_weight,
@@ -886,7 +884,7 @@ class BaseWrapper(BaseEstimator):
             A reference to the instance that can be chain called
             (ex: instance.partial_fit(X, y).transform(X) )
         """
-        return self._fit(
+        self._fit(
             X,
             y,
             sample_weight=sample_weight,
@@ -894,6 +892,7 @@ class BaseWrapper(BaseEstimator):
             epochs=1,
             initial_epoch=self.current_epoch,
         )
+        return self
 
     def predict(self, X, **kwargs):
         """Returns predictions for the given test data.
@@ -919,12 +918,12 @@ class BaseWrapper(BaseEstimator):
                 "``kwargs`` will be removed in a future release of SciKeras."
                 f"Instead, set predict arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
             )
-        self.set_params(
-            **{
-                (k if k.startswith("predict__") else "predict__" + k): v
-                for k, v in kwargs.items()
-            }
-        )
+        kwargs = {
+            (k if k.startswith("predict__") else "predict__" + k): v
+            for k, v in kwargs.items()
+        }
+        existing_kwargs = {k: v for k, v in self.get_params().items() if k in kwargs}
+        self.set_params(**kwargs)
 
         # check if fitted
         if not self.initialized_:
@@ -948,6 +947,12 @@ class BaseWrapper(BaseEstimator):
 
         # post process y
         y_pred = self.target_encoder_.inverse_transform(y_pred)
+
+        # restore original values for params overwritten by **kwargs
+        self.set_params(**existing_kwargs)
+        for k in kwargs.keys() - existing_kwargs.keys():
+            delattr(self, k)
+
         return y_pred
 
     @staticmethod
@@ -1322,53 +1327,13 @@ class KerasClassifier(BaseWrapper):
         categories = "auto" if self.classes_ is None else [self.classes_]
         return ClassifierLabelEncoder(loss=self.loss, categories=categories)
 
-    def fit(self, X, y, sample_weight=None, **kwargs):
-        """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
-
-        Parameters
-        ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
-            Training samples, where n_samples is the number of samples
-            and n_features is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
-            True labels for X.
-        sample_weight : array-like of shape (n_samples,), default=None
-            Array of weights that are assigned to individual samples.
-            If not provided, then each sample is given unit weight.
-        **kwargs : Dict[str, Any]
-            Extra arguments to route to ``Model.fit``.
-            This paremeter will be removed in a future release of SciKeras,
-            instead set fit arguments at initialization
-            (e.g., ``BaseWrapper(epochs=10, ...)``)
-
-        Returns
-        -------
-        BaseWrapper
-            A reference to the instance that can be chain called
-            (ex: instance.fit(X,y).transform(X) )
-        """
-        for k, v in kwargs.items():
-            warnings.warn(
-                "``kwargs`` will be removed in a future release of SciKeras."
-                f"Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
-            )
-        self.set_params(
-            **{
-                (k if k.startswith("fit__") else "fit__" + k): v
-                for k, v in kwargs.items()
-            }
-        )
-
-        self.classes_ = None
-
-        return self._fit(
-            X=X,
-            y=y,
-            sample_weight=sample_weight,
-            warm_start=self.warm_start,
-            epochs=self.epochs,
-            initial_epoch=0,
-        )
+    def _initialize(
+        self, X: np.ndarray, y: Union[np.ndarray, None] = None
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        # preserve classes_ if if was set by partial_fit, otherwise
+        # set it to None
+        self.classes_ = getattr(self, "classes_", None)
+        return super()._initialize(X=X, y=y)
 
     def partial_fit(self, X, y, classes=None, sample_weight=None):
         """Fit classifier for a single epoch, preserving the current epoch
@@ -1401,7 +1366,8 @@ class KerasClassifier(BaseWrapper):
         self.classes_ = (
             classes if classes is not None else getattr(self, "classes_", None)
         )
-        return super().partial_fit(X, y, sample_weight=sample_weight)
+        super().partial_fit(X, y, sample_weight=sample_weight)
+        return self
 
     def predict_proba(self, X, **kwargs):
         """Returns class probability estimates for the given test data.
@@ -1431,12 +1397,12 @@ class KerasClassifier(BaseWrapper):
                 "``kwargs`` will be removed in a future release of SciKeras."
                 f"Instead, set predict_proba arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
             )
-        self.set_params(
-            **{
-                (k if k.startswith("predict__") else "predict__" + k): v
-                for k, v in kwargs.items()
-            }
-        )
+        kwargs = {
+            (k if k.startswith("predict__") else "predict__" + k): v
+            for k, v in kwargs.items()
+        }
+        existing_kwargs = {k: v for k, v in self.get_params().items() if k in kwargs}
+        self.set_params(**kwargs)
 
         # check if fitted
         if not self.initialized_:
@@ -1460,6 +1426,11 @@ class KerasClassifier(BaseWrapper):
 
         # post process y
         y = self.target_encoder_.inverse_transform(outputs, return_proba=True)
+
+        # restore original values for params overwritten by **kwargs
+        self.set_params(**existing_kwargs)
+        for k in kwargs.keys() - existing_kwargs.keys():
+            delattr(self, k)
 
         return y
 
