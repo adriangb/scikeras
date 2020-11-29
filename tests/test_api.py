@@ -784,9 +784,9 @@ class TestInitialize:
         # Fit the model
         m1.fit(X, y)
         # Save Keras prediction
-        y_pred_keras = m1.predict(X).reshape(
-            -1,
-        )  # Keras outputs 2D despite input being 1D
+        y_pred_keras = m1.predict(X)
+        # Keras outputs 2D despite input being 1D; reshape to match input
+        y_pred_keras = y_pred_keras.reshape(-1,)
         # Extract the weights into a copy of the model
         weights = m1.get_weights()
         m2 = keras.models.clone_model(m1)
