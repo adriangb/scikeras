@@ -222,12 +222,11 @@ class TestMetricsParam:
 def test_class_weight_param():
     """Backport of sklearn.utils.estimator_checks.check_class_weight_classifiers
     for sklearn <= 0.23.0.
+
+    Tests that fit and partial_fit correctly handle the class_weight parameter.
     """
     clf = KerasClassifier(
-        model=dynamic_classifier,
-        model__hidden_layer_sizes=(100,),
-        epochs=50,
-        random_state=0,
+        model=dynamic_classifier, model__hidden_layer_sizes=(100,), random_state=0,
     )
     problems = (2, 3)
     for n_centers in problems:
@@ -241,11 +240,23 @@ def test_class_weight_param():
 
         if n_centers == 2:
             class_weight = {0: 1000, 1: 0.0001}
+            fit_epochs = 4
+            partial_fit_epochs = 3
         else:
             class_weight = {0: 1000, 1: 0.0001, 2: 0.0001}
+            fit_epochs = 8
+            partial_fit_epochs = 6
 
         clf.set_params(class_weight=class_weight)
 
+        # run fit epochs followed by several partial_fit iterations
+        # these numbers are purely empirical, just like they are in the
+        # original sklearn test
+        clf.set_params(fit__epochs=fit_epochs)
         clf.fit(X_train, y_train)
         y_pred = clf.predict(X_test)
-        assert np.mean(y_pred == 0) > 0.87
+        assert np.mean(y_pred == 0) > 0.8
+        for _ in range(partial_fit_epochs):
+            clf.partial_fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+        assert np.mean(y_pred == 0) > 0.95
