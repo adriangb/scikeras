@@ -24,6 +24,7 @@ from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
+from tensorflow.python.types.core import Value
 
 from scikeras._utils import (
     TFRandomState,
@@ -547,7 +548,12 @@ class BaseWrapper(BaseEstimator):
             # Keras Model's inputs are always a list
             X = [X]
         elif isinstance(X, Mapping):
-            X = [X[out.name] for out in self.model_.outputs]
+            X = [X[inp_name] for inp_name in self.model_.input_names]
+        if len(X) != len(self.model_.inputs):
+            raise ValueError(
+                f"``X`` has {len(X)} inputs, but the Keras model"
+                f" has {len(self.model_.inputs)} inputs."
+            )
         for X_in, model_in in zip(X, self.model_.inputs):
             # check shape
             X_in_shape = (1,) if X_in.ndim == 1 else X_in.shape[1:]

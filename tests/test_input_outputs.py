@@ -1,4 +1,4 @@
-from re import S
+from re import S, match
 from typing import Any, Dict
 
 import numpy as np
@@ -22,37 +22,6 @@ INPUT_DIM = 5
 TRAIN_SAMPLES = 10
 TEST_SAMPLES = 5
 NUM_CLASSES = 2
-
-
-class FunctionalAPIMultiInputClassifier(KerasClassifier):
-    """Tests Functional API Classifier with 2 inputs.
-    """
-
-    def _keras_build_fn(
-        self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
-    ) -> Model:
-        # get params
-        n_classes_ = meta["n_classes_"]
-
-        inp1 = Input((1,))
-        inp2 = Input((3,))
-
-        x1 = Dense(100)(inp1)
-        x2 = Dense(100)(inp2)
-
-        x3 = Concatenate(axis=-1)([x1, x2])
-
-        cat_out = Dense(n_classes_, activation="softmax")(x3)
-
-        model = Model([inp1, inp2], [cat_out])
-        losses = ["sparse_categorical_crossentropy"]
-        model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
-
-        return model
-
-    @property
-    def feature_encoder(self):
-        return FunctionTransformer(func=lambda X: [X[:, 0], X[:, 1:4]],)
 
 
 class FunctionalAPIMultiLabelClassifier(MultiOutputClassifier):
@@ -105,20 +74,74 @@ class FunctionalAPIMultiOutputRegressor(KerasRegressor):
         return model
 
 
-def test_multi_input():
-    """Tests custom multi-input Keras model.
-    """
-    clf = FunctionalAPIMultiInputClassifier()
-    (x_train, y_train), (x_test, y_test) = get_test_data(
-        train_samples=TRAIN_SAMPLES,
-        test_samples=TEST_SAMPLES,
-        input_shape=(4,),
-        num_classes=3,
-    )
+@pytest.mark.parametrize(
+    "tf_fn,error,error_pat",
+    [
+        (
+            lambda X: X,
+            ValueError,
+            "``X`` has 1 inputs, but the Keras model has 2 inputs",
+        ),
+        (
+            lambda X: [X],
+            ValueError,
+            "``X`` has 1 inputs, but the Keras model has 2 inputs",
+        ),
+        (
+            lambda X: [X[:, 0], X[:, 1:2], X[:, 2:3]],
+            ValueError,
+            "``X`` has 3 inputs, but the Keras model has 2 inputs",
+        ),
+        (lambda X: [X[:, 0], X[:, 1:4]], None, ""),
+        (lambda X: [X[:, 0:1], X[:, 1:4]], None, ""),
+        (
+            lambda X: [X[:, 0], X[:, 1:3]],
+            ValueError,
+            r"expected shape \(3,\) but got \(2,\)",
+        ),
+        (lambda X: {"Inp1": X[:, 0], "Inp2": X[:, 1:4]}, None, ""),
+        (lambda X: {"Inp1": X[:, 0:1], "Inp2": X[:, 1:4]}, None, ""),
+        (
+            lambda X: {"Inp1": X[:, 0], "Inp2": X[:, 1:3]},
+            ValueError,
+            r"expected shape \(3,\) but got \(2,\)",
+        ),
+    ],
+)
+def test_multi_input(tf_fn, error, error_pat):
+    class MultiInputClassifier(KerasClassifier):
+        def _keras_build_fn(self, meta: Dict[str, Any]) -> Model:
+            n_classes_ = meta["n_classes_"]
 
-    clf.fit(x_train, y_train)
-    clf.predict(x_test)
-    clf.score(x_train, y_train)
+            inp1 = Input((1,), name="Inp1")
+            inp2 = Input((3,), name="Inp2")
+
+            x1 = Dense(100)(inp1)
+            x2 = Dense(100)(inp2)
+
+            x3 = Concatenate(axis=-1)([x1, x2])
+
+            cat_out = Dense(n_classes_, activation="softmax")(x3)
+
+            model = Model([inp1, inp2], [cat_out])
+            losses = ["sparse_categorical_crossentropy"]
+            model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
+
+            return model
+
+        @property
+        def feature_encoder(self):
+            return FunctionTransformer(func=tf_fn)
+
+    clf = MultiInputClassifier()
+
+    X, y = np.random.random((10, 4)), np.random.randint(low=0, high=3, size=(10,))
+
+    if error:
+        with pytest.raises(error, match=error_pat):
+            clf.fit(X, y)
+    else:
+        clf.fit(X, y)
 
 
 def test_multi_output():
@@ -289,9 +312,9 @@ def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
 
 
 def test_incompatible_output_dimensions():
-    """Compares to the scikit-learn RandomForestRegressor classifier.
+    """Test for incompatible output dimensions.
     """
-    # create dataset with 4 outputs
+    # create dataset with 1 output
     X = np.random.rand(10, 20)
     y = np.random.randint(low=0, high=3, size=(10,))
 
@@ -314,7 +337,7 @@ def test_incompatible_output_dimensions():
 
     clf = KerasClassifier(model=build_fn_clf)
 
-    with pytest.raises(ValueError, match="input of size"):
+    with pytest.raises(ValueError, match="1 outputs but got 2"):
         clf.fit(X, y)
 
 
