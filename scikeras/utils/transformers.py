@@ -326,6 +326,7 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
             A reference to the current instance of RegressorTargetEncoder.
         """
         self._y_dtype = y.dtype
+        self._y_shape = y.shape
         self.n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         self.n_outputs_expected_ = 1
         return self
@@ -367,8 +368,9 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
             targets.
         """
         if self._y_dtype == np.float64 and y.dtype == np.float32:
-            return np.squeeze(y.astype(np.float64, copy=False))
-        return np.squeeze(y)
+            y = y.astype(np.float64, copy=False)
+        y = y.reshape(-1, *self._y_shape[1:])
+        return y
 
     def get_metadata(self):
         """Returns a dictionary of meta-parameters generated when this transfromer

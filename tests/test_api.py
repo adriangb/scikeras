@@ -27,7 +27,7 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
-from scikeras.wrappers import KerasClassifier, KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .testing_utils import basic_checks
@@ -766,7 +766,8 @@ class TestInitialize:
     """Test the ``initialize`` method.
     """
 
-    def test_prebuilt_model(self):
+    @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor, BaseWrapper])
+    def test_prebuilt_model(self, wrapper):
         """Test that when using a prebuilt model,
         initialize allows direct use of the model for inference.
         """
@@ -776,7 +777,10 @@ class TestInitialize:
         m1 = keras.Model(inp, out)
         m1.compile(loss="mae", optimizer="adam")
         # Create some test data
-        X, y = np.random.random((100, 1)), np.random.random((100,))
+        X, y = (
+            np.random.random((100, 1)),
+            np.random.randint(low=0, high=3, size=(100, 1)),
+        )
         # Fit the model
         m1.fit(X, y)
         # Save Keras prediction
@@ -787,15 +791,18 @@ class TestInitialize:
         m2.set_weights(weights)
         m2.compile()  # No loss, inference models shouldn't need a loss!
         # Wrap with SciKeras
-        reg = KerasRegressor(model=m2)
+        est = wrapper(model=m2)
         # Without calling initialize, a NotFittedError is raised
         with pytest.raises(NotFittedError):
-            reg.predict(X)
+            est.predict(X)
         # Call initialize
-        reg.initialize(X, y)  # TODO: test with just X, just y and neither
+        est.initialize(X, y)  # TODO: test with just X, just y and neither
         # Save predictions from wrapped model
-        y_pred_scikeras = reg.predict(X)
+        if wrapper is not KerasClassifier:
+            y_pred_scikeras = est.predict(X)
+        else:
+            y_pred_scikeras = est.predict_proba(X)
         # Check that predictions match
-        np.testing.assert_allclose(y_pred_keras.reshape(-1,), y_pred_scikeras)
+        np.testing.assert_allclose(y_pred_keras, y_pred_scikeras)
         # Check that we are still using the same model object
-        assert reg.model_ is m2
+        assert est.model_ is m2
