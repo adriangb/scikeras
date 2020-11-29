@@ -766,7 +766,7 @@ class TestInitialize:
     """Test the ``initialize`` method.
     """
 
-    @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor, BaseWrapper])
+    @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
     def test_prebuilt_model(self, wrapper):
         """Test that when using a prebuilt model,
         initialize allows direct use of the model for inference.
@@ -779,12 +779,14 @@ class TestInitialize:
         # Create some test data
         X, y = (
             np.random.random((100, 1)),
-            np.random.randint(low=0, high=3, size=(100, 1)),
+            np.random.randint(low=0, high=3, size=(100,)),
         )
         # Fit the model
         m1.fit(X, y)
         # Save Keras prediction
         y_pred_keras = m1.predict(X)
+        # Keras outputs 2D despite input being 1D; reshape to match input
+        y_pred_keras = y_pred_keras.reshape(-1,)
         # Extract the weights into a copy of the model
         weights = m1.get_weights()
         m2 = keras.models.clone_model(m1)

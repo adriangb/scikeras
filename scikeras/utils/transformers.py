@@ -142,6 +142,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         """
         target_type = self._type_of_target(y)
         keras_dtype = np.dtype(tf.keras.backend.floatx())
+        self._y_shape = y.shape
         encoders = {
             "binary": make_pipeline(
                 TargetReshaper(),
@@ -277,10 +278,10 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                 )
 
         if return_proba:
-            return y
-        return np.squeeze(np.column_stack(class_predictions)).astype(
-            self._y_dtype, copy=False
-        )
+            return np.squeeze(y)
+        res = np.column_stack(class_predictions).astype(self._y_dtype, copy=False)
+        res = res.reshape(-1, *self._y_shape[1:])
+        return res
 
     def get_metadata(self) -> Dict[str, Any]:
         """Returns a dictionary of meta-parameters generated when this transfromer
