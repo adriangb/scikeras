@@ -35,7 +35,11 @@ from scikeras._utils import (
     unflatten_params,
 )
 from scikeras.utils import loss_name, metric_name
-from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
+from scikeras.utils.transformers import (
+    ClassifierLabelEncoder,
+    RegressorTargetEncoder,
+    TargetReshaper,
+)
 
 
 class BaseWrapper(BaseEstimator):
@@ -678,7 +682,7 @@ class BaseWrapper(BaseEstimator):
             Transformer implementing the sklearn transformer
             interface.
         """
-        return FunctionTransformer()
+        return TargetReshaper()
 
     @property
     def feature_encoder(self):

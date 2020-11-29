@@ -779,12 +779,14 @@ class TestInitialize:
         # Create some test data
         X, y = (
             np.random.random((100, 1)),
-            np.random.randint(low=0, high=3, size=(100, 1)),
+            np.random.randint(low=0, high=3, size=(100,)),
         )
         # Fit the model
         m1.fit(X, y)
         # Save Keras prediction
-        y_pred_keras = m1.predict(X)
+        y_pred_keras = m1.predict(X).reshape(
+            -1,
+        )  # Keras outputs 2D despite input being 1D
         # Extract the weights into a copy of the model
         weights = m1.get_weights()
         m2 = keras.models.clone_model(m1)
