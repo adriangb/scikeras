@@ -508,25 +508,30 @@ class TestPartialFit:
         assert len(estimator.history_["loss"]) == epochs
 
     @pytest.mark.parametrize("warm_start", [True, False])
-    def test_current_epoch_property(self, warm_start):
+    @pytest.mark.parametrize("epochs_prefix", ["", "fit__"])
+    def test_current_epoch_property(self, warm_start, epochs_prefix):
         """Test the public current_epoch property
         that tracks the overall training epochs.
 
         The warm_start parameter should have
         NO impact on this behavior.
+
+        The prefix should NOT have any impact on
+        behavior. It is tested because the epochs
+        param has special handling within param routing.
         """
         data = load_boston()
-        X, y = data.data[:100], data.target[:100]
+        X, y = data.data[:10], data.target[:10]
         epochs = 2
-        partial_fit_iter = 4
+        partial_fit_iter = 3
 
         estimator = KerasRegressor(
             model=dynamic_regressor,
             loss=KerasRegressor.r_squared,
-            model__hidden_layer_sizes=[100,],
-            epochs=epochs,
+            model__hidden_layer_sizes=[],
             warm_start=warm_start,
         )
+        estimator.set_params(**{epochs_prefix + "epochs": epochs})
 
         # Check that each partial_fit call trains for 1 epoch
         for k in range(1, partial_fit_iter):
