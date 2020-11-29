@@ -766,7 +766,7 @@ class TestInitialize:
     """Test the ``initialize`` method.
     """
 
-    @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor, BaseWrapper])
+    @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
     def test_prebuilt_model(self, wrapper):
         """Test that when using a prebuilt model,
         initialize allows direct use of the model for inference.
