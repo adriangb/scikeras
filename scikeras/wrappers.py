@@ -737,7 +737,7 @@ class BaseWrapper(BaseEstimator):
             y=y,
             sample_weight=sample_weight,
             warm_start=self.warm_start,
-            epochs=self.epochs,
+            epochs=getattr(self, "fit__epochs", self.epochs),
             initial_epoch=0,
         )
 
@@ -857,7 +857,7 @@ class BaseWrapper(BaseEstimator):
             y,
             sample_weight=sample_weight,
             warm_start=warm_start,
-            epochs=getattr(self, "fit__epochs", self.epochs),
+            epochs=epochs,
             initial_epoch=initial_epoch,
         )
 
