@@ -142,6 +142,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         """
         target_type = self._type_of_target(y)
         keras_dtype = np.dtype(tf.keras.backend.floatx())
+        self._y_shape = y.shape
         encoders = {
             "binary": make_pipeline(
                 TargetReshaper(),
@@ -277,10 +278,10 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                 )
 
         if return_proba:
-            return y
-        return np.squeeze(np.column_stack(class_predictions)).astype(
-            self._y_dtype, copy=False
-        )
+            return np.squeeze(y)
+        res = np.column_stack(class_predictions).astype(self._y_dtype, copy=False)
+        res = res.reshape(-1, *self._y_shape[1:])
+        return res
 
     def get_metadata(self) -> Dict[str, Any]:
         """Returns a dictionary of meta-parameters generated when this transfromer
@@ -326,6 +327,7 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
             A reference to the current instance of RegressorTargetEncoder.
         """
         self._y_dtype = y.dtype
+        self._y_shape = y.shape
         self.n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         self.n_outputs_expected_ = 1
         return self
@@ -367,8 +369,9 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
             targets.
         """
         if self._y_dtype == np.float64 and y.dtype == np.float32:
-            return np.squeeze(y.astype(np.float64, copy=False))
-        return np.squeeze(y)
+            y = y.astype(np.float64, copy=False)
+        y = y.reshape(-1, *self._y_shape[1:])
+        return y
 
     def get_metadata(self):
         """Returns a dictionary of meta-parameters generated when this transfromer

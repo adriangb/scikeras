@@ -442,10 +442,10 @@ class BaseWrapper(BaseEstimator):
         X: Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]],
         y: Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]],
         sample_weight: Union[np.ndarray, None],
-        warm_start,
-        epochs,
-        initial_epoch,
-    ):
+        warm_start: bool,
+        epochs: int,
+        initial_epoch: int,
+    ) -> None:
         """Fits the Keras model.
 
         Parameters
@@ -722,25 +722,15 @@ class BaseWrapper(BaseEstimator):
             A reference to the instance that can be chain called
             (ex: instance.fit(X,y).transform(X) )
         """
-        for k, v in kwargs.items():
-            warnings.warn(
-                "``kwargs`` will be removed in a future release of SciKeras."
-                f"Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
-            )
-        kwargs = {
-            (k if k.startswith("fit__") else "fit__" + k): v for k, v in kwargs.items()
-        }
-        existing_kwargs = {k: v for k, v in self.get_params().items() if k in kwargs}
-        self.set_params(**kwargs)
-
         self._fit(
             X=X,
             y=y,
             sample_weight=sample_weight,
             warm_start=self.warm_start,
-            epochs=self.epochs,
+            epochs=getattr(self, "fit__epochs", self.epochs),
             initial_epoch=0,
         )
+        return self
 
         # restore original values for params overwritten by **kwargs
         self.set_params(**existing_kwargs)
@@ -1318,10 +1308,29 @@ class KerasClassifier(BaseWrapper):
 
     def initialize(self, X, y) -> "KerasClassifier":
         """Initialize the model without any fitting.
-
         You only need to call this model if you explicitly do not want to do any fitting
         (for example with a pretrained model). You should _not_ call this
         right before calling ``fit``, calling ``fit`` will do this automatically.
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe]of shape (n_samples, n_features)
+                Training samples where n_samples is the number of samples
+                and `n_features` is the number of features.
+        y : Union[array-like, sparse matrix, dataframe]of shape \
+            (n_samples,) or (n_samples, n_outputs), default None
+            True labels for X.
+        
+        Returns
+        -------
+        KerasClassifier
+            A reference to the KerasClassifier instance for chained calling.
+        """
+        self.classes_ = None
+        super().initialize(X=X, y=y)
+        return self
+
+    def fit(self, X, y, sample_weight=None) -> "KerasClassifier":
+        """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
 
         Parameters
         ----------
@@ -1369,7 +1378,7 @@ class KerasClassifier(BaseWrapper):
         if self.class_weight is not None:
             sample_weight = 1 if sample_weight is None else sample_weight
             sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
-        super().fit(X=X, y=y, sample_weight=sample_weight, **kwargs)
+        super().fit(X=X, y=y, sample_weight=sample_weight)
         return self
 
     def partial_fit(self, X, y, classes=None, sample_weight=None) -> "KerasClassifier":
