@@ -67,7 +67,7 @@ def test_kwarg_deprecation(wrapper, builder):
             assert "batch_size" in call_kwargs
             assert call_kwargs["batch_size"] == kwarg_batch_size
             if isinstance(est, KerasClassifier):
-                est.predict_proba(X, batch_size=kwarg_batch_size)
+                est.predict_proba(X, batch_size=kwarg_batch_size, **extra_kwargs)
                 call_args = mock_predict.call_args_list
                 assert len(call_args) == 2
                 call_kwargs = call_args[1][1]
