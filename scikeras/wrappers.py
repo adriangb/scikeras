@@ -10,7 +10,6 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Tuple, Type, Un
 import numpy as np
 import tensorflow as tf
 
-from numpy.lib.arraysetops import isin
 from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
