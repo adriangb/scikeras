@@ -1263,17 +1263,6 @@ class KerasClassifier(BaseWrapper):
         )
         self.class_weight = class_weight
 
-    def _validate_sample_weight(
-        self,
-        X: np.ndarray,
-        y: np.ndarray,
-        sample_weight: Union[None, np.ndarray, Iterable],
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        X, y, sample_weight = super()._validate_sample_weight(X, y, sample_weight)
-        if self.class_weight is not None:
-            sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
-        return X, y, sample_weight
-
     def _type_of_target(self, y: np.ndarray) -> str:
         target_type = type_of_target(y)
         if target_type == "binary" and self.classes_ is not None:
@@ -1327,15 +1316,63 @@ class KerasClassifier(BaseWrapper):
         categories = "auto" if self.classes_ is None else [self.classes_]
         return ClassifierLabelEncoder(loss=self.loss, categories=categories)
 
-    def _initialize(
-        self, X: np.ndarray, y: Union[np.ndarray, None] = None
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        # preserve classes_ if if was set by partial_fit, otherwise
-        # set it to None
-        self.classes_ = getattr(self, "classes_", None)
-        return super()._initialize(X=X, y=y)
+    def initialize(self, X, y) -> "KerasClassifier":
+        """Initialize the model without any fitting.
 
-    def partial_fit(self, X, y, classes=None, sample_weight=None):
+        You only need to call this model if you explicitly do not want to do any fitting
+        (for example with a pretrained model). You should _not_ call this
+        right before calling ``fit``, calling ``fit`` will do this automatically.
+
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe]of shape (n_samples, n_features)
+                Training samples where n_samples is the number of samples
+                and `n_features` is the number of features.
+        y : Union[array-like, sparse matrix, dataframe]of shape \
+            (n_samples,) or (n_samples, n_outputs), default None
+            True labels for X.
+        
+        Returns
+        -------
+        KerasClassifier
+            A reference to the KerasClassifier instance for chained calling.
+        """
+        self.classes_ = None
+        super().initialize(X=X, y=y)
+
+    def fit(self, X, y, sample_weight=None, **kwargs) -> "KerasClassifier":
+        """Constructs a new classifier with ``model`` & fit the model to ``(X, y)``.
+
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe]of shape (n_samples, n_features)
+            Training samples, where n_samples is the number of samples
+            and n_features is the number of features.
+        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for X.
+        sample_weight : array-like of shape (n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.fit``.
+            This paremeter will be removed in a future release of SciKeras,
+            instead set fit arguments at initialization
+            (e.g., ``KerasClassifier(epochs=10, ...)``)
+
+        Returns
+        -------
+        KerasClassifier
+            A reference to the instance that can be chain called
+            (ex: instance.fit(X,y).transform(X) )
+        """
+        self.classes_ = None
+        if self.class_weight is not None:
+            sample_weight = 1 if sample_weight is None else sample_weight
+            sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
+        super().fit(X=X, y=y, sample_weight=sample_weight, **kwargs)
+        return self
+
+    def partial_fit(self, X, y, classes=None, sample_weight=None) -> "KerasClassifier":
         """Fit classifier for a single epoch, preserving the current epoch
         and all model parameters and state.
 
@@ -1359,13 +1396,16 @@ class KerasClassifier(BaseWrapper):
 
         Returns
         -------
-        BaseWrapper
+        KerasClassifier
             A reference to the instance that can be chain called
             (ex: instance.fit(X,y).transform(X) )
         """
         self.classes_ = (
             classes if classes is not None else getattr(self, "classes_", None)
         )
+        if self.class_weight is not None:
+            sample_weight = 1 if sample_weight is None else sample_weight
+            sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
         super().partial_fit(X, y, sample_weight=sample_weight)
         return self
 
