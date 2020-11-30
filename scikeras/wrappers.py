@@ -910,7 +910,7 @@ class BaseWrapper(BaseEstimator):
             Extra arguments to route to ``Model.predict``.
             This paremeter will be removed in a future release of SciKeras,
             instead set fit arguments at initialization
-            (e.g., ``BaseWrapper(batch_size=10, ...)``)
+            (e.g., ``BaseWrapper(verbose=1, predict__batch_size=1000, ...)``)
 
         Returns
         -------
