@@ -23,7 +23,6 @@ from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
-from tensorflow.python.types.core import Value
 
 from scikeras._utils import (
     TFRandomState,
