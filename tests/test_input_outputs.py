@@ -352,32 +352,6 @@ def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
     assert set(clf.classes_) == set(y1)
 
 
-def test_incompatible_output_dimensions():
-    """Test for incompatible output dimensions.
-    """
-    # create dataset with 1 output
-    X = np.random.rand(10, 20)
-    y = np.random.randint(low=0, high=3, size=(10,))
-
-    # create a model with 2 outputs
-    def build_fn_clf(meta: Dict[str, Any]) -> Model:
-        n_features_in_ = meta["n_features_in_"]
-        inp = Input((n_features_in_,))
-        x1 = Dense(100)(inp)
-        binary_out = Dense(1, activation="sigmoid")(x1)
-        cat_out = Dense(2, activation="softmax")(x1)
-        model = Model([inp], [binary_out, cat_out])
-        model.compile(loss=["binary_crossentropy", "categorical_crossentropy"])
-        return model
-
-    clf = KerasClassifier(model=build_fn_clf)
-
-    with pytest.raises(
-        ValueError, match="1 outputs, but this Keras Model has 2 outputs"
-    ):
-        clf.fit(X, y)
-
-
 @pytest.mark.parametrize(
     "dtype", ["float32", "float64", "int64", "int32", "uint8", "uint16", "object"],
 )

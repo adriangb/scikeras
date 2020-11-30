@@ -587,7 +587,8 @@ class BaseWrapper(BaseEstimator):
                     )
 
     def _check_model_compatibility(self, X, y) -> None:
-        """Checks that the model output number and y shape match.
+        """Checks that the model inputs, outputs and loss
+        match the given or expected X, y & loss.
 
         This is in place to avoid cryptic TF errors.
         """
