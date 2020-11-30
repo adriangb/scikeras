@@ -718,7 +718,7 @@ class BaseWrapper(BaseEstimator):
             Extra arguments to route to ``Model.fit``.
             This paremeter will be removed in a future release of SciKeras,
             instead set fit arguments at initialization
-            (e.g., ``BaseWrapper(epochs=10, ...)``)
+            (e.g., ``BaseWrapper(epochs=10, fit__batch_size=32, ...)``)
         Returns
         -------
         BaseWrapper
