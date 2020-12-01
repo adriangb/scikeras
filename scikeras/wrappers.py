@@ -727,7 +727,7 @@ class BaseWrapper(BaseEstimator):
         """
         for k, v in kwargs.items():
             warnings.warn(
-                "``kwargs`` will be removed in a future release of SciKeras."
+                "``**kwargs`` has been deprecated, and will be removed in SciKeras 1.0.0"
                 f"Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
             )
 
@@ -919,7 +919,7 @@ class BaseWrapper(BaseEstimator):
         """
         for k, v in kwargs.items():
             warnings.warn(
-                "``kwargs`` will be removed in a future release of SciKeras."
+                "``**kwargs`` has been deprecated, and will be removed in SciKeras 1.0.0"
                 f"Instead, set predict arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
             )
 
@@ -1427,7 +1427,7 @@ class KerasClassifier(BaseWrapper):
         """
         for k, v in kwargs.items():
             warnings.warn(
-                "``kwargs`` will be removed in a future release of SciKeras."
+                "``**kwargs`` has been deprecated, and will be removed in SciKeras 1.0.0"
                 f"Instead, set predict_proba arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
             )
 
