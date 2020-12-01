@@ -5,9 +5,6 @@ from unittest import mock
 import numpy as np
 import pytest
 
-from numpy.lib.arraysetops import isin
-from tensorflow.keras.models import Model
-
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
@@ -43,7 +40,7 @@ def test_kwarg_deprecation(wrapper, builder):
     )
     X, y = np.random.random((100, 10)), np.random.randint(low=0, high=3, size=(100,))
     est.initialize(X, y)
-    match_txt = "``kwargs`` will be removed in a future release of SciKeras"
+    match_txt = r"``\*\*kwargs`` has been deprecated in SciKeras"
     # check fit
     with pytest.warns(UserWarning, match=match_txt):
         with mock.patch.object(
