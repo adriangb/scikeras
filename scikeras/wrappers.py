@@ -60,7 +60,7 @@ class BaseWrapper(BaseEstimator):
     loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
-        an instance of tf.keras.losses.Loss 
+        an instance of tf.keras.losses.Loss
         or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None
@@ -801,7 +801,7 @@ class BaseWrapper(BaseEstimator):
         y : Union[array-like, sparse matrix, dataframe] of shape \
             (n_samples,) or (n_samples, n_outputs), default None
             True labels for X.
-        
+
         Returns
         -------
         BaseWrapper
@@ -1041,7 +1041,7 @@ class BaseWrapper(BaseEstimator):
         ----------
         **params : dict
             Estimator parameters.
-    
+
         Returns
         -------
         BaseWrapper
@@ -1104,7 +1104,7 @@ class KerasClassifier(BaseWrapper):
     loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
-        an instance of tf.keras.losses.Loss 
+        an instance of tf.keras.losses.Loss
         or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None
@@ -1415,7 +1415,7 @@ class KerasClassifier(BaseWrapper):
             This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
             These parameters can also be specified by prefixing `predict__` to a parameter at initialization;
             e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
-        
+
         Returns
         -------
         array-like, shape (n_samples, n_outputs)
