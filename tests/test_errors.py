@@ -7,7 +7,7 @@ from sklearn.exceptions import NotFittedError
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
 
-from scikeras.wrappers import KerasClassifier, KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
@@ -32,6 +32,19 @@ def test_X_shape_change():
         estimator.partial_fit(X=X.reshape(2, 2, 1), y=y)
     with pytest.raises(ValueError, match="dimensions in X"):
         estimator.predict(X=X.reshape(2, 2, 1))
+
+
+def test_unknown_param():
+    """Test that setting a parameter unknown to set_params raises a
+    friendly error message.
+    """
+    est = BaseWrapper()
+    err = (
+        r"Invalid parameter test for estimator [\S\s]*"
+        "This issue can likely be resolved by setting this parameter"
+    )
+    with pytest.raises(ValueError, match=err):
+        est.set_params(test=1)
 
 
 def test_not_fitted_error():

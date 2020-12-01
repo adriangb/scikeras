@@ -1049,7 +1049,6 @@ class BaseWrapper(BaseEstimator):
         BaseWrapper
             Estimator instance.
         """
-        passthrough = dict()
         for param, value in params.items():
             if any(
                 param.startswith(prefix + "__") for prefix in self._routing_prefixes
@@ -1057,8 +1056,20 @@ class BaseWrapper(BaseEstimator):
                 # routed param
                 setattr(self, param, value)
             else:
-                passthrough[param] = value
-        return super().set_params(**passthrough)
+                try:
+                    super().set_params(**{param: value})
+                except ValueError:
+                    # Give a SciKeras specific user message to aid
+                    # in moving from the Keras wrappers
+                    raise ValueError(
+                        f"Invalid parameter {param} for estimator {self.__name__}."
+                        "\nThis issue can likely be resolved by setting this parameter"
+                        f" in the {self.__name__} constructor:"
+                        f"\n`{self.__name__}({param}={value})`"
+                        "\nCheck the list of available parameters with"
+                        " `estimator.get_params().keys()`"
+                    ) from None
+        return self
 
     def _get_param_names(self):
         """Get parameter names for the estimator"""
