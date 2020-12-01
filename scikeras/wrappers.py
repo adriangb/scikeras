@@ -727,8 +727,8 @@ class BaseWrapper(BaseEstimator):
         """
         for k, v in kwargs.items():
             warnings.warn(
-                "``**kwargs`` has been deprecated, and will be removed in SciKeras 1.0.0"
-                f"Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
+                "``**kwargs`` has been deprecated, and will be removed in SciKeras 1.0.0."
+                f" Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
             )
 
         self._fit(
@@ -919,8 +919,8 @@ class BaseWrapper(BaseEstimator):
         """
         for k, v in kwargs.items():
             warnings.warn(
-                "``**kwargs`` has been deprecated, and will be removed in SciKeras 1.0.0"
-                f"Instead, set predict arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
+                "``**kwargs`` has been deprecated, and will be removed in SciKeras 1.0.0."
+                f" Instead, set predict arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
             )
 
         # check if fitted
@@ -1427,8 +1427,8 @@ class KerasClassifier(BaseWrapper):
         """
         for k, v in kwargs.items():
             warnings.warn(
-                "``**kwargs`` has been deprecated, and will be removed in SciKeras 1.0.0"
-                f"Instead, set predict_proba arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
+                "``**kwargs`` has been deprecated, and will be removed in SciKeras 1.0.0."
+                f" Instead, set predict_proba arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
             )
 
         # check if fitted
