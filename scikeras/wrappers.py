@@ -1326,6 +1326,7 @@ class KerasClassifier(BaseWrapper):
         You only need to call this model if you explicitly do not want to do any fitting
         (for example with a pretrained model). You should _not_ call this
         right before calling ``fit``, calling ``fit`` will do this automatically.
+
         Parameters
         ----------
         X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
