@@ -60,7 +60,7 @@ class BaseWrapper(BaseEstimator):
     loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
-        an instance of tf.keras.losses.Loss 
+        an instance of tf.keras.losses.Loss
         or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None
@@ -445,6 +445,7 @@ class BaseWrapper(BaseEstimator):
         warm_start: bool,
         epochs: int,
         initial_epoch: int,
+        **kwargs,
     ) -> None:
         """Fits the Keras model.
 
@@ -463,6 +464,8 @@ class BaseWrapper(BaseEstimator):
             Number of epochs for which the model will be trained.
         initial_epoch : int
             Epoch at which to begin training.
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.fit``.
 
         Returns
         -------
@@ -506,6 +509,7 @@ class BaseWrapper(BaseEstimator):
         fit_args["sample_weight"] = sample_weight
         fit_args["epochs"] = initial_epoch + epochs
         fit_args["initial_epoch"] = initial_epoch
+        fit_args.update(kwargs)
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
@@ -731,12 +735,12 @@ class BaseWrapper(BaseEstimator):
         """
         return FunctionTransformer()
 
-    def fit(self, X, y, sample_weight=None) -> "BaseWrapper":
+    def fit(self, X, y, sample_weight=None, **kwargs) -> "BaseWrapper":
         """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe]of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
             Training samples, where n_samples is the number of samples
             and n_features is the number of features.
         y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
@@ -744,13 +748,23 @@ class BaseWrapper(BaseEstimator):
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
-
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.fit``.
+            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
+            These parameters can also be specified by prefixing `fit__` to a parameter at initialization;
+            e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
         Returns
         -------
         BaseWrapper
             A reference to the instance that can be chain called
             (ex: instance.fit(X,y).transform(X) )
         """
+        for k, v in kwargs.items():
+            warnings.warn(
+                "``**kwargs`` has been deprecated in SciKeras 0.2.1 and support will be removed be 1.0.0."
+                f" Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
+            )
+
         self._fit(
             X=X,
             y=y,
@@ -758,7 +772,9 @@ class BaseWrapper(BaseEstimator):
             warm_start=self.warm_start,
             epochs=getattr(self, "fit__epochs", self.epochs),
             initial_epoch=0,
+            **kwargs,
         )
+
         return self
 
     @property
@@ -813,13 +829,13 @@ class BaseWrapper(BaseEstimator):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe]of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
                 Training samples where n_samples is the number of samples
                 and `n_features` is the number of features.
-        y : Union[array-like, sparse matrix, dataframe]of shape \
+        y : Union[array-like, sparse matrix, dataframe] of shape \
             (n_samples,) or (n_samples, n_outputs), default None
             True labels for X.
-        
+
         Returns
         -------
         BaseWrapper
@@ -829,13 +845,20 @@ class BaseWrapper(BaseEstimator):
         return self  # to allow chained calls like initialize(...).predict(...)
 
     def _fit(
-        self, X, y, sample_weight, warm_start: bool, epochs: int, initial_epoch: int,
+        self,
+        X,
+        y,
+        sample_weight,
+        warm_start: bool,
+        epochs: int,
+        initial_epoch: int,
+        **kwargs,
     ) -> None:
         """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe]of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
                 Training samples where `n_samples` is the number of samples
                 and `n_features` is the number of features.
         y :Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
@@ -850,12 +873,8 @@ class BaseWrapper(BaseEstimator):
             model.
         initial_epoch : int
             Epoch at which to begin training.
-
-        Returns
-        -------
-        BaseWrapper
-            A reference to the instance that can be chain called
-            (ex: instance.fit(X,y).transform(X) )
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.fit``.
         """
         # Data checks
         if not ((self.warm_start or warm_start) and self.initialized_):
@@ -878,6 +897,7 @@ class BaseWrapper(BaseEstimator):
             warm_start=warm_start,
             epochs=epochs,
             initial_epoch=initial_epoch,
+            **kwargs,
         )
 
     def partial_fit(self, X, y, sample_weight=None) -> "BaseWrapper":
@@ -912,7 +932,7 @@ class BaseWrapper(BaseEstimator):
         )
         return self
 
-    def predict(self, X):
+    def predict(self, X, **kwargs):
         """Returns predictions for the given test data.
 
         Parameters
@@ -920,18 +940,28 @@ class BaseWrapper(BaseEstimator):
         X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
             Training samples where n_samples is the number of samples
             and n_features is the number of features.
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.predict``.
+            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
+            These parameters can also be specified by prefixing `predict__` to a parameter at initialization;
+            e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
 
         Returns
         -------
         array-like
             Predictions, of shape shape (n_samples,) or (n_samples, n_outputs).
         """
+        for k, v in kwargs.items():
+            warnings.warn(
+                "``**kwargs`` has been deprecated in SciKeras 0.2.1 and support will be removed be 1.0.0."
+                f" Instead, set predict arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
+            )
+
         # check if fitted
         if not self.initialized_:
             raise NotFittedError(
                 "Estimator needs to be fit before `predict` " "can be called"
             )
-
         # basic input checks
         X, _ = self._validate_data(X=X, y=None)
 
@@ -943,12 +973,14 @@ class BaseWrapper(BaseEstimator):
         pred_args = route_params(
             params, destination="predict", pass_filter=self._predict_kwargs
         )
+        pred_args.update(kwargs)
 
         # predict with Keras model
         y_pred = self.model_.predict(X, **pred_args)
 
         # post process y
         y_pred = self.target_encoder_.inverse_transform(y_pred)
+
         return y_pred
 
     @staticmethod
@@ -1043,7 +1075,7 @@ class BaseWrapper(BaseEstimator):
         ----------
         **params : dict
             Estimator parameters.
-    
+
         Returns
         -------
         BaseWrapper
@@ -1117,7 +1149,7 @@ class KerasClassifier(BaseWrapper):
     loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
-        an instance of tf.keras.losses.Loss 
+        an instance of tf.keras.losses.Loss
         or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None
@@ -1328,15 +1360,16 @@ class KerasClassifier(BaseWrapper):
         You only need to call this model if you explicitly do not want to do any fitting
         (for example with a pretrained model). You should _not_ call this
         right before calling ``fit``, calling ``fit`` will do this automatically.
+
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe]of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
                 Training samples where n_samples is the number of samples
                 and `n_features` is the number of features.
-        y : Union[array-like, sparse matrix, dataframe]of shape \
+        y : Union[array-like, sparse matrix, dataframe] of shape \
             (n_samples,) or (n_samples, n_outputs), default None
             True labels for X.
-        
+
         Returns
         -------
         KerasClassifier
@@ -1346,8 +1379,8 @@ class KerasClassifier(BaseWrapper):
         super().initialize(X=X, y=y)
         return self
 
-    def fit(self, X, y, sample_weight=None) -> "KerasClassifier":
-        """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
+    def fit(self, X, y, sample_weight=None, **kwargs) -> "KerasClassifier":
+        """Constructs a new classifier with ``model`` & fit the model to ``(X, y)``.
 
         Parameters
         ----------
@@ -1359,6 +1392,11 @@ class KerasClassifier(BaseWrapper):
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.fit``.
+            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
+            These parameters can also be specified by prefixing `fit__` to a parameter at initialization;
+            e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
 
         Returns
         -------
@@ -1370,7 +1408,7 @@ class KerasClassifier(BaseWrapper):
         if self.class_weight is not None:
             sample_weight = 1 if sample_weight is None else sample_weight
             sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
-        super().fit(X=X, y=y, sample_weight=sample_weight)
+        super().fit(X=X, y=y, sample_weight=sample_weight, **kwargs)
         return self
 
     def partial_fit(self, X, y, classes=None, sample_weight=None) -> "KerasClassifier":
@@ -1410,7 +1448,7 @@ class KerasClassifier(BaseWrapper):
         super().partial_fit(X, y, sample_weight=sample_weight)
         return self
 
-    def predict_proba(self, X):
+    def predict_proba(self, X, **kwargs):
         """Returns class probability estimates for the given test data.
 
         Parameters
@@ -1418,7 +1456,12 @@ class KerasClassifier(BaseWrapper):
         X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
             Training samples, where n_samples is the number of samples
             and n_features is the number of features.
-        
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.predict``.
+            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
+            These parameters can also be specified by prefixing `predict__` to a parameter at initialization;
+            e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
+
         Returns
         -------
         array-like, shape (n_samples, n_outputs)
@@ -1428,6 +1471,12 @@ class KerasClassifier(BaseWrapper):
             SciKeras will return an array of shape (n_samples, 2)
             (instead of `(n_sample, 1)` as in Keras).
         """
+        for k, v in kwargs.items():
+            warnings.warn(
+                "``**kwargs`` has been deprecated in SciKeras 0.2.1 and support will be removed be 1.0.0."
+                f" Instead, set predict_proba arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
+            )
+
         # check if fitted
         if not self.initialized_:
             raise NotFittedError(
@@ -1444,6 +1493,7 @@ class KerasClassifier(BaseWrapper):
         predict_args = route_params(
             self.get_params(), destination="predict", pass_filter=self._predict_kwargs,
         )
+        predict_args.update(kwargs)
 
         # call the Keras model's predict
         outputs = self.model_.predict(X, **predict_args)

@@ -116,15 +116,6 @@ def test_sample_weights_all_zero():
         estimator.fit(X, y, sample_weight=sample_weight)
 
 
-def test_build_fn_deprecation():
-    """An appropriate warning is raised when using the `build_fn`
-    parameter instead of `model`.
-    """
-    clf = KerasClassifier(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
-    with pytest.warns(UserWarning, match="``build_fn`` will be renamed to ``model``"):
-        clf.fit([[0], [1]], [0, 1])
-
-
 @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
 def test_build_fn_and_init_signature_do_not_agree(wrapper):
     """Test that passing a kwarg not present in the model
