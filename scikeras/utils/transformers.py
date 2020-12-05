@@ -265,7 +265,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         else:
             if not return_proba:
                 raise NotImplementedError(
-                    f"Class-predictions are not clearly defined for"
+                    "Class-predictions are not clearly defined for"
                     " 'multiclass-multioutput' target types."
                     "\n\nTo implement support, subclass KerasClassifier and override"
                     " ``target_encoder`` with a transformer that supports this"
@@ -361,7 +361,7 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         ----------
         y : np.ndarray
             Raw predictions from the Keras Model.
-    
+
         Returns
         -------
         np.ndarray
