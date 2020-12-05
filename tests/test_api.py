@@ -27,7 +27,7 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
-from scikeras.wrappers import KerasClassifier, KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .testing_utils import basic_checks
@@ -507,25 +507,30 @@ class TestPartialFit:
         assert len(estimator.history_["loss"]) == epochs
 
     @pytest.mark.parametrize("warm_start", [True, False])
-    def test_current_epoch_property(self, warm_start):
+    @pytest.mark.parametrize("epochs_prefix", ["", "fit__"])
+    def test_current_epoch_property(self, warm_start, epochs_prefix):
         """Test the public current_epoch property
         that tracks the overall training epochs.
 
         The warm_start parameter should have
         NO impact on this behavior.
+
+        The prefix should NOT have any impact on
+        behavior. It is tested because the epochs
+        param has special handling within param routing.
         """
         data = load_boston()
-        X, y = data.data[:100], data.target[:100]
+        X, y = data.data[:10], data.target[:10]
         epochs = 2
-        partial_fit_iter = 4
+        partial_fit_iter = 3
 
         estimator = KerasRegressor(
             model=dynamic_regressor,
             loss=KerasRegressor.r_squared,
-            model__hidden_layer_sizes=[100,],
-            epochs=epochs,
+            model__hidden_layer_sizes=[],
             warm_start=warm_start,
         )
+        estimator.set_params(**{epochs_prefix + "epochs": epochs})
 
         # Check that each partial_fit call trains for 1 epoch
         for k in range(1, partial_fit_iter):
@@ -765,7 +770,8 @@ class TestInitialize:
     """Test the ``initialize`` method.
     """
 
-    def test_prebuilt_model(self):
+    @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
+    def test_prebuilt_model(self, wrapper):
         """Test that when using a prebuilt model,
         initialize allows direct use of the model for inference.
         """
@@ -775,26 +781,34 @@ class TestInitialize:
         m1 = keras.Model(inp, out)
         m1.compile(loss="mae", optimizer="adam")
         # Create some test data
-        X, y = np.random.random((100, 1)), np.random.random((100,))
+        X, y = (
+            np.random.random((100, 1)),
+            np.random.randint(low=0, high=3, size=(100,)),
+        )
         # Fit the model
         m1.fit(X, y)
         # Save Keras prediction
         y_pred_keras = m1.predict(X)
+        # Keras outputs 2D despite input being 1D; reshape to match input
+        y_pred_keras = y_pred_keras.reshape(-1,)
         # Extract the weights into a copy of the model
         weights = m1.get_weights()
         m2 = keras.models.clone_model(m1)
         m2.set_weights(weights)
         m2.compile()  # No loss, inference models shouldn't need a loss!
         # Wrap with SciKeras
-        reg = KerasRegressor(model=m2)
+        est = wrapper(model=m2)
         # Without calling initialize, a NotFittedError is raised
         with pytest.raises(NotFittedError):
-            reg.predict(X)
+            est.predict(X)
         # Call initialize
-        reg.initialize(X, y)  # TODO: test with just X, just y and neither
+        est.initialize(X, y)  # TODO: test with just X, just y and neither
         # Save predictions from wrapped model
-        y_pred_scikeras = reg.predict(X)
+        if wrapper is not KerasClassifier:
+            y_pred_scikeras = est.predict(X)
+        else:
+            y_pred_scikeras = est.predict_proba(X)
         # Check that predictions match
-        np.testing.assert_allclose(y_pred_keras.reshape(-1,), y_pred_scikeras)
+        np.testing.assert_allclose(y_pred_keras, y_pred_scikeras)
         # Check that we are still using the same model object
-        assert reg.model_ is m2
+        assert est.model_ is m2
