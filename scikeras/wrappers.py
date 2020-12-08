@@ -10,7 +10,6 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Tuple, Type, Un
 import numpy as np
 import tensorflow as tf
 
-from numpy.lib.arraysetops import isin
 from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
@@ -24,7 +23,6 @@ from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
-from tensorflow.python.types.core import Value
 
 from scikeras._utils import (
     TFRandomState,
