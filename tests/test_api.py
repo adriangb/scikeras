@@ -47,9 +47,11 @@ def build_fn_clf(
     model.add(keras.layers.Activation("relu"))
     model.add(keras.layers.Dense(hidden_dim))
     model.add(keras.layers.Activation("relu"))
-    model.add(keras.layers.Dense(1))
-    model.add(keras.layers.Activation("sigmoid"))
-    model.compile(optimizer="sgd", loss="binary_crossentropy", metrics=["accuracy"])
+    model.add(keras.layers.Dense(n_classes_))
+    model.add(keras.layers.Activation("softmax"))
+    model.compile(
+        optimizer="sgd", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+    )
     return model
 
 
@@ -154,8 +156,7 @@ def build_fn_clss(
     model.add(Dense(X_shape_[1], activation="relu", input_shape=X_shape_[1:]))
     for size in hidden_layer_sizes:
         model.add(Dense(size, activation="relu"))
-    model.add(keras.layers.Dense(1))
-    model.add(keras.layers.Activation("sigmoid"))
+    model.add(Dense(1, activation="softmax"))
     model.compile("adam", loss="binary_crossentropy", metrics=["accuracy"])
     return model
 
@@ -313,12 +314,13 @@ class TestPrebuiltModel:
         data = loader()
         x_train, y_train = data.data[:100], data.target[:100]
 
+        n_classes_ = np.unique(y_train).size
         # make y the same shape as will be used by .fit
         if config != "MLPRegressor":
             y_train = to_categorical(y_train)
             meta = {
-                "n_classes_": 2,
-                "target_type_": "binary",
+                "n_classes_": n_classes_,
+                "target_type_": "multiclass",
                 "n_features_in_": x_train.shape[1],
                 "n_outputs_expected_": 1,
             }
@@ -348,12 +350,13 @@ class TestPrebuiltModel:
         data = loader()
         x_train, y_train = data.data[:100], data.target[:100]
 
+        n_classes_ = np.unique(y_train).size
         # make y the same shape as will be used by .fit
         if config != "MLPRegressor":
             y_train = to_categorical(y_train)
             meta = {
-                "n_classes_": 2,
-                "target_type_": "binary",
+                "n_classes_": n_classes_,
+                "target_type_": "multiclass",
                 "n_features_in_": x_train.shape[1],
                 "n_outputs_expected_": 1,
             }

@@ -150,14 +150,10 @@ def test_multi_input(tf_fn, error, error_pat):
         (
             lambda y: [y[:, 0], y[:, 1], y[:, 1]],
             ValueError,
-            "consist of 3 outputs, but this Keras Model has 2",
+            "3 outputs, but this Keras Model has 2 outputs",
         ),
-        (
-            lambda y: [y],
-            ValueError,
-            "consist of 1 outputs, but this Keras Model has 2",
-        ),
-        (lambda y: y, ValueError, "consist of 1 outputs, but this Keras Model has 2",),
+        (lambda y: [y], ValueError, "1 outputs, but this Keras Model has 2 outputs",),
+        (lambda y: y, ValueError, "1 outputs, but this Keras Model has 2 outputs",),
         (lambda y: {"Out1": y[:, 0], "Out2": y[:, 1]}, None, "",),
         (lambda y: {"Out1": y[:, 0]}, ValueError, "",),
     ],
@@ -170,23 +166,10 @@ def test_multi_output_clf(tf_fn, error, error_pat):
         def fit(self, y):
             super().fit(y)
             y_tf = super().transform(y)
-            if isinstance(y_tf, list):
-                outs = []
-                for _y in y_tf:
-                    n = np.unique(_y).size
-                    n = 1 if n == 2 else n
-                    outs.append(n)
-                self.n_outputs_expected_ = outs
-            elif isinstance(y_tf, dict):
-                outs = dict()
-                for name, _y in y_tf.items():
-                    n = np.unique(_y).size
-                    n = 1 if n == 2 else n
-                    outs[name] = n
-                self.n_outputs_expected_ = outs
+            if isinstance(y_tf, (list, dict)):
+                self.n_outputs_expected_ = len(y_tf)
             else:
-                classes = np.unique(y)
-                self.n_outputs_expected_ = 1 if classes.size == 2 else classes.size
+                self.n_outputs_expected_ = 1
             return self
 
         def get_metadata(self) -> Dict[str, Any]:

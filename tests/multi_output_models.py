@@ -15,8 +15,7 @@ class MultiLabelTransformer(ClassifierLabelEncoder):
             return super().fit(y)
         # y = array([1, 1, 1, 0], [0, 0, 1, 1])
         # each col will be processed as multiple binary classifications
-        self.n_outputs_ = y.shape[1]
-        self.n_outputs_expected_ = [1] * y.shape[1]
+        self.n_outputs_ = self.n_outputs_expected_ = y.shape[1]
         self._y_dtype = y.dtype
         self.classes_ = [np.array([0, 1])] * y.shape[1]
         self.n_classes_ = [2] * y.shape[1]

@@ -184,10 +184,10 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             target_type = "multiclass-onehot"
 
         self.n_outputs_ = 1
+        self.n_outputs_expected_ = 1
         self._y_dtype = y.dtype
         self._target_type = target_type
 
-        # Record class metadata
         if target_type in ("binary", "multiclass"):
             self.classes_ = self._final_encoder[1].categories_[0]
             self.n_classes_ = self.classes_.size
@@ -197,23 +197,6 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         elif target_type == "multiclass-multioutput":
             self.classes_ = None
             self.n_classes_ = None
-
-        # Record output metadata
-        if target_type == "binary":
-            # single output, single output unit, sigmoid activation
-            # it is also possible to use 2 units with a softmax activation,
-            # but there's generally no reason to do that so we assume a single unit
-            self.n_outputs_expected_ = 1
-        elif target_type in ("multiclass", "multiclass-onehot", "multilabel-indicator"):
-            # single output, one unit per class
-            self.n_outputs_expected_ = self.n_classes_
-        elif target_type == "multiclass-multioutput":
-            # This could be anything! We don't try to guess
-            # For user-written transformers, the expected format is
-            # List[int] (where the indexes are output numbers, as in Model.outputs)
-            # or
-            # Dict[str, int] (where the keys are output names, as in Model.output_names)
-            self.n_outputs_expected_ = None
 
         return self
 
@@ -345,7 +328,8 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         """
         self._y_dtype = y.dtype
         self._y_shape = y.shape
-        self.n_outputs_ = self.n_outputs_expected_ = 1 if y.ndim == 1 else y.shape[1]
+        self.n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
+        self.n_outputs_expected_ = 1
         return self
 
     def transform(self, y: np.ndarray) -> np.ndarray:
