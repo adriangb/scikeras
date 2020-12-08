@@ -23,6 +23,7 @@ from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
+from tensorflow.python.types.core import Value
 
 from scikeras._utils import (
     TFRandomState,
@@ -530,7 +531,7 @@ class BaseWrapper(BaseEstimator):
                     raise e
             self.history_[key] += val
 
-    def _check_model_outputs(self, y):
+    def _check_model_outputs(self):
         # output shapes depend on the number of classes in classification,
         # hence we cannot just check y here, we need the user (or the
         # data transformer) to tell us what to expect via n_outputs_expected_
@@ -1534,6 +1535,19 @@ class KerasClassifier(BaseWrapper):
         y = self.target_encoder_.inverse_transform(outputs, return_proba=True)
 
         return y
+
+    def _check_model_outputs(self):
+        # For classifiers, check the ambiguous case of binary classification
+        exp = getattr(self, "n_outputs_expected_", None)
+        actual = [output.shape[1] for output in self.model_.outputs]
+        if (
+            self._type_of_target == "binary"
+            and exp == 1
+            and actual == [2]
+            and isinstance(self.target_encoder_, ClassifierLabelEncoder)
+        ):
+            raise ValueError("SciKeras does not support ...")
+        return super()._check_model_outputs()
 
 
 class KerasRegressor(BaseWrapper):
