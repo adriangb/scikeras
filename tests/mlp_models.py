@@ -29,11 +29,8 @@ def dynamic_classifier(
         out = [Dense(1, activation="sigmoid")(hidden)]
     elif target_type_ == "multilabel-indicator":
         compile_kwargs["loss"] = compile_kwargs["loss"] or "binary_crossentropy"
-        if isinstance(n_classes_, list):
-            out = [
-                Dense(1, activation="sigmoid")(hidden)
-                for _ in range(n_outputs_expected_)
-            ]
+        if isinstance(n_outputs_expected_, list):
+            out = [Dense(n, activation="sigmoid")(hidden) for n in n_outputs_expected_]
         else:
             out = Dense(n_classes_, activation="softmax")(hidden)
     elif target_type_ == "multiclass-multioutput":
