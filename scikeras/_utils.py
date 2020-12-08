@@ -107,7 +107,7 @@ def make_model_picklable(model_obj):
 
 
 def _windows_upcast_ints(
-    inp: Union[List[np.ndarray], Dict[Any, np.ndarray], np.ndarray]
+    inp: Union[List[np.ndarray], Mapping[Any, np.ndarray], np.ndarray]
 ) -> Union[List[np.ndarray], np.ndarray]:
     # see tensorflow/probability#886
     def _upcast(x):
