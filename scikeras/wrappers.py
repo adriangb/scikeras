@@ -540,13 +540,12 @@ class BaseWrapper(BaseEstimator):
         # generated to avoid forcing users to subclass
         # generic transformers just to make them SciKeras compatible
         n_out_expect = getattr(self, "n_outputs_expected_", None)
-        if n_out_expect:
-            if n_out_expect != len(self.model_.outputs):
-                raise ValueError(
-                    "The target ``y`` seems to consist of"
-                    f" {n_out_expect} outputs, but this Keras"
-                    f" Model has {len(self.model_.outputs)} outputs."
-                )
+        if n_out_expect and n_out_expect != len(self.model_.outputs):
+            raise ValueError(
+                "The target ``y`` seems to consist of"
+                f" {n_out_expect} outputs, but this Keras"
+                f" Model has {len(self.model_.outputs)} outputs."
+            )
 
     def _check_model_inputs(self, X):
         if isinstance(X, np.ndarray):
