@@ -27,6 +27,7 @@ def _temp_create_all_weights(self, var_list):
         self.set_weights(self._restored_weights)
     except ValueError:
         # Weights don't match, eg. when optimizer was pickled before any training
+        # or a completely new dataset is being used right after pickling
         pass
     delattr(self, "_restored_weights")
     self._create_all_weights = self._create_all_weights_orig
