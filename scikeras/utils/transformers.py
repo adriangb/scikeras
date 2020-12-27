@@ -319,7 +319,7 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         """Fit the transformer to the target y.
 
         For RegressorTargetEncoder, this just records the dimensions
-        of y as the expected number of outputs and saves the dytpe.
+        of y as the expected number of outputs and saves the dtype.
 
         Returns
         -------
