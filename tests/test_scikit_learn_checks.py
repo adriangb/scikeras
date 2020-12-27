@@ -2,6 +2,7 @@
 
 from distutils.version import LooseVersion
 from typing import Any, Dict
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -16,6 +17,16 @@ from scikeras.wrappers import KerasClassifier, KerasRegressor
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .multi_output_models import MultiOutputClassifier
 from .testing_utils import basic_checks, parametrize_with_checks
+
+
+def relaxed_assert_allclose(*args, **kwargs):
+    """A more relaxed version of `assert_allclose`
+    that gets monkey-patched into the sklearn checks to allow
+    for lower precision testing.
+    """
+    if "atol" in kwargs:
+        kwargs["atol"] = max(5e-8, kwargs["atol"])
+    return np.testing.assert_allclose(*args, **kwargs)
 
 
 @parametrize_with_checks(
@@ -58,7 +69,8 @@ def test_fully_compliant_estimators(estimator, check):
     ):
         # These tests have bugs that are fixed in 0.23.0
         pytest.skip("This test is broken in sklearn<=0.23.0")
-    check(estimator)
+    with patch("numpy.testing.assert_allclose", relaxed_assert_allclose):
+        check(estimator)
 
 
 class SubclassedClassifier(KerasClassifier):
