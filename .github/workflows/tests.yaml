@@ -85,8 +85,9 @@ jobs:
       - name: Install Nightly Versions
         if: always()
         run: |
-          poetry run python -m pip install tf-nightly
-          poetry run python -m pip install --pre --extra-index https://pypi.anaconda.org/scipy-wheels-nightly/simple scikit-learn
+          poetry run python -m pip install -U tf-nightly
+          poetry run python -m pip install -U scipy
+          poetry run python -m pip install -U --pre --extra-index https://pypi.anaconda.org/scipy-wheels-nightly/simple scikit-learn
 
       - name: Test with pytest
         if: always()
