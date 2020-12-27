@@ -742,14 +742,14 @@ class BaseWrapper(BaseEstimator):
                 f" Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
             )
 
+        # epochs via kwargs > fit__epochs > epochs
+        kwargs["epochs"] = kwargs.get(
+            "epochs", getattr(self, "fit__epochs", self.epochs)
+        )
+        kwargs["initial_epoch"] = kwargs.get("initial_epoch", 0)
+
         self._fit(
-            X=X,
-            y=y,
-            sample_weight=sample_weight,
-            warm_start=self.warm_start,
-            epochs=getattr(self, "fit__epochs", self.epochs),
-            initial_epoch=0,
-            **kwargs,
+            X=X, y=y, sample_weight=sample_weight, warm_start=self.warm_start, **kwargs,
         )
 
         return self
