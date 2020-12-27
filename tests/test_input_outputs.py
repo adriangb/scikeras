@@ -331,6 +331,12 @@ def test_classifier_handles_dtypes(dtype):
     y = np.random.choice(n_classes, size=n).astype(dtype)
     sample_weight = np.ones(y.shape).astype(dtype)
 
+    if dtype == "object":
+        # sklearn (including MLPClassifier) does not recognize `np.array([1, 2, 1], dtype=object)`
+        # to get around this, we cast to string and then back to object to get
+        # `np.array(["1", "2", "1"], dtype=object)`, which _is_ recognized.
+        y = y.astype(str).astype(object)
+
     class StrictClassifier(KerasClassifier):
         def _fit_keras_model(
             self, X, y, sample_weight, warm_start, epochs, initial_epoch
@@ -339,6 +345,7 @@ def test_classifier_handles_dtypes(dtype):
                 assert X.dtype == np.dtype(tf.keras.backend.floatx())
             else:
                 assert X.dtype == np.dtype(dtype)
+            assert y.dtype == np.dtype(tf.keras.backend.floatx())
             # y is passed through encoders, it is likely not the original dtype
             # sample_weight should always be floatx
             assert sample_weight.dtype == np.dtype(tf.keras.backend.floatx())
@@ -349,10 +356,7 @@ def test_classifier_handles_dtypes(dtype):
     clf = StrictClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,))
     clf.fit(X, y, sample_weight=sample_weight)
     assert clf.score(X, y) >= 0
-    if y.dtype.kind != "O":
-        assert clf.predict(X).dtype == np.dtype(dtype)
-    else:
-        assert clf.predict(X).dtype == np.float32
+    assert clf.predict(X).dtype == np.dtype(dtype)
 
 
 @pytest.mark.parametrize(
