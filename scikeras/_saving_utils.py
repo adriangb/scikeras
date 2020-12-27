@@ -14,7 +14,12 @@ from tensorflow.keras.models import load_model
 
 
 def _get_temp_folder():
-    return f"ram://{tempfile.mkdtemp()}"
+    if os.name == "nt":
+        # the RAM-based filesystem is not fully supported on
+        # Windows yet, we save to a temp folder on disk instead
+        return tempfile.mkdtemp()
+    else:
+        return f"ram://{tempfile.mkdtemp()}"
 
 
 def _temp_create_all_weights(self, var_list):
