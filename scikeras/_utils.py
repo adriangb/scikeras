@@ -4,7 +4,7 @@ import random
 import warnings
 
 from inspect import isclass
-from typing import Any, Callable, Dict, Iterable, List, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Union
 
 import numpy as np
 import tensorflow as tf
@@ -107,16 +107,18 @@ def make_model_picklable(model_obj):
 
 
 def _windows_upcast_ints(
-    arr: Union[List[np.ndarray], np.ndarray]
+    inp: Union[List[np.ndarray], Mapping[Any, np.ndarray], np.ndarray]
 ) -> Union[List[np.ndarray], np.ndarray]:
     # see tensorflow/probability#886
     def _upcast(x):
         return x.astype("int64") if x.dtype == np.int32 else x
 
-    if isinstance(arr, np.ndarray):
-        return _upcast(arr)
+    if isinstance(inp, np.ndarray):
+        return _upcast(inp)
+    elif isinstance(inp, Mapping):
+        return {k: _upcast(x_) for k, x_ in inp.items()}
     else:
-        return [_upcast(x_) for x_ in arr]
+        return [_upcast(x_) for x_ in inp]
 
 
 def route_params(

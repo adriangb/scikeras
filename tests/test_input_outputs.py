@@ -1,10 +1,10 @@
-from re import S
 from typing import Any, Dict
 
 import numpy as np
 import pytest
 import tensorflow as tf
 
+from numpy.core.shape_base import hstack
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import FunctionTransformer, MultiLabelBinarizer
 from tensorflow.python.keras.layers import Concatenate, Dense, Input
@@ -22,37 +22,6 @@ INPUT_DIM = 5
 TRAIN_SAMPLES = 10
 TEST_SAMPLES = 5
 NUM_CLASSES = 2
-
-
-class FunctionalAPIMultiInputClassifier(KerasClassifier):
-    """Tests Functional API Classifier with 2 inputs.
-    """
-
-    def _keras_build_fn(
-        self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
-    ) -> Model:
-        # get params
-        n_classes_ = meta["n_classes_"]
-
-        inp1 = Input((1,))
-        inp2 = Input((3,))
-
-        x1 = Dense(100)(inp1)
-        x2 = Dense(100)(inp2)
-
-        x3 = Concatenate(axis=-1)([x1, x2])
-
-        cat_out = Dense(n_classes_, activation="softmax")(x3)
-
-        model = Model([inp1, inp2], [cat_out])
-        losses = ["sparse_categorical_crossentropy"]
-        model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
-
-        return model
-
-    @property
-    def feature_encoder(self):
-        return FunctionTransformer(func=lambda X: [X[:, 0], X[:, 1:4]],)
 
 
 class FunctionalAPIMultiLabelClassifier(MultiOutputClassifier):
@@ -105,59 +74,154 @@ class FunctionalAPIMultiOutputRegressor(KerasRegressor):
         return model
 
 
-def test_multi_input():
-    """Tests custom multi-input Keras model.
+@pytest.mark.parametrize(
+    "tf_fn,error,error_pat",
+    [
+        (
+            lambda X: X,
+            ValueError,
+            "``X`` has 1 inputs, but the Keras model has 2 inputs",
+        ),
+        (
+            lambda X: [X],
+            ValueError,
+            "``X`` has 1 inputs, but the Keras model has 2 inputs",
+        ),
+        (
+            lambda X: [X[:, 0], X[:, 1:2], X[:, 2:3]],
+            ValueError,
+            "``X`` has 3 inputs, but the Keras model has 2 inputs",
+        ),
+        (lambda X: [X[:, 0], X[:, 1:4]], None, ""),
+        (lambda X: [X[:, 0:1], X[:, 1:4]], None, ""),
+        (
+            lambda X: [X[:, 0], X[:, 1:3]],
+            ValueError,
+            r"expected shape \(3,\) but got \(2,\)",
+        ),
+        (lambda X: {"Inp1": X[:, 0], "Inp2": X[:, 1:4]}, None, ""),
+        (lambda X: {"Inp1": X[:, 0:1], "Inp2": X[:, 1:4]}, None, ""),
+        (
+            lambda X: {"Inp1": X[:, 0], "Inp2": X[:, 1:3]},
+            ValueError,
+            r"expected shape \(3,\) but got \(2,\)",
+        ),
+    ],
+)
+def test_multi_input(tf_fn, error, error_pat):
+    """Test handling of multiple inputs as lists and dicts.
     """
-    clf = FunctionalAPIMultiInputClassifier()
-    (x_train, y_train), (x_test, y_test) = get_test_data(
-        train_samples=TRAIN_SAMPLES,
-        test_samples=TEST_SAMPLES,
-        input_shape=(4,),
-        num_classes=3,
-    )
 
-    clf.fit(x_train, y_train)
-    clf.predict(x_test)
-    clf.score(x_train, y_train)
+    class MultiInputClassifier(KerasClassifier):
+        def _keras_build_fn(self, meta: Dict[str, Any]) -> Model:
+            n_classes_ = meta["n_classes_"]
+            inp1 = Input((1,), name="Inp1")
+            inp2 = Input((3,), name="Inp2")
+            x1 = Dense(100)(inp1)
+            x2 = Dense(100)(inp2)
+            x3 = Concatenate(axis=-1)([x1, x2])
+            cat_out = Dense(n_classes_, activation="softmax")(x3)
+            model = Model([inp1, inp2], [cat_out])
+            losses = ["sparse_categorical_crossentropy"]
+            model.compile(loss=losses)
+            return model
+
+        @property
+        def feature_encoder(self):
+            return FunctionTransformer(func=tf_fn)
+
+    est = MultiInputClassifier()
+
+    X, y = np.random.random((10, 4)), np.random.randint(low=0, high=3, size=(10,))
+
+    if error:
+        with pytest.raises(error, match=error_pat):
+            est.fit(X, y)
+    else:
+        est.fit(X, y)
+        est.score(X, y)
 
 
-def test_multi_output():
-    """Compares to scikit-learn RandomForestClassifier classifier.
+@pytest.mark.parametrize(
+    "tf_fn,error,error_pat",
+    [
+        (lambda y: [y[:, 0], y[:, 1]], None, "",),
+        (lambda y: [y[:, 0:1], y[:, 1]], None, "",),
+        (
+            lambda y: [y[:, 0], y[:, 1], y[:, 1]],
+            ValueError,
+            "3 outputs, but this Keras Model has 2 outputs",
+        ),
+        (lambda y: [y], ValueError, "1 outputs, but this Keras Model has 2 outputs",),
+        (lambda y: y, ValueError, "1 outputs, but this Keras Model has 2 outputs",),
+        (lambda y: {"Out1": y[:, 0], "Out2": y[:, 1]}, None, "",),
+        (lambda y: {"Out1": y[:, 0]}, ValueError, "",),
+    ],
+)
+def test_multi_output_clf(tf_fn, error, error_pat):
+    """Test handling of multiple outputs for classifiers as lists and dicts.
     """
 
-    def get_model(meta: Dict[str, Any]) -> Model:
-        # get params
-        n_features_in_ = meta["n_features_in_"]
+    class SciKerasFunctionTransformer(FunctionTransformer):
+        def fit(self, y):
+            super().fit(y)
+            y_tf = super().transform(y)
+            if isinstance(y_tf, (list, dict)):
+                self.n_outputs_expected_ = len(y_tf)
+            else:
+                self.n_outputs_expected_ = 1
+            return self
 
-        inp = Input((n_features_in_,))
+        def get_metadata(self) -> Dict[str, Any]:
+            return {"n_outputs_expected_": self.n_outputs_expected_}
 
-        x1 = Dense(100)(inp)
+    class MultiOutputClassifier(KerasClassifier):
+        def _keras_build_fn(self) -> Model:
+            n_features_in_ = self.n_features_in_
+            inp = Input((n_features_in_,))
+            x1 = Dense(100)(inp)
+            out = [
+                Dense(1, activation="sigmoid", name="Out1")(x1),
+                Dense(3, activation="softmax", name="Out2")(x1),
+            ]
+            model = Model([inp], out)
+            losses = ["binary_crossentropy", "sparse_categorical_crossentropy"]
+            model.compile(loss=losses)
+            return model
 
-        out = [Dense(1, activation="sigmoid")(x1) for _ in range(meta["n_outputs_"])]
+        @property
+        def target_encoder(self):
+            def inverse_func(y_tf):
+                y1 = np.around(y_tf[0]).astype(np.int64)
+                y2 = np.argmax(y_tf[1], axis=1).astype(np.int64)
+                return np.column_stack([y1, y2])
 
-        model = Model([inp], out)
-        losses = "binary_crossentropy"
-        model.compile(optimizer="adam", loss=losses, metrics=["accuracy"])
+            return SciKerasFunctionTransformer(
+                func=tf_fn, inverse_func=inverse_func, check_inverse=False
+            )
 
-        return model
+        def scorer(self, y, y_pred, **kwargs):
+            return np.average(
+                [
+                    super().scorer(y[:, 0], y_pred[:, 0]),
+                    super().scorer(y[:, 1], y_pred[:, 1]),
+                ]
+            )
 
-    clf_keras = MultiOutputClassifier(model=get_model)
-    clf_sklearn = RandomForestClassifier()
+    clf = MultiOutputClassifier()
 
     # generate data
     X = np.random.rand(10, 4)
-    y1 = np.random.randint(0, 2, size=(10, 1))
-    y2 = np.random.randint(0, 2, size=(10, 1))
-    y = np.hstack([y1, y2])
+    y1 = np.random.randint(0, 2, size=(10,))
+    y2 = np.random.randint(0, 3, size=(10,))
+    y = np.column_stack([y1, y2])
 
-    clf_keras.fit(X, y)
-    y_wrapper = clf_keras.predict(X)
-    clf_keras.score(X, y)
-
-    clf_sklearn.fit(X, y)
-    y_sklearn = clf_sklearn.predict(X)
-
-    assert y_sklearn.shape == y_wrapper.shape
+    if error:
+        with pytest.raises(error, match=error_pat):
+            clf.fit(X, y)
+    else:
+        clf.fit(X, y)
+        clf.score(X, y)
 
 
 def test_multi_label_clasification():
@@ -286,36 +350,6 @@ def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
     tfs_new = clf.target_encoder_
     assert tfs_new is tfs  # same transformer was re-used
     assert set(clf.classes_) == set(y1)
-
-
-def test_incompatible_output_dimensions():
-    """Compares to the scikit-learn RandomForestRegressor classifier.
-    """
-    # create dataset with 4 outputs
-    X = np.random.rand(10, 20)
-    y = np.random.randint(low=0, high=3, size=(10,))
-
-    # create a model with 2 outputs
-    def build_fn_clf(meta: Dict[str, Any], compile_kwargs: Dict[str, Any],) -> Model:
-        # get params
-        n_features_in_ = meta["n_features_in_"]
-
-        inp = Input((n_features_in_,))
-
-        x1 = Dense(100)(inp)
-
-        binary_out = Dense(1, activation="sigmoid")(x1)
-        cat_out = Dense(2, activation="softmax")(x1)
-
-        model = Model([inp], [binary_out, cat_out])
-        model.compile(loss=["binary_crossentropy", "categorical_crossentropy"])
-
-        return model
-
-    clf = KerasClassifier(model=build_fn_clf)
-
-    with pytest.raises(ValueError, match="input of size"):
-        clf.fit(X, y)
 
 
 @pytest.mark.parametrize(

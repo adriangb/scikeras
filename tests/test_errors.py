@@ -22,14 +22,16 @@ def test_X_shape_change():
         loss=KerasRegressor.r_squared,
         hidden_layer_sizes=(100,),
     )
-    X = np.array([[1, 2], [3, 4]]).reshape(2, 2, 1)
+    X = np.array([[1, 2], [3, 4]])
     y = np.array([[0, 1, 0], [1, 0, 0]])
 
     estimator.fit(X=X, y=y)
 
+    # Calling with a different number of dimensions for X raises an error
     with pytest.raises(ValueError, match="dimensions in X"):
-        # Calling with a different number of dimensions for X raises an error
-        estimator.partial_fit(X=X.reshape(2, 2), y=y)
+        estimator.partial_fit(X=X.reshape(2, 2, 1), y=y)
+    with pytest.raises(ValueError, match="dimensions in X"):
+        estimator.predict(X=X.reshape(2, 2, 1))
 
 
 def test_unknown_param():
