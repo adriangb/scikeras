@@ -19,6 +19,21 @@ from .multi_output_models import MultiOutputClassifier
 from .testing_utils import basic_checks, parametrize_with_checks
 
 
+higher_precision = (
+    "check_classifiers_classes",
+    "check_methods_sample_order_invariance",
+)
+
+
+# Set batch size to a large number
+# (larger than any X.shape[0] is the goal)
+# if batch_size < X.shape[0], results will very
+# slightly if X is shuffled.
+# This is only required for this tests and is not really
+# applicable to real world datasets
+batch_size = 1000
+
+
 def relaxed_assert_allclose(*args, **kwargs):
     """A more relaxed version of `assert_allclose`
     that gets monkey-patched into the sklearn checks to allow
@@ -33,34 +48,24 @@ def relaxed_assert_allclose(*args, **kwargs):
     estimators=[
         MultiOutputClassifier(
             model=dynamic_classifier,
-            # Set batch size to a large number
-            # (larger than X.shape[0] is the goal)
-            # if batch_size < X.shape[0], results will very
-            # slightly if X is shuffled.
-            # This is only required for this tests and is not really
-            # applicable to real world datasets
-            batch_size=100,
-            optimizer="adam",
+            batch_size=batch_size,
             model__hidden_layer_sizes=[],
         ),
         KerasRegressor(
             model=dynamic_regressor,
-            # Set batch size to a large number
-            # (larger than X.shape[0] is the goal)
-            # if batch_size < X.shape[0], results will very
-            # slightly if X is shuffled.
-            # This is only required for this tests and is not really
-            # applicable to real world datasets
-            batch_size=100,
-            optimizer="adam",
+            batch_size=batch_size,
             loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=[],
         ),
     ],
     ids=["KerasClassifier", "KerasRegressor"],
 )
-def test_fully_compliant_estimators(estimator, check):
-    if sklearn_version <= LooseVersion("0.23.0") and check.func.__name__ in (
+def test_fully_compliant_estimators_low_precision(estimator, check):
+    """Checks that can be passed with sklearn's default tolerances
+    and in a single epoch.
+    """
+    check_name = check.func.__name__
+    if sklearn_version <= LooseVersion("0.23.0") and check_name in (
         "check_classifiers_predictions",
         "check_classifiers_classes",
         "check_methods_subset_invariance",
@@ -69,7 +74,39 @@ def test_fully_compliant_estimators(estimator, check):
     ):
         # These tests have bugs that are fixed in 0.23.0
         pytest.skip("This test is broken in sklearn<=0.23.0")
-    with patch("numpy.testing.assert_allclose", relaxed_assert_allclose):
+    if check_name in higher_precision:
+        pytest.skip("This test requires high precision.")
+    check(estimator)
+
+
+@parametrize_with_checks(
+    estimators=[
+        MultiOutputClassifier(
+            model=dynamic_classifier,
+            batch_size=batch_size,
+            model__hidden_layer_sizes=[],
+            optimizer__learning_rate=0.1,
+            epochs=20,
+        ),
+        KerasRegressor(
+            model=dynamic_regressor,
+            batch_size=batch_size,
+            loss=KerasRegressor.r_squared,
+            model__hidden_layer_sizes=[],
+            optimizer__learning_rate=0.1,
+            epochs=20,
+        ),
+    ],
+    ids=["KerasClassifier", "KerasRegressor"],
+)
+def test_fully_compliant_estimators_high_precision(estimator, check):
+    """Checks that require lower tolerances (via `relaxed_assert_allclose`)
+    and/or many training epochs.
+    """
+    check_name = check.func.__name__
+    if check_name not in higher_precision:
+        pytest.skip("This test does not require high precision.")
+    with patch("sklearn.utils._testing.assert_allclose", relaxed_assert_allclose):
         check(estimator)
 
 
