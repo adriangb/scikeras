@@ -599,7 +599,7 @@ class BaseWrapper(BaseEstimator):
         self._check_model_loss()
 
     def _validate_data(
-        self, X=None, y=None, reset: bool = False
+        self, X=None, y=None, reset: bool = False, y_numeric: bool = False
     ) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
         """Validate input arrays and set or check their meta-parameters.
 
@@ -616,6 +616,9 @@ class BaseWrapper(BaseEstimator):
         reset : bool, default=False
             If True, override all meta attributes.
             If False, verify that they haven't changed.
+        y_numeric : bool, default = False
+            If True, ensure y is a numeric dtype.
+            If False, allow non-numeric y to pass through.
 
         Returns
         -------
@@ -623,14 +626,17 @@ class BaseWrapper(BaseEstimator):
             The validated input.
         """
 
-        def _check_array_dtype(arr):
+        def _check_array_dtype(arr, force_numeric):
             if not isinstance(arr, np.ndarray):
-                return _check_array_dtype(np.asarray(arr))
-            elif arr.dtype.kind != "O":
+                return _check_array_dtype(np.asarray(arr), force_numeric=force_numeric)
+            elif (
+                arr.dtype.kind not in ("O", "U", "S") or not force_numeric
+            ):  # object, unicode or string
+                # already numeric
                 return None  # check_array won't do any casting with dtype=None
             else:
                 # default to TFs backend float type
-                # instead of float64 (sklearns default)
+                # instead of float64 (sklearn's default)
                 return tf.keras.backend.floatx()
 
         if X is not None and y is not None:
@@ -644,7 +650,10 @@ class BaseWrapper(BaseEstimator):
 
         if y is not None:
             y = check_array(
-                y, ensure_2d=False, allow_nd=False, dtype=_check_array_dtype(y)
+                y,
+                ensure_2d=False,
+                allow_nd=False,
+                dtype=_check_array_dtype(y, force_numeric=y_numeric),
             )
             y_dtype_ = y.dtype
             y_ndim_ = y.ndim
@@ -665,7 +674,9 @@ class BaseWrapper(BaseEstimator):
                         f" is expecting {self.y_ndim_} dimensions in y."
                     )
         if X is not None:
-            X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X))
+            X = check_array(
+                X, allow_nd=True, dtype=_check_array_dtype(X, force_numeric=True)
+            )
             X_dtype_ = X.dtype
             X_shape_ = X.shape
             n_features_in_ = X.shape[1]
@@ -1231,8 +1242,6 @@ class KerasClassifier(BaseWrapper):
     _tags = {
         "multilabel": True,
         "_xfail_checks": {
-            "check_classifiers_classes": "can't meet \
-            performance target",
             "check_fit_idempotent": "tf does not use \
             sparse tensors",
             "check_no_attributes_set_in_init": "can only \
@@ -1616,7 +1625,6 @@ class KerasRegressor(BaseWrapper):
         "multilabel": True,
         "_xfail_checks": {
             "check_fit_idempotent": "tf does not use sparse tensors",
-            "check_methods_subset_invariance": "can't meet tol",
             "check_no_attributes_set_in_init": "can only pass if all \
             params are hardcoded in __init__",
         },
@@ -1645,6 +1653,15 @@ class KerasRegressor(BaseWrapper):
             Score for the test data set.
         """
         return sklearn_r2_score(y_true, y_pred, **kwargs)
+
+    def _validate_data(
+        self, X=None, y=None, reset: bool = False, y_numeric: bool = False
+    ) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
+        # For regressors, y should ALWAYS be numeric
+        # To enforce this without additional dtype checks, we set `y_numeric=True`
+        # when calling `_validate_data` which will force casting to numeric for
+        # non-numeric data.
+        return super()._validate_data(X=X, y=y, reset=reset, y_numeric=True)
 
     @property
     def target_encoder(self):
