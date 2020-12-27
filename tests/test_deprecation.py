@@ -29,6 +29,9 @@ def test_kwarg_deprecation(wrapper, builder):
     """
     original_batch_size = 128
     kwarg_batch_size = 90
+    kwarg_epochs = (
+        2  # epochs is a special case for fit since SciKeras also uses it internally
+    )
     extra_kwargs = {"workers": 1}  # chosen because it is not a SciKeras hardcoded param
     est = wrapper(
         model=builder,
@@ -46,12 +49,16 @@ def test_kwarg_deprecation(wrapper, builder):
         with mock.patch.object(
             est.model_, "fit", side_effect=est.model_.fit
         ) as mock_fit:
-            est.fit(X, y, batch_size=kwarg_batch_size, **extra_kwargs)
+            est.fit(
+                X, y, batch_size=kwarg_batch_size, epochs=kwarg_epochs, **extra_kwargs
+            )
             call_args = mock_fit.call_args_list
             assert len(call_args) == 1
             call_kwargs = call_args[0][1]
             assert "batch_size" in call_kwargs
             assert call_kwargs["batch_size"] == kwarg_batch_size
+            assert call_kwargs["epochs"] == kwarg_epochs
+            assert len(est.history_["loss"]) == kwarg_epochs
     # check predict
     with pytest.warns(UserWarning, match=match_txt):
         with mock.patch.object(
