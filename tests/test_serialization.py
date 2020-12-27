@@ -155,7 +155,9 @@ def test_partial_fit_pickle(optim):
     """
     X, y = make_regression(n_features=8, n_samples=100)
 
-    m1 = KerasRegressor(model=dynamic_regressor, optimizer=optim, random_state=42)
+    m1 = KerasRegressor(
+        model=dynamic_regressor, optimizer=optim, random_state=42, hidden_layer_sizes=[]
+    )
     m2 = clone(m1)
 
     # Ensure we can roundtrip before training
