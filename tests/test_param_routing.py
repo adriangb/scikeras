@@ -1,8 +1,5 @@
 import inspect
 
-from distutils.version import LooseVersion
-from typing import Any, Dict
-
 import numpy as np
 import pytest
 import tensorflow as tf
@@ -116,10 +113,6 @@ def test_routing_sets(dest):
         "kwargs",
     }
     known_params = getattr(BaseWrapper, f"_{dest}_kwargs")
-    if LooseVersion(tf.__version__) <= "2.2.0":
-        # this parameter is a kwarg in TF 2.2.0
-        # it will still work in practice, but breaks this test
-        known_params = known_params - {"run_eagerly"}
     assert known_params.issubset(accepted_params)
 
 

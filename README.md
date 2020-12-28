@@ -22,7 +22,7 @@ This package is available on PyPi:
 pip install scikeras
 ```
 
-The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.2.0`.
+The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.4.0`.
 
 ### Migrating from `tf.keras.wrappers.scikit_learn`
 
