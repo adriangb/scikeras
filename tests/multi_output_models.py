@@ -48,7 +48,7 @@ class MultiLabelTransformer(ClassifierLabelEncoder):
         if self._target_type == "multilabel-indicator":
             # RandomForestClassifier and sklearn's MultiOutputClassifier always return int64
             # for multilabel-indicator
-            y = y.astype(np.int64)
+            y = y.astype(int)
         return y
 
 
