@@ -314,6 +314,9 @@ def test_output_shapes_and_dtypes_against_sklearn_cls(
     else:
         assert y_out_scikeras.dtype == y_out_sklearn.dtype
 
+    The outputs' dtype and shape get compared to sklearn's MLPRegressor and are
+    expected to match except for the output dtype, which in MLPRegressor is always
+    float64 but in SciKeras depends on the TF backend dtype (usually float32).
 
 @pytest.mark.parametrize(
     "y_dtype", ("float32", "float64", "int64", "int32", "uint8", "uint16")
