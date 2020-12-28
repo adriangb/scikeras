@@ -294,10 +294,10 @@ def test_output_shapes_and_dtypes_against_sklearn_cls(
     def check_dtypes(*args, **kwargs):
         y = kwargs["y"]
         if isinstance(y, list):
-            assert all(y_.dtype == np.dtype(tf.keras.backend.floatx()) for y_ in y)
+            assert all(y_.dtype.name == tf.keras.backend.floatx() for y_ in y)
         else:
             # array
-            assert y.dtype == np.dtype(tf.keras.backend.floatx())
+            assert y.dtype.name == tf.keras.backend.floatx()
         return fit_orig(*args, **kwargs)
 
     with patch.object(est_pair[1].model_, "fit", new=check_dtypes):
@@ -310,7 +310,7 @@ def test_output_shapes_and_dtypes_against_sklearn_cls(
     # A quirk about sklearn: multilabel-indicator models _always_ return np.int64.
     # We match this in MultiOutputClassifier/MultiLabelTransformer
     if y_dtype == "object":
-        assert y_out_scikeras.dtype == "object"
+        assert y_out_scikeras.dtype.name == "object"
     else:
         assert y_out_scikeras.dtype == y_out_sklearn.dtype
 
@@ -338,7 +338,7 @@ def test_output_shapes_and_dtypes_against_sklearn_reg(y_dtype, y_val, est_pair):
 
     def check_dtypes(*args, **kwargs):
         y = kwargs["y"]
-        assert y.dtype == np.dtype(y_dtype)
+        assert y.dtype.name == y_dtype
         return fit_orig(*args, **kwargs)
 
     with patch.object(est_pair[1].model_, "fit", new=check_dtypes):
@@ -351,7 +351,7 @@ def test_output_shapes_and_dtypes_against_sklearn_reg(y_dtype, y_val, est_pair):
     # returns float64, except that we avoid a pointless conversion from
     # float32 -> float64 that would just be adding noise if TF is using float32
     # internally.
-    assert y_out_scikeras.dtype == np.float64
+    assert y_out_scikeras.dtype.name == "float64"
 
 
 @pytest.mark.parametrize(

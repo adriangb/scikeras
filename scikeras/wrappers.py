@@ -27,7 +27,6 @@ from tensorflow.python.keras.utils.generic_utils import register_keras_serializa
 from scikeras._utils import (
     TFRandomState,
     _class_from_strings,
-    _windows_upcast_ints,
     accepts_kwargs,
     has_param,
     make_model_picklable,
@@ -497,11 +496,6 @@ class BaseWrapper(BaseEstimator):
                 "\n\nSee https://www.tensorflow.org/api_docs/python/tf/keras/losses"
                 " for more information on Keras losses."
             )
-
-        if os.name == "nt":
-            # see tensorflow/probability#886
-            X = _windows_upcast_ints(X)
-            y = _windows_upcast_ints(y)
 
         # collect parameters
         params = self.get_params()
