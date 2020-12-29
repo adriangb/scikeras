@@ -106,19 +106,6 @@ def make_model_picklable(model_obj):
     model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
 
 
-def _windows_upcast_ints(
-    arr: Union[List[np.ndarray], np.ndarray]
-) -> Union[List[np.ndarray], np.ndarray]:
-    # see tensorflow/probability#886
-    def _upcast(x):
-        return x.astype("int64") if x.dtype == np.int32 else x
-
-    if isinstance(arr, np.ndarray):
-        return _upcast(arr)
-    else:
-        return [_upcast(x_) for x_ in arr]
-
-
 def route_params(
     params: Dict[str, Any],
     destination: str,
