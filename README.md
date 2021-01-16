@@ -8,7 +8,7 @@ Scikit-Learn compatible wrappers for Keras Models.
 
 ## Why SciKeras
 
-SciKeras is derived from and API compatible with `tf.keras.wrappers.scikit_learn`. The original TensorFlow (TF) wrappers are not actively mantained,
+SciKeras is derived from and API compatible with `tf.keras.wrappers.scikit_learn`. The original TensorFlow (TF) wrappers are not actively maintained,
 and [may be deprecated](https://github.com/tensorflow/tensorflow/pull/37201#pullrequestreview-391650001) at some point.
 
 An overview of the advantages and differences as compared to the TF wrappers can be found in our
@@ -22,7 +22,7 @@ This package is available on PyPi:
 pip install scikeras
 ```
 
-The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.2.0`.
+The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.4.0`.
 
 ### Migrating from `tf.keras.wrappers.scikit_learn`
 
