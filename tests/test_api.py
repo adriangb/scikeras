@@ -413,8 +413,7 @@ def test_warm_start():
 
 @register_keras_serializable(name="CustomMetric")
 class CustomMetric(metrics_module.MeanAbsoluteError):
-    def __reduce__(self):
-        return metrics_module.deserialize, (metrics_module.serialize(self),)
+    pass
 
 
 class TestPartialFit:
