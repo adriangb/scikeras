@@ -493,6 +493,8 @@ class BaseWrapper(BaseEstimator):
         fit_args["sample_weight"] = sample_weight
         fit_args["epochs"] = initial_epoch + epochs
         fit_args["initial_epoch"] = initial_epoch
+        if fit_args["batch_size"] == "all":
+            fit_args["batch_size"] = X.shape[1]
         fit_args.update(kwargs)
 
         if self._random_state is not None:

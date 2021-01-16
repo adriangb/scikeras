@@ -1,5 +1,7 @@
 import os
 
+from unittest import mock
+
 import numpy as np
 import pytest
 
@@ -260,3 +262,17 @@ def test_class_weight_param():
             clf.partial_fit(X_train, y_train)
         y_pred = clf.predict(X_test)
         assert np.mean(y_pred == 0) > 0.95
+
+
+def test_batch_size_all():
+    est = KerasClassifier(dynamic_classifier, batch_size="all", hidden_layer_sizes=[])
+    X, y = make_classification()
+    est.fit(X, y)  # build model_
+    fit_orig = est.model_.fit
+
+    def fit_check(**kwargs):
+        assert kwargs["bach_size"] == X.shape[1]
+        return fit_orig(**kwargs)
+
+    with mock.patch.object(est.model_, "fit", new=fit_check):
+        est.fit(X, y)
