@@ -762,8 +762,9 @@ class BaseWrapper(BaseEstimator):
             # Given the same RandomState, the seed will always be
             # the same, thus giving reproducible results
             state = self.random_state.get_state()
-            self._random_state = self.random_state.randint(low=1)
-            self.random_state.set_state(state)
+            r = np.random.RandomState()
+            r.set_state(state)
+            self._random_state = r.randint(low=1)
         else:
             # int or None
             self._random_state = self.random_state
