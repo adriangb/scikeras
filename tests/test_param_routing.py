@@ -23,6 +23,7 @@ keras_classifier_base_meta_set = {
     "n_outputs_",
     "feature_encoder_",
     "target_encoder_",
+    "dataset_transformer_",
 }
 
 keras_regressor_base_meta_set = {
@@ -36,6 +37,7 @@ keras_regressor_base_meta_set = {
     "target_type_",
     "feature_encoder_",
     "target_encoder_",
+    "dataset_transformer_",
 }
 
 

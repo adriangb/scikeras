@@ -696,6 +696,29 @@ class BaseWrapper(BaseEstimator):
         """
         return FunctionTransformer()
 
+    @property
+    def dataset_transformer(self):
+        """Retrieve a transformer to be applied jointly to X & y.
+
+        It MUST accept a 2 element tuple as it's single input argument
+        to `fit`, `transform` and `inverse_transform` and the
+        latter two MUST also output a two element tuple.
+        The second element, corresponding to `y`, can be None
+        if the first element (corresponding to `X`) is a Dataset.
+
+        Metadata will be collected from ``get_metadata`` if
+        the transformer implements that method.
+        Override this method to implement a custom data transformer
+        for entire dataset.
+
+        Returns
+        -------
+        dataset_transformer
+            Transformer implementing the sklearn transformer
+            interface.
+        """
+        return FunctionTransformer()
+
     def fit(self, X, y, sample_weight=None, **kwargs) -> "BaseWrapper":
         """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
 
@@ -774,8 +797,11 @@ class BaseWrapper(BaseEstimator):
         target_metadata = getattr(self.target_encoder_, "get_metadata", dict)()
         vars(self).update(**target_metadata)
         self.feature_encoder_ = self.feature_encoder.fit(X)
-        feature_meta = getattr(self.feature_encoder, "get_metadata", dict)()
+        feature_meta = getattr(self.feature_encoder_, "get_metadata", dict)()
         vars(self).update(**feature_meta)
+        self.dataset_transformer_ = self.dataset_transformer.fit((X, y))
+        dataset_meta = getattr(self.dataset_transformer_, "get_metadata", dict)()
+        vars(self).update(**dataset_meta)
 
         self.model_ = self._build_keras_model()
 
@@ -846,10 +872,13 @@ class BaseWrapper(BaseEstimator):
         if sample_weight is not None:
             X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
 
-        y = self.target_encoder_.transform(y)
         X = self.feature_encoder_.transform(X)
 
-        self._check_model_compatibility(y)
+        if y is not None:
+            y = self.target_encoder_.transform(y)
+            self._check_model_compatibility(y)
+
+        X, y = self.dataset_transformer_.transform((X, y))
 
         self._fit_keras_model(
             X,

@@ -2,6 +2,7 @@
 import pickle
 
 from typing import Any, Dict
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -17,7 +18,8 @@ from sklearn.ensemble import (
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import FunctionTransformer, StandardScaler
+from tensorflow.data import Dataset
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
@@ -27,7 +29,7 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
-from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .testing_utils import basic_checks
@@ -812,3 +814,34 @@ class TestInitialize:
         np.testing.assert_allclose(y_pred_keras, y_pred_scikeras)
         # Check that we are still using the same model object
         assert est.model_ is m2
+
+
+class TestDatasetTransformer:
+    def test_conversion_to_dataset(self):
+        inp = Input((1,))
+        out = Dense(1, activation="sigmoid")(inp)
+        m = Model(inp, out)
+        m.compile(loss="bce")
+
+        class MyWrapper(KerasClassifier):
+            @property
+            def dataset_transformer(self):
+                f = lambda x_y: (Dataset.from_tensor_slices(x_y), None)
+                return FunctionTransformer(f)
+
+        est = MyWrapper(m)
+        X = np.random.random((100, 1))
+        y = np.array(["a", "b"] * 50, dtype=str)
+        fit_orig = m.fit
+
+        def check_fit(**kwargs):
+            assert isinstance(kwargs["x"], Dataset)
+            assert kwargs["y"] is None
+            return fit_orig(**kwargs)
+
+        with patch.object(m, "fit", new=check_fit):
+            est.fit(X, y)
+        y_pred = est.predict(X)
+        assert y_pred.dtype == y.dtype
+        assert y_pred.shape == y.shape
+        assert set(y_pred).issubset(set(y))
