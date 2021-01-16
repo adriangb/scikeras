@@ -406,6 +406,10 @@ def test_dataset_input():
         return est.model_.fit(**kwargs)
 
     with patch.object(est.model_, "fit", new=check_fit):
+        # Fit mixess of dataset and numpy arrays
+        # All validation should be disabled, so no errors should be raised
         est.fit(data)
         est.partial_fit(data)
-        est.partial_fit(X, y)  # should be able to mix in np arrays _after_ a dataset
+        est.partial_fit(X, y)
+        est.fit(X, y)
+        est.partial_fit(data)
