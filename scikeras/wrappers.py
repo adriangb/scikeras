@@ -946,7 +946,7 @@ class BaseWrapper(BaseEstimator):
         return y_pred
 
     @staticmethod
-    def scorer(X, y, **kwargs) -> float:
+    def scorer(y_true, y_pred, **kwargs) -> float:
         """Scoring function for model.
 
         This is not implemented in BaseWrapper, it exists
