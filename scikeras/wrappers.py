@@ -955,7 +955,7 @@ class BaseWrapper(BaseEstimator):
         return y_pred
 
     @staticmethod
-    def scorer(X, y, **kwargs) -> float:
+    def scorer(y_true, y_pred, **kwargs) -> float:
         """Scoring function for model.
 
         This is not implemented in BaseWrapper, it exists
@@ -1030,7 +1030,7 @@ class BaseWrapper(BaseEstimator):
         return {
             k: v
             for k, v in self.__dict__.items()
-            if (len(k) > 1 and k[-1] == "_" and [-2] != "_" and k[0] != "_")
+            if (len(k) > 1 and k[-1] == "_" and k[-2] != "_" and k[0] != "_")
         }
 
     def set_params(self, **params) -> "BaseWrapper":
