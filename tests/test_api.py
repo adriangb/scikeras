@@ -1,7 +1,7 @@
 """Tests for Scikit-learn API wrapper."""
 import pickle
 
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 from unittest.mock import patch
 
 import numpy as np
@@ -823,11 +823,13 @@ class TestDatasetTransformer:
         m = Model(inp, out)
         m.compile(loss="bce")
 
+        def tf(X_y_s: Tuple[np.ndarray, np.ndarray, np.ndarray]):
+            return Dataset.from_tensor_slices(X_y_s), None, None
+
         class MyWrapper(KerasClassifier):
             @property
             def dataset_transformer(self):
-                f = lambda x_y: (Dataset.from_tensor_slices(x_y), None)
-                return FunctionTransformer(f)
+                return FunctionTransformer(tf)
 
         est = MyWrapper(m)
         X = np.random.random((100, 1))

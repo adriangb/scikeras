@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import tensorflow as tf
@@ -7,6 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.multiclass import type_of_target
 from tensorflow.keras.losses import Loss
 from tensorflow.python.keras.losses import is_categorical_crossentropy
@@ -390,3 +391,23 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
             "n_outputs_": self.n_outputs_,
             "n_outputs_expected_": self.n_outputs_expected_,
         }
+
+
+class ClassWeightDataTransformer(BaseEstimator, TransformerMixin):
+    def __init__(self, class_weight: Optional[Union[str, Dict[int, float]]] = None):
+        self.class_weight = class_weight
+
+    def fit(
+        self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]
+    ) -> "ClassWeightDataTransformer":
+        return self
+
+    def transform(
+        self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]
+    ) -> Tuple[np.ndarray, Union[np.ndarray, None], Union[np.ndarray, None]]:
+        X, y, sample_weight = data
+        if self.class_weight is None or y is None:
+            return data
+        sample_weight = 1 if sample_weight is None else sample_weight
+        sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
+        return X, y, sample_weight

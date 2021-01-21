@@ -5,6 +5,7 @@ import os
 import warnings
 
 from collections import defaultdict
+from random import sample
 from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, Union
 
 import numpy as np
@@ -15,7 +16,6 @@ from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
 from sklearn.preprocessing import FunctionTransformer
-from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
@@ -33,7 +33,11 @@ from scikeras._utils import (
     unflatten_params,
 )
 from scikeras.utils import loss_name, metric_name
-from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
+from scikeras.utils.transformers import (
+    ClassifierLabelEncoder,
+    ClassWeightDataTransformer,
+    RegressorTargetEncoder,
+)
 
 
 class BaseWrapper(BaseEstimator):
@@ -135,7 +139,6 @@ class BaseWrapper(BaseEstimator):
         "callbacks",
         "validation_split",
         "shuffle",
-        "class_weight",
         "sample_weight",
         "initial_epoch",
         "validation_steps",
@@ -550,7 +553,12 @@ class BaseWrapper(BaseEstimator):
                     )
 
     def _validate_data(
-        self, X=None, y=None, reset: bool = False, y_numeric: bool = False
+        self,
+        X=None,
+        y=None,
+        sample_weight=None,
+        reset: bool = False,
+        y_numeric: bool = False,
     ) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
         """Validate input arrays and set or check their meta-parameters.
 
@@ -657,7 +665,9 @@ class BaseWrapper(BaseEstimator):
                             n_features_in_, self.__class__.__name__, self.n_features_in_
                         )
                     )
-        return X, y
+        if sample_weight is not None:
+            X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
+        return X, y, sample_weight
 
     def _type_of_target(self, y: np.ndarray) -> str:
         return type_of_target(y)
@@ -698,18 +708,24 @@ class BaseWrapper(BaseEstimator):
 
     @property
     def dataset_transformer(self):
-        """Retrieve a transformer to be applied jointly to X & y.
+        """Retrieve a transformer to be applied jointly to the entire
+        dataset (X, y & sample_weights).
 
-        It MUST accept a 2 element tuple as it's single input argument
-        to `fit`, `transform` and `inverse_transform` and the
-        latter two MUST also output a two element tuple.
-        The second element, corresponding to `y`, can be None
-        if the first element (corresponding to `X`) is a Dataset.
+        You can override this method to provide custom transformations.
 
-        Metadata will be collected from ``get_metadata`` if
-        the transformer implements that method.
-        Override this method to implement a custom data transformer
-        for entire dataset.
+        It MUST accept a 3 element tuple as it's single input argument
+        to `fit` and `transform`. `transform` must also output
+        a 3 element tuple in the same format.
+        The first element corresponds to X, or as an output from the
+        transformer, to a `tf.data.Dataset` instance containing
+        X, y and optionally sample_weights.
+        The second element corresponds to `y`, and may be None
+        on the output side.
+        The third element is `sample_weights` which may be None
+        on the input and output sides.
+
+        Note that `inverse_transform` is never used
+        and is not required to be implemented.
 
         Returns
         -------
@@ -775,7 +791,10 @@ class BaseWrapper(BaseEstimator):
         return hasattr(self, "model_")
 
     def _initialize(
-        self, X: np.ndarray, y: Union[np.ndarray, None] = None
+        self,
+        X: np.ndarray,
+        y: Union[np.ndarray, None] = None,
+        sample_weight: Union[np.ndarray, None] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
 
         # Handle random state
@@ -791,7 +810,7 @@ class BaseWrapper(BaseEstimator):
             # int or None
             self._random_state = self.random_state
 
-        X, y = self._validate_data(X, y, reset=True)
+        X, y, sample_weight = self._validate_data(X, y, sample_weight, reset=True)
 
         self.target_encoder_ = self.target_encoder.fit(y)
         target_metadata = getattr(self.target_encoder_, "get_metadata", dict)()
@@ -799,15 +818,16 @@ class BaseWrapper(BaseEstimator):
         self.feature_encoder_ = self.feature_encoder.fit(X)
         feature_meta = getattr(self.feature_encoder_, "get_metadata", dict)()
         vars(self).update(**feature_meta)
-        self.dataset_transformer_ = self.dataset_transformer.fit((X, y))
-        dataset_meta = getattr(self.dataset_transformer_, "get_metadata", dict)()
-        vars(self).update(**dataset_meta)
 
         self.model_ = self._build_keras_model()
 
-        return X, y
+        self.dataset_transformer_ = self.dataset_transformer.fit((X, y, sample_weight))
+        dataset_meta = getattr(self.dataset_transformer_, "get_metadata", dict)()
+        vars(self).update(**dataset_meta)
 
-    def initialize(self, X, y=None) -> "BaseWrapper":
+        return X, y, sample_weight
+
+    def initialize(self, X, y=None, sample_weight=None) -> "BaseWrapper":
         """Initialize the model without any fitting.
 
         You only need to call this model if you explicitly do not want to do any fitting
@@ -828,7 +848,7 @@ class BaseWrapper(BaseEstimator):
         BaseWrapper
             A reference to the BaseWrapper instance for chained calling.
         """
-        self._initialize(X, y)
+        self._initialize(X, y, sample_weight)
         return self  # to allow chained calls like initialize(...).predict(...)
 
     def _fit(
@@ -865,12 +885,9 @@ class BaseWrapper(BaseEstimator):
         """
         # Data checks
         if not ((self.warm_start or warm_start) and self.initialized_):
-            X, y = self._initialize(X, y)
+            X, y, sample_weight = self._initialize(X, y, sample_weight)
         else:
-            X, y = self._validate_data(X, y)
-
-        if sample_weight is not None:
-            X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
+            X, y, sample_weight = self._validate_data(X, y, sample_weight)
 
         X = self.feature_encoder_.transform(X)
 
@@ -878,7 +895,7 @@ class BaseWrapper(BaseEstimator):
             y = self.target_encoder_.transform(y)
             self._check_model_compatibility(y)
 
-        X, y = self.dataset_transformer_.transform((X, y))
+        X, y, sample_weight = self.dataset_transformer_.transform((X, y, sample_weight))
 
         self._fit_keras_model(
             X,
@@ -953,10 +970,11 @@ class BaseWrapper(BaseEstimator):
                 "Estimator needs to be fit before `predict` " "can be called"
             )
         # basic input checks
-        X, _ = self._validate_data(X=X, y=None)
+        X, _, _ = self._validate_data(X=X)
 
         # pre process X
         X = self.feature_encoder_.transform(X)
+        X, _, _ = self.dataset_transformer_.transform((X, None, None))
 
         # filter kwargs and get attributes for predict
         params = self.get_params()
@@ -1026,7 +1044,7 @@ class BaseWrapper(BaseEstimator):
             )
 
         # validate y
-        _, y = self._validate_data(X=None, y=y)
+        _, y, _ = self._validate_data(X=None, y=y)
 
         # compute Keras model score
         y_pred = self.predict(X)
@@ -1343,6 +1361,40 @@ class KerasClassifier(BaseWrapper):
         categories = "auto" if self.classes_ is None else [self.classes_]
         return ClassifierLabelEncoder(loss=self.loss, categories=categories)
 
+    @property
+    def dataset_transformer(self):
+        """Retrieve a transformer to be applied jointly to the entire
+        dataset (X, y & sample_weights).
+
+        By default, KerasClassifier implements ClassWeightDataTransformer,
+        which embeds class_weight into sample_weight.
+
+        You can override this method to provide custom transformations.
+        To keep the default class_weight behavior, you can chain your
+        transfromer and ClassWeightDataTransformer using a Pipeline.
+
+        It MUST accept a 3 element tuple as it's single input argument
+        to `fit` and `transform`. `transform` must also output
+        a 3 element tuple in the same format.
+        The first element corresponds to X, or as an output from the
+        transformer, to a `tf.data.Dataset` instance containing
+        X, y and optionally sample_weights.
+        The second element corresponds to `y`, and may be None
+        on the output side.
+        The third element is `sample_weights` which may be None
+        on the input and output sides.
+
+        Note that `inverse_transform` is never used
+        and is not required to be implemented.
+
+        Returns
+        -------
+        dataset_transformer
+            Transformer implementing the sklearn transformer
+            interface.
+        """
+        return ClassWeightDataTransformer(class_weight=self.class_weight)
+
     def initialize(self, X, y) -> "KerasClassifier":
         """Initialize the model without any fitting.
         You only need to call this model if you explicitly do not want to do any fitting
@@ -1393,9 +1445,6 @@ class KerasClassifier(BaseWrapper):
             (ex: instance.fit(X,y).transform(X) )
         """
         self.classes_ = None
-        if self.class_weight is not None:
-            sample_weight = 1 if sample_weight is None else sample_weight
-            sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
         super().fit(X=X, y=y, sample_weight=sample_weight, **kwargs)
         return self
 
@@ -1430,9 +1479,6 @@ class KerasClassifier(BaseWrapper):
         self.classes_ = (
             classes if classes is not None else getattr(self, "classes_", None)
         )
-        if self.class_weight is not None:
-            sample_weight = 1 if sample_weight is None else sample_weight
-            sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
         super().partial_fit(X, y, sample_weight=sample_weight)
         return self
 
@@ -1472,7 +1518,7 @@ class KerasClassifier(BaseWrapper):
             )
 
         # basic input checks
-        X, _ = self._validate_data(X=X, y=None)
+        X, _, _ = self._validate_data(X=X)
 
         # pre process X
         X = self.feature_encoder_.transform(X)
@@ -1635,13 +1681,20 @@ class KerasRegressor(BaseWrapper):
         return sklearn_r2_score(y_true, y_pred, **kwargs)
 
     def _validate_data(
-        self, X=None, y=None, reset: bool = False, y_numeric: bool = False
+        self,
+        X=None,
+        y=None,
+        sample_weight=None,
+        reset: bool = False,
+        y_numeric: bool = False,
     ) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
         # For regressors, y should ALWAYS be numeric
         # To enforce this without additional dtype checks, we set `y_numeric=True`
         # when calling `_validate_data` which will force casting to numeric for
         # non-numeric data.
-        return super()._validate_data(X=X, y=y, reset=reset, y_numeric=True)
+        return super()._validate_data(
+            X=X, y=y, sample_weight=sample_weight, reset=reset, y_numeric=True
+        )
 
     @property
     def target_encoder(self):
