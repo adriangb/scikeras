@@ -19,4 +19,4 @@ The following are examples and notebooks on how to use SciKeras.
 
 .. toctree::
 
-   ../../notebooks/Autoencoders.ipynb
+   ../../notebooks/Autoencoders
