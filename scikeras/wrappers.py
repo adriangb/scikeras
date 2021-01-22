@@ -720,7 +720,8 @@ class BaseWrapper(BaseEstimator):
         transformer, to a `tf.data.Dataset` instance containing
         X, y and optionally sample_weights.
         The second element corresponds to `y`, and may be None
-        on the output side.
+        on the output side always and on the input side when
+        called from `predict`.
         The third element is `sample_weights` which may be None
         on the input and output sides.
 
@@ -1381,7 +1382,8 @@ class KerasClassifier(BaseWrapper):
         transformer, to a `tf.data.Dataset` instance containing
         X, y and optionally sample_weights.
         The second element corresponds to `y`, and may be None
-        on the output side.
+        on the output side always and on the input side when
+        called from `predict`.
         The third element is `sample_weights` which may be None
         on the input and output sides.
 
