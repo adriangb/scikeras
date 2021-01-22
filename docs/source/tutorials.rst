@@ -6,5 +6,6 @@ Tutorials
 The following are examples and notebooks on how to use SciKeras.
 
 .. toctree::
+    :maxdepth: 1
 
-   ../../notebooks/Autoencoders
+   Autoencoders
