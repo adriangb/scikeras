@@ -204,3 +204,8 @@ _linkcode_git_revision = _get_git_revision()
 
 # The following is used by sphinx.ext.linkcode to provide links to github
 linkcode_resolve = project_linkcode_resolve
+
+
+# nbsphinx config
+
+nbsphinx_execute = "always"
