@@ -57,6 +57,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autodoc.typehints",
+    "nbsphinx",
 ]
 autosummary_generate = True
 autodoc_default_options = {
