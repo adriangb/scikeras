@@ -1,5 +1,8 @@
 name: Docs
-on: [push, release]
+on:
+  push:
+    branches: [ master ]
+  pull_request:
 
 jobs:
   notebooks:
@@ -26,15 +29,23 @@ jobs:
       - name: Execute the notebooks
         run: |
           poetry run python -m jupyter nbconvert --inplace --to notebook --execute docs/source/notebooks/*
+      
+      - name: Build the docs
+        run: |
+          cd docs
+          poetry run sphinx-build html
 
-      - uses: actions/upload-artifact@v2
+      - name: Deploy docs
+        uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
-          name: notebooks-for-${{ github.sha }}
-          path: docs/source/notebooks
-
-      - name: Trigger RTDs build
-        uses: dfm/rtds-action@v1
-        with:
-          webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
-          webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
-          commit_ref: ${{ github.ref }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: docs/_build/html
+          CLEAN: true
+          TARGET_FOLDER: ${{ github.ref }}
+          SINGLE_COMMIT: true
+          PRESERVE: true
+      
+      - name: Print docs link
+        run: |
+          echo "Docs available at https://www.adriangb.com/scikeras/${{ github.ref }}"
