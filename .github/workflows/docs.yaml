@@ -15,7 +15,11 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
-  
+
+      - name: Install pandoc
+        run: |
+          sudo apt-get install pandoc
+
       - name: Install and Set Up Poetry
         run: |
           python -m pip install --upgrade poetry
@@ -28,7 +32,7 @@ jobs:
 
       - name: Execute the notebooks
         run: |
-          poetry run python -m jupyter nbconvert --inplace --to notebook --execute docs/source/notebooks/*
+          export TF_CPP_MIN_LOG_LEVEL=3;poetry run python -m jupyter nbconvert --inplace --to notebook --execute docs/source/notebooks/*
       
       - name: Build the docs
         run: |
