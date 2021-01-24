@@ -33,11 +33,11 @@ jobs:
       - name: Execute the notebooks
         run: |
           export TF_CPP_MIN_LOG_LEVEL=3
-          find docs/source/notebooks -type f -name '*.md' -print0 | xargs -0 -n 1 -P 8 poetry run jupytext --set-formats ipynb,md --execute
-      
+          find docs/source/notebooks -type f -name '*.md' -print0 | xargs -0 -n 1 -P 2 poetry run jupytext --set-formats ipynb,md --execute
+
       - name: Build the docs
         run: |
-          poetry run sphinx-build -b html -j 8 docs/source docs/_build
+          poetry run sphinx-build -b html -j 2 docs/source docs/_build
 
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@3.7.1
