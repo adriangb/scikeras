@@ -606,12 +606,12 @@ Lets quickly test our transformer:
 
 ```python
 data = ragged_transformer((X, y, None))
-data[0]
+data
 ```
 
 ```python
 data = ragged_transformer((X, None, None))
-data[0]
+data
 ```
 
 Our shapes look good, and we can handle the `y=None` case.
