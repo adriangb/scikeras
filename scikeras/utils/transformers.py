@@ -409,24 +409,6 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         }
 
 
-class DummyDataTransformer(BaseEstimator, TransformerMixin):
-    """A dummy transfomer implementing the data_transformer
-    interface. This is the default data_transformer for BaseWrapper.
-    """
-
-    def fit(
-        self,
-        data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]],
-        dummy: None = None,
-    ) -> "ClassWeightDataTransformer":
-        return self
-
-    def transform(
-        self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]
-    ) -> Tuple[np.ndarray, Union[np.ndarray, None], Union[np.ndarray, None]]:
-        return data
-
-
 class ClassWeightDataTransformer(BaseEstimator, TransformerMixin):
     """Default dataset_transformer for KerasClassifier.
 
