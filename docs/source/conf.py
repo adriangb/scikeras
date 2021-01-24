@@ -209,4 +209,4 @@ linkcode_resolve = project_linkcode_resolve
 
 # nbsphinx config
 
-nbsphinx_execute = "auto"
+nbsphinx_execute = "never"
