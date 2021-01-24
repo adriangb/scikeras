@@ -149,9 +149,13 @@ def _reload(model, epoch=None):
 def test_partial_fit_pickle(optim):
     """
     This test is implemented to make sure model pickling does not affect
-    training.
+    training, which is (essentially) what Dask-ML does for a model selection
+    search.
 
-    (this is essentially what Dask-ML does for search)
+    This test is simple for functional optimizers (like SGD without momentum),
+    and tricky for stateful transforms (SGD w/ momentum, Adam, Adagrad, etc).
+    For more detail, see https://github.com/adriangb/scikeras/pull/126 and
+    links within
     """
     X, y = make_regression(n_features=8, n_samples=100)
 
