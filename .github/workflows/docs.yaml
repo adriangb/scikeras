@@ -32,12 +32,12 @@ jobs:
 
       - name: Execute the notebooks
         run: |
-          export TF_CPP_MIN_LOG_LEVEL=3;poetry run python -m jupyter nbconvert --inplace --to notebook --execute docs/source/notebooks/*
+          export TF_CPP_MIN_LOG_LEVEL=3
+          find docs/source/notebooks -type f -print0 | xargs -0 -n 1 -P 8 poetry run python -m jupyter nbconvert --inplace --to notebook --execute
       
       - name: Build the docs
         run: |
-          cd docs
-          poetry run sphinx-build -b html source _build
+          poetry run sphinx-build -b html docs/source docs/_build
 
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@3.7.1
