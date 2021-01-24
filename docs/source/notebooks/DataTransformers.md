@@ -846,7 +846,3 @@ print(counts_bin)
 (_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)
 print(counts_cat)
 ```
-
-```python
-
-```
