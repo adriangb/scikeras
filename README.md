@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/adriangb/scikeras/workflows/Tests/badge.svg)](https://github.com/adriangb/scikeras/actions?query=workflow%3ATests+branch%3Amaster)
 [![Coverage Status](https://codecov.io/gh/adriangb/scikeras/branch/master/graph/badge.svg)](https://codecov.io/gh/adriangb/scikeras)
-[![Docs Status](https://readthedocs.org/projects/docs/badge/?version=latest)](https://scikeras.readthedocs.io/en/latest/?badge=latest)
+[![Docs](https://readthedocs.org/projects/docs/badge/?version=latest)](https://www.adriangb.com/scikeras/)
 
 Scikit-Learn compatible wrappers for Keras Models.
 
@@ -30,7 +30,7 @@ Please see the [migration](https://scikeras.readthedocs.io/en/latest/migration.h
 
 ## Documentation
 
-Documentation is available on [ReadTheDocs](https://scikeras.readthedocs.io/en/latest/).
+Documentation is available at [https://www.adriangb.com/scikeras/](https://www.adriangb.com/scikeras/).
 
 ## Contributing
 
