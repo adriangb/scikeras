@@ -33,7 +33,7 @@ This notebook implements an estimator that is analogous to `sklearn.neural_netwo
   * [2.4 Losses and optimizer](#2.4-Losses-and-optimizer)
   * [2.5 Wrapping with SciKeras](#2.5-Wrapping-with-SciKeras)
 * [3. Testing our classifier](#3.-Testing-our-classifier)
-* [4 Self contained MLPClassifier](#4.-Self-contained-MLPClassifier)
+* [4. Self contained MLPClassifier](#4.-Self-contained-MLPClassifier)
   * [4.1 Subclassing](#4.1-Subclassing)
 * [5. MLPRegressor](#5.-MLPRegressor)
 
