@@ -599,7 +599,8 @@ def ragged_transformer(data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np
     return (X, y, sample_weights)
 ```
 
-In this case, we chose to keep `y` and `sample_weights` as numpy arrays, which will allow us to re-use 
+In this case, we chose to keep `y` and `sample_weights` as numpy arrays, which will allow us to re-use ClassWeightDataTransformer,
+the default `dataset_transformer` for `KerasClassifier`.
 
 Lets quickly test our transformer:
 
