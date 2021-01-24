@@ -1,7 +1,7 @@
 ---
 jupyter:
   jupytext:
-    formats: md,ipynb
+    formats: ipynb,md
     text_representation:
       extension: .md
       format_name: markdown
@@ -13,8 +13,8 @@ jupyter:
     name: python3
 ---
 
-[![Run in Colab](https://www.tensorflow.org/images/colab_logo_32px.png)](https://colab.research.google.com/github/adriangb/scikeras/blob/master/docs/source/notebooks/Basic_Usage.ipynb)
-Run in Colab
+<a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/master/notebooks/Basic_Usage.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a>
+
 
 # Basic usage
 
@@ -24,28 +24,27 @@ This notebook shows you how to use the basic functionality of `SciKeras`.
 
 ## Table of contents
 
-- [Basic usage](#basic-usage)
-  - [Table of contents](#table-of-contents)
-  - [Training a classifier and making predictions](#training-a-classifier-and-making-predictions)
-    - [A toy binary classification task](#a-toy-binary-classification-task)
-    - [Definition of the `Keras` classification `Model`](#definition-of-the-keras-classification-model)
-    - [Defining and training the neural net classifier](#defining-and-training-the-neural-net-classifier)
-    - [Making predictions, classification](#making-predictions-classification)
-  - [Training a regressor](#training-a-regressor)
-    - [A toy regression task](#a-toy-regression-task)
-    - [Definition of the `Keras` regression `Model`](#definition-of-the-keras-regression-model)
-    - [Defining and training the neural net regressor](#defining-and-training-the-neural-net-regressor)
-    - [Making predictions, regression](#making-predictions-regression)
-  - [Saving and loading a model](#saving-and-loading-a-model)
-    - [Saving the whole model](#saving-the-whole-model)
-    - [Saving using Keras' saving methods](#saving-using-keras-saving-methods)
-  - [Usage with an `sklearn Pipeline`](#usage-with-an-sklearn-pipeline)
-  - [Callbacks](#callbacks)
-  - [Usage with sklearn `GridSearchCV`](#usage-with-sklearn-gridsearchcv)
-    - [Special prefixes](#special-prefixes)
-    - [Performing a grid search](#performing-a-grid-search)
+* [1. Setup](#1.-Setup)
+* [2. Training a classifier and making predictions](#2.-Training-a-classifier-and-making-predictions)
+  * [2.1 A toy binary classification task](#2.1-A-toy-binary-classification-task)
+  * [2.2 Definition of the Keras classification Model](#2.2-Definition-of-the-Keras-classification-Model)
+  * [2.3 Defining and training the neural net classifier](#2.3-Defining-and-training-the-neural-net-classifier)
+  * [2.4 Making predictions, classification](#2.4-Making-predictions-classification)
+* [3 Training a regressor](#3.-Training-a-regressor)
+  * [3.1 A toy regression task](#3.1-A-toy-regression-task)
+  * [3.2 Definition of the Keras regression Model](#3.2-Definition-of-the-Keras-regression-Model)
+  * [3.3 Defining and training the neural net regressor](#3.3-Defining-and-training-the-neural-net-regressor)
+  * [3.4 Making predictions, regression](#3.4-Making-predictions-regression)
+* [4. Saving and loading a model](#4.-Saving-and-loading-a-model)
+  * [4.1 Saving the whole model](#4.1-Saving-the-whole-model)
+  * [4.2 Saving using Keras' saving methods](#4.2-Saving-using-Keras-saving-methods)
+* [5. Usage with an sklearn Pipeline](#5.-Usage-with-an-sklearn-Pipeline)
+* [6. Callbacks](#6.-Callbacks)
+* [7. Usage with sklearn GridSearchCV](#7.-Usage-with-sklearn-GridSearchCV)
+  * [7.1 Special prefixes](#7.1-Special-prefixes)
+  * [7.2 Performing a grid search](#7.2-Performing-a-grid-search)
 
-Install SciKeras
+## 1. Setup
 
 ```python
 try:
@@ -54,21 +53,24 @@ except ImportError:
     !python -m pip install scikeras
 ```
 
-Silence TensorFlow logging to keep output succint.
+Silence TensorFlow logging to keep output succinct.
 
 ```python
+import warnings
 from tensorflow import get_logger
 get_logger().setLevel('ERROR')
+warnings.filterwarnings("ignore", message="Setting the random state for TF")
 ```
 
 ```python
+import numpy as np
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 from tensorflow import keras
 ```
 
-## Training a classifier and making predictions
+## 2. Training a classifier and making predictions
 
-### A toy binary classification task
+### 2.1 A toy binary classification task
 
 We load a toy classification task from `sklearn`.
 
@@ -85,7 +87,7 @@ X, y = make_classification(1000, 20, n_informative=10, random_state=0)
 X.shape, y.shape, y.mean()
 ```
 
-### Definition of the `Keras` classification `Model`
+### 2.2 Definition of the Keras classification Model
 
 We define a vanilla neural network with.
 
@@ -116,7 +118,7 @@ def get_clf(meta, hidden_layer_sizes, dropout):
     return model
 ```
 
-### Defining and training the neural net classifier
+### 2.3 Defining and training the neural net classifier
 
 We use `KerasClassifier` because we're dealing with a classifcation task. The first argument should be a callable returning a `Keras.Model`, in this case, `get_clf`. As additional arguments, we pass the number of loss function (required) and the optimizer, but the later is optional. We must also pass all of the arguments to `get_clf` as keyword arguments to `KerasClassifier` if they don't have a default value in `get_clf`. Note that if you do not pass an argument to `KerasClassifier`, it will not be avilable for hyperparameter tuning. Finally, we also pass `random_state=0` for reproducible results.
 
@@ -142,7 +144,7 @@ clf.fit(X, y)
 
 Also, as in `sklearn`, you may call `predict` or `predict_proba` on the fitted model.
 
-### Making predictions, classification
+### 2.4 Making predictions, classification
 
 ```python
 y_pred = clf.predict(X[:5])
@@ -154,9 +156,9 @@ y_proba = clf.predict_proba(X[:5])
 y_proba
 ```
 
-## Training a regressor
+## 3 Training a regressor
 
-### A toy regression task
+### 3.1 A toy regression task
 
 ```python
 from sklearn.datasets import make_regression
@@ -170,7 +172,7 @@ X_regr, y_regr = make_regression(1000, 20, n_informative=10, random_state=0)
 X_regr.shape, y_regr.shape, y_regr.min(), y_regr.max()
 ```
 
-### Definition of the `Keras` regression `Model`
+### 3.2 Definition of the Keras regression Model
 
 Again, define a vanilla neural network. The main difference is that the output layer always has a single unit and does not apply any nonlinearity.
 
@@ -186,7 +188,7 @@ def get_reg(meta, hidden_layer_sizes, dropout):
     return model
 ```
 
-### Defining and training the neural net regressor
+### 3.3 Defining and training the neural net regressor
 
 Training a regressor is almost the same as training a classifier. Mainly, we use `KerasRegressor` instead of `KerasClassifier` (this is the same terminology as in `sklearn`). We also change the loss function to `KerasRegressor.r_squared`. SciKeras provides this loss function because most of the `sklearn` ecosystem expects `R^2` as the loss function, but Keras does not have a default implementation.
 
@@ -208,7 +210,7 @@ reg = KerasRegressor(
 reg.fit(X_regr, y_regr)
 ```
 
-### Making predictions, regression
+### 3.4 Making predictions, regression
 
 You may call `predict` or `predict_proba` on the fitted model. For regressions, both methods return the same value.
 
@@ -217,7 +219,7 @@ y_pred = reg.predict(X_regr[:5])
 y_pred
 ```
 
-## Saving and loading a model
+## 4. Saving and loading a model
 
 Save and load either the whole model by using pickle, or use Keras' specialized save methods on the `KerasClassifier.model_` or `KerasRegressor.model_` attribute that is created after fitting. You will want to use Keras' model saving utilities if any of the following apply:
 
@@ -227,7 +229,7 @@ Save and load either the whole model by using pickle, or use Keras' specialized 
 
 For more information, see Keras' [saving documentation](https://www.tensorflow.org/guide/keras/save_and_serialize).
 
-### Saving the whole model
+### 4.1 Saving the whole model
 
 ```python
 import pickle
@@ -242,9 +244,10 @@ new_reg = pickle.loads(bytes_model)
 new_reg
 ```
 
-### Saving using Keras' saving methods
+### 4.2 Saving using Keras' saving methods
 
 This efficiently and safely saves the model to disk, including trained weights.
+You should use this method if you plan on sharing your saved models.
 
 ```python
 # Save to disk
@@ -266,7 +269,7 @@ reg.fit(X_regr, y_regr)
 reg.predict(X_regr[:5])
 ```
 
-## Usage with an `sklearn Pipeline`
+## 5. Usage with an sklearn Pipeline
 
 It is possible to put the `KerasClassifier` inside an `sklearn Pipeline`, as you would with any `sklearn` classifier.
 
@@ -293,7 +296,7 @@ y_proba
 
 To save the whole pipeline, including the Keras model, use `pickle`.
 
-## Callbacks
+## 6. Callbacks
 
 Adding a new callback to the model is straightforward. Below we show how to add an `EarlyStopping` callback to prevent overfitting.
 
@@ -333,7 +336,7 @@ clf = KerasClassifier(
 )
 start = time.time()
 clf.fit(X, y)
-print(f"Training time: {time.time() - start}")
+print(f"Training time: {time.time() * start}")
 print(f"Final accuracy: {clf.history_['val_binary_accuracy'][-1]}")  # get last value of last fit/partial_fit call
 ```
 
@@ -353,7 +356,7 @@ clf = KerasClassifier(
 )
 start = time.time()
 clf.fit(X, y)
-print(f"Training time: {time.time() - start}")
+print(f"Training time: {time.time() * start}")
 print(f"Final accuracy: {clf.history_['val_binary_accuracy'][-1]}")  # get last value of last fit/partial_fit call
 ```
 
@@ -363,9 +366,9 @@ For information on how to write custom callbacks, have a look at the
 
 [Advanced_Usage](https://nbviewer.jupyter.org/github/adriangb/scikeras/blob/master/notebooks/Advanced_Usage.ipynb) notebook.
 
-## Usage with sklearn `GridSearchCV`
+## 7. Usage with sklearn GridSearchCV
 
-### Special prefixes
+### 7.1 Special prefixes
 
 SciKeras allows to direct access to all parameters passed to the wrapper constructors, including deeply nested routed parameters. This allows tunning of
 paramters like `hidden_layer_sizes` as well as `optimizer__learning_rate`.
@@ -378,7 +381,7 @@ To differentiate paramters like `callbacks` which are accepted by both `tf.keras
 
 For more information on parameter routing with special prefixes, see the [Advanced Usage Docs](https://scikeras.org.readthedocs.build/en/latest/advanced.html#routed-parameters)
 
-### Performing a grid search
+### 7.2 Performing a grid search
 
 Below we show how to perform a grid search over the learning rate (`optimizer__lr`), the model's number of hidden layers (`model__hidden_layer_sizes`), the model's dropout rate (`model__dropout`).
 

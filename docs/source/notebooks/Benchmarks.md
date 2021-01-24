@@ -1,7 +1,7 @@
 ---
 jupyter:
   jupytext:
-    formats: md,ipynb
+    formats: ipynb,md
     text_representation:
       extension: .md
       format_name: markdown
@@ -13,7 +13,8 @@ jupyter:
     name: python3
 ---
 
-[![Run in Colab](https://www.tensorflow.org/images/colab_logo_32px.png)](https://colab.research.google.com/github/adriangb/scikeras/blob/master/docs/source/notebooks/Benchmarks.ipynb) Run in Colab
+<a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/master/notebooks/Benchmarks.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a>
+
 
 # SciKeras Benchmarks
 
@@ -21,14 +22,13 @@ SciKeras wraps Keras Models, but does not alter their performance since all of t
 
 ## Table of contents
 
-- [SciKeras Benchmarks](#scikeras-benchmarks)
-  - [Table of contents](#table-of-contents)
-  - [Dataset](#dataset)
-  - [Define Keras Model](#define-keras-model)
-  - [Keras benchmarks](#keras-benchmarks)
-  - [SciKeras benchmark](#scikeras-benchmark)
+* [1. Setup](#1.-Setup)
+* [2. Dataset](#2.-Dataset)
+* [3. Define Keras Model](#3.-Define-Keras-Model)
+* [4. Keras benchmarks](#4.-Keras-benchmarks)
+* [5. SciKeras benchmark](#5.-SciKeras-benchmark)
 
-Install SciKeras
+## 1. Setup
 
 ```python
 try:
@@ -37,7 +37,7 @@ except ImportError:
     !python -m pip install scikeras
 ```
 
-Silence TensorFlow warnings to keep output succint.
+Silence TensorFlow logging to keep output succinct.
 
 ```python
 import warnings
@@ -52,8 +52,7 @@ from scikeras.wrappers import KerasClassifier, KerasRegressor
 from tensorflow import keras
 ```
 
-<a id='1'></a>
-## Dataset
+## 2. Dataset
 
 We will be using the MNIST dataset available within Keras.
 
@@ -70,8 +69,7 @@ x_train, y_train = x_train[:2000], y_train[:2000]
 x_test, y_test = x_test[:500], y_test[:500]
 ```
 
-<a id='2'></a>
-## Define Keras Model
+## 3. Define Keras Model
 
 Next we will define our Keras model (adapted from [keras.io](https://keras.io/examples/vision/mnist_convnet/)):
 
@@ -99,8 +97,7 @@ def get_model():
     return model
 ```
 
-<a id='3'></a>
-## Keras benchmarks
+## 4. Keras benchmarks
 
 ```python
 fit_kwargs = {"batch_size": 128, "validation_split": 0.1, "verbose": 0, "epochs": 5}
@@ -123,8 +120,7 @@ with TFRandomState(seed=0):  # we force a TF random state to be able to compare 
 print(f"Accuracy: {accuracy_score(y_test, y_pred)}")
 ```
 
-<a id='4'></a>
-## SciKeras benchmark
+## 5. SciKeras benchmark
 
 ```python
 clf = KerasClassifier(

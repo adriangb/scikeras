@@ -17,7 +17,7 @@ poetry install --extras dev_docs
 ## Working with .md notebooks
 
 To make edits to the markdown notebooks, you will need install jupytext with jupyter, which will then allow you to open and execute markdown notebooks as described [here](https://jupytext.readthedocs.io/en/latest/paired-notebooks.html).
-If you installed via `dev_docs`, this should be working. However, if you also had installed `jupyter` globally, you may need to run via:
+If you installed via `dev_docs`, this should be working. However, if you also had installed jupyter globally, you may need to run via:
 
 ```bash
 poetry run jupyter notebook

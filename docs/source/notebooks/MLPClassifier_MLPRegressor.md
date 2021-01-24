@@ -1,7 +1,7 @@
 ---
 jupyter:
   jupytext:
-    formats: md,ipynb
+    formats: ipynb,md
     text_representation:
       extension: .md
       format_name: markdown
@@ -13,7 +13,8 @@ jupyter:
     name: python3
 ---
 
-[![Run in Colab](https://www.tensorflow.org/images/colab_logo_32px.png)](https://colab.research.google.com/github/adriangb/scikeras/blob/master/docs/source/notebooks/Benchmarks.ipynb) Run in Colab
+<a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/master/notebooks/MLPClassifier_MLPRegressor.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a>
+
 
 # MLPClassifier and MLPRegressor in SciKeras
 
@@ -23,20 +24,19 @@ This notebook implements an estimator that is analogous to `sklearn.neural_netwo
 
 ## Table of contents
 
-- [MLPClassifier and MLPRegressor in SciKeras](#mlpclassifier-and-mlpregressor-in-scikeras)
-  - [Table of contents](#table-of-contents)
-  - [Defining the Keras Model](#defining-the-keras-model)
-    - [Inputs](#inputs)
-    - [Hidden Layers](#hidden-layers)
-    - [Output layers](#output-layers)
-    - [Losses and optimizer](#losses-and-optimizer)
-    - [Wrapping with SciKeras](#wrapping-with-scikeras)
-  - [Testing our classifier](#testing-our-classifier)
-  - [Self contained MLPClassifier](#self-contained-mlpclassifier)
-    - [Subclassing](#subclassing)
-  - [MLPRegressor](#mlpregressor)
+* [1. Setup](#1.-Setup)
+* [2. Defining the Keras Model](#2.-Defining-the-Keras-Model)
+  * [2.1 Inputs](#2.1-Inputs)
+  * [2.2 Hidden layers](#2.2-Hidden-layers)
+  * [2.3 Output layers](#2.3-Output-layers)
+  * [2.4 Losses and optimizer](#2.4-Losses-and-optimizer)
+  * [2.5 Wrapping with SciKeras](#2.5-Wrapping-with-SciKeras)
+* [3. Testing our classifier](#3.-Testing-our-classifier)
+* [4 Self contained MLPClassifier](#4.-Self-contained-MLPClassifier)
+  * [4.1 Subclassing](#4.1-Subclassing)
+* [5. MLPRegressor](#5.-MLPRegressor)
 
-Install SciKeras
+## 1. Setup
 
 ```python
 try:
@@ -45,7 +45,7 @@ except ImportError:
     !python -m pip install scikeras
 ```
 
-Silence TensorFlow logging to keep output succint.
+Silence TensorFlow logging to keep output succinct.
 
 ```python
 import warnings
@@ -55,14 +55,12 @@ warnings.filterwarnings("ignore", message="Setting the random state for TF")
 ```
 
 ```python
-from typing import Dict, Iterable, Any
-
 import numpy as np
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 from tensorflow import keras
 ```
 
-## Defining the Keras Model
+## 2. Defining the Keras Model
 
 First, we outline our model building function, using a `Sequential` Model:
 
@@ -72,24 +70,27 @@ def get_clf_model():
     return model
 ```
 
-### Inputs
+### 2.1 Inputs
 
 We need to define an input layer for Keras. SciKeras allows you to dynamically determine the input size based on the features (`X`). To do this, you need to add the `meta` parameter to `get_clf_model`'s parameters. `meta` will be a dictionary with all of the `meta` attributes that `KerasClassifier` generates during the `fit` call, including `n_features_in_`, which we will use to dynamically size the input layer.
 
 ```python
-def get_clf_model(meta: dict):
+from typing import Dict, Iterable, Any
+
+
+def get_clf_model(meta: Dict[str, Any]):
     model = keras.Sequential()
     inp = keras.layers.Input(shape=(meta["n_features_in_"]))
     model.add(inp)
     return model
 ```
 
-### Hidden Layers
+### 2.2 Hidden Layers
 
 Multilayer perceptrons are generally composed of an input layer, an output layer and 0 or more hidden layers. The size of the hidden layers is specified via the `hidden_layer_sizes` parameter in MLClassifier, where the the ith element represents the number of neurons in the ith hidden layer. Let's add that parameter:
 
 ```python
-def get_clf_model(hidden_layer_sizes: Iterable[int], meta: dict):
+def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any]):
     model = keras.Sequential()
     inp = keras.layers.Input(shape=(meta["n_features_in_"]))
     model.add(inp)
@@ -99,15 +100,16 @@ def get_clf_model(hidden_layer_sizes: Iterable[int], meta: dict):
     return model
 ```
 
-### Output layers
+### 2.3 Output layers
 
 The output layer needs to reflect the type of classification task being performed. Here, we will handle 2 cases:
-* binary classification: single output unit with sigmoid activation
-* multiclass classification: one output unit for each class, with softmax activation
+
+- binary classification: single output unit with sigmoid activation
+- multiclass classification: one output unit for each class, with softmax activation
 The main complication arises from determining which one to use. Like with the input features, SciKeras provides useful information on the target within the `meta` parameter. Specifically, we will use the `n_classes_` and `target_type_` attributes to determine the number of output units and activation function.
 
 ```python
-def get_clf_model(hidden_layer_sizes: Iterable[int], meta: dict):
+def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any]):
     model = keras.Sequential()
     inp = keras.layers.Input(shape=(meta["n_features_in_"]))
     model.add(inp)
@@ -129,12 +131,12 @@ def get_clf_model(hidden_layer_sizes: Iterable[int], meta: dict):
 
 For now, we raise a `NotImplementedError` for other target types. For an example handling multi-output target types, see the [Multi Output notebook](https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MultiInput.ipynb).
 
-### Losses and optimizer
+### 2.4 Losses and optimizer
 
 Like the output layer, the loss must match the type of classification task. Generally, it is easier and safet to allow SciKeras to compile your model for you by passing the loss to `KerasClassifier` directly (`KerasClassifier(loss="binary_crossentropy")`). However, in order to implement custom logic around the choice of loss function, we compile the model ourselves within `get_clf_model`; SciKeras will not re-compile the model.
 
 ```python
-def get_clf_model(hidden_layer_sizes: Iterable[int], meta: dict):
+def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any]):
     model = keras.Sequential()
     inp = keras.layers.Input(shape=(meta["n_features_in_"]))
     model.add(inp)
@@ -183,13 +185,13 @@ def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any], compi
     return model
 ```
 
-### Wrapping with SciKeras
+### 2.5 Wrapping with SciKeras
 
 Our last step in defining our model is to wrap it with SciKeras. A couple of things to note are:
-* Every user-defined parameter in `model`/`get_clf_model` (in our case just `hidden_layer_sizes`) must be defined as a keyword argument to `KerasClassifier` with a default value.
-* Keras defaults to `"rmsprop"` for `optimizer`. We set it to `"adam"` to mimic MLPClassifier.
-* We set the learning rate for the optimizer to `0.001`, again to mimic MLPClassifier. We set this parameter using [parameter routing](https://scikeras.readthedocs.io/en/latest/advanced.html#routed-parameters).
-* Other parameters, such as `activation`, can be added similar to `hidden_layer_sizes`, but we omit them here for simplicity.
+- Every user-defined parameter in `model`/`get_clf_model` (in our case just `hidden_layer_sizes`) must be defined as a keyword argument to `KerasClassifier` with a default value.
+- Keras defaults to `"rmsprop"` for `optimizer`. We set it to `"adam"` to mimic MLPClassifier.
+- We set the learning rate for the optimizer to `0.001`, again to mimic MLPClassifier. We set this parameter using [parameter routing](https://scikeras.readthedocs.io/en/latest/advanced.html#routed-parameters).
+- Other parameters, such as `activation`, can be added similar to `hidden_layer_sizes`, but we omit them here for simplicity.
 
 ```python
 clf = KerasClassifier(
@@ -202,7 +204,7 @@ clf = KerasClassifier(
 )
 ```
 
-## Testing our classifier
+## 3. Testing our classifier
 
 Before continouing, we will run a small test to make sure we get somewhat reasonable results.
 
@@ -222,13 +224,13 @@ print(np.mean(cross_val_score(clf, X, y)))
 
 We get a score above 0.7, which is reasonable and indicates that our classifier is generally working.
 
-## Self contained MLPClassifier
+## 4 Self contained MLPClassifier
 
 You will have noticed that up until now, we define our Keras model in a function and pass that function to `KerasClassifier` via the `model` argument.
 
 This is convenient, but it does not give us a self-contained class that we could package within a module for users to instantiate. To do that, we need to subclass `KerasClassifier`.
 
-### Subclassing
+### 4.1 Subclassing
 
 By subclassing KerasClassifier, you can embed your Keras model into directly into your estimator class. We start by inheriting from KerasClassifier and defining an `__init__` method with all of our parameters.
 
@@ -303,7 +305,7 @@ clf = MLPClassifier()
 print(np.mean(cross_val_score(clf, X, y)))
 ```
 
-## MLPRegressor
+## 5. MLPRegressor
 
 The process for MLPRegressor is similar, we only change the loss function and output layers.
 

@@ -1,7 +1,7 @@
 ---
 jupyter:
   jupytext:
-    formats: md,ipynb
+    formats: ipynb,md
     text_representation:
       extension: .md
       format_name: markdown
@@ -13,7 +13,8 @@ jupyter:
     name: python3
 ---
 
-[![Run in Colab](https://www.tensorflow.org/images/colab_logo_32px.png)](https://colab.research.google.com/github/adriangb/scikeras/blob/master/docs/source/notebooks/DataTransformers.ipynb) Run in Colab
+<a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/master/notebooks/DataTransformers.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a>
+
 
 # Data Transformers
 
@@ -23,28 +24,26 @@ Keras support many types of input and output data formats, including:
 * Multiple outputs
 * Higher-dimensional tensors
 
-In this notebook, we explore how to reconcile this functionality with the sklearn ecosystem via SciKeras Data Transformer interface.
+In this notebook, we explore how to reconcile this functionality with the sklearn ecosystem via SciKeras data transformer interface.
 
 ## Table of contents
 
-- [Data Transformers](#data-transformers)
-  - [Table of contents](#table-of-contents)
-  - [Install SciKeras](#install-scikeras)
-  - [Data transformer interface](#data-transformer-interface)
-    - [get_metadata method](#get_metadata-method)
-  - [1. Multiple Outputs](#1-multiple-outputs)
-    - [1.1 Define Keras Model](#11-define-keras-model)
-    - [1.2 Define output Data Transformer](#12-define-output-data-transformer)
-    - [1.3 Test classifier](#13-test-classifier)
-  - [2. Multiple inputs](#2-multiple-inputs)
-    - [2.1 Define Keras Model](#21-define-keras-model)
-    - [2.2 Define Data Transformer](#22-define-data-transformer)
-    - [2.3 Test regressor](#23-test-regressor)
-  - [3. Multidimensional inputs with MNIST dataset](#3-multidimensional-inputs-with-mnist-dataset)
-    - [3.1 Define Keras Model](#31-define-keras-model)
-    - [3.2 Test](#32-test)
+* [1. Setup](#1.-Setup)
+* [2. Data transformer interface](#2.-Data-transformer-interface)
+  * [2.1 get_metadata method](#2.1-get_metadata-method)
+* [3. Multiple outputs](#3.-Multiple-outputs)
+  * [3.1 Define Keras Model](#3.1-Define-Keras-Model)
+  * [3.2 Define output data transformer](#3.2-Define-output-data-transformer)
+  * [3.3 Test classifier](#3.3-Test-classifier)
+* [4. Multiple inputs](#4-multiple-inputs)
+  * [4.1 Define Keras Model](#4.1-Define-Keras-Model)
+  * [4.2 Define data transformer](#4.2-Define-data-transformer)
+  * [4.3 Test regressor](#4.3-Test-regressor)
+* [5. Multidimensional inputs with MNIST dataset](#5.-Multidimensional-inputs-with-MNIST-dataset)
+  * [5.1 Define Keras Model](#5.1-Define-Keras-Model)
+  * [5.2 Test](#5.2-Test)
 
-## Install SciKeras
+## 1. Setup
 
 ```python
 try:
@@ -68,7 +67,7 @@ from scikeras.wrappers import KerasClassifier, KerasRegressor
 from tensorflow import keras
 ```
 
-## Data transformer interface
+## 2. Data transformer interface
 
 SciKeras enables advanced Keras use cases by providing an interface to convert sklearn compliant data to whatever format your Keras model requires within SciKeras, right before passing said data to the Keras model.
 
@@ -139,7 +138,7 @@ if False:  # avoid executing pseudocode
             return MultiOutputTransformer(...)
 ```
 
-### get_metadata method
+### 2.1 get_metadata method
 
 SciKeras recognized an optional `get_metadata` on the transformers. `get_metadata` is expected to return a dicionary of with key strings and arbitrary values. SciKeras will set add these items to the wrappers namespace and make them available to your model building function via the `meta` keyword argument:
 
@@ -167,15 +166,15 @@ if False:  # avoid executing pseudocode
     print(clf.my_param_)  # foobarbaz
 ```
 
-## 1. Multiple Outputs
+## 3. Multiple outputs
 
-Keras makes it striaghtforward to define models with multiple outputs, that is a Model with multiple sets of fully-connected heads at the end of the network. This functionality is only available in the Functional Model and subclassed Model definition modes, and is not available when using Sequential.
+Keras makes it straight forward to define models with multiple outputs, that is a Model with multiple sets of fully-connected heads at the end of the network. This functionality is only available in the Functional Model and subclassed Model definition modes, and is not available when using Sequential.
 
 In practice, the main thing about Keras models with multiple outputs that you need to know as a SciKeras user is that Keras expects `X` or `y` to be a list of arrays/tensors, with one array/tensor for each input/output.
 
 Note that "multiple outputs" in Keras has a slightly different meaning than "multiple outputs" in sklearn. Many tasks that would be considered "multiple output" tasks in sklearn can be mapped to a single "output" in Keras with multiple units. This notebook specifically focuses on the cases that require multiple distinct Keras outputs.
 
-### 1.1 Define Keras Model
+### 3.1 Define Keras Model
 
 Here we define a simple perceptron that has two outputs, corresponding to one binary classification taks and one multiclass classification task. For example, one output might be "image has car" (binary) and the other might be "color of car in image" (multiclass).
 
@@ -227,7 +226,7 @@ Our data transormer's job will be to convert from a single numpy array (which is
 We will structure our data on the sklearn side by column-stacking our list
 of arrays. This works well in this case since we have the same number of datapoints in each array.
 
-### 1.2 Define output Data Transformer
+### 3.2 Define output data transformer
 
 Let's go ahead and protoype this data transformer:
 
@@ -329,7 +328,7 @@ class MultiOutputClassifier(KerasClassifier):
         return np.mean([accuracy_score(y_bin, y_pred_bin), accuracy_score(y_cat, y_pred_cat)])
 ```
 
-### 1.3 Test classifier
+### 3.3 Test classifier
 
 ```python
 from sklearn.preprocessing import StandardScaler
@@ -345,7 +344,7 @@ clf = MultiOutputClassifier(model=get_clf_model, verbose=0, random_state=0)
 clf.fit(X, y_sklearn).score(X, y_sklearn)
 ```
 
-## 2. Multiple inputs
+## 4. Multiple inputs
 
 The process for multiple inputs is similar, but instead of overriding the transformer in `target_encoder` we override `feature_encoder`.
 
@@ -365,7 +364,7 @@ if False:
             return MultiInputTransformer(...)
 ```
 
-### 2.1 Define Keras Model
+### 4.1 Define Keras Model
 
 Let's define a Keras **regression** Model with 2 inputs:
 
@@ -409,7 +408,7 @@ r2_score(y, y_pred)
 
 Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.
 
-### 2.2 Define Data Transformer
+### 4.2 Define data transformer
 
 Just like for overriding `target_encoder`, we just need to define a sklearn transformer and drop it into our SciKeras wrapper. Since we hardcoded the input
 shapes into our model and do not rely on any transformer-generated metadata, we can simply use `sklearn.preprocessing.FunctionTransformer`:
@@ -429,7 +428,7 @@ class MultiInputRegressor(KerasRegressor):
 
 Note that we did **not** implement `inverse_transform` (that is, we did not pass an `inverse_func` argument to `FunctionTransformer`) because features are never converted back to their original form.
 
-### 2.3 Test regressor
+### 4.3 Test regressor
 
 ```python
 reg = MultiInputRegressor(model=get_reg_model, verbose=0, random_state=0)
@@ -439,7 +438,7 @@ X_sklearn = np.column_stack(X)
 reg.fit(X_sklearn, y).score(X_sklearn, y)
 ```
 
-## 3. Multidimensional inputs with MNIST dataset
+## 5. Multidimensional inputs with MNIST dataset
 
 In this example, we look at how we can use SciKeras to process the MNIST dataset. The dataset is composed of 60,000 images of digits, each of which is a 2D 28x28 image.
 
@@ -481,7 +480,7 @@ print(np.min(x_train), np.max(x_train))  # scaled 0-1
 
 Of course, in this case, we could have just as easily used numpy functions to scale our data, but we use `MinMaxScaler` to demonstrate use of the sklearn ecosystem.
 
-### 3.1 Define Keras Model
+### 5.1 Define Keras Model
 
 Next we will define our Keras model (adapted from [keras.io](https://keras.io/examples/vision/mnist_convnet/)):
 
@@ -531,7 +530,7 @@ clf = MultiDimensionalClassifier(
 )
 ```
 
-### 3.2 Test
+### 5.2 Test
 
 Train and score the model (this takes some time)
 

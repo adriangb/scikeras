@@ -1,7 +1,7 @@
 ---
 jupyter:
   jupytext:
-    formats: md,ipynb
+    formats: ipynb,md
     text_representation:
       extension: .md
       format_name: markdown
@@ -13,7 +13,8 @@ jupyter:
     name: python3
 ---
 
-[![Run in Colab](https://www.tensorflow.org/images/colab_logo_32px.png)](https://colab.research.google.com/github/adriangb/scikeras/blob/master/docs/source/notebooks/Meta_Estimators.ipynb) Run in Colab
+<a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/master/notebooks/Meta_Estimators.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a>
+
 
 # Meta Estimators in SciKeras
 
@@ -21,14 +22,13 @@ In this notebook, we implement sklearn ensemble and tree meta-estimators backed 
 
 ## Table of contents
 
-- [Meta Estimators in SciKeras](#meta-estimators-in-scikeras)
-  - [Table of contents](#table-of-contents)
-  - [Defining the Keras Model](#defining-the-keras-model)
-    - [Building a boosting ensemble](#building-a-boosting-ensemble)
-  - [Testing with a toy dataset](#testing-with-a-toy-dataset)
-  - [Bagging ensemble](#bagging-ensemble)
+* [1. Setup](#1.-Setup)
+* [2. Defining the Keras Model](#2.-Defining-the-Keras-Model)
+  * [2.1 Building a boosting ensemble](#2.1-Building-a-boosting-ensemble)
+* [3. Testing with a toy dataset](#3.-Testing-with-a-toy-dataset)
+* [4. Bagging ensemble](#4.-Bagging-ensemble)
 
-Install SciKeras
+## 1. Setup
 
 ```python
 try:
@@ -37,7 +37,7 @@ except ImportError:
     !python -m pip install scikeras
 ```
 
-Silence TensorFlow warnings to keep output succint.
+Silence TensorFlow logging to keep output succinct.
 
 ```python
 import warnings
@@ -47,18 +47,19 @@ warnings.filterwarnings("ignore", message="Setting the random state for TF")
 ```
 
 ```python
-from typing import Dict, Iterable, Any
-
 import numpy as np
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 from tensorflow import keras
 ```
 
-## Defining the Keras Model
+## 2. Defining the Keras Model
 
 We borrow our MLPClassifier implementation from the [MLPClassifier notebook](https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MLPClassifier_and_MLPRegressor.ipynb).
 
 ```python
+from typing import Dict, Iterable, Any
+
+
 def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any], compile_kwargs: Dict[str, Any]):
     model = keras.Sequential()
     inp = keras.layers.Input(shape=(meta["n_features_in_"]))
@@ -95,7 +96,7 @@ clf = KerasClassifier(
 )
 ```
 
-### Building a boosting ensemble
+### 2.1 Building a boosting ensemble
 
 Because SciKeras estimators are fully compliant with the Scikit-Learn API, we can make use of Scikit-Learn's built in utilities. In particular example, we will use `AdaBoostClassifier` from `sklearn.ensemble.AdaBoostClassifier`, but the process is the same for most Scikit-Learn meta-estimators.
 
@@ -107,7 +108,7 @@ from sklearn.ensemble import AdaBoostClassifier
 adaboost = AdaBoostClassifier(base_estimator=clf, random_state=0)
 ```
 
-## Testing with a toy dataset
+## 3. Testing with a toy dataset
 
 Before continouing, we will run a small test to make sure we get somewhat reasonable results.
 
@@ -138,7 +139,7 @@ print(adaboost.estimators_[0].model_.get_weights()[0][0, :5])  # first sub-estim
 print(adaboost.estimators_[1].model_.get_weights()[0][0, :5])  # second sub-estimator
 ```
 
-## Bagging ensemble
+## 4. Bagging ensemble
 
 For comparison, we run the same test with an ensemble built using `sklearn.ensemble.BaggingClassifier`.
 

@@ -1,7 +1,7 @@
 ---
 jupyter:
   jupytext:
-    formats: md,ipynb
+    formats: ipynb,md
     text_representation:
       extension: .md
       format_name: markdown
@@ -13,23 +13,21 @@ jupyter:
     name: python3
 ---
 
-# Autoencoders in SciKeras
+<a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/master/notebooks/AutoEncoders.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a>
 
-[![Run in Colab](https://www.tensorflow.org/images/colab_logo_32px.png)](https://colab.research.google.com/github/adriangb/scikeras/blob/master/docs/source/notebooks/Autencoders.ipynb)
-Run in Colab
+# Autoencoders in SciKeras
 
 Autencoders are an approach to use nearual networks to distill data into it's most important features, thereby compressing the data. We will be following the [Keras tutorial](https://blog.keras.io/building-autoencoders-in-keras.html) on the topic, which goes much more in depth and breadth than we will here. You are highly encouraged to check out that tutorial if you want to learn about autoencoders in the general sense.
 
 ## Table of contents
 
-- [Autoencoders in SciKeras](#autoencoders-in-scikeras)
-  - [Table of contents](#table-of-contents)
-  - [Data](#data)
-  - [Define Keras Model](#define-keras-model)
-  - [Training](#training)
-  - [Explore Results](#explore-results)
+* [1. Setup](#1.-Setup)
+* [2. Data](#2.-Data)
+* [3. Define Keras Model](#3.-Define-keras-model)
+* [4. Training](#4.-Training)
+* [5. Explore Results](#5.-Explore-results)
 
-Install SciKeras
+## 1. Setup
 
 ```python
 try:
@@ -38,15 +36,22 @@ except ImportError:
     !python -m pip install scikeras
 ```
 
-Silence TensorFlow warnings to keep output succinct.
+Silence TensorFlow logging to keep output succinct.
 
 ```python
 import warnings
 from tensorflow import get_logger
 get_logger().setLevel('ERROR')
+warnings.filterwarnings("ignore", message="Setting the random state for TF")
 ```
 
-## Data
+```python
+import numpy as np
+from scikeras.wrappers import KerasClassifier, KerasRegressor
+from tensorflow import keras
+```
+
+## 2. Data
 
 We load the dataset from the Keras tutorial. The dataset consists of images of cats and dogs.
 
@@ -64,7 +69,7 @@ print(x_train.shape)
 print(x_test.shape)
 ```
 
-## Define Keras Model
+## 3. Define Keras Model
 
 We will be defining a very simple autencoder. We define _three_ model building methods:
 
@@ -156,7 +161,7 @@ inv_tf_est = BaseWrapper(model=get_inverse_tf_model, fit_model=None, encoding_di
 autoencoder = KerasTransformer(model=get_fit_model, tf_est=tf_est, inv_tf_est=inv_tf_est, loss="binary_crossentropy", encoding_dim=32, epochs=5)
 ```
 
-## Training
+## 4. Training
 
 To train the model, we pass the input images as both the features and the target. This will train the layers to compress the data as accurately as possible between the encoder and decoder. Note that we only pass the `X` parameter, since we defined the mapping `y=X` in `KerasTransformer.fit` above.
 
@@ -170,7 +175,7 @@ Next, we round trip the test dataset and explore the performance of the autoenco
 roundtrip_imgs = autoencoder.inverse_transform(autoencoder.transform(x_test))
 ```
 
-## Explore Results
+## 5. Explore Results
 
 Let's compare our inputs to lossy decoded outputs:
 
