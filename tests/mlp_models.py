@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
@@ -7,7 +7,9 @@ from scikeras.wrappers import KerasRegressor
 
 
 def dynamic_classifier(
-    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+    hidden_layer_sizes=(10,),
+    meta: Optional[Dict[str, Any]] = None,
+    compile_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Model:
     """Creates a basic MLP classifier dynamically choosing binary/multiclass
     classification loss and ouput activations.
@@ -54,7 +56,9 @@ def dynamic_classifier(
 
 
 def dynamic_regressor(
-    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+    hidden_layer_sizes=(10,),
+    meta: Optional[Dict[str, Any]] = None,
+    compile_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Model:
     """Creates a basic MLP regressor dynamically.
     """
