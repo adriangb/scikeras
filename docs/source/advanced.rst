@@ -178,11 +178,50 @@ This is basically the same as calling :py:func:`~scikeras.wrappers.BaseWrapper.g
 Data Transformers
 ^^^^^^^^^^^^^^^^^
 
-In some cases, the input actually consists of multiple inputs. E.g.,
+Keras supports a much wider range of inputs/outputs than Scikit-Learn does. E.g.,
 in a text classification task, you might have an array that contains
 the integers representing the tokens for each sample, and another
-array containing the number of tokens of each sample. SciKeras has you
-covered here as well.
+array containing the number of tokens of each sample.
+
+In order to reconcile Keras' expanded input/output support and Scikit-Learn's more
+limited options, SciKeras introduces "data transformers". These are really just
+dependency injection points where you can declare custom data transformations,
+for example to split an array into a list of arrays, join `X` & `y` into a `Dataset`, etc.
+In order to keep these transformations in a familiar format, they are implemented as
+sklearn-style transformers. You can think of this setup as an sklearn Pipeline:
+
+.. code-block::
+
+                                             ↗ feature_encoder ↘
+    your data → sklearn-ecosystem → SciKeras                    dataset_transformer → Keras
+                                             ↘ target_encoder  ↗ 
+
+
+As you can see, there are 2 stages of data transformations within SciKeras:
+
+- Target/Feature transformations:
+    - feature_encoder: Handles transformations to the features (`X`). This can be used 
+      to implement multi-input models.
+    - target_encoder: Handles transformations to the target (`y`). This can be used
+      to implement non-int labels (eg: strings) as well as mutli-output models.
+- Whole dataset transformations:
+    - dataset_transformer: This is the last step before passing the data to Keras.
+      It can be used to implement conversion to a `Dataset`, amongst other things.
+
+`feature_encoder` and `target_encoder` are run before building the Keras Model,
+while `data_transformer` is run after the Model is built. This means that the
+former two will not have access to the Model (eg. to get the number of outputs)
+but *will* be able to inject data into the model building function (more on this
+below). `data_transformer` on the other hand *will* get access to the built Model,
+but it cannot pass any data to model building.
+
+Although you could just implement everything in `dataset_transformer`,
+having several distinct dependency injections points allows for more modularity,
+for example to keep the default processing of string-encoded labels but convert
+the data to a `Dataset` before passing to Keras.
+
+Multi-input and output models
++++++++++++++++++++++++++++++
 
 Scikit-Learn natively supports multiple outputs, although it technically
 requires them to be arrays of equal length
@@ -208,11 +247,11 @@ type, and implements basic handling of the following cases out of the box:
 +--------------------------+--------------+----------------+----------------+---------------+
 | "binary"                 | [1, 0, 1]    | 1              | 1 or 2         | Yes           |
 +--------------------------+--------------+----------------+----------------+---------------+
-| "mulilabel-indicator"    | [[1, 1],     | 1 or >1        | 2 per target   | Single output |
+| "multilabel-indicator"   | [[1, 1],     | 1 or >1        | 2 per target   | Single output |
 |                          |              |                |                |               |
-|                          | [0, 2],      |                |                | only          |
+|                          | [0, 1],      |                |                | only          |
 |                          |              |                |                |               |
-|                          | [1, 1]]      |                |                |               |
+|                          | [1, 0]]      |                |                |               |
 +--------------------------+--------------+----------------+----------------+---------------+
 | "multiclass-multioutput" | [[1, 1],     | >1             | >=2 per target | No            |
 |                          |              |                |                |               |
@@ -231,6 +270,13 @@ type, and implements basic handling of the following cases out of the box:
 
 If you find that your target is classified as ``"multiclass-multioutput"`` or ``"unknown"``, you will have to
 implement your own data processing routine.
+
+In addition to converting data, `feature_encoder` and `target_encoder`, allows you to inject data
+into your model construction method. This is useful if for example you use `target_encoder` to dynamically
+determine how many outputs your model should have based on the data and then use this information to
+assign the right number of outputs in your Model. To return data from `feature_encoder` or `target_encoder`,
+you will need to provide a transformer with a `get_metadata` method, which is expected to return a dictionary
+which will be injected into your model building function via the `meta` parameter.
 
 For a complete examples implementing custom data processing, see the examples in the
 :ref:`tutorials` section.
