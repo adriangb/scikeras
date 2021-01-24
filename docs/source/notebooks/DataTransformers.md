@@ -694,7 +694,7 @@ class RaggedClassifier(KerasClassifier):
     @property
     def dataset_transformer(self):
         t1 = FunctionTransformer(ragged_transformer)
-        t2 = ClassWeightDataTransformer(self.class_weight)
+        t2 = super().dataset_transformer  # ClassWeightDataTransformer
         t3 = FunctionTransformer(dataset_transformer)
         return make_pipeline(t1, t2, t3)
     
