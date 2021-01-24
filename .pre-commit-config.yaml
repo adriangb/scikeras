@@ -10,12 +10,3 @@ repos:
       - id: isort
         additional_dependencies: [toml]
         exclude: ^.*/?setup\.py$
-  - repo: local
-    hooks:
-      - id: jupyter-nb-clear-output
-        name: jupyter-nb-clear-output
-        files: \.ipynb$
-        stages: [commit]
-        language: python
-        entry: python -m jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
-        additional_dependencies: ['jupyter', 'nbconvert']
