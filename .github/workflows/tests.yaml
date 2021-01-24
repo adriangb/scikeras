@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
       
       - name: Update packages
         run: |
@@ -83,11 +83,14 @@ jobs:
           poetry install
 
       - name: Install Nightly Versions
+        if: always()
         run: |
           poetry run python -m pip install -U tf-nightly
+          poetry run python -m pip install -U scipy
           poetry run python -m pip install -U --pre --extra-index https://pypi.anaconda.org/scipy-wheels-nightly/simple scikit-learn
 
-      - name: Test with pytest 
+      - name: Test with pytest
+        if: always()
         run: |
           poetry run python -m pip freeze
           poetry run python -m pytest -v --cov=scikeras --cov-report xml --numprocesses=auto --color=yes
@@ -100,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tf-version: [2.2.0]
+        tf-version: [2.4.0]
         python-version: [3.6, 3.8]
         sklearn-version: [0.22.0]
 

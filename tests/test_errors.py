@@ -7,7 +7,7 @@ from sklearn.exceptions import NotFittedError
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
 
-from scikeras.wrappers import KerasClassifier, KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 
@@ -27,9 +27,22 @@ def test_X_shape_change():
 
     estimator.fit(X=X, y=y)
 
-    with pytest.raises(ValueError, match=r"dimensions in `X`"):
+    with pytest.raises(ValueError, match="dimensions in X"):
         # Calling with a different number of dimensions for X raises an error
         estimator.partial_fit(X=X.reshape(2, 2), y=y)
+
+
+def test_unknown_param():
+    """Test that setting a parameter unknown to set_params raises a
+    friendly error message.
+    """
+    est = BaseWrapper()
+    err = (
+        r"Invalid parameter test for estimator [\S\s]*"
+        "This issue can likely be resolved by setting this parameter"
+    )
+    with pytest.raises(ValueError, match=err):
+        est.set_params(test=1)
 
 
 def test_not_fitted_error():
@@ -56,7 +69,7 @@ class TestInvalidBuildFn:
             pass
 
         clf = KerasClassifier(model=Model())
-        with pytest.raises(TypeError, match="`model` must be"):
+        with pytest.raises(TypeError, match="``model`` must be"):
             clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
     def test_no_build_fn(self):
@@ -65,7 +78,7 @@ class TestInvalidBuildFn:
 
         clf = NoBuildFn()
 
-        with pytest.raises(ValueError, match="must implement `_keras_build_fn`"):
+        with pytest.raises(ValueError, match="must implement ``_keras_build_fn``"):
             clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
     def test_call_and_build_fn_function(self):
@@ -78,7 +91,7 @@ class TestInvalidBuildFn:
 
         clf = Clf(model=dummy_func,)
 
-        with pytest.raises(ValueError, match="cannot implement `_keras_build_fn`"):
+        with pytest.raises(ValueError, match="cannot implement ``_keras_build_fn``"):
             clf.fit(np.array([[0], [1]]), np.array([0, 1]))
 
 
@@ -99,15 +112,6 @@ def test_sample_weights_all_zero():
 
     with pytest.raises(ValueError, match="only zeros were passed in sample_weight"):
         estimator.fit(X, y, sample_weight=sample_weight)
-
-
-def test_build_fn_deprecation():
-    """An appropriate warning is raised when using the `build_fn`
-    parameter instead of `model`.
-    """
-    clf = KerasClassifier(build_fn=dynamic_regressor, model__hidden_layer_sizes=(100,))
-    with pytest.warns(UserWarning, match="`build_fn` will be renamed to `model`"):
-        clf.fit([[0], [1]], [0, 1])
 
 
 @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
@@ -183,7 +187,7 @@ def test_target_dtype_changes_incremental_fit():
     est.fit(X, y)
     est.partial_fit(X, y.astype(np.uint8))
     with pytest.raises(
-        ValueError, match="Got `y` with dtype",
+        ValueError, match="Got y with dtype",
     ):
         est.partial_fit(X, y.astype(np.float64))
 
@@ -196,7 +200,7 @@ def test_target_dims_changes_incremental_fit():
     est.fit(X, y)
     y_new = y.reshape(-1, 1)
     with pytest.raises(
-        ValueError, match="`y` has 2 dimensions, but this ",
+        ValueError, match="y has 2 dimensions, but this ",
     ):
         est.partial_fit(X, y_new)
 
@@ -221,7 +225,7 @@ def test_target_shape_changes_incremental_fit_reg():
     est = KerasRegressor(model=dynamic_regressor, hidden_layer_sizes=(100,))
     est.fit(X, y)
     with pytest.raises(
-        ValueError, match="Detected `y` to have ",
+        ValueError, match="Detected ``y`` to have ",
     ):
         est.partial_fit(X, np.column_stack([y, y]))
 
@@ -234,7 +238,7 @@ def test_X_dtype_changes_incremental_fit():
     est.fit(X, y)
     est.partial_fit(X.astype(np.uint8), y)
     with pytest.raises(
-        ValueError, match="Got `X` with dtype",
+        ValueError, match="Got X with dtype",
     ):
         est.partial_fit(X.astype(np.float64), y)
 

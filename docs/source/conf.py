@@ -14,7 +14,7 @@ import os
 import sys
 
 
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, "../../scikeras")
 
 # -- Project information -----------------------------------------------------
 
@@ -29,20 +29,31 @@ release = __version__
 
 # -- General configuration ---------------------------------------------------
 
-#  on_rtd is whether we are on readthedocs.org, this line of code grabbed
-#  from docs.readthedocs.org
-on_rtd = os.environ.get("READTHEDOCS", None) == "True"
+
+def maybe_skip_member(app, what, name, obj, skip, options) -> bool:
+    """Skip all private members, including __init__
+    """
+    if name.startswith("_"):
+        return True
+    return skip
+
+
+def setup(app):
+    app.connect("autodoc-skip-member", maybe_skip_member)
+
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",
+    "numpydoc",
     "sphinx.ext.linkcode",
     "sphinx.ext.autosummary",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.autodoc.typehints",
+    "nbsphinx",
 ]
 autosummary_generate = True
 autodoc_default_options = {
@@ -59,14 +70,20 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
 }
 
+# this is needed for some reason...
+# see https://github.com/numpy/numpydoc/issues/69
+numpydoc_class_members_toctree = False
+numpydoc_show_class_members = False
+
+autodoc_typehints = "description"
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+templates_path = ["templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ["_build"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
@@ -76,8 +93,7 @@ pygments_style = "sphinx"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
-html_theme = "default"
+html_theme = "insipid"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -90,12 +106,6 @@ html_context = {
     "conf_py_path": "/source/",
 }
 
-if not on_rtd:  # only import and set the theme if we're building docs locally
-    import sphinx_rtd_theme
-
-    html_theme = "sphinx_rtd_theme"
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
 # -- GitHub source code link ----------------------------------------------
 
 # Functionality to build github source URI, taken from sklearn.
@@ -103,7 +113,6 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 import inspect
 import subprocess
 
-from functools import partial
 from operator import attrgetter
 
 
@@ -144,8 +153,10 @@ def _linkcode_resolve(domain, info, package, url_fmt, revision):
         # Python 2 only
         class_name = class_name.encode("utf-8")
     module = __import__(info["module"], fromlist=[class_name])
-    obj = attrgetter(info["fullname"])(module)
-
+    try:
+        obj = attrgetter(info["fullname"])(module)
+    except AttributeError:
+        return ""
     try:
         fn = inspect.getsourcefile(obj)
     except Exception:
@@ -183,3 +194,8 @@ _linkcode_git_revision = _get_git_revision()
 
 # The following is used by sphinx.ext.linkcode to provide links to github
 linkcode_resolve = project_linkcode_resolve
+
+
+# nbsphinx config
+
+nbsphinx_execute = "never"

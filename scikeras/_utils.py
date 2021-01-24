@@ -4,14 +4,10 @@ import random
 import warnings
 
 from inspect import isclass
-from typing import Any, Callable, Dict, Iterable, List, Union
+from typing import Any, Callable, Dict, Iterable, Union
 
 import numpy as np
 import tensorflow as tf
-
-from tensorflow.keras.layers import deserialize as deserialize_layer
-from tensorflow.keras.layers import serialize as serialize_layer
-from tensorflow.python.keras.saving import saving_utils
 
 
 class TFRandomState:
@@ -51,72 +47,6 @@ class TFRandomState:
         random.setstate(self.orig_random_state)
         np.random.set_state(self.orig_np_random_state)
         tf.random.set_seed(None)  # TODO: can we revert instead of unset?
-
-
-def unpack_keras_model(model, training_config, weights):
-    """Creates a new Keras model object using the input
-    parameters.
-
-    Returns
-    -------
-    Model
-        A copy of the input Keras Model,
-        compiled if the original was compiled.
-    """
-    restored_model = deserialize_layer(model)
-    if training_config is not None:
-        restored_model.compile(
-            **saving_utils.compile_args_from_training_config(training_config)
-        )
-    restored_model.set_weights(weights)
-    restored_model.__reduce_ex__ = pack_keras_model.__get__(restored_model)
-    return restored_model
-
-
-def pack_keras_model(model_obj, protocol):
-    """Pickle a Keras Model.
-
-    Arguments:
-        model_obj: an instance of a Keras Model.
-        protocol: pickle protocol version, ignored.
-
-    Returns
-    -------
-    Pickled model
-        A tuple following the pickle protocol.
-    """
-    model_metadata = saving_utils.model_metadata(model_obj)
-    training_config = model_metadata.get("training_config", None)
-    model = serialize_layer(model_obj)
-    weights = model_obj.get_weights()
-    return (unpack_keras_model, (model, training_config, weights))
-
-
-def make_model_picklable(model_obj):
-    """Makes a Keras Model object picklable without cloning.
-
-    Arguments:
-        model_obj: an instance of a Keras Model.
-
-    Returns
-    -------
-    Model
-        The input model, but directly picklable.
-    """
-    model_obj.__reduce_ex__ = pack_keras_model.__get__(model_obj)
-
-
-def _windows_upcast_ints(
-    arr: Union[List[np.ndarray], np.ndarray]
-) -> Union[List[np.ndarray], np.ndarray]:
-    # see tensorflow/probability#886
-    def _upcast(x):
-        return x.astype("int64") if x.dtype == np.int32 else x
-
-    if isinstance(arr, np.ndarray):
-        return _upcast(arr)
-    else:
-        return [_upcast(x_) for x_ in arr]
 
 
 def route_params(
@@ -159,19 +89,20 @@ def route_params(
 
 
 def has_param(func: Callable, param: str) -> bool:
-    """[summary]
+    """Check if func has a parameter named param.
 
     Parameters
     ----------
     func : Callable
-        [description]
+        Function to inspect.
     param : str
-        [description]
+        Parameter name.
 
     Returns
     -------
     bool
-        [description]
+        True if the parameter is part of func's signature,
+        False otherwise.
     """
     return any(
         p.name == param

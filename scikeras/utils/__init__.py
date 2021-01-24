@@ -1,8 +1,6 @@
 from inspect import isclass
 from typing import Callable, Union
 
-import numpy as np
-
 from tensorflow.keras.losses import Loss
 from tensorflow.keras.losses import get as keras_loss_get
 from tensorflow.keras.metrics import Metric
@@ -28,7 +26,7 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     Returns
     -------
     str
-        [description]
+        String name of the loss.
 
     Notes
     -----
@@ -49,15 +47,14 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     Raises
     ------
     TypeError
-        If the wrong type is passed.
-
+        If loss is not a string, tf.keras.losses.Loss instance or a callable.
     """
     if isclass(loss):
         loss = loss()
     if not (isinstance(loss, (str, Loss)) or callable(loss)):
         raise TypeError(
-            "`loss` must be a string, a function, an instance of tf.keras.losses.Loss"
-            " or a type inheriting from `tf.keras.losses.Loss`"
+            "``loss`` must be a string, a function, an instance of ``tf.keras.losses.Loss``"
+            " or a type inheriting from ``tf.keras.losses.Loss``"
         )
     fn_or_cls = keras_loss_get(loss)
     if isinstance(fn_or_cls, Loss):
@@ -97,16 +94,17 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
 
     Raises
     ------
-    ValueError
-        In case of an unknown metric.
+    TypeError
+        If metric is not a string, a tf.keras.metrics.Metric instance a class
+        inheriting from tf.keras.metrics.Metric.
     """
     if isclass(metric):
         metric = metric()  # get_metric accepts instances, not classes
     if not (isinstance(metric, (str, Metric)) or callable(metric)):
         raise TypeError(
-            "`metric` must be a string, a function, an instance of"
-            " tf.keras.metrics.Metric or a type inheriting from"
-            " `tf.keras.metrics.Metric`"
+            "``metric`` must be a string, a function, an instance of"
+            " ``tf.keras.metrics.Metric`` or a type inheriting from"
+            " ``tf.keras.metrics.Metric``"
         )
     fn_or_cls = keras_metric_get(metric)
     if isinstance(fn_or_cls, Metric):

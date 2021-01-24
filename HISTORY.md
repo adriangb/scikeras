@@ -1,5 +1,17 @@
 # History
 
+## 0.2.1 (2020-12-06)
+
+Thank you to @stsievert for your continued support and contributions!
+
+Release notes:
+
+* Support autoencoders and more general use cases via BaseWrapper (#123)
+* Fix slowdown caused by sample_weight processing
+(reported in [DaskML#764](https://github.com/dask/dask-ml/issues/764), fixed in #123)
+* Documentation improvements (#134, #135, #145 and #138)
+* Fix the `initialize` method in KerasClassifier (#140)
+
 ## 0.2.0 (2020-10-03)
 
 * Move data transformations to a Scikit-Learn Transformer based interface (#88)
