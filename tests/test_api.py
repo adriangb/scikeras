@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
+import tensorflow as tf
 
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.datasets import load_boston, load_digits, load_iris
@@ -17,9 +18,8 @@ from sklearn.ensemble import (
 )
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
-from tensorflow.data import Dataset
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
@@ -818,18 +818,21 @@ class TestInitialize:
 
 class TestDatasetTransformer:
     def test_conversion_to_dataset(self):
+        """Check that the dataset_transformer
+        interface can return a tf Dataset
+        """
         inp = Input((1,))
         out = Dense(1, activation="sigmoid")(inp)
         m = Model(inp, out)
         m.compile(loss="bce")
 
-        def tf(X_y_s: Tuple[np.ndarray, np.ndarray, np.ndarray]):
-            return Dataset.from_tensor_slices(X_y_s), None, None
+        def dtf(X_y_s: Tuple[np.ndarray, np.ndarray, np.ndarray]):
+            return (tf.data.Dataset.from_tensor_slices(X_y_s), None, None)
 
         class MyWrapper(KerasClassifier):
             @property
             def dataset_transformer(self):
-                return FunctionTransformer(tf)
+                return FunctionTransformer(dtf)
 
         est = MyWrapper(m)
         X = np.random.random((100, 1))
@@ -837,7 +840,7 @@ class TestDatasetTransformer:
         fit_orig = m.fit
 
         def check_fit(**kwargs):
-            assert isinstance(kwargs["x"], Dataset)
+            assert isinstance(kwargs["x"], tf.data.Dataset)
             assert kwargs["y"] is None
             return fit_orig(**kwargs)
 
@@ -847,3 +850,28 @@ class TestDatasetTransformer:
         assert y_pred.dtype == y.dtype
         assert y_pred.shape == y.shape
         assert set(y_pred).issubset(set(y))
+
+    def test_pipeline(self):
+        """Check that the dataset_transformer
+        interface is compatible with Pipelines
+        """
+        inp = Input((1,))
+        out = Dense(1, activation="sigmoid")(inp)
+        m = Model(inp, out)
+        m.compile(loss="bce")
+
+        def dtf(X_y_s: Tuple[np.ndarray, np.ndarray, np.ndarray]):
+            return (tf.data.Dataset.from_tensor_slices(X_y_s), None, None)
+
+        class MyWrapper(KerasClassifier):
+            @property
+            def dataset_transformer(self):
+                t1 = super().dataset_transformer
+                t2 = FunctionTransformer(dtf)
+                return make_pipeline(t1, t2)
+
+        est = MyWrapper(m, class_weight="balanced")
+        X = np.random.random((100, 1))
+        y = np.array(["a", "b"] * 50, dtype=str)
+
+        est.fit(X, y)

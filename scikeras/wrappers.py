@@ -36,6 +36,7 @@ from scikeras.utils import loss_name, metric_name
 from scikeras.utils.transformers import (
     ClassifierLabelEncoder,
     ClassWeightDataTransformer,
+    DummyDataTransformer,
     RegressorTargetEncoder,
 )
 
@@ -734,7 +735,7 @@ class BaseWrapper(BaseEstimator):
             Transformer implementing the sklearn transformer
             interface.
         """
-        return FunctionTransformer()
+        return DummyDataTransformer()
 
     def fit(self, X, y, sample_weight=None, **kwargs) -> "BaseWrapper":
         """Constructs a new model with ``model`` & fit the model to ``(X, y)``.

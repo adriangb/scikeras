@@ -43,6 +43,8 @@ In this notebook, we explore how to reconcile this functionality with the sklear
 * [5. Multidimensional inputs with MNIST dataset](#5.-Multidimensional-inputs-with-MNIST-dataset)
   * [5.1 Define Keras Model](#5.1-Define-Keras-Model)
   * [5.2 Test](#5.2-Test)
+* [6. Ragged datasets with tf.data.Dataset](#6.-Ragged-datasets-with-tf.data.Dataset)
+* [7. Multi-output class_weight](#7.-Multi-output-class_weight)
 
 ## 1. Setup
 
@@ -469,6 +471,10 @@ x_train = x_train.reshape((n_samples_train, -1))
 x_test = x_test.reshape((n_samples_test, -1))
 x_train = MinMaxScaler().fit_transform(x_train)
 x_test = MinMaxScaler().fit_transform(x_test)
+
+# reduce dataset size for faster training
+n_samples = 1000
+x_train, y_train, x_test, y_test = x_train[:n_samples], y_train[:n_samples], x_test[:n_samples], y_test[:n_samples]
 ```
 
 ```python
@@ -542,4 +548,305 @@ clf.fit(x_train, y_train)
 ```python
 score = clf.score(x_test, y_test)
 print(f"Test score (accuracy): {score:.2f}")
+```
+
+## 6. Ragged datasets with tf.data.Dataset
+
+SciKeras provides a third dependency injection point that operats on the entire dataset: X, y & sample_weight. This `dataset_transformer` is applied after `target_transformer` and `feature_transformer`. One use case for this dependancy injection point is to transform data from tabular/array-like to the `tf.data.Dataset` format, which only requires iteration. We can use this to create a `tf.data.Dataset` of ragged tensors.
+
+Note that `dataset_transformer` should accept a single **3 element tuple** as its argument and return value:
+
+```python
+help(KerasClassifier.dataset_transformer)
+```
+
+The use of a 3 element tuple allows you to chain transformers with this same interface using a Scikit-Learn Pipeline, as you will see below.
+
+
+When you return a tuple like `(tf.data.Dataset(...), None, None)`, SciKeras will pass the data untouched to `Model.fit` like `Model.fit(x=tf.data.Dataset(...), y=None, sample_weight=None)`. You can process these arguments in any way you like, as long as Keras accepts them, SciKeras will not complain.
+
+
+Let's start by defining our data. We'll have an extra "feature" that marks the observation index, but we'll remove it when we deconstruct our data in the transformer.
+
+```python
+feature_1 = np.random.uniform(size=(10, ))
+feature_2 = np.random.uniform(size=(10, ))
+obs = [0] * 3 + [1] * 2 + [2] * 1 + [3] * 2 + [4] * 2
+
+X = np.column_stack([feature_1, feature_2, obs]).astype("float32")
+
+y = np.array(["class1"] * 5 + ["class2"] * 5, dtype=str)
+```
+
+Next, we define our `dataset_transformer`. We will do this by defining a custom forward transformation outside of the Keras model. Note that we do not define an inverse transformation since that is never used.
+Also note that `dataset_transformer` will _always_ be called with `X` (i.e. the first element of the tuple will always be populated), but will be called with `y=None` when used for `predict`. Thus,
+you should check if `y` and `sample_weigh` are None before doing any operations on them.
+
+```python
+from typing import Tuple, Optional
+
+from sklearn.base import BaseEstimator, TransformerMixin
+import tensorflow as tf
+
+
+def ragged_transformer(data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> Tuple[tf.RaggedTensor, None, None]:
+    X, y, sample_weights = data
+    if y is not None:
+        y = y.reshape(-1, 1 if len(y.shape) == 1 else y.shape[1])
+        y = y[tf.RaggedTensor.from_value_rowids(y, X[:, -1]).row_starts().numpy()]
+    if sample_weights is not None:
+        sample_weights = sample_weights.reshape(-1, 1 if len(sample_weights.shape) == 1 else sample_weights.shape[1])
+        sample_weights = sample_weights[tf.RaggedTensor.from_value_rowids(sample_weights, X[:, -1]).row_starts().numpy()]
+    X = tf.RaggedTensor.from_value_rowids(X[:, :-1], X[:, -1])
+    return (X, y, sample_weights)
+```
+
+In this case, we chose to keep `y` and `sample_weights` as numpy arrays, which will allow us to re-use 
+
+Lets quickly test our transformer:
+
+```python
+data = ragged_transformer((X, y, None))
+data[0]
+```
+
+```python
+data = ragged_transformer((X, None, None))
+data[0]
+```
+
+Our shapes look good, and we can handle the `y=None` case.
+
+
+Because Keras will not accept a RaggedTensor directly, we will need to wrap our entire dataset into a tensorflow `Dataset`. We can do this by adding one more transformation step:
+
+
+Next, we can add our transormers to our model. We use an sklearn `Pipeline` (generated via `make_pipeline`) to keep ClassWeightDataTransformer operational while implementing our custom transformation.
+
+```python
+def dataset_transformer(data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> Tuple[tf.data.Dataset, None, None]:
+    return (tf.data.Dataset.from_tensor_slices(data), None, None)
+```
+
+```python
+from sklearn.preprocessing import FunctionTransformer
+from sklearn.pipeline import make_pipeline
+
+
+class RaggedClassifier(KerasClassifier):
+
+    @property
+    def dataset_transformer(self):
+        t1 = FunctionTransformer(ragged_transformer)
+        t2 = super().dataset_transformer  # ClassWeightDataTransformer
+        t3 = FunctionTransformer(dataset_transformer)
+        return make_pipeline(t1, t2, t3)
+```
+
+Now we can define a Model. We need some way to handle/flatten our ragged arrays within our model. For this example, we use a custom mean layer, but you could use an Embedding layer, LSTM, etc.
+
+```python
+from tensorflow import reduce_mean, reshape
+from tensorflow.keras import Sequential, layers
+
+
+class CustomMean(layers.Layer):
+
+    def __init__(self, axis=None):
+        super(CustomMean, self).__init__()
+        self._supports_ragged_inputs = True
+        self.axis = axis
+
+    def call(self, inputs, **kwargs):
+        input_shape = inputs.get_shape()
+        return reshape(reduce_mean(inputs, axis=self.axis), (1, *input_shape[1:]))
+
+
+def get_model(meta):
+    inp_shape = meta["X_shape_"][1]-1
+    model = Sequential([               
+        layers.Input(shape=(inp_shape,), ragged=True),
+        CustomMean(axis=0),
+        layers.Dense(1, activation='sigmoid')
+    ])
+    return model
+```
+
+And attach our model to our classifier wrapper:
+
+```python
+clf = RaggedClassifier(get_model, loss="bce")
+```
+
+Finally, let's train and predict:
+
+```python
+clf.fit(X, y)
+y_pred = clf.predict(X)
+y_pred
+```
+
+If we define our custom layers, transformers and wrappers in their own module, we can easily create a self-contained classifier that is able to handle ragged datasets and has a clean Scikit-Learn compatible API:
+
+```python
+class RaggedClassifier(KerasClassifier):
+
+    @property
+    def dataset_transformer(self):
+        t1 = FunctionTransformer(ragged_transformer)
+        t2 = ClassWeightDataTransformer(self.class_weight)
+        t3 = FunctionTransformer(dataset_transformer)
+        return make_pipeline(t1, t2, t3)
+    
+    def _keras_build_fn(self):
+        inp_shape = self.X_shape_[1] - 1
+        model = Sequential([               
+            layers.Input(shape=(inp_shape,), ragged=True),
+            CustomMean(axis=0),
+            layers.Dense(1, activation='sigmoid')
+        ])
+        return model
+```
+
+```python
+clf = RaggedClassifier(loss="bce")
+clf.fit(X, y)
+y_pred = clf.predict(X)
+y_pred
+```
+
+## 7. Multi-output class_weight
+
+In this example, we will use `dataset_transformer` to support multi-output class weights. We will re-use our `MultiOutputTransformer` from our previous example to split the output, then we will create `sample_weights` from `class_weight`
+
+```python
+from collections import defaultdict
+from typing import Union
+
+from sklearn.utils.class_weight import compute_sample_weight
+
+
+class DatasetTransformer(BaseEstimator, TransformerMixin):
+
+    def __init__(self, output_names, class_weight=None):
+        self.class_weight = class_weight
+        self.output_names = output_names
+
+    def fit(self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> "DatasetTransformer":
+        return self
+
+    def transform(self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> Tuple[np.ndarray, Union[np.ndarray, None], Union[np.ndarray, None]]:
+        if self.class_weight is None:
+            return data
+        class_weight = self.class_weight
+        if isinstance(class_weight, str):  # handle "balanced"
+            class_weight_ = class_weight
+            class_weight = defaultdict(lambda: class_weight_)
+        X, y, sample_weights = data
+        assert sample_weights is None, "Cannot use class_weight & sample_weights together"
+        if y is not None:
+            # y should be a list of arrays, as split up by MultiOutputTransformer
+            sample_weights = dict()
+            for output_num, (output_name, output_data) in enumerate(zip(self.output_names, y)):
+                # class_weight is expected to be indexable by output_number
+                # see https://scikit-learn.org/stable/modules/generated/sklearn.utils.class_weight.compute_sample_weight.html
+                # Note that it is trivial to change the expected format to match Keras' ({output_name: weights, ...})
+                # see https://github.com/keras-team/keras/issues/4735#issuecomment-267473722
+                cls_wt_out = class_weight[output_num]
+                sample_weights[output_name] = compute_sample_weight(cls_wt_out, output_data)
+        return X, y, sample_weights
+
+```
+
+```python
+def get_model(meta, compile_kwargs):
+    inp = keras.layers.Input(shape=(meta["n_features_in_"]))
+    x1 = keras.layers.Dense(100, activation="relu")(inp)
+    out_bin = keras.layers.Dense(1, activation="sigmoid")(x1)
+    out_cat = keras.layers.Dense(meta["n_classes_"][1], activation="softmax")(x1)
+    model = keras.Model(inputs=inp, outputs=[out_bin, out_cat])
+    model.compile(
+        loss=["binary_crossentropy", "sparse_categorical_crossentropy"],
+        optimizer=compile_kwargs["optimizer"]
+    )
+    return model
+
+
+class CustomClassifier(KerasClassifier):
+
+    @property
+    def target_encoder(self):
+        return MultiOutputTransformer()
+    
+    @property
+    def dataset_transformer(self):
+        return DatasetTransformer(
+            output_names=self.model_.output_names,
+            class_weight=self.class_weight
+        )
+```
+
+Next, we define the data. We'll use `sklearn.datasets.make_blobs` to generate a relatively noisy dataset:
+
+```python
+from sklearn.datasets import make_blobs
+
+
+X, y = make_blobs(centers=3, random_state=0, cluster_std=20)
+# make a binary target for "is the value of the first class?"
+y_bin = y == y[0]
+y = np.column_stack([y_bin, y])
+```
+
+Test the model without specifying class weighting:
+
+```python
+clf = CustomClassifier(get_model, epochs=100, verbose=0, random_state=0)
+clf.fit(X, y)
+y_pred = clf.predict(X)
+(_, counts_bin) = np.unique(y_pred[:, 0], return_counts=True)
+print(counts_bin)
+(_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)
+print(counts_cat)
+```
+
+As you can see, without `class_weight="balanced"`, our classifier only predicts mainly a single class for the first output. Now with `class_weight="balanced"`:
+
+```python
+clf = CustomClassifier(get_model, class_weight="balanced", epochs=100, verbose=0, random_state=0)
+clf.fit(X, y)
+y_pred = clf.predict(X)
+(_, counts_bin) = np.unique(y_pred[:, 0], return_counts=True)
+print(counts_bin)
+(_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)
+print(counts_cat)
+```
+
+Now, we get (mostly) balanced classes. But what if we want to specify our classes manually? You will notice that in when we defined `DatasetTransformer`, we gave it the ability to handle
+a list of class weights. For demonstration purposes, we will highly bias towards the second class in each output:
+
+```python
+clf = CustomClassifier(get_model, class_weight=[{0: 0.1, 1: 1}, {0: 0.1, 1: 1, 2: 0.1}], epochs=100, verbose=0, random_state=0)
+clf.fit(X, y)
+y_pred = clf.predict(X)
+(_, counts_bin) = np.unique(y_pred[:, 0], return_counts=True)
+print(counts_bin)
+(_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)
+print(counts_cat)
+```
+
+Or mixing the two methods, because our first output is unbalanced but our second is (presumably) balanced:
+
+```python
+clf = CustomClassifier(get_model, class_weight=["balanced", None], epochs=100, verbose=0, random_state=0)
+clf.fit(X, y)
+y_pred = clf.predict(X)
+(_, counts_bin) = np.unique(y_pred[:, 0], return_counts=True)
+print(counts_bin)
+(_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)
+print(counts_cat)
+```
+
+```python
+
 ```
