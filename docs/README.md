@@ -33,4 +33,12 @@ find docs/source/notebooks -type f -name '*.md' -print0 | xargs -0 -n 1 -P 8 poe
 poetry run sphinx-build -b html -j 8 docs/source docs/_build
 ```
 
+Note that you can change `-P 8` and `-j 8` to match the number of cores your processor has. Or to run on a single core:
+
+```bash
+export TF_CPP_MIN_LOG_LEVEL=3
+poetry run jupytext --set-formats ipynb,md --execute docs/source/notebooks/*
+poetry run sphinx-build -b html docs/source docs/_build
+```
+
 You can now load the docs from [docs/_build/index.html](_build/index.html).
