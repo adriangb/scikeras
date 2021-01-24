@@ -20,10 +20,3 @@ Overall, SciKeras aims at being as flexible as Keras while having a clean interf
    tutorials
    advanced
    api
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
