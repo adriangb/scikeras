@@ -328,6 +328,8 @@ Custom Scorers
 SciKeras uses :func:`sklearn.metrics.accuracy_score` and :func:`sklearn.metrics.accuracy_score`
 as the scoring functions for :class:`scikeras.wrappers.KerasClassifier`
 and :class:`scikeras.wrappers.KerasRegressor` respectively. To override these scoring functions,
+override :func:`scikeras.wrappers.KerasClassifier.scorer`
+or :func:`scikeras.wrappers.KerasRegressor.scorer`.
 
 
 .. _Keras Callbacks docs: https://www.tensorflow.org/api_docs/python/tf/keras/callbacks
