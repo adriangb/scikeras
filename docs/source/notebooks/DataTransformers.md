@@ -552,7 +552,7 @@ print(f"Test score (accuracy): {score:.2f}")
 
 ## 6. Ragged datasets with tf.data.Dataset
 
-SciKeras provides a third dependency injection point that operats on the entire dataset: X, y & sample_weight. This `dataset_transformer` is applied after `target_transformer` and `feature_transformer`. One use case for this dependancy injection point is to transform data from tabular/array-like to the `tf.data.Dataset` format, which only requires iteration. We can use this to create a `tf.data.Dataset` of ragged tensors.
+SciKeras provides a third dependency injection point that operates on the entire dataset: X, y & sample_weight. This `dataset_transformer` is applied after `target_transformer` and `feature_transformer`. One use case for this dependency injection point is to transform data from tabular/array-like to the `tf.data.Dataset` format, which only requires iteration. We can use this to create a `tf.data.Dataset` of ragged tensors.
 
 Note that `dataset_transformer` should accept a single **3 element tuple** as its argument and return value:
 
@@ -562,9 +562,7 @@ help(KerasClassifier.dataset_transformer)
 
 The use of a 3 element tuple allows you to chain transformers with this same interface using a Scikit-Learn Pipeline, as you will see below.
 
-
 When you return a tuple like `(tf.data.Dataset(...), None, None)`, SciKeras will pass the data untouched to `Model.fit` like `Model.fit(x=tf.data.Dataset(...), y=None, sample_weight=None)`. You can process these arguments in any way you like, as long as Keras accepts them, SciKeras will not complain.
-
 
 Let's start by defining our data. We'll have an extra "feature" that marks the observation index, but we'll remove it when we deconstruct our data in the transformer.
 
@@ -617,9 +615,7 @@ data[0]
 
 Our shapes look good, and we can handle the `y=None` case.
 
-
 Because Keras will not accept a RaggedTensor directly, we will need to wrap our entire dataset into a tensorflow `Dataset`. We can do this by adding one more transformation step:
-
 
 Next, we can add our transormers to our model. We use an sklearn `Pipeline` (generated via `make_pipeline`) to keep ClassWeightDataTransformer operational while implementing our custom transformation.
 
