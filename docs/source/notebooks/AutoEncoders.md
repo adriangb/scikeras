@@ -14,7 +14,7 @@ jupyter:
 ---
 
 <!-- #raw -->
-<a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/master/notebooks/AutoEncoders.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a>
+<a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a>
 <!-- #endraw -->
 
 # Autoencoders in SciKeras
@@ -25,9 +25,9 @@ Autencoders are an approach to use nearual networks to distill data into it's mo
 
 * [1. Setup](#1.-Setup)
 * [2. Data](#2.-Data)
-* [3. Define Keras Model](#3.-Define-keras-model)
+* [3. Define Keras Model](#3.-Define-Keras-Model)
 * [4. Training](#4.-Training)
-* [5. Explore Results](#5.-Explore-results)
+* [5. Explore Results](#5.-Explore-Results)
 
 ## 1. Setup
 
