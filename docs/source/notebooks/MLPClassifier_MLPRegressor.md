@@ -13,12 +13,13 @@ jupyter:
     name: python3
 ---
 
+<!-- #raw -->
 <a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/master/notebooks/MLPClassifier_MLPRegressor.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a>
-
+<!-- #endraw -->
 
 # MLPClassifier and MLPRegressor in SciKeras
 
-SciKeras is a bridge between Keras and Scikit-Learn. As such, one of SciKeras' design goals is to be able to create a Scikit-Learn style estimator backed by Keras. 
+SciKeras is a bridge between Keras and Scikit-Learn. As such, one of SciKeras' design goals is to be able to create a Scikit-Learn style estimator backed by Keras.
 
 This notebook implements an estimator that is analogous to `sklearn.neural_network.MLPClassifier` using Keras. This estimator should (for the most part) work as a drop-in replacement for `MLPClassifier`!
 
