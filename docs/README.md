@@ -22,3 +22,15 @@ If you installed via `dev_docs`, this should be working. However, if you also ha
 ```bash
 poetry run jupyter notebook
 ```
+
+## Building docs locally
+
+To build the docs, run the following from the project root directory
+
+```bash
+export TF_CPP_MIN_LOG_LEVEL=3
+find docs/source/notebooks -type f -name '*.md' -print0 | xargs -0 -n 1 -P 8 poetry run jupytext --set-formats ipynb,md --execute
+poetry run sphinx-build -b html -j 8 docs/source docs/_build
+```
+
+You can now load the docs from [docs/_build/index.html](_build/index.html).
