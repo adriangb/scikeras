@@ -225,7 +225,7 @@ print(np.mean(cross_val_score(clf, X, y)))
 
 We get a score above 0.7, which is reasonable and indicates that our classifier is generally working.
 
-## 4 Self contained MLPClassifier
+## 4. Self contained MLPClassifier
 
 You will have noticed that up until now, we define our Keras model in a function and pass that function to `KerasClassifier` via the `model` argument.
 
