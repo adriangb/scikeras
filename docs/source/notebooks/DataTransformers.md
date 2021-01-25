@@ -25,26 +25,26 @@ Keras support many types of input and output data formats, including:
 * Multiple outputs
 * Higher-dimensional tensors
 
-In this notebook, we explore how to reconcile this functionality with the sklearn ecosystem via SciKeras data transformer interface.
+This notebook walks through an example of the different data transformations and how SciKeras bridges Keras and Scikit-learn.
+It may be helpful to have a general understanding of the dataflow before tackling these examples, which is available in
+the [data transformer docs][docs].
 
 ## Table of contents
 
 * [1. Setup](#1.-Setup)
-* [2. Data transformer interface](#2.-Data-transformer-interface)
-  * [2.1 get_metadata method](#2.1-get_metadata-method)
-* [3. Multiple outputs](#3.-Multiple-outputs)
+* [2. Multiple outputs](#2.-Multiple-outputs)
+  * [2.1 Define Keras Model](#2.1-Define-Keras-Model)
+  * [2.2 Define output data transformer](#2.2-Define-output-data-transformer)
+  * [2.3 Test classifier](#2.3-Test-classifier)
+* [3. Multiple inputs](#3-multiple-inputs)
   * [3.1 Define Keras Model](#3.1-Define-Keras-Model)
-  * [3.2 Define output data transformer](#3.2-Define-output-data-transformer)
-  * [3.3 Test classifier](#3.3-Test-classifier)
-* [4. Multiple inputs](#4-multiple-inputs)
+  * [3.2 Define data transformer](#3.2-Define-data-transformer)
+  * [3.3 Test regressor](#3.3-Test-regressor)
+* [4. Multidimensional inputs with MNIST dataset](#4.-Multidimensional-inputs-with-MNIST-dataset)
   * [4.1 Define Keras Model](#4.1-Define-Keras-Model)
-  * [4.2 Define data transformer](#4.2-Define-data-transformer)
-  * [4.3 Test regressor](#4.3-Test-regressor)
-* [5. Multidimensional inputs with MNIST dataset](#5.-Multidimensional-inputs-with-MNIST-dataset)
-  * [5.1 Define Keras Model](#5.1-Define-Keras-Model)
-  * [5.2 Test](#5.2-Test)
-* [6. Ragged datasets with tf.data.Dataset](#6.-Ragged-datasets-with-tf.data.Dataset)
-* [7. Multi-output class_weight](#7.-Multi-output-class_weight)
+  * [4.2 Test](#4.2-Test)
+* [5. Ragged datasets with tf.data.Dataset](#5.-Ragged-datasets-with-tf.data.Dataset)
+* [6. Multi-output class_weight](#6.-Multi-output-class_weight)
 
 ## 1. Setup
 
@@ -70,106 +70,7 @@ from scikeras.wrappers import KerasClassifier, KerasRegressor
 from tensorflow import keras
 ```
 
-## 2. Data transformer interface
-
-SciKeras enables advanced Keras use cases by providing an interface to convert sklearn compliant data to whatever format your Keras model requires within SciKeras, right before passing said data to the Keras model.
-
-This interface is implemented in the form of two sklearn transformers, one for the features (`X`) and one for the target (`y`).  SciKeras loads these transformers via the `target_encoder` and `feature_encoder` methods.
-
-By default, SciKeras implements `target_encoder` for both KerasClassifier and KerasRegressor to facilitate common types of tasks in sklearn. The default implementations are `scikeras.utils.transformers.ClassifierLabelEncoder` and `scikeras.utils.transformers.RegressorTargetEncoder` for KerasClassifier and KerasRegressor respectively. Information on the types of tasks that these default transformers are able to perform can be found in the [SciKeras docs](https://scikeras.readthedocs.io/en/latest/advanced.html#data-transformers).
-
-Below is an outline of the inner workings of the data transfomer interfaces to help understand when they are called:
-
-```python
-if False:  # avoid executing pseudocode
-    from scikeras.utils.transformers import (
-        ClassifierLabelEncoder,
-        RegressorTargetEncoder,
-    )
-
-
-    class BaseWrapper:
-        def fit(self, X, y):
-            self.target_encoder_ = self.target_encoder
-            self.feature_encoder_ = self.feature_encoder
-            y = self.target_encoder_.fit_transform(y)
-            X = self.feature_encoder_.fit_transform(X)
-            self.model_.fit(X, y)
-            return self
-        
-        def predict(self, X):
-            X = self.feature_encoder_.transform(X)
-            y_pred = self.model_.predict(X)
-            return self.target_encoder_.inverse_transform(y_pred)
-
-    class KerasClassifier(BaseWrapper):
-
-        @property
-        def target_encoder(self):
-            return ClassifierLabelEncoder(loss=self.loss)
-        
-        def predict_proba(self, X):
-            X = self.feature_encoder_.transform(X)
-            y_pred = self.model_.predict(X)
-            return self.target_encoder_.inverse_transform(y_pred, return_proba=True)
-
-
-    class KerasRegressor(BaseWrapper):
-
-        @property
-        def target_encoder(self):
-            return RegressorTargetEncoder()
-```
-
-To substitute your own data transformation routine, you must subclass the wrappers and override one of the encoder defining functions. You will have access to all attributes of the wrappers, and you can pass these to your transformer, like we do above with `loss`.
-
-```python
-from sklearn.base import BaseEstimator, TransformerMixin
-```
-
-```python
-if False:  # avoid executing pseudocode
-
-    class MultiOutputTransformer(BaseEstimator, TransformerMixin):
-        ...
-
-
-    class MultiOutputClassifier(KerasClassifier):
-
-        @property
-        def target_encoder(self):
-            return MultiOutputTransformer(...)
-```
-
-### 2.1 get_metadata method
-
-SciKeras recognized an optional `get_metadata` on the transformers. `get_metadata` is expected to return a dicionary of with key strings and arbitrary values. SciKeras will set add these items to the wrappers namespace and make them available to your model building function via the `meta` keyword argument:
-
-```python
-if False:  # avoid executing pseudocode
-
-    class MultiOutputTransformer(BaseEstimator, TransformerMixin):
-        def get_metadata(self):
-            return {"my_param_": "foobarbaz"}
-
-
-    class MultiOutputClassifier(KerasClassifier):
-
-        @property
-        def target_encoder(self):
-            return MultiOutputTransformer(...)
-
-
-    def get_model(meta):
-        print(f"Got: {meta['my_param_']}")
-
-
-    clf = MultiOutputClassifier(model=get_model)
-    clf.fit(X, y)  # Got: foobarbaz
-    print(clf.my_param_)  # foobarbaz
-```
-
-## 3. Multiple outputs
+## 2. Multiple outputs
 
 Keras makes it straight forward to define models with multiple outputs, that is a Model with multiple sets of fully-connected heads at the end of the network. This functionality is only available in the Functional Model and subclassed Model definition modes, and is not available when using Sequential.
 
@@ -177,7 +78,7 @@ In practice, the main thing about Keras models with multiple outputs that you ne
 
 Note that "multiple outputs" in Keras has a slightly different meaning than "multiple outputs" in sklearn. Many tasks that would be considered "multiple output" tasks in sklearn can be mapped to a single "output" in Keras with multiple units. This notebook specifically focuses on the cases that require multiple distinct Keras outputs.
 
-### 3.1 Define Keras Model
+### 2.1 Define Keras Model
 
 Here we define a simple perceptron that has two outputs, corresponding to one binary classification taks and one multiclass classification task. For example, one output might be "image has car" (binary) and the other might be "color of car in image" (multiclass).
 
@@ -229,7 +130,7 @@ Our data transormer's job will be to convert from a single numpy array (which is
 We will structure our data on the sklearn side by column-stacking our list
 of arrays. This works well in this case since we have the same number of datapoints in each array.
 
-### 3.2 Define output data transformer
+### 2.2 Define output data transformer
 
 Let's go ahead and protoype this data transformer:
 
@@ -289,7 +190,7 @@ class MultiOutputTransformer(BaseEstimator, TransformerMixin):
 
 Note that in addition to the usual `transform` and `inverse_transform` methods, we implement the `get_metadata` method to return the `n_classes_` attribute.
 
-Lets test our transformer with the same dataset we previoulsy used to test our model:
+Lets test our transformer with the same dataset we previously used to test our model:
 
 ```python
 tf = MultiOutputTransformer()
@@ -331,7 +232,7 @@ class MultiOutputClassifier(KerasClassifier):
         return np.mean([accuracy_score(y_bin, y_pred_bin), accuracy_score(y_cat, y_pred_cat)])
 ```
 
-### 3.3 Test classifier
+### 2.3 Test classifier
 
 ```python
 from sklearn.preprocessing import StandardScaler
@@ -347,27 +248,23 @@ clf = MultiOutputClassifier(model=get_clf_model, verbose=0, random_state=0)
 clf.fit(X, y_sklearn).score(X, y_sklearn)
 ```
 
-## 4. Multiple inputs
+## 3. Multiple inputs
 
 The process for multiple inputs is similar, but instead of overriding the transformer in `target_encoder` we override `feature_encoder`.
 
-```python
-if False:
-    from sklearn.base import BaseEstimator, TransformerMixin
+```python .noeval
+class MultiOutputTransformer(BaseEstimator, TransformerMixin):
+    ...
 
 
-    class MultiOutputTransformer(BaseEstimator, TransformerMixin):
-        ...
+class MultiOutputClassifier(KerasClassifier):
 
-
-    class MultiOutputClassifier(KerasClassifier):
-
-        @property
-        def feature_encoder(self):
-            return MultiInputTransformer(...)
+    @property
+    def feature_encoder(self):
+        return MultiInputTransformer(...)
 ```
 
-### 4.1 Define Keras Model
+### 3.1 Define Keras Model
 
 Let's define a Keras **regression** Model with 2 inputs:
 
@@ -411,7 +308,7 @@ r2_score(y, y_pred)
 
 Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.
 
-### 4.2 Define data transformer
+### 3.2 Define data transformer
 
 Just like for overriding `target_encoder`, we just need to define a sklearn transformer and drop it into our SciKeras wrapper. Since we hardcoded the input
 shapes into our model and do not rely on any transformer-generated metadata, we can simply use `sklearn.preprocessing.FunctionTransformer`:
@@ -431,7 +328,7 @@ class MultiInputRegressor(KerasRegressor):
 
 Note that we did **not** implement `inverse_transform` (that is, we did not pass an `inverse_func` argument to `FunctionTransformer`) because features are never converted back to their original form.
 
-### 4.3 Test regressor
+### 3.3 Test regressor
 
 ```python
 reg = MultiInputRegressor(model=get_reg_model, verbose=0, random_state=0)
@@ -441,7 +338,7 @@ X_sklearn = np.column_stack(X)
 reg.fit(X_sklearn, y).score(X_sklearn, y)
 ```
 
-## 5. Multidimensional inputs with MNIST dataset
+## 4. Multidimensional inputs with MNIST dataset
 
 In this example, we look at how we can use SciKeras to process the MNIST dataset. The dataset is composed of 60,000 images of digits, each of which is a 2D 28x28 image.
 
@@ -487,7 +384,7 @@ print(np.min(x_train), np.max(x_train))  # scaled 0-1
 
 Of course, in this case, we could have just as easily used numpy functions to scale our data, but we use `MinMaxScaler` to demonstrate use of the sklearn ecosystem.
 
-### 5.1 Define Keras Model
+### 4.1 Define Keras Model
 
 Next we will define our Keras model (adapted from [keras.io](https://keras.io/examples/vision/mnist_convnet/)):
 
@@ -537,7 +434,7 @@ clf = MultiDimensionalClassifier(
 )
 ```
 
-### 5.2 Test
+### 4.2 Test
 
 Train and score the model (this takes some time)
 
@@ -550,26 +447,18 @@ score = clf.score(x_test, y_test)
 print(f"Test score (accuracy): {score:.2f}")
 ```
 
-## 6. Ragged datasets with tf.data.Dataset
+## 5. Ragged datasets with tf.data.Dataset
 
 SciKeras provides a third dependency injection point that operates on the entire dataset: X, y & sample_weight. This `dataset_transformer` is applied after `target_transformer` and `feature_transformer`. One use case for this dependency injection point is to transform data from tabular/array-like to the `tf.data.Dataset` format, which only requires iteration. We can use this to create a `tf.data.Dataset` of ragged tensors.
 
-Note that `dataset_transformer` should accept a single **3 element tuple** as its argument and return value:
-
-```python
-help(KerasClassifier.dataset_transformer)
-```
-
-The use of a 3 element tuple allows you to chain transformers with this same interface using a Scikit-Learn Pipeline, as you will see below.
-
-When you return a tuple like `(tf.data.Dataset(...), None, None)`, SciKeras will pass the data untouched to `Model.fit` like `Model.fit(x=tf.data.Dataset(...), y=None, sample_weight=None)`. You can process these arguments in any way you like, as long as Keras accepts them, SciKeras will not complain.
+Note that `dataset_transformer` should accept a single **3 element tuple** as its argument and return value; more details on this are in the [docs][docs].
 
 Let's start by defining our data. We'll have an extra "feature" that marks the observation index, but we'll remove it when we deconstruct our data in the transformer.
 
 ```python
 feature_1 = np.random.uniform(size=(10, ))
 feature_2 = np.random.uniform(size=(10, ))
-obs = [0] * 3 + [1] * 2 + [2] * 1 + [3] * 2 + [4] * 2
+obs = [0, 0, 0, 1, 1, 2, 3, 3, 4, 4]
 
 X = np.column_stack([feature_1, feature_2, obs]).astype("float32")
 
@@ -583,7 +472,6 @@ you should check if `y` and `sample_weigh` are None before doing any operations 
 ```python
 from typing import Tuple, Optional
 
-from sklearn.base import BaseEstimator, TransformerMixin
 import tensorflow as tf
 
 
@@ -712,7 +600,7 @@ y_pred = clf.predict(X)
 y_pred
 ```
 
-## 7. Multi-output class_weight
+## 6. Multi-output class_weight
 
 In this example, we will use `dataset_transformer` to support multi-output class weights. We will re-use our `MultiOutputTransformer` from our previous example to split the output, then we will create `sample_weights` from `class_weight`
 
@@ -743,14 +631,14 @@ class DatasetTransformer(BaseEstimator, TransformerMixin):
         assert sample_weights is None, "Cannot use class_weight & sample_weights together"
         if y is not None:
             # y should be a list of arrays, as split up by MultiOutputTransformer
-            sample_weights = dict()
-            for output_num, (output_name, output_data) in enumerate(zip(self.output_names, y)):
-                # class_weight is expected to be indexable by output_number
-                # see https://scikit-learn.org/stable/modules/generated/sklearn.utils.class_weight.compute_sample_weight.html
-                # Note that it is trivial to change the expected format to match Keras' ({output_name: weights, ...})
-                # see https://github.com/keras-team/keras/issues/4735#issuecomment-267473722
-                cls_wt_out = class_weight[output_num]
-                sample_weights[output_name] = compute_sample_weight(cls_wt_out, output_data)
+            sample_weights = {
+                compute_sample_weight(class_weight[output_num], output_data)
+                for output_num, (output_name, output_data) in enumerate(zip(self.output_names, y))
+            }
+            # Note: class_weight is expected to be indexable by output_number in sklearn
+            # see https://scikit-learn.org/stable/modules/generated/sklearn.utils.class_weight.compute_sample_weight.html
+            # It is trivial to change the expected format to match Keras' ({output_name: weights, ...})
+            # see https://github.com/keras-team/keras/issues/4735#issuecomment-267473722
         return X, y, sample_weights
 
 ```
@@ -843,3 +731,5 @@ print(counts_bin)
 (_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)
 print(counts_cat)
 ```
+
+[docs]: https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers  "SciKeras Data Transformer Docs"
