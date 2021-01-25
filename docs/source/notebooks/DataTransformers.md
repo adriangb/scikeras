@@ -27,7 +27,7 @@ Keras support many types of input and output data formats, including:
 
 This notebook walks through an example of the different data transformations and how SciKeras bridges Keras and Scikit-learn.
 It may be helpful to have a general understanding of the dataflow before tackling these examples, which is available in
-the [data transformer docs][docs].
+the [data transformer docs](https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers).
 
 ## Table of contents
 
@@ -451,7 +451,7 @@ print(f"Test score (accuracy): {score:.2f}")
 
 SciKeras provides a third dependency injection point that operates on the entire dataset: X, y & sample_weight. This `dataset_transformer` is applied after `target_transformer` and `feature_transformer`. One use case for this dependency injection point is to transform data from tabular/array-like to the `tf.data.Dataset` format, which only requires iteration. We can use this to create a `tf.data.Dataset` of ragged tensors.
 
-Note that `dataset_transformer` should accept a single **3 element tuple** as its argument and return value; more details on this are in the [docs][docs].
+Note that `dataset_transformer` should accept a single **3 element tuple** as its argument and return value; more details on this are in the [docs](https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers).
 
 Let's start by defining our data. We'll have an extra "feature" that marks the observation index, but we'll remove it when we deconstruct our data in the transformer.
 
@@ -731,5 +731,3 @@ print(counts_bin)
 (_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)
 print(counts_cat)
 ```
-
-[docs]: https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers  "SciKeras Data Transformer Docs"
