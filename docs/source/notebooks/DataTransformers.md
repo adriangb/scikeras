@@ -632,7 +632,7 @@ class DatasetTransformer(BaseEstimator, TransformerMixin):
         if y is not None:
             # y should be a list of arrays, as split up by MultiOutputTransformer
             sample_weights = {
-                compute_sample_weight(class_weight[output_num], output_data)
+                output_name: compute_sample_weight(class_weight[output_num], output_data)
                 for output_num, (output_name, output_data) in enumerate(zip(self.output_names, y))
             }
             # Note: class_weight is expected to be indexable by output_number in sklearn
