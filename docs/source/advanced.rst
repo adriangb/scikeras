@@ -199,7 +199,7 @@ sklearn-style transformers. You can think of this setup as an sklearn Pipeline:
 
 Within SciKeras, this is roughly implemented as follows:
 
-.. code-block::python
+.. code:: python
 
     from sklearn.preprocessing import FunctionTransformer
 
