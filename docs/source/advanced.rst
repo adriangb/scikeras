@@ -346,6 +346,7 @@ and passes it directly to :py:func:`tensorflow.keras.Model.fit`.
 Its signature is ``dataset_transformer.fit_transform((X, y, sample_weight))``,
 that is, a 3 element tuple corresponding to the ``x``, ``y`` and ``sample_weight``
 arguments in :py:func:`tensorflow.keras.Model.fit`.
+
 The output must be a 3 element tuple as well, and it will be passed untouched
 to :py:func:`tensorflow.keras.Model.fit`, so that the second and/or third
 elements are allowed to be ``None``, but the first must always have a value.
