@@ -1,0 +1,640 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>scikeras.wrappers.KerasClassifier &#8212; SciKeras 0.2.1 documentation</title>
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/insipid.css" type="text/css" />
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script defer src="../_static/insipid.js"></script>
+    <script defer src="../_static/insipid-sidebar.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="scikeras.wrappers.KerasRegressor" href="scikeras.wrappers.KerasRegressor.html" />
+    <link rel="prev" title="scikeras.wrappers.BaseWrapper" href="scikeras.wrappers.BaseWrapper.html" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+  </head>
+  <body class="sidebar-visible">
+    <script type="text/javascript">
+        (function() {
+            var $body = $(document.body);
+            $body.addClass('js');
+            $body.addClass('sidebar-resizing');  // avoid transitions on load
+            $body.removeClass('sidebar-visible');
+            try {
+                var sidebar = localStorage.getItem('sphinx-sidebar');
+                if (sidebar === 'visible') {
+                    $body.addClass('sidebar-visible');
+                }
+                var sidebar_width = localStorage.getItem('sphinx-sidebar-width');
+                if (sidebar_width) {
+                    $(':root').css('--sidebar-width', sidebar_width);
+                }
+            } catch(e) {
+            }
+        })();
+    </script>
+    <header id="topbar-placeholder">
+      <div id="topbar">
+        <div id="titlebar">
+          <div class="buttons">
+            <button id="sidebar-button" type="button" aria-controls="sphinxsidebar" accesskey="M">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg>
+            </button>
+            <button id="search-button" type="button" title="Search" aria-label="Search" aria-expanded="false" aria-controls="search-form" accesskey="S">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+            </button>
+          </div>
+          <div class="title">
+            <a class="parent" href="../api.html" accesskey="U">SciKeras API</a>
+            <a class="top" href="#">scikeras.wrappers.KerasClassifier</a>
+          </div>
+          <div class="buttons">
+            <button id="fullscreen-button" type="button" aria-hidden="true">
+              <span class="enable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M212.686 315.314L120 408l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C10.697 480 0 469.255 0 456V344c0-21.382 25.803-32.09 40.922-16.971L72 360l92.686-92.686c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.249 6.248 6.249 16.378 0 22.627zm22.628-118.628L328 104l-32.922-31.029C279.958 57.851 290.666 32 312.048 32h112C437.303 32 448 42.745 448 56v112c0 21.382-25.803 32.09-40.922 16.971L376 152l-92.686 92.686c-6.248 6.248-16.379 6.248-22.627 0l-25.373-25.373c-6.249-6.248-6.249-16.378 0-22.627z"/></svg>
+              </span>
+              <span class="disable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M4.686 427.314L104 328l-32.922-31.029C55.958 281.851 66.666 256 88.048 256h112C213.303 256 224 266.745 224 280v112c0 21.382-25.803 32.09-40.922 16.971L152 376l-99.314 99.314c-6.248 6.248-16.379 6.248-22.627 0L4.686 449.941c-6.248-6.248-6.248-16.379 0-22.627zM443.314 84.686L344 184l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C234.697 256 224 245.255 224 232V120c0-21.382 25.803-32.09 40.922-16.971L296 136l99.314-99.314c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.248 6.248 6.248 16.379 0 22.627z"/></svg>
+              </span>
+            </button>
+            <a href="https://github.com/adriangb/scikeras/" title="Github">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div id="searchbox" role="search">
+          <form id="search-form" class="search" style="display: none" action="../search.html" method="get">
+            <input type="search" name="q" placeholder="Search ..." />
+            <button>Go</button>
+          </form>
+        </div>
+      </div>
+    </header>
+    <nav>
+      <a href="scikeras.wrappers.BaseWrapper.html" class="nav-icon previous" title="previous:&#13;scikeras.wrappers.BaseWrapper" aria-label="Previous topic" accesskey="P" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6 0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9 0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>
+      </a>
+      <a href="scikeras.wrappers.KerasRegressor.html" class="nav-icon next" title="next:&#13;scikeras.wrappers.KerasRegressor" aria-label="Next topic" accesskey="N" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9 0l-22.6-22.6c-9.4-9.4-9.4-24.6 0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6 0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9 0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg>
+      </a>
+    </nav>
+
+    <nav class="relbar">
+      <a class="previous" href="scikeras.wrappers.BaseWrapper.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            scikeras.wrappers.BaseWrapper
+          </span>
+        </div>
+      </a>
+      <a class="next" href="scikeras.wrappers.KerasRegressor.html" aria-label="Next topic" >
+        <div class="title">
+          <span class="text">
+            <span class="direction">next</span>
+            scikeras.wrappers.KerasRegressor
+          </span>
+        </div>
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
+        </div>
+      </a>
+    </nav>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<div class="section" id="scikeras-wrappers-kerasclassifier">
+<h1>scikeras.wrappers.KerasClassifier<a class="headerlink" href="#scikeras-wrappers-kerasclassifier" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="scikeras.wrappers.KerasClassifier">
+<em class="property">class </em><code class="sig-prename descclassname">scikeras.wrappers.</code><code class="sig-name descname">KerasClassifier</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">build_fn</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">warm_start</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">optimizer</span><span class="o">=</span><span class="default_value">'rmsprop'</span></em>, <em class="sig-param"><span class="n">loss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">metrics</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">batch_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">callbacks</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">validation_split</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">shuffle</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">run_eagerly</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">epochs</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">class_weight</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/6956236/scikeras/wrappers.py#L1092"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikeras.wrappers.KerasClassifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of the scikit-learn classifier API for Keras.</p>
+<p>Below are a list of SciKeras specific parameters. For details on other parameters,
+please see the see the
+[tf.keras.Model documentation](<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/Model">https://www.tensorflow.org/api_docs/python/tf/keras/Model</a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model</strong><span class="classifier">Union[None, Callable[…, tf.keras.Model], tf.keras.Model], default None</span></dt><dd><p>Used to build the Keras Model. When called,
+must return a compiled instance of a Keras Model
+to be used by <cite>fit</cite>, <cite>predict</cite>, etc.
+If None, you must implement <code class="docutils literal notranslate"><span class="pre">_keras_build_fn</span></code>.</p>
+</dd>
+<dt><strong>optimizer</strong><span class="classifier">Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]], default “rmsprop”</span></dt><dd><p>This can be a string for Keras’ built in optimizers,
+an instance of tf.keras.optimizers.Optimizer
+or a class inheriting from tf.keras.optimizers.Optimizer.
+Only strings and classes support parameter routing.</p>
+</dd>
+<dt><strong>loss</strong><span class="classifier">Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None</span></dt><dd><p>The loss function to use for training.
+This can be a string for Keras’ built in losses,
+an instance of tf.keras.losses.Loss
+or a class inheriting from tf.keras.losses.Loss .
+Only strings and classes support parameter routing.</p>
+</dd>
+<dt><strong>random_state</strong><span class="classifier">Union[int, np.random.RandomState, None], default None</span></dt><dd><p>Set the Tensorflow random number generators to a
+reproducible deterministic state using this seed.
+Pass an int for reproducible results across multiple
+function calls.</p>
+</dd>
+<dt><strong>warm_start</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, subsequent calls to fit will _not_ reset
+the model parameters but <em>will</em> reset the epoch to zero.
+If False, subsequent fit calls will reset the entire model.
+This has no impact on partial_fit, which always trains
+for a single epoch starting from the current epoch.</p>
+</dd>
+<dt><strong>class_weight</strong><span class="classifier">Union[Dict[Any, float], str, None], default None</span></dt><dd><p>Weights associated with classes in the form <code class="docutils literal notranslate"><span class="pre">{class_label:</span> <span class="pre">weight}</span></code>.
+If not given, all classes are supposed to have weight one.
+The “balanced” mode uses the values of y to automatically adjust
+weights inversely proportional to class frequencies in the input data
+as <code class="docutils literal notranslate"><span class="pre">n_samples</span> <span class="pre">/</span> <span class="pre">(n_classes</span> <span class="pre">*</span> <span class="pre">np.bincount(y))</span></code>.
+Note that these weights will be multiplied with sample_weight (passed
+through the fit method) if sample_weight is specified.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>model_</strong><span class="classifier">tf.keras.Model</span></dt><dd><p>The instantiated and compiled Keras Model. For pre-built models, this
+will just be a reference to the passed Model instance.</p>
+</dd>
+<dt><strong>history_</strong><span class="classifier">Dict[str, List[Any]]</span></dt><dd><p>Dictionary of the format <code class="docutils literal notranslate"><span class="pre">{metric_str_name:</span> <span class="pre">[epoch_0_data,</span> <span class="pre">epoch_1_data,</span> <span class="pre">...,</span> <span class="pre">epoch_n_data]}</span></code>.</p>
+</dd>
+<dt><a class="reference internal" href="#scikeras.wrappers.KerasClassifier.initialized_" title="scikeras.wrappers.KerasClassifier.initialized_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initialized_</span></code></a><span class="classifier">bool</span></dt><dd><p>Checks if the estimator is intialized.</p>
+</dd>
+<dt><strong>target_encoder_</strong><span class="classifier">sklearn-transformer</span></dt><dd><p>Transformer used to pre/post process the target y.</p>
+</dd>
+<dt><strong>feature_encoder_</strong><span class="classifier">sklearn-transformer</span></dt><dd><p>Transformer used to pre/post process the features/input X.</p>
+</dd>
+<dt><strong>n_outputs_expected_</strong><span class="classifier">int</span></dt><dd><p>The number of outputs the Keras Model is expected to have, as determined by <code class="docutils literal notranslate"><span class="pre">target_transformer_</span></code>.</p>
+</dd>
+<dt><strong>target_type_</strong><span class="classifier">str</span></dt><dd><p>One of:</p>
+<ul class="simple">
+<li><p>‘continuous’: y is an array-like of floats that are not all
+integers, and is 1d or a column vector.</p></li>
+<li><p>‘continuous-multioutput’: y is a 2d array of floats that are
+not all integers, and both dimensions are of size &gt; 1.</p></li>
+<li><p>‘binary’: y contains &lt;= 2 discrete values and is 1d or a column
+vector.</p></li>
+<li><p>‘multiclass’: y contains more than two discrete values, is not a
+sequence of sequences, and is 1d or a column vector.</p></li>
+<li><p>‘multiclass-multioutput’: y is a 2d array that contains more
+than two discrete values, is not a sequence of sequences, and both
+dimensions are of size &gt; 1.</p></li>
+<li><p>‘multilabel-indicator’: y is a label indicator matrix, an array
+of two dimensions with at least two columns, and at most 2 unique
+values.</p></li>
+<li><p>‘unknown’: y is array-like but none of the above, such as a 3d
+array, sequence of sequences, or an array of non-sequence objects.</p></li>
+</ul>
+</dd>
+<dt><strong>y_shape_</strong><span class="classifier">Tuple[int]</span></dt><dd><p>Shape of the target y that the estimator was fitted on.</p>
+</dd>
+<dt><strong>y_dtype_</strong><span class="classifier">np.dtype</span></dt><dd><p>Dtype of the target y that the estimator was fitted on.</p>
+</dd>
+<dt><strong>X_shape_</strong><span class="classifier">Tuple[int]</span></dt><dd><p>Shape of the input X that the estimator was fitted on.</p>
+</dd>
+<dt><strong>X_dtype_</strong><span class="classifier">np.dtype</span></dt><dd><p>Dtype of the input X that the estimator was fitted on.</p>
+</dd>
+<dt><strong>n_features_in_</strong><span class="classifier">int</span></dt><dd><p>The number of features seen during <cite>fit</cite>.</p>
+</dd>
+<dt><strong>n_outputs_</strong><span class="classifier">int</span></dt><dd><p>Dimensions of y that the transformer was trained on.</p>
+</dd>
+<dt><strong>n_outputs_expected_</strong><span class="classifier">int</span></dt><dd><p>Number of outputs the Keras Model is expected to have.</p>
+</dd>
+<dt><strong>classes_</strong><span class="classifier">Iterable</span></dt><dd><p>The classes seen during <cite>fit</cite>.</p>
+</dd>
+<dt><strong>n_classes_</strong><span class="classifier">int</span></dt><dd><p>The number of classes seen during <cite>fit</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.current_epoch">
+<em class="property">property </em><code class="sig-name descname">current_epoch</code><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.current_epoch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current training epoch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>Current training epoch.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.feature_encoder">
+<em class="property">property </em><code class="sig-name descname">feature_encoder</code><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.feature_encoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a transformer for features / X.</p>
+<p>Metadata will be collected from <code class="docutils literal notranslate"><span class="pre">get_metadata</span></code> if
+the transformer implements that method.
+Override this method to implement a custom data transformer
+for the features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>sklearn transformer</dt><dd><p>Transformer implementing the sklearn transformer
+interface.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">sample_weight</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/6956236/scikeras/wrappers.py#L1342"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a new classifier with <code class="docutils literal notranslate"><span class="pre">model</span></code> &amp; fit the model to <code class="docutils literal notranslate"><span class="pre">(X,</span> <span class="pre">y)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)</span></dt><dd><p>Training samples, where n_samples is the number of samples
+and n_features is the number of features.</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)</span></dt><dd><p>True labels for X.</p>
+</dd>
+<dt><strong>sample_weight</strong><span class="classifier">array-like of shape (n_samples,), default=None</span></dt><dd><p>Array of weights that are assigned to individual samples.
+If not provided, then each sample is given unit weight.</p>
+</dd>
+<dt><strong>**kwargs</strong><span class="classifier">Dict[str, Any]</span></dt><dd><p>Extra arguments to route to <code class="docutils literal notranslate"><span class="pre">Model.fit</span></code>.
+This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
+These parameters can also be specified by prefixing <cite>fit__</cite> to a parameter at initialization;
+e.g, <cite>BaseWrapper(…, fit__batch_size=32, predict__batch_size=1000)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>KerasClassifier</dt><dd><p>A reference to the instance that can be chain called
+(ex: instance.fit(X,y).transform(X) )</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#scikeras.wrappers.KerasClassifier" title="scikeras.wrappers.KerasClassifier">scikeras.wrappers.KerasClassifier</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.get_params">
+<code class="sig-name descname">get_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">deep</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/6956236/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L178"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get parameters for this estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>deep</strong><span class="classifier">bool, default=True</span></dt><dd><p>If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>params</strong><span class="classifier">dict</span></dt><dd><p>Parameter names mapped to their values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.initialize">
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/6956236/scikeras/wrappers.py#L1318"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the model without any fitting.
+You only need to call this model if you explicitly do not want to do any fitting
+(for example with a pretrained model). You should _not_ call this
+right before calling <code class="docutils literal notranslate"><span class="pre">fit</span></code>, calling <code class="docutils literal notranslate"><span class="pre">fit</span></code> will do this automatically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)</span></dt><dd><p>Training samples where n_samples is the number of samples
+and <cite>n_features</cite> is the number of features.</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">Union[array-like, sparse matrix, dataframe] of shape             (n_samples,) or (n_samples, n_outputs), default None</span></dt><dd><p>True labels for X.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>KerasClassifier</dt><dd><p>A reference to the KerasClassifier instance for chained calling.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#scikeras.wrappers.KerasClassifier" title="scikeras.wrappers.KerasClassifier">scikeras.wrappers.KerasClassifier</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.initialized_">
+<em class="property">property </em><code class="sig-name descname">initialized_</code><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.initialized_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the estimator is intialized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>bool</dt><dd><p>True if the estimator is initialized (i.e., it can
+be used for inference or is ready to train),
+otherwise False.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.partial_fit">
+<code class="sig-name descname">partial_fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">classes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sample_weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/6956236/scikeras/wrappers.py#L1374"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.partial_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit classifier for a single epoch, preserving the current epoch
+and all model parameters and state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)</span></dt><dd><p>Training samples, where n_samples is the number of samples
+and n_features is the number of features.</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)</span></dt><dd><p>True labels for X.</p>
+</dd>
+<dt><strong>classes: ndarray of shape (n_classes,), default=None</strong></dt><dd><p>Classes across all calls to partial_fit. Can be obtained by via
+np.unique(y_all), where y_all is the target vector of the entire dataset.
+This argument is only needed for the first call to partial_fit and can be
+omitted in the subsequent calls. Note that y doesn’t need to contain
+all labels in classes. If you do not pass this argument, SciKeras
+will use <code class="docutils literal notranslate"><span class="pre">classes=np.all(y)</span></code> with the y passed in the first call.</p>
+</dd>
+<dt><strong>sample_weight</strong><span class="classifier">array-like of shape (n_samples,), default=None</span></dt><dd><p>Array of weights that are assigned to individual samples.
+If not provided, then each sample is given unit weight.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>KerasClassifier</dt><dd><p>A reference to the instance that can be chain called
+(ex: instance.fit(X,y).transform(X) )</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#scikeras.wrappers.KerasClassifier" title="scikeras.wrappers.KerasClassifier">scikeras.wrappers.KerasClassifier</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/6956236/scikeras/wrappers.py#L897"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns predictions for the given test data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)</span></dt><dd><p>Training samples where n_samples is the number of samples
+and n_features is the number of features.</p>
+</dd>
+<dt><strong>**kwargs</strong><span class="classifier">Dict[str, Any]</span></dt><dd><p>Extra arguments to route to <code class="docutils literal notranslate"><span class="pre">Model.predict</span></code>.
+This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
+These parameters can also be specified by prefixing <cite>predict__</cite> to a parameter at initialization;
+e.g, <cite>BaseWrapper(…, fit__batch_size=32, predict__batch_size=1000)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>array-like</dt><dd><p>Predictions, of shape shape (n_samples,) or (n_samples, n_outputs).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.predict_proba">
+<code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/6956236/scikeras/wrappers.py#L1411"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.predict_proba" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns class probability estimates for the given test data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)</span></dt><dd><p>Training samples, where n_samples is the number of samples
+and n_features is the number of features.</p>
+</dd>
+<dt><strong>**kwargs</strong><span class="classifier">Dict[str, Any]</span></dt><dd><p>Extra arguments to route to <code class="docutils literal notranslate"><span class="pre">Model.predict</span></code>.
+This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
+These parameters can also be specified by prefixing <cite>predict__</cite> to a parameter at initialization;
+e.g, <cite>BaseWrapper(…, fit__batch_size=32, predict__batch_size=1000)</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>array-like, shape (n_samples, n_outputs)</dt><dd><p>Class probability estimates.
+In the case of binary classification,
+to match the scikit-learn API,
+SciKeras will return an array of shape (n_samples, 2)
+(instead of <cite>(n_sample, 1)</cite> as in Keras).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.score">
+<code class="sig-name descname">score</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">sample_weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/6956236/scikeras/wrappers.py#L971"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the score on the given test data and labels.</p>
+<p>No default scoring function is implemented in BaseWrapper,
+you must subclass and implement one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X</strong><span class="classifier">Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)</span></dt><dd><p>Test input samples, where n_samples is the number of samples
+and n_features is the number of features.</p>
+</dd>
+<dt><strong>y</strong><span class="classifier">Union[array-like, sparse matrix, dataframe] of shape             (n_samples,) or (n_samples, n_outputs)</span></dt><dd><p>True labels for X.</p>
+</dd>
+<dt><strong>sample_weight</strong><span class="classifier">array-like of shape (n_samples,), default=None</span></dt><dd><p>Array of weights that are assigned to individual samples.
+If not provided, then each sample is given unit weight.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Score for the test data set.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.scorer">
+<em class="property">static </em><code class="sig-name descname">scorer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">y_true</span></em>, <em class="sig-param"><span class="n">y_pred</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/6956236/scikeras/wrappers.py#L1272"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.scorer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scoring function for KerasClassifier.</p>
+<p>KerasClassifier uses <code class="docutils literal notranslate"><span class="pre">sklearn_accuracy_score</span></code> by default.
+To change this, override this method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>y_true</strong><span class="classifier">array-like of shape (n_samples,) or (n_samples, n_outputs)</span></dt><dd><p>True labels.</p>
+</dd>
+<dt><strong>y_pred</strong><span class="classifier">array-like of shape (n_samples,) or (n_samples, n_outputs)</span></dt><dd><p>Predicted labels.</p>
+</dd>
+<dt><strong>**kwargs: dict</strong></dt><dd><p>Extra parameters passed to the scorer.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Score for the test data set.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.set_params">
+<code class="sig-name descname">set_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/6956236/scikeras/wrappers.py#L1027"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as pipelines). The latter have parameters of the form
+<code class="docutils literal notranslate"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></code> so that it’s possible to update each
+component of a nested object.
+This also supports routed parameters, eg: <code class="docutils literal notranslate"><span class="pre">classifier__optimizer__learning_rate</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>**params</strong><span class="classifier">dict</span></dt><dd><p>Estimator parameters.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>BaseWrapper</dt><dd><p>Estimator instance.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper" title="scikeras.wrappers.BaseWrapper">scikeras.wrappers.BaseWrapper</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scikeras.wrappers.KerasClassifier.target_encoder">
+<em class="property">property </em><code class="sig-name descname">target_encoder</code><a class="headerlink" href="#scikeras.wrappers.KerasClassifier.target_encoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a transformer for targets / y.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">KerasClassifier.predict_proba</span></code> to
+work, this transformer must accept a <code class="docutils literal notranslate"><span class="pre">return_proba</span></code>
+argument in <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code> with a default value
+of False.</p>
+<p>Metadata will be collected from <code class="docutils literal notranslate"><span class="pre">get_metadata</span></code> if
+the transformer implements that method.
+Override this method to implement a custom data transformer
+for the target.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>sklearn-transformer</dt><dd><p>Transformer implementing the sklearn transformer
+interface.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+    <nav class="relbar">
+      <a class="previous" href="scikeras.wrappers.BaseWrapper.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            scikeras.wrappers.BaseWrapper
+          </span>
+        </div>
+      </a>
+      <a class="next" href="scikeras.wrappers.KerasRegressor.html" aria-label="Next topic" >
+        <div class="title">
+          <span class="text">
+            <span class="direction">next</span>
+            scikeras.wrappers.KerasRegressor
+          </span>
+        </div>
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
+        </div>
+      </a>
+    </nav>
+
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+
+          <div class="sidebar-resize-handle"></div>
+
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration.html">Migrating from <code class="docutils literal notranslate"><span class="pre">tf.keras.wrappers.scikit_learn</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced.html">Advanced Usage of SciKeras Wrappers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">SciKeras API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#wrappers">Wrappers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#utilities">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+<hr class="docutils" />
+<ul>
+  <li class="toctree-l1"><a class="reference internal" href="../genindex.html" accesskey="I">General Index</a></li>
+  <li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+<div id="ethical-ad-placement"></div>
+        </div>
+      </div>
+    <footer role="contentinfo">
+      &#169; Copyright 2020, SciKeras Developers.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+      <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
+<a class="reference internal" href="../_sources/generated/scikeras.wrappers.KerasClassifier.rst.txt" rel="nofollow">Show Source</a>.
+    </footer>
+    <div class="sidebar-resize-handle"></div>
+    <div id="overlay"></div>
+  </body>
+</html>

@@ -1,0 +1,2604 @@
+{
+ "cells": [
+  {
+   "cell_type": "raw",
+   "id": "preliminary-connection",
+   "metadata": {},
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/DataTransformers.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "welcome-footwear",
+   "metadata": {},
+   "source": [
+    "# Data Transformers\n",
+    "\n",
+    "Keras support many types of input and output data formats, including:\n",
+    "\n",
+    "* Multiple inputs\n",
+    "* Multiple outputs\n",
+    "* Higher-dimensional tensors\n",
+    "\n",
+    "This notebook walks through an example of the different data transformations and how SciKeras bridges Keras and Scikit-learn.\n",
+    "It may be helpful to have a general understanding of the dataflow before tackling these examples, which is available in\n",
+    "the [data transformer docs](https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers).\n",
+    "\n",
+    "## Table of contents\n",
+    "\n",
+    "* [1. Setup](#1.-Setup)\n",
+    "* [2. Multiple outputs](#2.-Multiple-outputs)\n",
+    "  * [2.1 Define Keras Model](#2.1-Define-Keras-Model)\n",
+    "  * [2.2 Define output data transformer](#2.2-Define-output-data-transformer)\n",
+    "  * [2.3 Test classifier](#2.3-Test-classifier)\n",
+    "* [3. Multiple inputs](#3-multiple-inputs)\n",
+    "  * [3.1 Define Keras Model](#3.1-Define-Keras-Model)\n",
+    "  * [3.2 Define data transformer](#3.2-Define-data-transformer)\n",
+    "  * [3.3 Test regressor](#3.3-Test-regressor)\n",
+    "* [4. Multidimensional inputs with MNIST dataset](#4.-Multidimensional-inputs-with-MNIST-dataset)\n",
+    "  * [4.1 Define Keras Model](#4.1-Define-Keras-Model)\n",
+    "  * [4.2 Test](#4.2-Test)\n",
+    "* [5. Ragged datasets with tf.data.Dataset](#5.-Ragged-datasets-with-tf.data.Dataset)\n",
+    "* [6. Multi-output class_weight](#6.-Multi-output-class_weight)\n",
+    "\n",
+    "## 1. Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "light-humor",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:10.681178Z",
+     "iopub.status.busy": "2021-01-25T23:58:10.680492Z",
+     "iopub.status.idle": "2021-01-25T23:58:12.130812Z",
+     "shell.execute_reply": "2021-01-25T23:58:12.131499Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "try:\n",
+    "    import scikeras\n",
+    "except ImportError:\n",
+    "    !python -m pip install scikeras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "proved-progressive",
+   "metadata": {},
+   "source": [
+    "Silence TensorFlow warnings to keep output succint."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "compliant-grocery",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:12.136871Z",
+     "iopub.status.busy": "2021-01-25T23:58:12.136234Z",
+     "iopub.status.idle": "2021-01-25T23:58:12.139621Z",
+     "shell.execute_reply": "2021-01-25T23:58:12.140290Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "from tensorflow import get_logger\n",
+    "get_logger().setLevel('ERROR')\n",
+    "warnings.filterwarnings(\"ignore\", message=\"Setting the random state for TF\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "lesbian-multiple",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:12.144212Z",
+     "iopub.status.busy": "2021-01-25T23:58:12.143644Z",
+     "iopub.status.idle": "2021-01-25T23:58:12.532214Z",
+     "shell.execute_reply": "2021-01-25T23:58:12.532647Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from scikeras.wrappers import KerasClassifier, KerasRegressor\n",
+    "from tensorflow import keras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "aware-layout",
+   "metadata": {},
+   "source": [
+    "## 2. Multiple outputs\n",
+    "\n",
+    "Keras makes it straight forward to define models with multiple outputs, that is a Model with multiple sets of fully-connected heads at the end of the network. This functionality is only available in the Functional Model and subclassed Model definition modes, and is not available when using Sequential.\n",
+    "\n",
+    "In practice, the main thing about Keras models with multiple outputs that you need to know as a SciKeras user is that Keras expects `X` or `y` to be a list of arrays/tensors, with one array/tensor for each input/output.\n",
+    "\n",
+    "Note that \"multiple outputs\" in Keras has a slightly different meaning than \"multiple outputs\" in sklearn. Many tasks that would be considered \"multiple output\" tasks in sklearn can be mapped to a single \"output\" in Keras with multiple units. This notebook specifically focuses on the cases that require multiple distinct Keras outputs.\n",
+    "\n",
+    "### 2.1 Define Keras Model\n",
+    "\n",
+    "Here we define a simple perceptron that has two outputs, corresponding to one binary classification taks and one multiclass classification task. For example, one output might be \"image has car\" (binary) and the other might be \"color of car in image\" (multiclass)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "signal-request",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:12.539150Z",
+     "iopub.status.busy": "2021-01-25T23:58:12.538563Z",
+     "iopub.status.idle": "2021-01-25T23:58:12.542826Z",
+     "shell.execute_reply": "2021-01-25T23:58:12.542159Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def get_clf_model(meta):\n",
+    "    inp = keras.layers.Input(shape=(meta[\"n_features_in_\"]))\n",
+    "    x1 = keras.layers.Dense(100, activation=\"relu\")(inp)\n",
+    "    out_bin = keras.layers.Dense(1, activation=\"sigmoid\")(x1)\n",
+    "    out_cat = keras.layers.Dense(meta[\"n_classes_\"][1], activation=\"softmax\")(x1)\n",
+    "    model = keras.Model(inputs=inp, outputs=[out_bin, out_cat])\n",
+    "    model.compile(\n",
+    "        loss=[\"binary_crossentropy\", \"sparse_categorical_crossentropy\"]\n",
+    "    )\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "endangered-completion",
+   "metadata": {},
+   "source": [
+    "Let's test that this model works with the kind of inputs and outputs we expect."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "colored-jimmy",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:12.550670Z",
+     "iopub.status.busy": "2021-01-25T23:58:12.550057Z",
+     "iopub.status.idle": "2021-01-25T23:58:13.422620Z",
+     "shell.execute_reply": "2021-01-25T23:58:13.422078Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "X = np.random.random(size=(100, 10))\n",
+    "y_bin = np.random.randint(0, 2, size=(100,))\n",
+    "y_cat = np.random.randint(0, 5, size=(100, ))\n",
+    "y = [y_bin, y_cat]\n",
+    "\n",
+    "# build mock meta\n",
+    "meta = {\n",
+    "    \"n_features_in_\": 10,\n",
+    "    \"n_classes_\": [2, 5]  # note that we made this a list, one for each output\n",
+    "}\n",
+    "\n",
+    "model = get_clf_model(meta=meta)\n",
+    "\n",
+    "model.fit(X, y, verbose=0)\n",
+    "y_pred = model.predict(X)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "cloudy-knowing",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:13.427288Z",
+     "iopub.status.busy": "2021-01-25T23:58:13.426721Z",
+     "iopub.status.idle": "2021-01-25T23:58:13.431918Z",
+     "shell.execute_reply": "2021-01-25T23:58:13.431463Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[[0.5345907]\n",
+      " [0.5115747]]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(y_pred[0][:2, :])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "unusual-quilt",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:13.436126Z",
+     "iopub.status.busy": "2021-01-25T23:58:13.435577Z",
+     "iopub.status.idle": "2021-01-25T23:58:13.439520Z",
+     "shell.execute_reply": "2021-01-25T23:58:13.439951Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[[0.19414467 0.23679101 0.15807398 0.23539537 0.17559497]\n",
+      " [0.21173626 0.25879008 0.12498645 0.20726196 0.19722524]]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(y_pred[1][:2, :])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "periodic-impact",
+   "metadata": {},
+   "source": [
+    "As you can see, our `predict` output is also a list of arrays, except it contains probabilities instead of the class predictions.\n",
+    "\n",
+    "Our data transormer's job will be to convert from a single numpy array (which is what the sklearn ecosystem works with) to the list of arrays and then back. Additionally, for classifiers, we will want to be able to convert probabilities to class predictions.\n",
+    "\n",
+    "We will structure our data on the sklearn side by column-stacking our list\n",
+    "of arrays. This works well in this case since we have the same number of datapoints in each array.\n",
+    "\n",
+    "### 2.2 Define output data transformer\n",
+    "\n",
+    "Let's go ahead and protoype this data transformer:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "plastic-federation",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:13.450516Z",
+     "iopub.status.busy": "2021-01-25T23:58:13.449938Z",
+     "iopub.status.idle": "2021-01-25T23:58:13.453556Z",
+     "shell.execute_reply": "2021-01-25T23:58:13.453044Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from typing import List\n",
+    "\n",
+    "from sklearn.base import BaseEstimator, TransformerMixin\n",
+    "from sklearn.preprocessing import LabelEncoder\n",
+    "\n",
+    "\n",
+    "class MultiOutputTransformer(BaseEstimator, TransformerMixin):\n",
+    "\n",
+    "    def fit(self, y):\n",
+    "        y_bin, y_cat = y[:, 0], y[:, 1]\n",
+    "        # Create internal encoders to ensure labels are 0, 1, 2...\n",
+    "        self.bin_encoder_ = LabelEncoder()\n",
+    "        self.cat_encoder_ = LabelEncoder()\n",
+    "        # Fit them to the input data\n",
+    "        self.bin_encoder_.fit(y_bin)\n",
+    "        self.cat_encoder_.fit(y_cat)\n",
+    "        # Save the number of classes\n",
+    "        self.n_classes_ = [\n",
+    "            self.bin_encoder_.classes_.size,\n",
+    "            self.cat_encoder_.classes_.size,\n",
+    "        ]\n",
+    "        # Save number of expected outputs in the Keras model\n",
+    "        # SciKeras will automatically use this to do error-checking\n",
+    "        self.n_outputs_expected_ = 2\n",
+    "        return self\n",
+    "\n",
+    "    def transform(self, y: np.ndarray) -> List[np.ndarray]:\n",
+    "        y_bin, y_cat = y[:, 0], y[:, 1]\n",
+    "        # Apply transformers to input array\n",
+    "        y_bin = self.bin_encoder_.transform(y_bin)\n",
+    "        y_cat = self.cat_encoder_.transform(y_cat)\n",
+    "        # Split the data into a list\n",
+    "        return [y_bin, y_cat]\n",
+    "\n",
+    "    def inverse_transform(self, y: List[np.ndarray], return_proba: bool = False) -> np.ndarray:\n",
+    "        y_pred_proba = y  # rename for clarity, what Keras gives us are probs\n",
+    "        if return_proba:\n",
+    "            return np.column_stack(y_pred_proba, axis=1)\n",
+    "        # Get class predictions from probabilities\n",
+    "        y_pred_bin = (y_pred_proba[0] > 0.5).astype(int).reshape(-1, )\n",
+    "        y_pred_cat = np.argmax(y_pred_proba[1], axis=1)\n",
+    "        # Pass back through LabelEncoder\n",
+    "        y_pred_bin = self.bin_encoder_.inverse_transform(y_pred_bin)\n",
+    "        y_pred_cat = self.cat_encoder_.inverse_transform(y_pred_cat)\n",
+    "        return np.column_stack([y_pred_bin, y_pred_cat])\n",
+    "    \n",
+    "    def get_metadata(self):\n",
+    "        return {\n",
+    "            \"n_classes_\": self.n_classes_,\n",
+    "            \"n_outputs_expected_\": self.n_outputs_expected_,\n",
+    "        }"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "positive-banks",
+   "metadata": {},
+   "source": [
+    "Note that in addition to the usual `transform` and `inverse_transform` methods, we implement the `get_metadata` method to return the `n_classes_` attribute.\n",
+    "\n",
+    "Lets test our transformer with the same dataset we previously used to test our model:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "demonstrated-pressure",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:13.459112Z",
+     "iopub.status.busy": "2021-01-25T23:58:13.457668Z",
+     "iopub.status.idle": "2021-01-25T23:58:13.462917Z",
+     "shell.execute_reply": "2021-01-25T23:58:13.462428Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "`y`, as will be passed to Keras:\n",
+      "[array([1, 1, 1, 1]), array([1, 3, 3, 4])]\n"
+     ]
+    }
+   ],
+   "source": [
+    "tf = MultiOutputTransformer()\n",
+    "\n",
+    "y_sklearn = np.column_stack(y)\n",
+    "\n",
+    "y_keras = tf.fit_transform(y_sklearn)\n",
+    "print(\"`y`, as will be passed to Keras:\")\n",
+    "print([y_keras[0][:4], y_keras[1][:4]])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "victorian-relaxation",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:13.467366Z",
+     "iopub.status.busy": "2021-01-25T23:58:13.466225Z",
+     "iopub.status.idle": "2021-01-25T23:58:13.478429Z",
+     "shell.execute_reply": "2021-01-25T23:58:13.479250Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "`y_pred`, as will be returned to sklearn:\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "array([[1, 1],\n",
+       "       [1, 1],\n",
+       "       [1, 0],\n",
+       "       [1, 1],\n",
+       "       [0, 0]])"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "y_pred_sklearn = tf.inverse_transform(y_pred)\n",
+    "print(\"`y_pred`, as will be returned to sklearn:\")\n",
+    "y_pred_sklearn[:5]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "sublime-hawaiian",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:13.482992Z",
+     "iopub.status.busy": "2021-01-25T23:58:13.482391Z",
+     "iopub.status.idle": "2021-01-25T23:58:13.486255Z",
+     "shell.execute_reply": "2021-01-25T23:58:13.487052Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "metadata = {'n_classes_': [2, 5], 'n_outputs_expected_': 2}\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(f\"metadata = {tf.get_metadata()}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "satisfactory-assignment",
+   "metadata": {},
+   "source": [
+    "Since this looks good, we move on to integrating our transformer into our classifier."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "steady-stake",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:13.492714Z",
+     "iopub.status.busy": "2021-01-25T23:58:13.492146Z",
+     "iopub.status.idle": "2021-01-25T23:58:13.495674Z",
+     "shell.execute_reply": "2021-01-25T23:58:13.496442Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.metrics import accuracy_score\n",
+    "\n",
+    "\n",
+    "class MultiOutputClassifier(KerasClassifier):\n",
+    "\n",
+    "    @property\n",
+    "    def target_encoder(self):\n",
+    "        return MultiOutputTransformer()\n",
+    "    \n",
+    "    @staticmethod\n",
+    "    def scorer(y_true, y_pred, **kwargs):\n",
+    "        y_bin, y_cat = y_true[:, 0], y_true[:, 1]\n",
+    "        y_pred_bin, y_pred_cat = y_pred[:, 0], y_pred[:, 1]\n",
+    "        # Keras by default uses the mean of losses of each outputs, so here we do the same\n",
+    "        return np.mean([accuracy_score(y_bin, y_pred_bin), accuracy_score(y_cat, y_pred_cat)])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "dried-stick",
+   "metadata": {},
+   "source": [
+    "### 2.3 Test classifier"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "experimental-bahrain",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:13.501110Z",
+     "iopub.status.busy": "2021-01-25T23:58:13.500547Z",
+     "iopub.status.idle": "2021-01-25T23:58:13.503783Z",
+     "shell.execute_reply": "2021-01-25T23:58:13.504528Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.preprocessing import StandardScaler\n",
+    "\n",
+    "# Use labels as features, just to make sure we can learn correctly\n",
+    "X = y_sklearn\n",
+    "X = StandardScaler().fit_transform(X)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "pediatric-radius",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:13.509167Z",
+     "iopub.status.busy": "2021-01-25T23:58:13.508177Z",
+     "iopub.status.idle": "2021-01-25T23:58:14.285199Z",
+     "shell.execute_reply": "2021-01-25T23:58:14.285948Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.35"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "clf = MultiOutputClassifier(model=get_clf_model, verbose=0, random_state=0)\n",
+    "\n",
+    "clf.fit(X, y_sklearn).score(X, y_sklearn)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "quiet-supply",
+   "metadata": {},
+   "source": [
+    "## 3. Multiple inputs\n",
+    "\n",
+    "The process for multiple inputs is similar, but instead of overriding the transformer in `target_encoder` we override `feature_encoder`.\n",
+    "\n",
+    "```python .noeval\n",
+    "class MultiOutputTransformer(BaseEstimator, TransformerMixin):\n",
+    "    ...\n",
+    "\n",
+    "\n",
+    "class MultiOutputClassifier(KerasClassifier):\n",
+    "\n",
+    "    @property\n",
+    "    def feature_encoder(self):\n",
+    "        return MultiInputTransformer(...)\n",
+    "```\n",
+    "\n",
+    "### 3.1 Define Keras Model\n",
+    "\n",
+    "Let's define a Keras **regression** Model with 2 inputs:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "extraordinary-relay",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:14.289515Z",
+     "iopub.status.busy": "2021-01-25T23:58:14.288493Z",
+     "iopub.status.idle": "2021-01-25T23:58:14.295864Z",
+     "shell.execute_reply": "2021-01-25T23:58:14.296708Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def get_reg_model():\n",
+    "\n",
+    "    inp1 = keras.layers.Input(shape=(1, ))\n",
+    "    inp2 = keras.layers.Input(shape=(1, ))\n",
+    "\n",
+    "    x1 = keras.layers.Dense(100, activation=\"relu\")(inp1)\n",
+    "    x2 = keras.layers.Dense(50, activation=\"relu\")(inp2)\n",
+    "\n",
+    "    concat = keras.layers.Concatenate(axis=-1)([x1, x2])\n",
+    "\n",
+    "    out = keras.layers.Dense(1)(concat)\n",
+    "\n",
+    "    model = keras.Model(inputs=[inp1, inp2], outputs=out)\n",
+    "    model.compile(loss=\"mse\")\n",
+    "\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "certified-triple",
+   "metadata": {},
+   "source": [
+    "And test it with a small mock dataset:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "geological-reading",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:14.300230Z",
+     "iopub.status.busy": "2021-01-25T23:58:14.299110Z",
+     "iopub.status.idle": "2021-01-25T23:58:14.868630Z",
+     "shell.execute_reply": "2021-01-25T23:58:14.867766Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "X = np.random.random(size=(100, 2))\n",
+    "y = np.sum(X, axis=1)\n",
+    "X = np.split(X, 2, axis=1)\n",
+    "\n",
+    "model = get_reg_model()\n",
+    "\n",
+    "model.fit(X, y, verbose=0)\n",
+    "y_pred = model.predict(X).squeeze()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "utility-costa",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:14.872318Z",
+     "iopub.status.busy": "2021-01-25T23:58:14.871338Z",
+     "iopub.status.idle": "2021-01-25T23:58:14.877768Z",
+     "shell.execute_reply": "2021-01-25T23:58:14.878579Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "-1.8342453059269634"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "from sklearn.metrics import r2_score\n",
+    "\n",
+    "r2_score(y, y_pred)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "helpful-membrane",
+   "metadata": {},
+   "source": [
+    "Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.\n",
+    "\n",
+    "### 3.2 Define data transformer\n",
+    "\n",
+    "Just like for overriding `target_encoder`, we just need to define a sklearn transformer and drop it into our SciKeras wrapper. Since we hardcoded the input\n",
+    "shapes into our model and do not rely on any transformer-generated metadata, we can simply use `sklearn.preprocessing.FunctionTransformer`:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "educational-sociology",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:14.881715Z",
+     "iopub.status.busy": "2021-01-25T23:58:14.880736Z",
+     "iopub.status.idle": "2021-01-25T23:58:14.885881Z",
+     "shell.execute_reply": "2021-01-25T23:58:14.886672Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.preprocessing import FunctionTransformer\n",
+    "\n",
+    "\n",
+    "class MultiInputRegressor(KerasRegressor):\n",
+    "\n",
+    "    @property\n",
+    "    def feature_encoder(self):\n",
+    "        return FunctionTransformer(\n",
+    "            func=lambda X: [X[:, 0], X[:, 1]],\n",
+    "        )"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "standard-extra",
+   "metadata": {},
+   "source": [
+    "Note that we did **not** implement `inverse_transform` (that is, we did not pass an `inverse_func` argument to `FunctionTransformer`) because features are never converted back to their original form.\n",
+    "\n",
+    "### 3.3 Test regressor"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "lesbian-registration",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:14.889700Z",
+     "iopub.status.busy": "2021-01-25T23:58:14.888736Z",
+     "iopub.status.idle": "2021-01-25T23:58:15.583228Z",
+     "shell.execute_reply": "2021-01-25T23:58:15.584012Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "-2.88311632109692"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "reg = MultiInputRegressor(model=get_reg_model, verbose=0, random_state=0)\n",
+    "\n",
+    "X_sklearn = np.column_stack(X)\n",
+    "\n",
+    "reg.fit(X_sklearn, y).score(X_sklearn, y)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "spatial-april",
+   "metadata": {},
+   "source": [
+    "## 4. Multidimensional inputs with MNIST dataset\n",
+    "\n",
+    "In this example, we look at how we can use SciKeras to process the MNIST dataset. The dataset is composed of 60,000 images of digits, each of which is a 2D 28x28 image.\n",
+    "\n",
+    "The dataset and Keras Model architecture used come from a [Keras example](https://keras.io/examples/vision/mnist_convnet/). It may be beneficial to understand the Keras model by reviewing that example first."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "professional-inclusion",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:15.587770Z",
+     "iopub.status.busy": "2021-01-25T23:58:15.586671Z",
+     "iopub.status.idle": "2021-01-25T23:58:15.922884Z",
+     "shell.execute_reply": "2021-01-25T23:58:15.923666Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(60000, 28, 28)"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()\n",
+    "x_train.shape"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "dried-undergraduate",
+   "metadata": {},
+   "source": [
+    "The outputs (labels) are numbers 0-9:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "european-traveler",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:15.927294Z",
+     "iopub.status.busy": "2021-01-25T23:58:15.926183Z",
+     "iopub.status.idle": "2021-01-25T23:58:15.934634Z",
+     "shell.execute_reply": "2021-01-25T23:58:15.935394Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(60000,)\n",
+      "[0 1 2 3 4 5 6 7 8 9]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(y_train.shape)\n",
+    "print(np.unique(y_train))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "premium-austin",
+   "metadata": {},
+   "source": [
+    "First, we will \"flatten\" the data into an array of shape `(n_samples, 28*28)` (i.e. a 2D array). This will allow us to use sklearn ecosystem utilities, for example, `sklearn.preprocessing.MinMaxScaler`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "small-happiness",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:15.938925Z",
+     "iopub.status.busy": "2021-01-25T23:58:15.937808Z",
+     "iopub.status.idle": "2021-01-25T23:58:16.632342Z",
+     "shell.execute_reply": "2021-01-25T23:58:16.633165Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.preprocessing import MinMaxScaler\n",
+    "\n",
+    "n_samples_train = x_train.shape[0]\n",
+    "n_samples_test = x_test.shape[0]\n",
+    "\n",
+    "x_train = x_train.reshape((n_samples_train, -1))\n",
+    "x_test = x_test.reshape((n_samples_test, -1))\n",
+    "x_train = MinMaxScaler().fit_transform(x_train)\n",
+    "x_test = MinMaxScaler().fit_transform(x_test)\n",
+    "\n",
+    "# reduce dataset size for faster training\n",
+    "n_samples = 1000\n",
+    "x_train, y_train, x_test, y_test = x_train[:n_samples], y_train[:n_samples], x_test[:n_samples], y_test[:n_samples]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "electoral-colonial",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:16.637113Z",
+     "iopub.status.busy": "2021-01-25T23:58:16.635969Z",
+     "iopub.status.idle": "2021-01-25T23:58:16.642497Z",
+     "shell.execute_reply": "2021-01-25T23:58:16.643312Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(784,)\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(x_train.shape[1:])  # 784 = 28*28"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "affected-therapist",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:16.646892Z",
+     "iopub.status.busy": "2021-01-25T23:58:16.645736Z",
+     "iopub.status.idle": "2021-01-25T23:58:16.653162Z",
+     "shell.execute_reply": "2021-01-25T23:58:16.653950Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0.0 1.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(np.min(x_train), np.max(x_train))  # scaled 0-1"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "objective-train",
+   "metadata": {},
+   "source": [
+    "Of course, in this case, we could have just as easily used numpy functions to scale our data, but we use `MinMaxScaler` to demonstrate use of the sklearn ecosystem.\n",
+    "\n",
+    "### 4.1 Define Keras Model\n",
+    "\n",
+    "Next we will define our Keras model (adapted from [keras.io](https://keras.io/examples/vision/mnist_convnet/)):"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "id": "norman-exception",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:16.657579Z",
+     "iopub.status.busy": "2021-01-25T23:58:16.656421Z",
+     "iopub.status.idle": "2021-01-25T23:58:16.664247Z",
+     "shell.execute_reply": "2021-01-25T23:58:16.664990Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "num_classes = 10\n",
+    "input_shape = (28, 28, 1)\n",
+    "\n",
+    "\n",
+    "def get_model(meta):\n",
+    "    model = keras.Sequential(\n",
+    "        [\n",
+    "            keras.Input(input_shape),\n",
+    "            keras.layers.Conv2D(32, kernel_size=(3, 3), activation=\"relu\"),\n",
+    "            keras.layers.MaxPooling2D(pool_size=(2, 2)),\n",
+    "            keras.layers.Conv2D(64, kernel_size=(3, 3), activation=\"relu\"),\n",
+    "            keras.layers.MaxPooling2D(pool_size=(2, 2)),\n",
+    "            keras.layers.Flatten(),\n",
+    "            keras.layers.Dropout(0.5),\n",
+    "            keras.layers.Dense(num_classes, activation=\"softmax\"),\n",
+    "        ]\n",
+    "    )\n",
+    "    model.compile(\n",
+    "        loss=\"sparse_categorical_crossentropy\"\n",
+    "    )\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "spectacular-rogers",
+   "metadata": {},
+   "source": [
+    "Now let's define a transformer that we will use to reshape our input from the sklearn shape (`(n_samples, 784)`) to the Keras shape (which we will be `(n_samples, 28, 28, 1)`)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "id": "ambient-video",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:16.668530Z",
+     "iopub.status.busy": "2021-01-25T23:58:16.667457Z",
+     "iopub.status.idle": "2021-01-25T23:58:16.672467Z",
+     "shell.execute_reply": "2021-01-25T23:58:16.673205Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "class MultiDimensionalClassifier(KerasClassifier):\n",
+    "\n",
+    "    @property\n",
+    "    def feature_encoder(self):\n",
+    "        return FunctionTransformer(\n",
+    "            func=lambda X: X.reshape(X.shape[0], *input_shape),\n",
+    "        )"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "id": "comprehensive-august",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:16.676570Z",
+     "iopub.status.busy": "2021-01-25T23:58:16.675509Z",
+     "iopub.status.idle": "2021-01-25T23:58:16.680136Z",
+     "shell.execute_reply": "2021-01-25T23:58:16.680872Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "clf = MultiDimensionalClassifier(\n",
+    "    model=get_model,\n",
+    "    epochs=10,\n",
+    "    batch_size=128,\n",
+    "    validation_split=0.1,\n",
+    "    random_state=0,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "earned-broad",
+   "metadata": {},
+   "source": [
+    "### 4.2 Test\n",
+    "\n",
+    "Train and score the model (this takes some time)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "id": "coupled-marble",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:16.684650Z",
+     "iopub.status.busy": "2021-01-25T23:58:16.683516Z",
+     "iopub.status.idle": "2021-01-25T23:58:24.450587Z",
+     "shell.execute_reply": "2021-01-25T23:58:24.451405Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 1/10\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/8 [==>...........................] - ETA: 3s - loss: 2.3388"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "2/8 [======>.......................] - ETA: 0s - loss: 2.3138"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "3/8 [==========>...................] - ETA: 0s - loss: 2.2955"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "4/8 [==============>...............] - ETA: 0s - loss: 2.2804"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/8 [=================>............] - ETA: 0s - loss: 2.2653"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "6/8 [=====================>........] - ETA: 0s - loss: 2.2506"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "7/8 [=========================>....] - ETA: 0s - loss: 2.2346"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - 2s 155ms/step - loss: 2.2129 - val_loss: 1.9378\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 2/10\n",
+      "\r",
+      "1/8 [==>...........................] - ETA: 0s - loss: 1.9194"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "2/8 [======>.......................] - ETA: 0s - loss: 1.8859"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "3/8 [==========>...................] - ETA: 0s - loss: 1.8602"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "4/8 [==============>...............] - ETA: 0s - loss: 1.8336"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/8 [=================>............] - ETA: 0s - loss: 1.8105"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "6/8 [=====================>........] - ETA: 0s - loss: 1.7871"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "7/8 [=========================>....] - ETA: 0s - loss: 1.7651"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - 1s 84ms/step - loss: 1.7355 - val_loss: 1.4332\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 3/10\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/8 [==>...........................] - ETA: 0s - loss: 1.5482"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "2/8 [======>.......................] - ETA: 0s - loss: 1.4905"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "3/8 [==========>...................] - ETA: 0s - loss: 1.4373"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "4/8 [==============>...............] - ETA: 0s - loss: 1.4038"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/8 [=================>............] - ETA: 0s - loss: 1.3722"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "6/8 [=====================>........] - ETA: 0s - loss: 1.3461"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "7/8 [=========================>....] - ETA: 0s - loss: 1.3252"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - 1s 85ms/step - loss: 1.2980 - val_loss: 1.1264\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 4/10\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/8 [==>...........................] - ETA: 0s - loss: 0.9745"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "2/8 [======>.......................] - ETA: 0s - loss: 0.9901"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "3/8 [==========>...................] - ETA: 0s - loss: 0.9931"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "4/8 [==============>...............] - ETA: 0s - loss: 0.9934"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/8 [=================>............] - ETA: 0s - loss: 0.9891"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "6/8 [=====================>........] - ETA: 0s - loss: 0.9830"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "7/8 [=========================>....] - ETA: 0s - loss: 0.9744"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - 1s 88ms/step - loss: 0.9632 - val_loss: 0.8725\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 5/10\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/8 [==>...........................] - ETA: 0s - loss: 0.8483"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "2/8 [======>.......................] - ETA: 0s - loss: 0.8333"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "3/8 [==========>...................] - ETA: 0s - loss: 0.8148"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "4/8 [==============>...............] - ETA: 0s - loss: 0.8013"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/8 [=================>............] - ETA: 0s - loss: 0.7932"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "6/8 [=====================>........] - ETA: 0s - loss: 0.7884"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "7/8 [=========================>....] - ETA: 0s - loss: 0.7839"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - 1s 84ms/step - loss: 0.7774 - val_loss: 0.7834\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 6/10\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/8 [==>...........................] - ETA: 0s - loss: 0.7395"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "2/8 [======>.......................] - ETA: 0s - loss: 0.7439"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "3/8 [==========>...................] - ETA: 0s - loss: 0.7406"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "4/8 [==============>...............] - ETA: 0s - loss: 0.7288"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/8 [=================>............] - ETA: 0s - loss: 0.7162"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "6/8 [=====================>........] - ETA: 0s - loss: 0.7084"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "7/8 [=========================>....] - ETA: 0s - loss: 0.7005"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - 1s 79ms/step - loss: 0.6900 - val_loss: 0.8330\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 7/10\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/8 [==>...........................] - ETA: 0s - loss: 0.6743"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "2/8 [======>.......................] - ETA: 0s - loss: 0.6714"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "3/8 [==========>...................] - ETA: 0s - loss: 0.6668"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "4/8 [==============>...............] - ETA: 0s - loss: 0.6620"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/8 [=================>............] - ETA: 0s - loss: 0.6558"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "6/8 [=====================>........] - ETA: 0s - loss: 0.6494"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "7/8 [=========================>....] - ETA: 0s - loss: 0.6429"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - 1s 77ms/step - loss: 0.6336 - val_loss: 0.6026\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 8/10\n",
+      "\r",
+      "1/8 [==>...........................] - ETA: 0s - loss: 0.5816"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "2/8 [======>.......................] - ETA: 0s - loss: 0.5781"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "3/8 [==========>...................] - ETA: 0s - loss: 0.5809"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "4/8 [==============>...............] - ETA: 0s - loss: 0.5764"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/8 [=================>............] - ETA: 0s - loss: 0.5720"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "6/8 [=====================>........] - ETA: 0s - loss: 0.5677"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "7/8 [=========================>....] - ETA: 0s - loss: 0.5666"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - 1s 82ms/step - loss: 0.5648 - val_loss: 0.7812\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 9/10\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/8 [==>...........................] - ETA: 0s - loss: 0.5764"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "2/8 [======>.......................] - ETA: 0s - loss: 0.6031"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "3/8 [==========>...................] - ETA: 0s - loss: 0.5845"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "4/8 [==============>...............] - ETA: 0s - loss: 0.5679"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/8 [=================>............] - ETA: 0s - loss: 0.5564"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "6/8 [=====================>........] - ETA: 0s - loss: 0.5490"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "7/8 [=========================>....] - ETA: 0s - loss: 0.5440"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - 1s 84ms/step - loss: 0.5369 - val_loss: 0.5447\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 10/10\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/8 [==>...........................] - ETA: 0s - loss: 0.4803"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "2/8 [======>.......................] - ETA: 0s - loss: 0.5018"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "3/8 [==========>...................] - ETA: 0s - loss: 0.4980"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "4/8 [==============>...............] - ETA: 0s - loss: 0.4908"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/8 [=================>............] - ETA: 0s - loss: 0.4890"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "6/8 [=====================>........] - ETA: 0s - loss: 0.4859"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "7/8 [=========================>....] - ETA: 0s - loss: 0.4812"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - 1s 76ms/step - loss: 0.4750 - val_loss: 0.6593\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "MultiDimensionalClassifier(\n",
+       "\tmodel=<function get_model at 0x7f4f2c03d4c0>\n",
+       "\tbuild_fn=None\n",
+       "\twarm_start=False\n",
+       "\trandom_state=0\n",
+       "\toptimizer=rmsprop\n",
+       "\tloss=None\n",
+       "\tmetrics=None\n",
+       "\tbatch_size=128\n",
+       "\tverbose=1\n",
+       "\tcallbacks=None\n",
+       "\tvalidation_split=0.1\n",
+       "\tshuffle=True\n",
+       "\trun_eagerly=False\n",
+       "\tepochs=10\n",
+       "\tclass_weight=None\n",
+       ")"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "clf.fit(x_train, y_train)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "id": "surprising-fishing",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:24.456003Z",
+     "iopub.status.busy": "2021-01-25T23:58:24.454685Z",
+     "iopub.status.idle": "2021-01-25T23:58:24.734234Z",
+     "shell.execute_reply": "2021-01-25T23:58:24.735082Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/8 [==>...........................] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "3/8 [==========>...................] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/8 [=================>............] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "8/8 [==============================] - 0s 24ms/step\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Test score (accuracy): 0.76\n"
+     ]
+    }
+   ],
+   "source": [
+    "score = clf.score(x_test, y_test)\n",
+    "print(f\"Test score (accuracy): {score:.2f}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fresh-actor",
+   "metadata": {},
+   "source": [
+    "## 5. Ragged datasets with tf.data.Dataset\n",
+    "\n",
+    "SciKeras provides a third dependency injection point that operates on the entire dataset: X, y & sample_weight. This `dataset_transformer` is applied after `target_transformer` and `feature_transformer`. One use case for this dependency injection point is to transform data from tabular/array-like to the `tf.data.Dataset` format, which only requires iteration. We can use this to create a `tf.data.Dataset` of ragged tensors.\n",
+    "\n",
+    "Note that `dataset_transformer` should accept a single **3 element tuple** as its argument and return value; more details on this are in the [docs](https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers).\n",
+    "\n",
+    "Let's start by defining our data. We'll have an extra \"feature\" that marks the observation index, but we'll remove it when we deconstruct our data in the transformer."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "id": "handy-pension",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:24.738959Z",
+     "iopub.status.busy": "2021-01-25T23:58:24.737786Z",
+     "iopub.status.idle": "2021-01-25T23:58:24.744495Z",
+     "shell.execute_reply": "2021-01-25T23:58:24.745279Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "feature_1 = np.random.uniform(size=(10, ))\n",
+    "feature_2 = np.random.uniform(size=(10, ))\n",
+    "obs = [0, 0, 0, 1, 1, 2, 3, 3, 4, 4]\n",
+    "\n",
+    "X = np.column_stack([feature_1, feature_2, obs]).astype(\"float32\")\n",
+    "\n",
+    "y = np.array([\"class1\"] * 5 + [\"class2\"] * 5, dtype=str)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "western-circuit",
+   "metadata": {},
+   "source": [
+    "Next, we define our `dataset_transformer`. We will do this by defining a custom forward transformation outside of the Keras model. Note that we do not define an inverse transformation since that is never used.\n",
+    "Also note that `dataset_transformer` will _always_ be called with `X` (i.e. the first element of the tuple will always be populated), but will be called with `y=None` when used for `predict`. Thus,\n",
+    "you should check if `y` and `sample_weigh` are None before doing any operations on them."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "id": "advisory-disaster",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:24.749384Z",
+     "iopub.status.busy": "2021-01-25T23:58:24.748234Z",
+     "iopub.status.idle": "2021-01-25T23:58:24.757226Z",
+     "shell.execute_reply": "2021-01-25T23:58:24.758007Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from typing import Tuple, Optional\n",
+    "\n",
+    "import tensorflow as tf\n",
+    "\n",
+    "\n",
+    "def ragged_transformer(data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> Tuple[tf.RaggedTensor, None, None]:\n",
+    "    X, y, sample_weights = data\n",
+    "    if y is not None:\n",
+    "        y = y.reshape(-1, 1 if len(y.shape) == 1 else y.shape[1])\n",
+    "        y = y[tf.RaggedTensor.from_value_rowids(y, X[:, -1]).row_starts().numpy()]\n",
+    "    if sample_weights is not None:\n",
+    "        sample_weights = sample_weights.reshape(-1, 1 if len(sample_weights.shape) == 1 else sample_weights.shape[1])\n",
+    "        sample_weights = sample_weights[tf.RaggedTensor.from_value_rowids(sample_weights, X[:, -1]).row_starts().numpy()]\n",
+    "    X = tf.RaggedTensor.from_value_rowids(X[:, :-1], X[:, -1])\n",
+    "    return (X, y, sample_weights)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "guilty-intervention",
+   "metadata": {},
+   "source": [
+    "In this case, we chose to keep `y` and `sample_weights` as numpy arrays, which will allow us to re-use ClassWeightDataTransformer,\n",
+    "the default `dataset_transformer` for `KerasClassifier`.\n",
+    "\n",
+    "Lets quickly test our transformer:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "id": "vanilla-stephen",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:24.762037Z",
+     "iopub.status.busy": "2021-01-25T23:58:24.760582Z",
+     "iopub.status.idle": "2021-01-25T23:58:24.776469Z",
+     "shell.execute_reply": "2021-01-25T23:58:24.779032Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(<tf.RaggedTensor [[[0.3133695125579834, 0.7581841945648193], [0.4090987741947174, 0.1472364217042923], [0.494441956281662, 0.9587141871452332]], [[0.5110822916030884, 0.5296800136566162], [0.6061713099479675, 0.7572534680366516]], [[0.06231812760233879, 0.004794537555426359]], [[0.5278240442276001, 0.8990969061851501], [0.9108428955078125, 0.15449781715869904]], [[0.46702826023101807, 0.08458245545625687], [0.4333193302154541, 0.11795379221439362]]]>,\n",
+       " array([['class1'],\n",
+       "        ['class1'],\n",
+       "        ['class2'],\n",
+       "        ['class2'],\n",
+       "        ['class2']], dtype='<U6'),\n",
+       " None)"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "data = ragged_transformer((X, y, None))\n",
+    "data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "id": "prerequisite-hundred",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:24.782707Z",
+     "iopub.status.busy": "2021-01-25T23:58:24.781548Z",
+     "iopub.status.idle": "2021-01-25T23:58:24.792074Z",
+     "shell.execute_reply": "2021-01-25T23:58:24.793312Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(<tf.RaggedTensor [[[0.3133695125579834, 0.7581841945648193], [0.4090987741947174, 0.1472364217042923], [0.494441956281662, 0.9587141871452332]], [[0.5110822916030884, 0.5296800136566162], [0.6061713099479675, 0.7572534680366516]], [[0.06231812760233879, 0.004794537555426359]], [[0.5278240442276001, 0.8990969061851501], [0.9108428955078125, 0.15449781715869904]], [[0.46702826023101807, 0.08458245545625687], [0.4333193302154541, 0.11795379221439362]]]>,\n",
+       " None,\n",
+       " None)"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "data = ragged_transformer((X, None, None))\n",
+    "data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "retained-korean",
+   "metadata": {},
+   "source": [
+    "Our shapes look good, and we can handle the `y=None` case.\n",
+    "\n",
+    "Because Keras will not accept a RaggedTensor directly, we will need to wrap our entire dataset into a tensorflow `Dataset`. We can do this by adding one more transformation step:\n",
+    "\n",
+    "Next, we can add our transormers to our model. We use an sklearn `Pipeline` (generated via `make_pipeline`) to keep ClassWeightDataTransformer operational while implementing our custom transformation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "id": "freelance-boulder",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:24.798615Z",
+     "iopub.status.busy": "2021-01-25T23:58:24.797973Z",
+     "iopub.status.idle": "2021-01-25T23:58:24.802209Z",
+     "shell.execute_reply": "2021-01-25T23:58:24.803241Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def dataset_transformer(data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> Tuple[tf.data.Dataset, None, None]:\n",
+    "    return (tf.data.Dataset.from_tensor_slices(data), None, None)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "id": "otherwise-verification",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:24.807124Z",
+     "iopub.status.busy": "2021-01-25T23:58:24.805963Z",
+     "iopub.status.idle": "2021-01-25T23:58:24.812013Z",
+     "shell.execute_reply": "2021-01-25T23:58:24.812806Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.preprocessing import FunctionTransformer\n",
+    "from sklearn.pipeline import make_pipeline\n",
+    "\n",
+    "\n",
+    "class RaggedClassifier(KerasClassifier):\n",
+    "\n",
+    "    @property\n",
+    "    def dataset_transformer(self):\n",
+    "        t1 = FunctionTransformer(ragged_transformer)\n",
+    "        t2 = super().dataset_transformer  # ClassWeightDataTransformer\n",
+    "        t3 = FunctionTransformer(dataset_transformer)\n",
+    "        return make_pipeline(t1, t2, t3)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "regional-engagement",
+   "metadata": {},
+   "source": [
+    "Now we can define a Model. We need some way to handle/flatten our ragged arrays within our model. For this example, we use a custom mean layer, but you could use an Embedding layer, LSTM, etc."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "id": "collected-blocking",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:24.816535Z",
+     "iopub.status.busy": "2021-01-25T23:58:24.815392Z",
+     "iopub.status.idle": "2021-01-25T23:58:24.823523Z",
+     "shell.execute_reply": "2021-01-25T23:58:24.824374Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from tensorflow import reduce_mean, reshape\n",
+    "from tensorflow.keras import Sequential, layers\n",
+    "\n",
+    "\n",
+    "class CustomMean(layers.Layer):\n",
+    "\n",
+    "    def __init__(self, axis=None):\n",
+    "        super(CustomMean, self).__init__()\n",
+    "        self._supports_ragged_inputs = True\n",
+    "        self.axis = axis\n",
+    "\n",
+    "    def call(self, inputs, **kwargs):\n",
+    "        input_shape = inputs.get_shape()\n",
+    "        return reshape(reduce_mean(inputs, axis=self.axis), (1, *input_shape[1:]))\n",
+    "\n",
+    "\n",
+    "def get_model(meta):\n",
+    "    inp_shape = meta[\"X_shape_\"][1]-1\n",
+    "    model = Sequential([               \n",
+    "        layers.Input(shape=(inp_shape,), ragged=True),\n",
+    "        CustomMean(axis=0),\n",
+    "        layers.Dense(1, activation='sigmoid')\n",
+    "    ])\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "occupational-appearance",
+   "metadata": {},
+   "source": [
+    "And attach our model to our classifier wrapper:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "id": "arabic-distribution",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:24.827882Z",
+     "iopub.status.busy": "2021-01-25T23:58:24.826761Z",
+     "iopub.status.idle": "2021-01-25T23:58:24.831352Z",
+     "shell.execute_reply": "2021-01-25T23:58:24.832131Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "clf = RaggedClassifier(get_model, loss=\"bce\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "executed-reminder",
+   "metadata": {},
+   "source": [
+    "Finally, let's train and predict:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "id": "together-proceeding",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:24.835709Z",
+     "iopub.status.busy": "2021-01-25T23:58:24.834590Z",
+     "iopub.status.idle": "2021-01-25T23:58:25.270487Z",
+     "shell.execute_reply": "2021-01-25T23:58:25.271047Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/5 [=====>........................] - ETA: 1s - loss: 1.2182"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/5 [==============================] - 0s 1ms/step - loss: 1.0061\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/5 [=====>........................] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/5 [==============================] - 0s 907us/step\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "array(['class2', 'class2', 'class2', 'class2', 'class2'], dtype='<U6')"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "clf.fit(X, y)\n",
+    "y_pred = clf.predict(X)\n",
+    "y_pred"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "reliable-stroke",
+   "metadata": {},
+   "source": [
+    "If we define our custom layers, transformers and wrappers in their own module, we can easily create a self-contained classifier that is able to handle ragged datasets and has a clean Scikit-Learn compatible API:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 39,
+   "id": "quick-wallace",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:25.280052Z",
+     "iopub.status.busy": "2021-01-25T23:58:25.279513Z",
+     "iopub.status.idle": "2021-01-25T23:58:25.282559Z",
+     "shell.execute_reply": "2021-01-25T23:58:25.283188Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "class RaggedClassifier(KerasClassifier):\n",
+    "\n",
+    "    @property\n",
+    "    def dataset_transformer(self):\n",
+    "        t1 = FunctionTransformer(ragged_transformer)\n",
+    "        t2 = super().dataset_transformer  # ClassWeightDataTransformer\n",
+    "        t3 = FunctionTransformer(dataset_transformer)\n",
+    "        return make_pipeline(t1, t2, t3)\n",
+    "    \n",
+    "    def _keras_build_fn(self):\n",
+    "        inp_shape = self.X_shape_[1] - 1\n",
+    "        model = Sequential([               \n",
+    "            layers.Input(shape=(inp_shape,), ragged=True),\n",
+    "            CustomMean(axis=0),\n",
+    "            layers.Dense(1, activation='sigmoid')\n",
+    "        ])\n",
+    "        return model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "id": "deluxe-attention",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:25.293035Z",
+     "iopub.status.busy": "2021-01-25T23:58:25.291085Z",
+     "iopub.status.idle": "2021-01-25T23:58:25.672196Z",
+     "shell.execute_reply": "2021-01-25T23:58:25.673032Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/5 [=====>........................] - ETA: 1s - loss: 0.5297"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/5 [==============================] - 0s 1ms/step - loss: 0.6106\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/5 [=====>........................] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "5/5 [==============================] - 0s 1ms/step\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "array(['class1', 'class1', 'class1', 'class1', 'class1'], dtype='<U6')"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "clf = RaggedClassifier(loss=\"bce\")\n",
+    "clf.fit(X, y)\n",
+    "y_pred = clf.predict(X)\n",
+    "y_pred"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "remarkable-bride",
+   "metadata": {},
+   "source": [
+    "## 6. Multi-output class_weight\n",
+    "\n",
+    "In this example, we will use `dataset_transformer` to support multi-output class weights. We will re-use our `MultiOutputTransformer` from our previous example to split the output, then we will create `sample_weights` from `class_weight`"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 41,
+   "id": "innovative-healthcare",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:25.686512Z",
+     "iopub.status.busy": "2021-01-25T23:58:25.681274Z",
+     "iopub.status.idle": "2021-01-25T23:58:25.693635Z",
+     "shell.execute_reply": "2021-01-25T23:58:25.694442Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from collections import defaultdict\n",
+    "from typing import Union\n",
+    "\n",
+    "from sklearn.utils.class_weight import compute_sample_weight\n",
+    "\n",
+    "\n",
+    "class DatasetTransformer(BaseEstimator, TransformerMixin):\n",
+    "\n",
+    "    def __init__(self, output_names, class_weight=None):\n",
+    "        self.class_weight = class_weight\n",
+    "        self.output_names = output_names\n",
+    "\n",
+    "    def fit(self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> \"DatasetTransformer\":\n",
+    "        return self\n",
+    "\n",
+    "    def transform(self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> Tuple[np.ndarray, Union[np.ndarray, None], Union[np.ndarray, None]]:\n",
+    "        if self.class_weight is None:\n",
+    "            return data\n",
+    "        class_weight = self.class_weight\n",
+    "        if isinstance(class_weight, str):  # handle \"balanced\"\n",
+    "            class_weight_ = class_weight\n",
+    "            class_weight = defaultdict(lambda: class_weight_)\n",
+    "        X, y, sample_weights = data\n",
+    "        assert sample_weights is None, \"Cannot use class_weight & sample_weights together\"\n",
+    "        if y is not None:\n",
+    "            # y should be a list of arrays, as split up by MultiOutputTransformer\n",
+    "            sample_weights = {\n",
+    "                output_name: compute_sample_weight(class_weight[output_num], output_data)\n",
+    "                for output_num, (output_name, output_data) in enumerate(zip(self.output_names, y))\n",
+    "            }\n",
+    "            # Note: class_weight is expected to be indexable by output_number in sklearn\n",
+    "            # see https://scikit-learn.org/stable/modules/generated/sklearn.utils.class_weight.compute_sample_weight.html\n",
+    "            # It is trivial to change the expected format to match Keras' ({output_name: weights, ...})\n",
+    "            # see https://github.com/keras-team/keras/issues/4735#issuecomment-267473722\n",
+    "        return X, y, sample_weights\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 42,
+   "id": "incredible-victorian",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:25.704108Z",
+     "iopub.status.busy": "2021-01-25T23:58:25.703418Z",
+     "iopub.status.idle": "2021-01-25T23:58:25.707405Z",
+     "shell.execute_reply": "2021-01-25T23:58:25.708290Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def get_model(meta, compile_kwargs):\n",
+    "    inp = keras.layers.Input(shape=(meta[\"n_features_in_\"]))\n",
+    "    x1 = keras.layers.Dense(100, activation=\"relu\")(inp)\n",
+    "    out_bin = keras.layers.Dense(1, activation=\"sigmoid\")(x1)\n",
+    "    out_cat = keras.layers.Dense(meta[\"n_classes_\"][1], activation=\"softmax\")(x1)\n",
+    "    model = keras.Model(inputs=inp, outputs=[out_bin, out_cat])\n",
+    "    model.compile(\n",
+    "        loss=[\"binary_crossentropy\", \"sparse_categorical_crossentropy\"],\n",
+    "        optimizer=compile_kwargs[\"optimizer\"]\n",
+    "    )\n",
+    "    return model\n",
+    "\n",
+    "\n",
+    "class CustomClassifier(KerasClassifier):\n",
+    "\n",
+    "    @property\n",
+    "    def target_encoder(self):\n",
+    "        return MultiOutputTransformer()\n",
+    "    \n",
+    "    @property\n",
+    "    def dataset_transformer(self):\n",
+    "        return DatasetTransformer(\n",
+    "            output_names=self.model_.output_names,\n",
+    "            class_weight=self.class_weight\n",
+    "        )"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "contained-lemon",
+   "metadata": {},
+   "source": [
+    "Next, we define the data. We'll use `sklearn.datasets.make_blobs` to generate a relatively noisy dataset:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 43,
+   "id": "concrete-protocol",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:25.718908Z",
+     "iopub.status.busy": "2021-01-25T23:58:25.717850Z",
+     "iopub.status.idle": "2021-01-25T23:58:25.746991Z",
+     "shell.execute_reply": "2021-01-25T23:58:25.747730Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.datasets import make_blobs\n",
+    "\n",
+    "\n",
+    "X, y = make_blobs(centers=3, random_state=0, cluster_std=20)\n",
+    "# make a binary target for \"is the value of the first class?\"\n",
+    "y_bin = y == y[0]\n",
+    "y = np.column_stack([y_bin, y])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "great-physics",
+   "metadata": {},
+   "source": [
+    "Test the model without specifying class weighting:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 44,
+   "id": "musical-canvas",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:25.760571Z",
+     "iopub.status.busy": "2021-01-25T23:58:25.753648Z",
+     "iopub.status.idle": "2021-01-25T23:58:27.004336Z",
+     "shell.execute_reply": "2021-01-25T23:58:27.003783Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[91  9]\n",
+      "[28 30 42]\n"
+     ]
+    }
+   ],
+   "source": [
+    "clf = CustomClassifier(get_model, epochs=100, verbose=0, random_state=0)\n",
+    "clf.fit(X, y)\n",
+    "y_pred = clf.predict(X)\n",
+    "(_, counts_bin) = np.unique(y_pred[:, 0], return_counts=True)\n",
+    "print(counts_bin)\n",
+    "(_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)\n",
+    "print(counts_cat)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "unknown-cover",
+   "metadata": {},
+   "source": [
+    "As you can see, without `class_weight=\"balanced\"`, our classifier only predicts mainly a single class for the first output. Now with `class_weight=\"balanced\"`:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 45,
+   "id": "disturbed-incentive",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:27.013072Z",
+     "iopub.status.busy": "2021-01-25T23:58:27.012478Z",
+     "iopub.status.idle": "2021-01-25T23:58:28.362487Z",
+     "shell.execute_reply": "2021-01-25T23:58:28.361954Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[57 43]\n",
+      "[27 27 46]\n"
+     ]
+    }
+   ],
+   "source": [
+    "clf = CustomClassifier(get_model, class_weight=\"balanced\", epochs=100, verbose=0, random_state=0)\n",
+    "clf.fit(X, y)\n",
+    "y_pred = clf.predict(X)\n",
+    "(_, counts_bin) = np.unique(y_pred[:, 0], return_counts=True)\n",
+    "print(counts_bin)\n",
+    "(_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)\n",
+    "print(counts_cat)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "genetic-counter",
+   "metadata": {},
+   "source": [
+    "Now, we get (mostly) balanced classes. But what if we want to specify our classes manually? You will notice that in when we defined `DatasetTransformer`, we gave it the ability to handle\n",
+    "a list of class weights. For demonstration purposes, we will highly bias towards the second class in each output:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 46,
+   "id": "african-bikini",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:28.374265Z",
+     "iopub.status.busy": "2021-01-25T23:58:28.371893Z",
+     "iopub.status.idle": "2021-01-25T23:58:29.658672Z",
+     "shell.execute_reply": "2021-01-25T23:58:29.659203Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[ 7 93]\n",
+      "[ 2 98]\n"
+     ]
+    }
+   ],
+   "source": [
+    "clf = CustomClassifier(get_model, class_weight=[{0: 0.1, 1: 1}, {0: 0.1, 1: 1, 2: 0.1}], epochs=100, verbose=0, random_state=0)\n",
+    "clf.fit(X, y)\n",
+    "y_pred = clf.predict(X)\n",
+    "(_, counts_bin) = np.unique(y_pred[:, 0], return_counts=True)\n",
+    "print(counts_bin)\n",
+    "(_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)\n",
+    "print(counts_cat)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "wrong-alcohol",
+   "metadata": {},
+   "source": [
+    "Or mixing the two methods, because our first output is unbalanced but our second is (presumably) balanced:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 47,
+   "id": "equal-annual",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-25T23:58:29.668070Z",
+     "iopub.status.busy": "2021-01-25T23:58:29.664739Z",
+     "iopub.status.idle": "2021-01-25T23:58:30.978937Z",
+     "shell.execute_reply": "2021-01-25T23:58:30.978072Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[57 43]\n",
+      "[30 25 45]\n"
+     ]
+    }
+   ],
+   "source": [
+    "clf = CustomClassifier(get_model, class_weight=[\"balanced\", None], epochs=100, verbose=0, random_state=0)\n",
+    "clf.fit(X, y)\n",
+    "y_pred = clf.predict(X)\n",
+    "(_, counts_bin) = np.unique(y_pred[:, 0], return_counts=True)\n",
+    "print(counts_bin)\n",
+    "(_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)\n",
+    "print(counts_cat)"
+   ]
+  }
+ ],
+ "metadata": {
+  "jupytext": {
+   "formats": "ipynb,md"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

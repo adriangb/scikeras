@@ -1,0 +1,430 @@
+{
+ "cells": [
+  {
+   "cell_type": "raw",
+   "id": "developmental-special",
+   "metadata": {},
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Meta_Estimators.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "secure-source",
+   "metadata": {},
+   "source": [
+    "# Meta Estimators in SciKeras\n",
+    "\n",
+    "In this notebook, we implement sklearn ensemble and tree meta-estimators backed by a Keras MLP model.\n",
+    "\n",
+    "## Table of contents\n",
+    "\n",
+    "* [1. Setup](#1.-Setup)\n",
+    "* [2. Defining the Keras Model](#2.-Defining-the-Keras-Model)\n",
+    "  * [2.1 Building a boosting ensemble](#2.1-Building-a-boosting-ensemble)\n",
+    "* [3. Testing with a toy dataset](#3.-Testing-with-a-toy-dataset)\n",
+    "* [4. Bagging ensemble](#4.-Bagging-ensemble)\n",
+    "\n",
+    "## 1. Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "hispanic-fields",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:12:13.452173Z",
+     "iopub.status.busy": "2021-01-24T19:12:13.451499Z",
+     "iopub.status.idle": "2021-01-24T19:12:14.890401Z",
+     "shell.execute_reply": "2021-01-24T19:12:14.890865Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "try:\n",
+    "    import scikeras\n",
+    "except ImportError:\n",
+    "    !python -m pip install scikeras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "chicken-extent",
+   "metadata": {},
+   "source": [
+    "Silence TensorFlow logging to keep output succinct."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "sufficient-gambling",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:12:14.895646Z",
+     "iopub.status.busy": "2021-01-24T19:12:14.895084Z",
+     "iopub.status.idle": "2021-01-24T19:12:14.898025Z",
+     "shell.execute_reply": "2021-01-24T19:12:14.898433Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "from tensorflow import get_logger\n",
+    "get_logger().setLevel('ERROR')\n",
+    "warnings.filterwarnings(\"ignore\", message=\"Setting the random state for TF\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "exterior-newfoundland",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:12:14.902292Z",
+     "iopub.status.busy": "2021-01-24T19:12:14.901730Z",
+     "iopub.status.idle": "2021-01-24T19:12:15.288320Z",
+     "shell.execute_reply": "2021-01-24T19:12:15.288747Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from scikeras.wrappers import KerasClassifier, KerasRegressor\n",
+    "from tensorflow import keras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "recovered-found",
+   "metadata": {},
+   "source": [
+    "## 2. Defining the Keras Model\n",
+    "\n",
+    "We borrow our MLPClassifier implementation from the [MLPClassifier notebook](https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MLPClassifier_and_MLPRegressor.ipynb)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "parliamentary-reason",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:12:15.291618Z",
+     "iopub.status.busy": "2021-01-24T19:12:15.290977Z",
+     "iopub.status.idle": "2021-01-24T19:12:15.298328Z",
+     "shell.execute_reply": "2021-01-24T19:12:15.298800Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from typing import Dict, Iterable, Any\n",
+    "\n",
+    "\n",
+    "def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any], compile_kwargs: Dict[str, Any]):\n",
+    "    model = keras.Sequential()\n",
+    "    inp = keras.layers.Input(shape=(meta[\"n_features_in_\"]))\n",
+    "    model.add(inp)\n",
+    "    for hidden_layer_size in hidden_layer_sizes:\n",
+    "        layer = keras.layers.Dense(hidden_layer_size, activation=\"relu\")\n",
+    "        model.add(layer)\n",
+    "    if meta[\"target_type_\"] == \"binary\":\n",
+    "        n_output_units = 1\n",
+    "        output_activation = \"sigmoid\"\n",
+    "        loss = \"binary_crossentropy\"\n",
+    "    elif meta[\"target_type_\"] == \"multiclass\":\n",
+    "        n_output_units = meta[\"n_classes_\"]\n",
+    "        output_activation = \"softmax\"\n",
+    "        loss = \"sparse_categorical_crossentropy\"\n",
+    "    else:\n",
+    "        raise NotImplementedError(f\"Unsupported task type: {meta['target_type_']}\")\n",
+    "    out = keras.layers.Dense(n_output_units, activation=output_activation)\n",
+    "    model.add(out)\n",
+    "    model.compile(loss=loss, optimizer=compile_kwargs[\"optimizer\"])\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "great-detector",
+   "metadata": {},
+   "source": [
+    "Next we wrap this Keras model with SciKeras"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "adapted-distribution",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:12:15.301295Z",
+     "iopub.status.busy": "2021-01-24T19:12:15.300766Z",
+     "iopub.status.idle": "2021-01-24T19:12:15.304022Z",
+     "shell.execute_reply": "2021-01-24T19:12:15.304496Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "clf = KerasClassifier(\n",
+    "    model=get_clf_model,\n",
+    "    hidden_layer_sizes=(100, ),\n",
+    "    optimizer=\"adam\",\n",
+    "    optimizer__learning_rate=0.001,\n",
+    "    verbose=0,\n",
+    "    random_state=0,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "patent-explanation",
+   "metadata": {},
+   "source": [
+    "### 2.1 Building a boosting ensemble\n",
+    "\n",
+    "Because SciKeras estimators are fully compliant with the Scikit-Learn API, we can make use of Scikit-Learn's built in utilities. In particular example, we will use `AdaBoostClassifier` from `sklearn.ensemble.AdaBoostClassifier`, but the process is the same for most Scikit-Learn meta-estimators."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "cardiovascular-dairy",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:12:15.306947Z",
+     "iopub.status.busy": "2021-01-24T19:12:15.306399Z",
+     "iopub.status.idle": "2021-01-24T19:12:15.357167Z",
+     "shell.execute_reply": "2021-01-24T19:12:15.357653Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.ensemble import AdaBoostClassifier"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "insured-forth",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:12:15.360319Z",
+     "iopub.status.busy": "2021-01-24T19:12:15.359782Z",
+     "iopub.status.idle": "2021-01-24T19:12:15.363561Z",
+     "shell.execute_reply": "2021-01-24T19:12:15.364367Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "adaboost = AdaBoostClassifier(base_estimator=clf, random_state=0)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "systematic-petroleum",
+   "metadata": {},
+   "source": [
+    "## 3. Testing with a toy dataset\n",
+    "\n",
+    "Before continouing, we will run a small test to make sure we get somewhat reasonable results."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "ongoing-ireland",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:12:15.367849Z",
+     "iopub.status.busy": "2021-01-24T19:12:15.366618Z",
+     "iopub.status.idle": "2021-01-24T19:12:15.393699Z",
+     "shell.execute_reply": "2021-01-24T19:12:15.394476Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.datasets import make_moons\n",
+    "from sklearn.model_selection import cross_val_score"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "alpine-purchase",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:12:15.398000Z",
+     "iopub.status.busy": "2021-01-24T19:12:15.396940Z",
+     "iopub.status.idle": "2021-01-24T19:15:03.976775Z",
+     "shell.execute_reply": "2021-01-24T19:15:03.976266Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Single score: 0.33\n",
+      "AdaBoost score: 0.81\n"
+     ]
+    }
+   ],
+   "source": [
+    "X, y = make_moons()\n",
+    "\n",
+    "single_score = np.mean(cross_val_score(clf, X, y))\n",
+    "\n",
+    "adaboost_score = np.mean(cross_val_score(adaboost, X, y))\n",
+    "\n",
+    "print(f\"Single score: {single_score:.2f}\")\n",
+    "print(f\"AdaBoost score: {adaboost_score:.2f}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "helpful-treasurer",
+   "metadata": {},
+   "source": [
+    "We see that the score for the AdaBoost classifier is slightly higher than that of an individual MLPRegressor instance. We can explore the individual classifiers, and see that each one is composed of a Keras Model with it's own individual weights."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "protected-integer",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:15:03.982240Z",
+     "iopub.status.busy": "2021-01-24T19:15:03.981686Z",
+     "iopub.status.idle": "2021-01-24T19:15:35.376339Z",
+     "shell.execute_reply": "2021-01-24T19:15:35.375826Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "AdaBoostClassifier(base_estimator=KerasClassifier(hidden_layer_sizes=(100,), model=<function get_clf_model at 0x7fdb5818f700>, optimizer='adam', optimizer__learning_rate=0.001, random_state=0, verbose=0),\n",
+       "                   random_state=0)"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "adaboost.fit(X, y)  # we need to fit outside of cross_val_score before accessing the weights"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "swedish-priority",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:15:35.380978Z",
+     "iopub.status.busy": "2021-01-24T19:15:35.380436Z",
+     "iopub.status.idle": "2021-01-24T19:15:35.395013Z",
+     "shell.execute_reply": "2021-01-24T19:15:35.395474Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[-0.12566204  0.08286709 -0.08257101  0.17549482 -0.15006955]\n",
+      "[ 0.06889009 -0.21080416  0.19628195 -0.07112497 -0.00978077]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(adaboost.estimators_[0].model_.get_weights()[0][0, :5])  # first sub-estimator\n",
+    "print(adaboost.estimators_[1].model_.get_weights()[0][0, :5])  # second sub-estimator"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "narrow-depression",
+   "metadata": {},
+   "source": [
+    "## 4. Bagging ensemble\n",
+    "\n",
+    "For comparison, we run the same test with an ensemble built using `sklearn.ensemble.BaggingClassifier`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "technical-chassis",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:15:35.399681Z",
+     "iopub.status.busy": "2021-01-24T19:15:35.399123Z",
+     "iopub.status.idle": "2021-01-24T19:15:35.401842Z",
+     "shell.execute_reply": "2021-01-24T19:15:35.401108Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.ensemble import BaggingClassifier"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "transsexual-little",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:15:35.407499Z",
+     "iopub.status.busy": "2021-01-24T19:15:35.405517Z",
+     "iopub.status.idle": "2021-01-24T19:17:00.414739Z",
+     "shell.execute_reply": "2021-01-24T19:17:00.415160Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Bagging score: 0.60\n"
+     ]
+    }
+   ],
+   "source": [
+    "bagging = BaggingClassifier(base_estimator=clf, random_state=0, n_jobs=-1)\n",
+    "\n",
+    "bagging_score = np.mean(cross_val_score(bagging, X, y))\n",
+    "\n",
+    "print(f\"Bagging score: {bagging_score:.2f}\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "jupytext": {
+   "formats": "ipynb,md"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

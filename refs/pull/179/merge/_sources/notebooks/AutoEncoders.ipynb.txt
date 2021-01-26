@@ -1,0 +1,3048 @@
+{
+ "cells": [
+  {
+   "cell_type": "raw",
+   "id": "infectious-family",
+   "metadata": {},
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cognitive-matter",
+   "metadata": {},
+   "source": [
+    "# Autoencoders in SciKeras\n",
+    "\n",
+    "Autencoders are an approach to use nearual networks to distill data into it's most important features, thereby compressing the data. We will be following the [Keras tutorial](https://blog.keras.io/building-autoencoders-in-keras.html) on the topic, which goes much more in depth and breadth than we will here. You are highly encouraged to check out that tutorial if you want to learn about autoencoders in the general sense.\n",
+    "\n",
+    "## Table of contents\n",
+    "\n",
+    "* [1. Setup](#1.-Setup)\n",
+    "* [2. Data](#2.-Data)\n",
+    "* [3. Define Keras Model](#3.-Define-Keras-Model)\n",
+    "* [4. Training](#4.-Training)\n",
+    "* [5. Explore Results](#5.-Explore-Results)\n",
+    "\n",
+    "## 1. Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "neither-roberts",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:11:23.962050Z",
+     "iopub.status.busy": "2021-01-24T19:11:23.961465Z",
+     "iopub.status.idle": "2021-01-24T19:11:25.503727Z",
+     "shell.execute_reply": "2021-01-24T19:11:25.504557Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "try:\n",
+    "    import scikeras\n",
+    "except ImportError:\n",
+    "    !python -m pip install scikeras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "considered-monkey",
+   "metadata": {},
+   "source": [
+    "Silence TensorFlow logging to keep output succinct."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "neural-associate",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:11:25.508363Z",
+     "iopub.status.busy": "2021-01-24T19:11:25.507256Z",
+     "iopub.status.idle": "2021-01-24T19:11:25.512300Z",
+     "shell.execute_reply": "2021-01-24T19:11:25.513018Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "from tensorflow import get_logger\n",
+    "get_logger().setLevel('ERROR')\n",
+    "warnings.filterwarnings(\"ignore\", message=\"Setting the random state for TF\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "opposite-tower",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:11:25.516328Z",
+     "iopub.status.busy": "2021-01-24T19:11:25.515264Z",
+     "iopub.status.idle": "2021-01-24T19:11:25.914849Z",
+     "shell.execute_reply": "2021-01-24T19:11:25.915740Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from scikeras.wrappers import KerasClassifier, KerasRegressor\n",
+    "from tensorflow import keras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "acceptable-adelaide",
+   "metadata": {},
+   "source": [
+    "## 2. Data\n",
+    "\n",
+    "We load the dataset from the Keras tutorial. The dataset consists of images of cats and dogs."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "regular-warehouse",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:11:25.919376Z",
+     "iopub.status.busy": "2021-01-24T19:11:25.918290Z",
+     "iopub.status.idle": "2021-01-24T19:11:26.518691Z",
+     "shell.execute_reply": "2021-01-24T19:11:26.519670Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz\n",
+      "\r",
+      "    8192/11490434 [..............................] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 4202496/11490434 [=========>....................] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "11493376/11490434 [==============================] - 0s 0us/step\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(60000, 784)\n",
+      "(10000, 784)\n"
+     ]
+    }
+   ],
+   "source": [
+    "from tensorflow.keras.datasets import mnist\n",
+    "import numpy as np\n",
+    "\n",
+    "\n",
+    "(x_train, _), (x_test, _) = mnist.load_data()\n",
+    "x_train = x_train.astype('float32') / 255.\n",
+    "x_test = x_test.astype('float32') / 255.\n",
+    "x_train = x_train.reshape((len(x_train), np.prod(x_train.shape[1:])))\n",
+    "x_test = x_test.reshape((len(x_test), np.prod(x_test.shape[1:])))\n",
+    "print(x_train.shape)\n",
+    "print(x_test.shape)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "regulation-protest",
+   "metadata": {},
+   "source": [
+    "## 3. Define Keras Model\n",
+    "\n",
+    "We will be defining a very simple autencoder. We define _three_ model building methods:\n",
+    "\n",
+    "1. One to build a full end-to-end autoencoder.\n",
+    "2. One to create a model that includes only the encoder portion.\n",
+    "3. One that creates a model that includes only the decoder portion.\n",
+    "\n",
+    "The only variable we give our model is the encoding dimensions, which will be a hyperparemter of our final transformer."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "awful-blogger",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:11:26.523431Z",
+     "iopub.status.busy": "2021-01-24T19:11:26.522287Z",
+     "iopub.status.idle": "2021-01-24T19:11:26.531084Z",
+     "shell.execute_reply": "2021-01-24T19:11:26.531811Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from tensorflow import keras\n",
+    "\n",
+    "\n",
+    "def get_fit_model(encoding_dim: int) -> keras.Model:\n",
+    "    \"\"\"Get an autoencoder.\n",
+    "\n",
+    "    This autoencoder compresses a 28x28 image (784 pixels) down to a feature of length\n",
+    "    `encoding_dim`, and tries to reconstruct the input image from that vector.\n",
+    "    \"\"\"\n",
+    "    input_img = keras.Input(shape=(784,), name=\"input\")\n",
+    "    encoded = keras.layers.Dense(encoding_dim, activation='relu', name=\"encoded\")(input_img)\n",
+    "    decoded = keras.layers.Dense(784, activation='sigmoid', name=\"output\")(encoded)\n",
+    "    autoencoder_model = keras.Model(input_img, decoded)\n",
+    "    return autoencoder_model\n",
+    "\n",
+    "def get_tf_model(fit_model: keras.Model) -> keras.Model:\n",
+    "    \"\"\"Get an encoder model.\n",
+    "\n",
+    "    We do this by extracting the encoding layer from the fitted autoencoder model.\n",
+    "    \"\"\"\n",
+    "    return keras.Model(fit_model.get_layer(\"input\").input, fit_model.get_layer(\"encoded\").output)\n",
+    "\n",
+    "def get_inverse_tf_model(fit_model: keras.Model, encoding_dim: int) -> keras.Model:\n",
+    "    \"\"\"Get an deencoder model.\n",
+    "\n",
+    "    We do this by extracting the deencoding layer from the fitted autoencoder model\n",
+    "    and adding a new Keras input layer.\n",
+    "    \"\"\"\n",
+    "    encoded_input = keras.Input(shape=(encoding_dim,))\n",
+    "    output = fit_model.get_layer(\"output\")(encoded_input)\n",
+    "    return keras.Model(encoded_input, output)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "facial-haven",
+   "metadata": {},
+   "source": [
+    "Next we create a class that that will enable the `transform` and `fit_transform` methods, as well as integrating all three of our models into a single estimator."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "posted-demographic",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:11:26.535148Z",
+     "iopub.status.busy": "2021-01-24T19:11:26.534088Z",
+     "iopub.status.idle": "2021-01-24T19:11:26.543890Z",
+     "shell.execute_reply": "2021-01-24T19:11:26.544598Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.base import TransformerMixin, clone\n",
+    "from scikeras.wrappers import BaseWrapper\n",
+    "\n",
+    "\n",
+    "class KerasTransformer(BaseWrapper, TransformerMixin):\n",
+    "    \"\"\"A class that enables transform and fit_transform.\n",
+    "    \"\"\"\n",
+    "\n",
+    "    def __init__(self, *args, tf_est: BaseWrapper = None, inv_tf_est: BaseWrapper = None, **kwargs) -> None:\n",
+    "        super().__init__(*args, **kwargs)\n",
+    "        self.tf_est = tf_est\n",
+    "        self.inv_tf_est = inv_tf_est\n",
+    "\n",
+    "\n",
+    "    def fit(self, X, sample_weight=None):\n",
+    "        super().fit(X=X, y=X, sample_weight=sample_weight)\n",
+    "        self.tf_est_ = clone(self.tf_est)\n",
+    "        self.inv_tf_est_ = clone(self.inv_tf_est)\n",
+    "        self.tf_est_.set_params(fit_model=self.model_)\n",
+    "        self.inv_tf_est_.set_params(fit_model=self.model_, encoding_dim=self.encoding_dim)\n",
+    "        X = self.feature_encoder_.transform(X)\n",
+    "        self.tf_est_.initialize(X=X)\n",
+    "        X_tf = self.tf_est_.predict(X=X)\n",
+    "        self.inv_tf_est_.initialize(X_tf)\n",
+    "        return self\n",
+    "\n",
+    "    def transform(self, X):\n",
+    "        X = self.feature_encoder_.transform(X)\n",
+    "        X_tf = self.tf_est_.predict(X)\n",
+    "        return X_tf\n",
+    "    \n",
+    "    def inverse_transform(self, X_tf):\n",
+    "        X = self.inv_tf_est_.predict(X_tf)\n",
+    "        X = self.feature_encoder_.inverse_transform(X)\n",
+    "        return X"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "vietnamese-shelter",
+   "metadata": {},
+   "source": [
+    "Next, we wrap the Keras Model with Scikeras. Note that for our encoder/decoder estimators, we do not need to provide a loss function since no training will be done. We do however need to have the `fit_model` and `encoding_dim` so that these will be settable by `BaseWrapper.set_params`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "agreed-backup",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:11:26.547941Z",
+     "iopub.status.busy": "2021-01-24T19:11:26.546902Z",
+     "iopub.status.idle": "2021-01-24T19:11:26.552442Z",
+     "shell.execute_reply": "2021-01-24T19:11:26.553178Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "tf_est = BaseWrapper(model=get_tf_model, fit_model=None, verbose=0)\n",
+    "inv_tf_est = BaseWrapper(model=get_inverse_tf_model, fit_model=None, encoding_dim=None, verbose=0)\n",
+    "autoencoder = KerasTransformer(model=get_fit_model, tf_est=tf_est, inv_tf_est=inv_tf_est, loss=\"binary_crossentropy\", encoding_dim=32, epochs=5)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "widespread-distance",
+   "metadata": {},
+   "source": [
+    "## 4. Training\n",
+    "\n",
+    "To train the model, we pass the input images as both the features and the target. This will train the layers to compress the data as accurately as possible between the encoder and decoder. Note that we only pass the `X` parameter, since we defined the mapping `y=X` in `KerasTransformer.fit` above."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "tested-arnold",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:11:26.556381Z",
+     "iopub.status.busy": "2021-01-24T19:11:26.555384Z",
+     "iopub.status.idle": "2021-01-24T19:11:47.115452Z",
+     "shell.execute_reply": "2021-01-24T19:11:47.115960Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 1/5\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "   1/1875 [..............................] - ETA: 12:23 - loss: 0.6926"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  29/1875 [..............................] - ETA: 3s - loss: 0.5458   "
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  60/1875 [..............................] - ETA: 3s - loss: 0.4608"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  92/1875 [>.............................] - ETA: 2s - loss: 0.4167"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 123/1875 [>.............................] - ETA: 2s - loss: 0.3899"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 154/1875 [=>............................] - ETA: 2s - loss: 0.3707"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 187/1875 [=>............................] - ETA: 2s - loss: 0.3548"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 216/1875 [==>...........................] - ETA: 2s - loss: 0.3433"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 254/1875 [===>..........................] - ETA: 2s - loss: 0.3308"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 291/1875 [===>..........................] - ETA: 2s - loss: 0.3205"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 322/1875 [====>.........................] - ETA: 2s - loss: 0.3130"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 356/1875 [====>.........................] - ETA: 2s - loss: 0.3057"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 391/1875 [=====>........................] - ETA: 2s - loss: 0.2989"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 428/1875 [=====>........................] - ETA: 2s - loss: 0.2925"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 466/1875 [======>.......................] - ETA: 2s - loss: 0.2865"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 496/1875 [======>.......................] - ETA: 2s - loss: 0.2822"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 528/1875 [=======>......................] - ETA: 2s - loss: 0.2779"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 560/1875 [=======>......................] - ETA: 2s - loss: 0.2739"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 592/1875 [========>.....................] - ETA: 1s - loss: 0.2701"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 624/1875 [========>.....................] - ETA: 1s - loss: 0.2666"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 655/1875 [=========>....................] - ETA: 1s - loss: 0.2634"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 687/1875 [=========>....................] - ETA: 1s - loss: 0.2603"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 718/1875 [==========>...................] - ETA: 1s - loss: 0.2574"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 750/1875 [===========>..................] - ETA: 1s - loss: 0.2546"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 780/1875 [===========>..................] - ETA: 1s - loss: 0.2521"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 811/1875 [===========>..................] - ETA: 1s - loss: 0.2496"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 844/1875 [============>.................] - ETA: 1s - loss: 0.2471"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 877/1875 [=============>................] - ETA: 1s - loss: 0.2447"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 912/1875 [=============>................] - ETA: 1s - loss: 0.2423"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 946/1875 [==============>...............] - ETA: 1s - loss: 0.2401"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 978/1875 [==============>...............] - ETA: 1s - loss: 0.2380"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1012/1875 [===============>..............] - ETA: 1s - loss: 0.2360"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1043/1875 [===============>..............] - ETA: 1s - loss: 0.2341"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1075/1875 [================>.............] - ETA: 1s - loss: 0.2323"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1106/1875 [================>.............] - ETA: 1s - loss: 0.2307"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1138/1875 [=================>............] - ETA: 1s - loss: 0.2290"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1168/1875 [=================>............] - ETA: 1s - loss: 0.2274"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1200/1875 [==================>...........] - ETA: 1s - loss: 0.2259"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1235/1875 [==================>...........] - ETA: 1s - loss: 0.2242"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1267/1875 [===================>..........] - ETA: 0s - loss: 0.2227"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1299/1875 [===================>..........] - ETA: 0s - loss: 0.2213"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1334/1875 [====================>.........] - ETA: 0s - loss: 0.2198"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1368/1875 [====================>.........] - ETA: 0s - loss: 0.2183"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1392/1875 [=====================>........] - ETA: 0s - loss: 0.2173"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1421/1875 [=====================>........] - ETA: 0s - loss: 0.2162"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1452/1875 [======================>.......] - ETA: 0s - loss: 0.2150"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1486/1875 [======================>.......] - ETA: 0s - loss: 0.2137"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1519/1875 [=======================>......] - ETA: 0s - loss: 0.2125"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1553/1875 [=======================>......] - ETA: 0s - loss: 0.2113"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1587/1875 [========================>.....] - ETA: 0s - loss: 0.2101"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1621/1875 [========================>.....] - ETA: 0s - loss: 0.2089"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1654/1875 [=========================>....] - ETA: 0s - loss: 0.2078"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1686/1875 [=========================>....] - ETA: 0s - loss: 0.2068"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1719/1875 [==========================>...] - ETA: 0s - loss: 0.2058"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1749/1875 [==========================>...] - ETA: 0s - loss: 0.2048"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1780/1875 [===========================>..] - ETA: 0s - loss: 0.2039"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1810/1875 [===========================>..] - ETA: 0s - loss: 0.2030"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1843/1875 [============================>.] - ETA: 0s - loss: 0.2021"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1875/1875 [==============================] - 3s 2ms/step - loss: 0.2011\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 2/5\n",
+      "\r",
+      "   1/1875 [..............................] - ETA: 5s - loss: 0.0992"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  35/1875 [..............................] - ETA: 2s - loss: 0.1092"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  68/1875 [>.............................] - ETA: 2s - loss: 0.1091"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 102/1875 [>.............................] - ETA: 2s - loss: 0.1091"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 136/1875 [=>............................] - ETA: 2s - loss: 0.1091"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 167/1875 [=>............................] - ETA: 2s - loss: 0.1091"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 197/1875 [==>...........................] - ETA: 2s - loss: 0.1090"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 224/1875 [==>...........................] - ETA: 2s - loss: 0.1089"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 255/1875 [===>..........................] - ETA: 2s - loss: 0.1088"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 289/1875 [===>..........................] - ETA: 2s - loss: 0.1087"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 323/1875 [====>.........................] - ETA: 2s - loss: 0.1086"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 352/1875 [====>.........................] - ETA: 2s - loss: 0.1085"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 383/1875 [=====>........................] - ETA: 2s - loss: 0.1084"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 416/1875 [=====>........................] - ETA: 2s - loss: 0.1083"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 446/1875 [======>.......................] - ETA: 2s - loss: 0.1082"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 478/1875 [======>.......................] - ETA: 2s - loss: 0.1081"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 510/1875 [=======>......................] - ETA: 2s - loss: 0.1081"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 543/1875 [=======>......................] - ETA: 2s - loss: 0.1080"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 576/1875 [========>.....................] - ETA: 2s - loss: 0.1079"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 609/1875 [========>.....................] - ETA: 2s - loss: 0.1078"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 636/1875 [=========>....................] - ETA: 1s - loss: 0.1078"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 666/1875 [=========>....................] - ETA: 1s - loss: 0.1077"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 698/1875 [==========>...................] - ETA: 1s - loss: 0.1076"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 730/1875 [==========>...................] - ETA: 1s - loss: 0.1075"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 762/1875 [===========>..................] - ETA: 1s - loss: 0.1075"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 793/1875 [===========>..................] - ETA: 1s - loss: 0.1074"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 823/1875 [============>.................] - ETA: 1s - loss: 0.1073"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 850/1875 [============>.................] - ETA: 1s - loss: 0.1073"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 883/1875 [=============>................] - ETA: 1s - loss: 0.1072"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 915/1875 [=============>................] - ETA: 1s - loss: 0.1071"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 944/1875 [==============>...............] - ETA: 1s - loss: 0.1071"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 974/1875 [==============>...............] - ETA: 1s - loss: 0.1070"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1004/1875 [===============>..............] - ETA: 1s - loss: 0.1070"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1036/1875 [===============>..............] - ETA: 1s - loss: 0.1069"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1068/1875 [================>.............] - ETA: 1s - loss: 0.1068"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1104/1875 [================>.............] - ETA: 1s - loss: 0.1068"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1140/1875 [=================>............] - ETA: 1s - loss: 0.1067"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1170/1875 [=================>............] - ETA: 1s - loss: 0.1067"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1198/1875 [==================>...........] - ETA: 1s - loss: 0.1066"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1232/1875 [==================>...........] - ETA: 1s - loss: 0.1065"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1267/1875 [===================>..........] - ETA: 0s - loss: 0.1065"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1297/1875 [===================>..........] - ETA: 0s - loss: 0.1064"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1332/1875 [====================>.........] - ETA: 0s - loss: 0.1064"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1364/1875 [====================>.........] - ETA: 0s - loss: 0.1063"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1397/1875 [=====================>........] - ETA: 0s - loss: 0.1063"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1428/1875 [=====================>........] - ETA: 0s - loss: 0.1062"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1456/1875 [======================>.......] - ETA: 0s - loss: 0.1062"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1488/1875 [======================>.......] - ETA: 0s - loss: 0.1061"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1516/1875 [=======================>......] - ETA: 0s - loss: 0.1061"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1546/1875 [=======================>......] - ETA: 0s - loss: 0.1060"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1580/1875 [========================>.....] - ETA: 0s - loss: 0.1060"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1611/1875 [========================>.....] - ETA: 0s - loss: 0.1059"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1642/1875 [=========================>....] - ETA: 0s - loss: 0.1059"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1673/1875 [=========================>....] - ETA: 0s - loss: 0.1058"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1703/1875 [==========================>...] - ETA: 0s - loss: 0.1058"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1735/1875 [==========================>...] - ETA: 0s - loss: 0.1057"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1767/1875 [===========================>..] - ETA: 0s - loss: 0.1057"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1797/1875 [===========================>..] - ETA: 0s - loss: 0.1056"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1831/1875 [============================>.] - ETA: 0s - loss: 0.1056"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1863/1875 [============================>.] - ETA: 0s - loss: 0.1055"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1875/1875 [==============================] - 3s 2ms/step - loss: 0.1055\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 3/5\n",
+      "\r",
+      "   1/1875 [..............................] - ETA: 3s - loss: 0.1045"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  32/1875 [..............................] - ETA: 2s - loss: 0.1015"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  63/1875 [>.............................] - ETA: 2s - loss: 0.1008"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  95/1875 [>.............................] - ETA: 2s - loss: 0.1005"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 126/1875 [=>............................] - ETA: 2s - loss: 0.1004"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 157/1875 [=>............................] - ETA: 2s - loss: 0.1002"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 190/1875 [==>...........................] - ETA: 2s - loss: 0.1001"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 226/1875 [==>...........................] - ETA: 2s - loss: 0.0999"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 264/1875 [===>..........................] - ETA: 2s - loss: 0.0998"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 297/1875 [===>..........................] - ETA: 2s - loss: 0.0997"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 328/1875 [====>.........................] - ETA: 2s - loss: 0.0996"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 361/1875 [====>.........................] - ETA: 2s - loss: 0.0995"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 388/1875 [=====>........................] - ETA: 2s - loss: 0.0995"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 417/1875 [=====>........................] - ETA: 2s - loss: 0.0994"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 445/1875 [======>.......................] - ETA: 2s - loss: 0.0993"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 471/1875 [======>.......................] - ETA: 2s - loss: 0.0993"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 495/1875 [======>.......................] - ETA: 2s - loss: 0.0992"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 517/1875 [=======>......................] - ETA: 2s - loss: 0.0992"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 541/1875 [=======>......................] - ETA: 2s - loss: 0.0991"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 565/1875 [========>.....................] - ETA: 2s - loss: 0.0991"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 589/1875 [========>.....................] - ETA: 2s - loss: 0.0991"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 615/1875 [========>.....................] - ETA: 2s - loss: 0.0990"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 636/1875 [=========>....................] - ETA: 2s - loss: 0.0990"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 658/1875 [=========>....................] - ETA: 2s - loss: 0.0990"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 689/1875 [==========>...................] - ETA: 2s - loss: 0.0989"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 720/1875 [==========>...................] - ETA: 2s - loss: 0.0989"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 748/1875 [==========>...................] - ETA: 1s - loss: 0.0989"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 778/1875 [===========>..................] - ETA: 1s - loss: 0.0988"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 813/1875 [============>.................] - ETA: 1s - loss: 0.0988"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 841/1875 [============>.................] - ETA: 1s - loss: 0.0988"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 873/1875 [============>.................] - ETA: 1s - loss: 0.0987"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 906/1875 [=============>................] - ETA: 1s - loss: 0.0987"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 933/1875 [=============>................] - ETA: 1s - loss: 0.0987"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 962/1875 [==============>...............] - ETA: 1s - loss: 0.0987"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 990/1875 [==============>...............] - ETA: 1s - loss: 0.0986"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1021/1875 [===============>..............] - ETA: 1s - loss: 0.0986"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1052/1875 [===============>..............] - ETA: 1s - loss: 0.0986"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1083/1875 [================>.............] - ETA: 1s - loss: 0.0986"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1115/1875 [================>.............] - ETA: 1s - loss: 0.0985"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1147/1875 [=================>............] - ETA: 1s - loss: 0.0985"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1179/1875 [=================>............] - ETA: 1s - loss: 0.0985"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1212/1875 [==================>...........] - ETA: 1s - loss: 0.0985"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1244/1875 [==================>...........] - ETA: 1s - loss: 0.0985"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1276/1875 [===================>..........] - ETA: 1s - loss: 0.0984"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1307/1875 [===================>..........] - ETA: 0s - loss: 0.0984"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1339/1875 [====================>.........] - ETA: 0s - loss: 0.0984"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1372/1875 [====================>.........] - ETA: 0s - loss: 0.0984"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1405/1875 [=====================>........] - ETA: 0s - loss: 0.0984"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1437/1875 [=====================>........] - ETA: 0s - loss: 0.0983"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1471/1875 [======================>.......] - ETA: 0s - loss: 0.0983"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1504/1875 [=======================>......] - ETA: 0s - loss: 0.0983"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1538/1875 [=======================>......] - ETA: 0s - loss: 0.0983"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1575/1875 [========================>.....] - ETA: 0s - loss: 0.0983"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1610/1875 [========================>.....] - ETA: 0s - loss: 0.0982"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1643/1875 [=========================>....] - ETA: 0s - loss: 0.0982"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1674/1875 [=========================>....] - ETA: 0s - loss: 0.0982"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1703/1875 [==========================>...] - ETA: 0s - loss: 0.0982"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1730/1875 [==========================>...] - ETA: 0s - loss: 0.0982"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1752/1875 [===========================>..] - ETA: 0s - loss: 0.0982"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1778/1875 [===========================>..] - ETA: 0s - loss: 0.0982"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1807/1875 [===========================>..] - ETA: 0s - loss: 0.0981"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1840/1875 [============================>.] - ETA: 0s - loss: 0.0981"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1870/1875 [============================>.] - ETA: 0s - loss: 0.0981"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1875/1875 [==============================] - 3s 2ms/step - loss: 0.0981\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 4/5\n",
+      "\r",
+      "   1/1875 [..............................] - ETA: 2s - loss: 0.0988"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  34/1875 [..............................] - ETA: 2s - loss: 0.0970"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  69/1875 [>.............................] - ETA: 2s - loss: 0.0966"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 102/1875 [>.............................] - ETA: 2s - loss: 0.0965"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 134/1875 [=>............................] - ETA: 2s - loss: 0.0964"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 166/1875 [=>............................] - ETA: 2s - loss: 0.0964"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 198/1875 [==>...........................] - ETA: 2s - loss: 0.0963"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 230/1875 [==>...........................] - ETA: 2s - loss: 0.0964"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 262/1875 [===>..........................] - ETA: 2s - loss: 0.0964"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 295/1875 [===>..........................] - ETA: 2s - loss: 0.0963"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 326/1875 [====>.........................] - ETA: 2s - loss: 0.0963"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 358/1875 [====>.........................] - ETA: 2s - loss: 0.0963"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 390/1875 [=====>........................] - ETA: 2s - loss: 0.0963"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 423/1875 [=====>........................] - ETA: 2s - loss: 0.0963"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 455/1875 [======>.......................] - ETA: 2s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 486/1875 [======>.......................] - ETA: 2s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 518/1875 [=======>......................] - ETA: 2s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 548/1875 [=======>......................] - ETA: 2s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 574/1875 [========>.....................] - ETA: 2s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 607/1875 [========>.....................] - ETA: 2s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 640/1875 [=========>....................] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 673/1875 [=========>....................] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 704/1875 [==========>...................] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 737/1875 [==========>...................] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 770/1875 [===========>..................] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 802/1875 [===========>..................] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 832/1875 [============>.................] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 865/1875 [============>.................] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 895/1875 [=============>................] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 926/1875 [=============>................] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 955/1875 [==============>...............] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 988/1875 [==============>...............] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1020/1875 [===============>..............] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1049/1875 [===============>..............] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1082/1875 [================>.............] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1116/1875 [================>.............] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1147/1875 [=================>............] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1176/1875 [=================>............] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1198/1875 [==================>...........] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1229/1875 [==================>...........] - ETA: 1s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1260/1875 [===================>..........] - ETA: 0s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1290/1875 [===================>..........] - ETA: 0s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1322/1875 [====================>.........] - ETA: 0s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1354/1875 [====================>.........] - ETA: 0s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1386/1875 [=====================>........] - ETA: 0s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1417/1875 [=====================>........] - ETA: 0s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1449/1875 [======================>.......] - ETA: 0s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1481/1875 [======================>.......] - ETA: 0s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1508/1875 [=======================>......] - ETA: 0s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1531/1875 [=======================>......] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1554/1875 [=======================>......] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1581/1875 [========================>.....] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1609/1875 [========================>.....] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1640/1875 [=========================>....] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1670/1875 [=========================>....] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1697/1875 [==========================>...] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1720/1875 [==========================>...] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1742/1875 [==========================>...] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1770/1875 [===========================>..] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1800/1875 [===========================>..] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1825/1875 [============================>.] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1853/1875 [============================>.] - ETA: 0s - loss: 0.0961"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1875/1875 [==============================] - 3s 2ms/step - loss: 0.0961\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 5/5"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "\r",
+      "   1/1875 [..............................] - ETA: 5s - loss: 0.1044"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  32/1875 [..............................] - ETA: 2s - loss: 0.0962"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  65/1875 [>.............................] - ETA: 2s - loss: 0.0952"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  96/1875 [>.............................] - ETA: 2s - loss: 0.0950"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 122/1875 [>.............................] - ETA: 2s - loss: 0.0949"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 150/1875 [=>............................] - ETA: 2s - loss: 0.0949"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 177/1875 [=>............................] - ETA: 2s - loss: 0.0949"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 211/1875 [==>...........................] - ETA: 2s - loss: 0.0950"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 237/1875 [==>...........................] - ETA: 2s - loss: 0.0950"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 265/1875 [===>..........................] - ETA: 2s - loss: 0.0950"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 293/1875 [===>..........................] - ETA: 2s - loss: 0.0951"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 320/1875 [====>.........................] - ETA: 2s - loss: 0.0951"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 347/1875 [====>.........................] - ETA: 2s - loss: 0.0951"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 373/1875 [====>.........................] - ETA: 2s - loss: 0.0951"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 401/1875 [=====>........................] - ETA: 2s - loss: 0.0952"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 431/1875 [=====>........................] - ETA: 2s - loss: 0.0952"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 458/1875 [======>.......................] - ETA: 2s - loss: 0.0952"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 487/1875 [======>.......................] - ETA: 2s - loss: 0.0952"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 512/1875 [=======>......................] - ETA: 2s - loss: 0.0952"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 540/1875 [=======>......................] - ETA: 2s - loss: 0.0952"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 570/1875 [========>.....................] - ETA: 2s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 595/1875 [========>.....................] - ETA: 2s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 623/1875 [========>.....................] - ETA: 2s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 648/1875 [=========>....................] - ETA: 2s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 674/1875 [=========>....................] - ETA: 2s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 704/1875 [==========>...................] - ETA: 2s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 729/1875 [==========>...................] - ETA: 2s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 759/1875 [===========>..................] - ETA: 2s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 789/1875 [===========>..................] - ETA: 1s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 819/1875 [============>.................] - ETA: 1s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 847/1875 [============>.................] - ETA: 1s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 878/1875 [=============>................] - ETA: 1s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 905/1875 [=============>................] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 932/1875 [=============>................] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 958/1875 [==============>...............] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 986/1875 [==============>...............] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1014/1875 [===============>..............] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1042/1875 [===============>..............] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1068/1875 [================>.............] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1096/1875 [================>.............] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1123/1875 [================>.............] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1149/1875 [=================>............] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1176/1875 [=================>............] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1205/1875 [==================>...........] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1233/1875 [==================>...........] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1262/1875 [===================>..........] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1291/1875 [===================>..........] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1320/1875 [====================>.........] - ETA: 1s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1347/1875 [====================>.........] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1374/1875 [====================>.........] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1405/1875 [=====================>........] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1429/1875 [=====================>........] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1452/1875 [======================>.......] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1478/1875 [======================>.......] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1504/1875 [=======================>......] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1529/1875 [=======================>......] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1552/1875 [=======================>......] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1578/1875 [========================>.....] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1603/1875 [========================>.....] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1629/1875 [=========================>....] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1652/1875 [=========================>....] - ETA: 0s - loss: 0.0954"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1679/1875 [=========================>....] - ETA: 0s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1701/1875 [==========================>...] - ETA: 0s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1729/1875 [==========================>...] - ETA: 0s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1753/1875 [===========================>..] - ETA: 0s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1781/1875 [===========================>..] - ETA: 0s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1808/1875 [===========================>..] - ETA: 0s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1832/1875 [============================>.] - ETA: 0s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1857/1875 [============================>.] - ETA: 0s - loss: 0.0953"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1875/1875 [==============================] - 4s 2ms/step - loss: 0.0953\n"
+     ]
+    }
+   ],
+   "source": [
+    "_ = autoencoder.fit(X=x_train)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "afraid-legislature",
+   "metadata": {},
+   "source": [
+    "Next, we round trip the test dataset and explore the performance of the autoencoder."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "clear-pizza",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:11:47.120149Z",
+     "iopub.status.busy": "2021-01-24T19:11:47.119578Z",
+     "iopub.status.idle": "2021-01-24T19:11:47.780729Z",
+     "shell.execute_reply": "2021-01-24T19:11:47.779797Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "roundtrip_imgs = autoencoder.inverse_transform(autoencoder.transform(x_test))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "terminal-metallic",
+   "metadata": {},
+   "source": [
+    "## 5. Explore Results\n",
+    "\n",
+    "Let's compare our inputs to lossy decoded outputs:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "hungarian-financing",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:11:47.787725Z",
+     "iopub.status.busy": "2021-01-24T19:11:47.787136Z",
+     "iopub.status.idle": "2021-01-24T19:11:50.626498Z",
+     "shell.execute_reply": "2021-01-24T19:11:50.629727Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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xZ9//rnFkydP9vpt3rw54esjebqcgnP+GNN7zfA7kazWrVtb/Ouvv3ptc+bMsXjs2LFem37nfvnll5TeOxnMtAEAAAAAAIghHtoAAAAAAADEEA9tAAAAAAAAYqhE17TREt/OOde0aVOLZ82a5bU1atTI4qi84sMOO8ziJUuWWJyoRF9RNI9t1apVFms569DixYu97Xxd00bp+hWpuvnmmy2uX79+wn6aS1rUNuLrlltusTj8zjCOMmPEiBEWa0nuVGlp040bN3pttWrVsljLzn7xxRdevx133HG79yPXhfncWrZ5/vz5Fj/wwANZ26fTTjsta++FrR100EHe9qGHHpqwr97bvPvuuxnbp1xRpUoVb/uss85K2Peyyy6zWO8bM03Xsfnggw8S9gvXtAnXg4RzN910k8Vawj1Z4TptJ510ksVh2XBd/yaTa2Dkqqh1Zpo1a2axlnoOTZgwwWL9Xblw4UKvX82aNS3WtUydS886gNiaPg+4+uqrLQ7H2B577FHk33/77bfe9qeffmrxggULvDb9DaJrK7Zq1crrp+eEDh06eG1Tp061WMuGpxszbQAAAAAAAGKIhzYAAAAAAAAxVKLpUaNHj47cVmGptj+F5UabN29usU5zatmyZdL79dNPP1k8d+5ci8OULZ0qpVPTsX1OOeUUi7V05i677OL1++677yz+29/+5rX9+OOPGdo7bK/atWt72y1atLBYx5tzlEZMl6OPPtrbbtCggcU6vTfZqb7h9E+dnqylM51z7thjj7U4qhzxlVdeafHTTz+d1H7kmzvuuMPb1iniOhU/TFFLN732hd8tpotnV1TKTihMI0C0Rx991Nv+y1/+YrHeXzrn3KBBg7KyT6G2bdtaXLVqVa/txRdftPiVV17J1i6VGpq665xzl156aZH9pk2b5m2vXLnS4vbt2yd8/QoVKlisqVfOOTdgwACLV6xYse2dzXPh/f+rr75qsaZDOeenB0elDKowJUqFy18g/Z555hlvW9Paosp363ODr7/+2uLbb7/d66e/60OHH364xXof+sILL3j99PmCngOcc653794Wv/nmmxanO1WWmTYAAAAAAAAxxEMbAAAAAACAGCrR9Kh0WLt2rbf90UcfFdkvKvUqik49DlOxdCrWwIEDU3p9bE3TZcIpkUo/808++SSj+4T0CdMpVDarbuQ6TUN7/fXXvbao6aZKq3nplM9//OMfXr+odER9jSuuuMLiypUre/0eeughi8uUKeO1PfnkkxZv2bJlW7udU84++2yLw4oF8+bNszibldY0zS1Mh/r4448tXrduXZb2KH8dddRRCdvCqjRR6YnYWmFhobet3/Vly5Z5bZmsAFS2bFlvW6f+X3XVVRaH+9ulS5eM7VMu0HQH55zbfffdLdZqM+E9i16fzj//fIvDlIy6detavM8++3htb731lsUnn3yyxWvWrElm1/NC+fLlLQ6XQNBlFFavXu21PfLIIxazVEJ8hPd1WrXp8ssv99oKCgos1t8FYer8ww8/bHGqyylUqlTJYq1ies8993j9dJmWMLUyW5hpAwAAAAAAEEM8tAEAAAAAAIghHtoAAAAAAADEUKlf0yYTqlSpYvFTTz1l8Q47+M+4tBw1eaip+89//uNtn3DCCUX2e/nll73tsPwtSoeDDjooYZuua4Lts9NO/zu9J7uGTbg2VOfOnS0O88aTpWvaPPjggxY/9thjXr9y5cpZHH4Phg0bZvH8+fNT2o/S6pxzzrFYPyPn/OtTpukaSRdeeKHFv/32m9fvvvvuszjf1h/KFi1RqnEozPGfMmVKpnYp73Ts2NHb1nLqupZTuAZDsnQdlXbt2nlthx12WJF/M3jw4JTeK1/tuuuu3rauCfSvf/0r4d9p+eB+/fpZrOdq55zbf//9E76GrrWSyfWQSrPTTz/d4ttuu81r0zLcWvbeOefWr1+f0f1CasLz2M0332yxrmHjnHPffvutxbq27BdffJHSe+taNTVq1PDa9LfliBEjLA7XsVXh/vbv39/iTK7lx0wbAAAAAACAGOKhDQAAAAAAQAyRHlWEq6++2mItSxuWF58zZ07W9inXVKtWzeJwerdOWdWUDJ1275xzGzduzNDeId10Ovell17qtU2ePNniUaNGZW2f8ActFR2WiE01JSoRTXPSFBvnnGvZsmVa36u0qlChgredKBXCudRTL1Kh5do13W7WrFlev48++ihr+5Svkh0r2fx+5KInnnjC2z7mmGMsrl69utempdd16vypp56a0nvra4SlvNU333xjcVhyGtG0XHdI09/CFP5EWrRokfR7T5gwwWLuZYsWlfqp941Lly7Nxu5gO2mKknNbp1arX3/91eLWrVtbfPbZZ3v9GjZsWOTfb9682dtu1KhRkbFz/n1u1apVE+6TWrlypbedrbRwZtoAAAAAAADEEA9tAAAAAAAAYoj0KOfcEUcc4W2Hq5T/SVcyd8656dOnZ2qXct6bb75pcaVKlRL2e+WVVyzOt6oxuaR9+/YWV6xY0WsbOXKkxVqVAekTVr5TOvU003TKf7hPUft4zz33WHzRRRelfb/iJKxosu+++1r82muvZXt3TN26dYv871wHsy8qDSMdlYvwh0mTJnnbTZs2tbh58+Ze20knnWSxVkVZtWqV1++ll15K6r21GsnUqVMT9hs/frzF3CMVT3g+1VQ2TUEMUzC0AuYZZ5xhcVhtRsdi2Na1a1eL9VjPnDkzmV3PC2EqjNLxdvfdd3ttb731lsVUzIuPDz/80NvWVGr9jeCcczVr1rT43//+t8VRqaKabhWmYkVJlBL1+++/e9tDhw61uHv37l7b8uXLk36/7cFMGwAAAAAAgBjioQ0AAAAAAEAM8dAGAAAAAAAghljTxjnXoUMHb3vnnXe2ePTo0RZ/9tlnWdunXKT5woccckjCfh9//LHFYa4qSqdmzZpZHOakDh48ONu7kxf++te/Whzm5paUTp06WXzwwQd7bbqP4f7qmja57ocffvC2NSdf19Rwzl8fas2aNWndjypVqnjbidYXGDt2bFrfF0U78sgjLb7gggsS9lu/fr3FlMJNr7Vr11oclrbX7VtvvXW732v//fe3WNcCc84/J9x0003b/V756oMPPvC2dezoujXhOjOJ1tUIX+/qq6+2+O233/baDjjgAIt1fQy9bue7ypUrWxzeE+jab3fddZfXdscdd1jcp08fi7XMunP+uinz5s2zeMaMGQn3qUmTJt62/i7kfBstLMOt60HtueeeXpuuLavrzn7//fdev8WLF1us3wn9zeGcc61atSr2/vbt29fbvv322y3W9aqyiZk2AAAAAAAAMcRDGwAAAAAAgBjK2/SosmXLWqyl45xz7pdffrFY03O2bNmS+R3LIWEpb51apiloIZ36u3HjxrTvF7Jjn332sbht27YWz5kzx+unZfSQPpqKlE06pdk55xo3bmyxngOihGVy8+ncG04h1jK+Z511ltf2zjvvWPzYY48V+70OPPBAb1tTMmrXru21JUoJiEvqXa7T6+kOOyT+/22jRo3Kxu4gwzTlIxx7mn4VniuRvDCl9Nxzz7VY07YrVKiQ8DV69eplcZgW99NPP1k8ZMgQr03TP0488USL69at6/XL5zLujzzyiMU33HBD0n+n58errrqqyDhddPzp0g6dO3dO+3vlsjDdSMdHKl5++WVvOyo9SlPS9Xv24osvev20pHhJYaYNAAAAAABADPHQBgAAAAAAIIZ4aAMAAAAAABBDebumzc0332xxWHp25MiRFo8fPz5r+5RrbrzxRm+7ZcuWRfb7z3/+421T5js3/L//9/8s1vLB7777bgnsDbLl73//u7etZU+jLFy40OJLLrnEa9OyjvlGz4dh6d+OHTta/NprrxX7tVevXu1t69oZe++9d1KvEeZ9IzMSlVwP1wJ45plnsrA3SLdzzjnH27744ost1jUXnNu67C3SQ0t263i74IILvH465nTtIV3DJtSzZ09vu1GjRhafeuqpRb6ec1tfC/OJrmsycOBAr+3VV1+1eKed/J+yNWrUsDhq/a900DX89DujZcedc+6+++7L6H7AuVtuucXi4qwp9Ne//tXiVO6jsomZNgAAAAAAADHEQxsAAAAAAIAYypv0KJ1G7pxzd955p8UbNmzw2u69996s7FOuS7ZE3zXXXONtU+Y7N9SqVavI/7527dos7wkybcSIERY3aNAgpdeYOXOmxWPHjt3ufcoVs2fPtlhL0jrnXPPmzS2uV69esV9by9qGXnrpJW/7wgsvLLJfWKIc6bHffvt522GKxp+WLl3qbU+cODFj+4TMOfnkkxO2vf322972V199lendyXuaKqVxqsLzpKb7aHrUMccc4/WrWLGixWGJ8lynJZbD81r9+vUT/t1xxx1n8c4772zxPffc4/VLtGRDqjR9+dBDD03ra6Nol19+ucWakhamzKkZM2Z420OGDEn/jmUIM20AAAAAAABiiIc2AAAAAAAAMZTT6VGVKlWy+N///rfXtuOOO1qsU/udc27ChAmZ3TF4dPqnc85t2bKl2K+xfv36hK+h0yMrVKiQ8DX23HNPbzvZ9C6dwnnrrbd6bT/++GNSr5GLTjnllCL/+/Dhw7O8J/lJp+pGVVCImpbft29fi6tXr56wn77+77//nuwuejp16pTS3+WzKVOmFBmnwzfffJNUvwMPPNDbnj59elr3I18dfvjh3naiMRxWX0TpFJ6HN23aZPGjjz6a7d1Bhr3xxhsWa3rUeeed5/XT5QNYuiE5o0ePLvK/azqxc3561K+//mpxv379vH7PPvusxdddd53XlihtFZnRqlUrb1vPjeXLl0/4d7rshlaLcs65n3/+OU17l3nMtAEAAAAAAIghHtoAAAAAAADEEA9tAAAAAAAAYijn1rTRtWpGjhxpcZ06dbx+8+fPt1jLfyP7pk2btt2vMWjQIG97+fLlFletWtXiMF843VasWOFt33///Rl9vzg58sgjve199tmnhPYEzjn39NNPW/zQQw8l7KflZKPWo0l2rZpk+/Xp0yepfigZuiZSUdt/Yg2bzNA1+UKrV6+2+IknnsjG7iADdG0FvU9xzrnvvvvOYkp85x69Tur1+bTTTvP63X333Ra//vrrXtvcuXMztHe56f333/e29f5cS0R37drV61evXj2L27Vrl9R7LV26NIU9xLaEax/uvvvuRfbTNcGc89eNGjduXPp3LEuYaQMAAAAAABBDPLQBAAAAAACIoZxLj6pbt67Fhx56aMJ+Ws5ZU6WQPmEp9XDaZzqdc845Kf2dlvmLSusYNmyYxRMnTkzY79NPP01pP3LBGWec4W1rquLkyZMtHjNmTNb2KZ8NGTLE4ptvvtlrq1y5csbed9WqVd72rFmzLL7iiiss1hRGxE9hYWHkNjLrxBNPTNi2ePFii9evX5+N3UEGaHpUOL7eeeedhH+nKQF77bWXxfq9QOkxZcoUi++66y6v7eGHH7b4gQce8Nouuugiizdv3pyZncshei/inF92/dxzz034d8ccc0zCtt9++81iHbO33XZbKruIIuj57pZbbknqbwYMGOBtf/zxx+ncpRLDTBsAAAAAAIAY4qENAAAAAABADPHQBgAAAAAAIIZK/Zo2tWrV8rbDkm5/Ctd00DK3yIwzzzzT29ZcxJ133jmp12jSpInFxSnX/cILL1i8cOHChP3efPNNi2fPnp306+MP5cqVs7hDhw4J+w0ePNhizQFG5ixatMjizp07e22nn366xT169Ejr+4Zl7nv37p3W10d2lClTJmEb6ydkhl4XdX2+0E8//WTxli1bMrpPKBl6nbzwwgu9tuuvv97iGTNmWHzJJZdkfseQUS+//LK33a1bN4vDe+p7773X4mnTpmV2x3JAeN267rrrLC5fvrzFLVq08PpVqVLF4vD3RP/+/S2+5557tn8n4Zzzj8fMmTMtjvrtqGNAj20uYaYNAAAAAABADPHQBgAAAAAA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3nnneW2asvzJJ59YPHjwYK+fXpM5n/6PftZ77rmn19a6dWuL9V5lyZIlXr9vvvnGYk0XDVPSdHwkewzCc+1OO/3vFr9KlSoJ2zS9VdPmitqvfBSOsUTXtPCclsrYCf9Gj1OYvqx99dwdnnf1nMx43rbw+nnddddZfOWVV3ptuoRD1L1OgwYNLO7WrZvXpuXAr7nmmiL/u3PR12fkB+6mAQAAAAAAYoiHNgAAAAAAADFUoulR4ZRDnaYfTrnWaYE6pTusesD0sezSalHOOdeuXTuLjz76aK9Np+X369fP4jfeeMPrt3LlSot1mvFFF13k9dNqVOG0xNWrV1vMdND0SiUVKarKgW5HpXV8++23FodViEi1SJ2ed8OUxjPOOMNiTbvQKdvO+ecBrTjlnHMHHHCAxdOmTbNYp2wjOWHlNf1sGzdubLEeU+ecmzp1qsWaChEeg6jKT4nGepgqp9+NDRs2eG1r1661+JdffrE418dvspW90pESo9PwtbKJc85VqlTJ4urVq1v81ltvJfVe+SYcR5peds8993htNWvWtHjKlCkW9+rVy+un6d96vMNzqn4vwvta/W7o8dfj65xzzZo1s7h+/foJX2PChAkW6znaufxNj9LPNfw9oqn++h1Zvny510/veVO5V3LOP0eHqWuapqrfpaiKU/kg2X+/Xk9btmxpcVjdSdP0w3NComtmeE3Te6Twd9Ohhx5qsf420vsv55xbtGhREf8KFCXq+UL4O0N/Z+qYDcdbHO5TmGkDAAAAAAAQQzy0AQAAAAAAiCEe2gAAAAAAAMRQVta00VxdzSEMy8secsghFjdt2tRr22+//SzWEs4LFy70+n399dcWa/58mIum6+KEbZonqvn6moMf7keYu68l93Kt3J7mBtarV89rO/nkky0Oj+/bb79tseZ5h+sSKV275PPPP/faunfvbnFYfvOoo46yWMuZZiI/W3Of45DzmG5RazCoVNdg0O/JXnvt5bXpeNaYtau2jx6D448/3uJXXnnF66e5v1F54nrOrFu3rtd26623Wqz52h9++KHXLzy/4g96rHQdEuf80qHNmze3ePbs2V6/r776yuKotWSixnCifP1wHQ1dG2DOnDlem671odfnfJLs+TRZOvacc+7iiy+2uFq1agnfS6+F4TU4F+5TUqWfUfj53XnnnRbreAv/TsfHggULvH5h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anHU9OZwiiLVioqm4yPZY6xTW9u3b++17bHHHhaH0xZTSYUJj3G+jMWQTrfv06eP16YpFCo8z44YMcLiHj16WBxO4daxE04b1aoZOkVcK8M551e90coBzjk3atQoi6dPn17kvueKsDrCsccea3FY7WTmzJkWa0poeL1LNAbC82TU9HEdwyeccILFWm3ROT91IKwCGfX6+SrZ85OOsd13393i0047zesXlbatFaOSTeGJmrqfi+dW/TdVrlzZa9NrS5iuoVP9NcVelwQIX0P/JrxuaZphWBFs+PDhFjdq1MjicMkBTd0Jq7Xm61jU1EKtSuOc/5noOfSjjz7y+nXt2tVirch28cUXe/20yl54XdRUtnyrQJosPfeEFaKuvfZai8P7RK2OGfU9T5TCH/5Nsr8FUh1TuXgeLUp4/3LqqadarOlQzvnXOP3tF/5G0LGoafvh70U9huHnrWNTlw4I91evreFrrF27tsj3SvZZRrKYaQMAAAAAABBDPLQBAAAAAACIIR7aAAAAAAAAxFDW17RRUXn3yeb4hflhumaOxsXJI9N1VFq1amVxmHOsa+ZMnjzZa8uXHMVQKvn5e++9t9emOYr6Hfnvf//r9bvzzjst1mMdiiqrqfvLGjZFS7XcuR5jXbemdevWXj/N537rrbe8trBsfCJ6jDVn3bno9atyma6DoOUxnUtcznTcuHFevzPPPNPiqLz7RLnhzvmlqDt37pzwNfTvNJ/ZOedq165tcS6uaaOf35577um17bfffhaHufs6XnTtjKjrXarXppo1a1qsa0GEa3t8+OGHFufrWm9RUv0M9DtSr149ixs2bJiwX1j6Xcd3svsRjud8WgtlwYIF3na4ZoyqVauWxX/7298s/vLLL71+us5JgwYNLF68eLHXT9dnvPHGG702PR8qXePKOefeffddi7m/+YOer/baay+vTcsH61i5+uqrvX66jo1eZ6+//nqvX9myZS0Ox42WlQ7PofiD3q8fccQRXluTJk0s/vjjj702veeLKt2u26wrlBn6+YdrxHTo0CFhm/6d3vfcfffdXj+9H9QxFv7W0+vYrrvu6rXpWlR6rg1fQ4Xfl6+++spiXa833ddLZtoAAAAAAADEEA9tAAAAAAAAYigr6VGJRE1VS9drJiNMp9DStlrONJya/vjjj1us0yVRNP2c69evb3Hv3r29fs2bN7dYP/O3337b66elZUOJpsKF3w9Nq2LqfnJSmVav07k13cM5fwq6lph2Lvkp3VGl+PL1uGpJ7XDqqX4mmzZtsviWW27x+iWbWqavF04H1fLgOuVcS1k7558fwnOybkdNdy6t9N+k6bnO+emj4XVGUy/SnQYYTg2+/PLLLda0gjAFZ9iwYRYnm96YzxJ9h8NS2zoGTjnlFIvLly/v9dPxF14ztSxpFD13h/uRK2MuEf33abqMc36Ktpb1ds7/nE4//XSLzz//fK+fXtP0eGjKm3POVahQweIaNWokfC+dph+mDuRrarAKv7+aihR+Ppri8Pzzz1scpt9r2tMjjzxisaaQhu8dplOsX7/eYk2JDX9n5HPajt67d+zY0WvTzyxMF9S/C4+/yvVzWRzo56+phM75KaVRS1foOA1T/ZcsWWKxppu2bdvW61elShWLDzroIK/tgAMOsDi891Q6FhcuXOi19evXz2Jd1iPd109m2gAAAAAAAMQQD20AAAAAAABiKOvpUemYjhZVqSRqmr7Sv2vcuLHXduKJJ1qsUxVffvllr9/YsWMtZmX+rYXTwpo2bWrx0KFDLa5WrZrXTz/LiRMnFvk3zkVP/dUpblErxOdTJYziSCUFJTzeu+yyi8WHH364xWHFBl35P5yOnmzqgI7nfJ1OHE4v7datm8VRFWBGjRplsU4PTxd9rzFjxlgcVmIpU6aMxWFlQe2r/5ZcOe/q9zlMu9DPJUw30mn6+rmkel7T75BOGXbOr7Cgrx9Wx5k1a9Z27we2phX49B4lnM6t35FBgwZ5bcmOF/0u5XMKgaZ2Oufck08+abFOy3fOT2HSMazj1zl/TOi1Lzw2xx9/vMVRU+wnTJhgcVj9D9G+/fZbb1uPW8uWLS0OK5zq+NNUuJDeo4bXO03pOeGEEywO73P1nijfzqdaaS28HunSFXXq1PHatOqvVjMMj4GOuWTPc+F9lqbb6X1LPp83E9H7lVD43dbPT699F1xwgdfv0ksvtVirjobvFZXym+h9w/vQKVOmWPzoo496bXrfo79B0v09YKYNAAAAAABADPHQBgAAAAAAIIZ4aAMAAAAAABBDJVryuzg0jzDReiXO+blkmrcW5rBpCdyLLrrIa9O+7733nsVa2s+5rfMj4dM1TZxz7rnnnrM4LPustAzmU089ZfHMmTO9fpoDGZXzTVnvbYvK8Uz1NTQPVUvUhjnBqZQtDt9Lvwv5lvf9p3DtBC0dHX4muu7FY489ZnHU5x+ui6OiPnM93s2aNbNY84/D1w/PrVqWPBfXtNHPKDwGmlcdlnc+7rjjLNZyxN99953XT4+PXj/D19O1G+677z6vTdd70OMzbdo0r98PP/xgcb6eb9NRZjZ8DS2PGq7voJYvX26x5uBHvXfU9TNfz6fObb2mwejRoy3WNQ2d88eSrnMRnqP0XKavr9dL5/w1Gfbff3+v7ccff7T42muvTbi/qVzXc33MRpXjbd26tcW6bk147dNzqP7mmD9/vtdP1z2qXLmy16bjuXv37haHazzq2hlhOfBcp2shahlv5/xjV6FCBa/tqquusljLQH/99ddePx1H+r0I113U9z7zzDO9Nr3e9ezZ0+LVq1d7/fJ1rUW1dOlSb7tXr14Wd+nSxWvT9Yz0fiP8XPW3pP6uL855TK9xuo9PP/201+/111+3eNmyZV6b3rdl8hzKTBsAAAAAAIAY4qENAAAAAABADMU2PSqcjqjTTXVqYlgCVaclaRymZGi6Rvv27b22jRs3WvzMM89YnGw5YvyhUaNG3na9evUs1qmN4ZTPyy+/3OIRI0ZYHE4zjkp/077pmN4d9V6JvnNxF/VvUqlO59cp/PXr17c4TH3RKcXJprtEHe/SdAzSqVKlSt62ph+F50lNpdFSheFnp59zVBngqHKKJ510ksUPPvigxeF0Z33NFStWeG06BTlXUqKUnqNWrlzptS1YsMBiLRPrnHPNmze3+IorrrA4LN2uqao67TgsF61TjQ8++GCvLbyG/ilMW9V01HyS7DUiWeHnfc4551is08DD8TB16lSLv//++6TeKyrdNF/Pp85t/dnqdnhOXb9+/Xa9V/g561jUlCrnnHv33Xctnjt3bpH7FwqPsX6/9L3D1yjtxz/cf01jmDx5stem/3ZNdwtTVjX99O6777Z4zJgxXr+6detaHKZ/dOrUyWJNSw3Tb/r372+x/jZxLjdTF/V7qilF4XVF7yPXrFnjtdWoUcPiW2+91eIwHVh/V0alhEb9ntDzgI6p+++/3+un5eVz8bglov/WMG375Zdftli/58759yb6nQjPT5rK1rFjR4tvuukmr5+OxfA1NNXp/PPPt3jSpElevzgstcFMGwAAAAAAgBjioQ0AAAAAAEAM8dAGAAAAAAAghkrNmjaJyrwmm3+refzO+SXh9txzT6/to48+slhLxOVTHmKqtOxw7969vbZE5dgGDx7s9dN87WTXrwiPeyr5hlFl4TUXNiytrHmaWkIw7vQzSkfJ73ANBi3vXK5cOYs1t9c5P6886rhFrRnB2Ny6ZKx+T8Njo+NKz39hbngi4flZj0dYnlZzlcNzrdL89VGjRnlt33zzjcW5eKz1eOi/1TnnhgwZYnG7du28Nl334vjjj7dYx55zfu6+loSeM2eO10/XN2rbtq3XpsdVXy8Xj0cq0pHjHlXGtkOHDhbreA6vOY888ojFxVnjBH+Iui6mex0Dff2WLVt6bU2aNLFYS0c759w///lPi3Vtj2Svn84lXqMsF9cMU/rvmzZtmtf23nvvWaxrXWqpd+f8tdl0/bXwuqjrHIVrzh111FEW67oc4bVa12cJ7510PZXSvvbQn/TfoesdfvLJJ14/XWcoXAdOS7frWpp63QpF3V/qvUm4vpHe2+o6ReH+Dho0yOJ8vWaG/24ts54qPf998MEHFvfo0cPrp8ctvM/9v//7P4snTpxocRzX52OmDQAAAAAAQAzx0AYAAAAAACCGYpseFU7R1GmAyU4t02mG11xzjdfWuHFji9euXeu1vfrqqxaXpnSXODjvvPMs1nK0ziVOcQvLLiaa5hlOPdUytjp9MXz9qNfQqY0NGjTw2i644AKLNb0u/L7odLqwbF24X3GVjqm14dRTnV6sx+rLL7/0+oUl3xOJKiut27kyTbi4wu+2pveFU67r1KljsabVhN/fRKV/9bWd89N2nn32Wa8tKiVKaQrAQw895LWFJW9zjX62YengkSNHWhyWoKxZs6bFev6qUqWK10+P1+uvv25xmIql/f7yl78k3EctxxmWUcXW56BkU5G037777uu1aZqEWrx4sbetKR/5ei7cHlHHKh3XGX0NTWHt2bOn169q1aoWf/bZZ16bpo0kux/hfbP+XT59T/TfumrVKq9N0yQef/xxizUFyrnEaUnh56jpH2PHjvXatCR0t27dLA5TfXTcT5061WvT9I1cTGubPXu2xVpa3Tn/3jr8naa/755//nmLteyzc/59kY6PMH1Gj3d4bdVrYeXKlS3WtCznSEfNFD0evXr1sjhM09fPPxzPb731lsVx/83GTBsAAAAAAIAY4qENAAAAAABADMU2PSod1YAaNWpk8SWXXOK1abrGhx9+6LV98cUXFufilMN00qmBzjl37rnnWhxWWVI6VS08NrpS/8aNGy1u06aN109TA7766iuvbcGCBRZrCpSuKu+cc2eeeabFLVq08Nr073TqZDgV85hjjrFYUxmc8yu1xFk6pnrXrl3ba9PPU1N3wim+yU5HzNfp3MnSKmbO+VO/wxQW/W7fdtttFocVg8aPH2+xjrfjjjvO66fn2rJlyya1v+EUZK2OE7blU7WF8N+q6VI//PCD16apMVOmTLE4TEn7/vvvLdZ0xPC99Ny2cOFCr02rnURN9WZsbi3Zz0Q/1/Bapfcsel8SVikhpTt9kk2Vci61Y6ypL5rS4Zx/bxWm1qRjCr9+h/Lp2qr/vvBz1LSJZFPhNMUm/E5oxZrw+jxw4MAi+zVs2NDrp2nnYWqOpl9FLSFRWo+p3v+H57VEqdvOOff5559b3L17d4v79evn9dPrpL5+uATC3nvvbXH4mydRFbYwzY3fkulRrVo1b3vcuHEW16pVy+JwLOp91MMPP+y16b1y3O81mWkDAAAAAAAQQzy0AQAAAAAAiCEe2gAAAAAAAMRQbNe0SZWWLNXS3ZqT6Jyfs9inTx+vTcvLltZc0GwJywwn+9np3x188MFem5aE1tfYddddvX7aFq71oPm9uhaAruURtoU5kJrvrLnDYT8tSxiuxZHr9DhquXfnnKtevbrF+lnOmDHD65fsGIvKu2ecOrd69Wpve9CgQRZfd911XpueJ/fbbz+LdU0q5/xjqt/7qJLrIT02usbTiSee6PWbO3dukX+Tb6K+22G+tebJa/nXMCc/Kv8/0XtFrU2k77Vu3bqE/VA8ej498sgjvTZd20LXwBgyZIjXL+45+XEXNT6izoHJvoaugdKuXTuLw3sTfQ29rwrfO9VzJd+T6HNt1LHWdU30eOp50bnodUx0vZZPP/3UYr13dc7/Xuy7774JX0Ov/+F+qNJ0bdXvaHG+r3p+/OijjyzW34TOOXfxxRdbrL8FwnVT9BiEv3nU5s2bLZ4zZ47XVpo+97jR8TZ8+HCvrU6dOkX+Tbhela4hFV4z9fsSd8y0AQAAAAAAiCEe2gAAAAAAAMRQqU+P0qmJzjl3ww03WFy/fn2Lw+mC//znPy2eNm2a10ZptuSFn9W9995rcTi9u2rVqhbrFMPwGGrqRrLTgCtWrOhtJ5rmGtJpcVoSzjnnJk2aZPGyZcss1qmszvmldkvTNLt00FLSYbqLHmNNG9N0MueYNpou4XTQxx57zOLw2Gg59nD8pUKPYXiu1fFy2WWXWbxkyZKEr4HkpLtUr05Drly5stem3y89V4albNORupGvdBp+WAJaP0v9zKdOnZqwX7JSLV+dbzRFI9nPLOynad5a1j38e32vRo0aJXwNTacJXyPq3kfl8vGOOk5Rab7JpsLp9a44vx10P7TcdHgsdGmH8Fqtqam6REBUelS+0c/igQce8Nr0HNu2bVuLy5Qp4/WLuqbpdVF/M6TjvIw/XHLJJRY3a9YsYT/9jJ977jmv7dprr7U4vFcuTZhpAwAAAAAAEEM8tAEAAAAAAIghHtoAAAAAAADEUKlc00bzCxs2bOi1ae6b9hs7dqzXr3fv3haX5vy2khbm8M6cOdPipk2bem3HHnusxaeccorFYY6i5vDuvvvuSb13uB+6toyu0xCWzhw/frzFjz76qNemJfv09cLvS7LldHOFrlWz5557WhweA13HZsSIERaH5YjTIdXyq7lM1x3p3Lmz16blwHWcatnLKOGxXrhwocU9evTw2kaNGmUxufbxEo4bLfMdjtOVK1daPH/+fIvDEqi67gJlhbdNj8Fee+1lsV63nPOvXbpeQlgiOJX3Db8HekzDY5hP59Oof2uqn4OuR6PnXi3p7px/nxHeS+n6gFrqOTwvp7reSmmk3+FEJbmd849b1LlLP6/wnk+303GO07WswhLGen8cnpP1nKDrXOn6Ns7l15iNomsAOeevcdOvXz+Lq1Sp4vXT71a49qX+3bPPPmvxhg0btmtf852uqXfTTTdZHDWeJ0+ebHH37t29frnyO5+ZNgAAAAAAADHEQxsAAAAAAIAYKjXpUTo9TVNm7rrrLq9f9erVLdbpglqK2jnnfv7553TvIpw/VVSn7Trn3BtvvFFknKyoKdw6vdQ55/bYYw+LN2/eXGTsXHS5TGyblqocNmyY16ZTTLX8XqopMnp88nnKfio0fck559q0aWNxgwYNLL7lllu8fto2YcIEi1999VWv3/Tp0y3W7wSKL9Opfvr6YXqAvv7777/vtWnfb775xuJ0lIzPZ4nSTcNrlaabfvnll9v9vlFpHZxP0ycczxUqVLBYUy3Cz1y3w3SX8H7nT+ExzfWUKKWfs6b51qpVy+unqVNhauGqVass1vuUTNxv6H6EqZAqLB2diO5vsqXe8014HPWzPe200yzW1Bzn/O/FihUrvDYdm7qMArZNr336m80554444giLy5cvb3F4TtPP/9xzz7U4V48FM20AAAAAAABiiIc2AAAAAAAAMRSr9KioagY63fG4446zuG3btl4/naqt06O08oVz6Z9mznTizAs/Y50mF04fDreRPjrF9Pvvv7f4iSeeSPg36a5iwXjbPrqS/owZMyzW6nsoGZn4bieaLh++18aNGy3++OOPvTYd9/PmzbN49uzZCfth2/Tz0rSz2267zeun6aazZs2yONXqUYn2AekVjjGtADR37lyLNRXVOf8eZsyYMV6bpmhoGl0+H0f9t+uYWL58udevTJkyFofHRlN79fdDpu839HgOHz7ca9MlH2rXru21adqzfl/yKS1ue+hnpudUrYKLzNH0KK0a7JxzZ511lsW6JEp4vRs9erTFmkIc3vPkym8GZtoAAAAAAADEEA9tAAAAAAAAYoiHNgAAAAAAADEUqzVtVFT5w6OOOsriqlWrev0SlYEO1zhhPRpg+2keeViiFkA8JLrGhf/9559/tljX23DOucWLFxf5d/o3Ue+FounntWHDBos//fTThH+Tz2uXlDbheFi3bp3FDz74oMV9+/b1+un6DMuWLfPadE0ybE3XdNHP27noe/9snrt0zRwd93PmzPH6LViwwOJwbaOo8zCKh+tW9ukatG3atPHatAS7/pYPf2cMGDDAYh3ruXo8mWkDAAAAAAAQQzy0AQAAAAAAiKFYpUdFTWfaaaf/7aqWBgunCevUxyVLlli8adOmpN8rWbk6/QoAkN/C6xvpj9lFClRu0nGlaU9Lly5N2A+pK8kUqCi6H4li5/zzAKW8kUs0RfCzzz7z2hYtWmRxtWrVLL7++uu9fm+//bbFcRnbmcRMGwAAAAAAgBjioQ0AAAAAAEAM8dAGAAAAAAAghgqKkwNWUFAQi4SxsmXLWnzkkUd6bZMnT7ZYSyaW9vzwwsLCgm332ra4HMM8NamwsLBFOl6I41hyGIs5gbGYAxiLOYGxmAMYizmBsZgDGIs5ocixyEwbAAAAAACAGOKhDQAAAAAAQAwVt+T3aufcom32yjAtPTpq1KgS3JOsqZXG14rFMcxTHMfSj2OYGziOpR/HMDdwHEs/jmFu4DiWfhzD3FDkcSzWmjYAAAAAAADIDtKjAAAAAAAAYoiHNgAAAAAAADHEQxsAAAAAAIAY4qENAAAAAABADPHQBgAAAAAAIIZ4aAMAAAAAABBDPLQBAAAAAACIIR7aAAAAAAAAxBAPbQAAAAAAAGLo/wMe8fLZd6iOZgAAAABJRU5ErkJggg==\n",
+      "text/plain": [
+       "<Figure size 1440x288 with 20 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "import matplotlib.pyplot as plt\n",
+    "\n",
+    "\n",
+    "n = 10  # How many digits we will display\n",
+    "plt.figure(figsize=(20, 4))\n",
+    "for i in range(n):\n",
+    "    # Display original\n",
+    "    ax = plt.subplot(2, n, i + 1)\n",
+    "    plt.imshow(x_test[i].reshape(28, 28))\n",
+    "    plt.gray()\n",
+    "    ax.get_xaxis().set_visible(False)\n",
+    "    ax.get_yaxis().set_visible(False)\n",
+    "\n",
+    "    # Display reconstruction\n",
+    "    ax = plt.subplot(2, n, i + 1 + n)\n",
+    "    plt.imshow(roundtrip_imgs[i].reshape(28, 28))\n",
+    "    plt.gray()\n",
+    "    ax.get_xaxis().set_visible(False)\n",
+    "    ax.get_yaxis().set_visible(False)\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "beneficial-coral",
+   "metadata": {},
+   "source": [
+    "What about the compression? Let's check the sizes of the arrays."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "magnetic-stopping",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-24T19:11:50.633516Z",
+     "iopub.status.busy": "2021-01-24T19:11:50.632404Z",
+     "iopub.status.idle": "2021-01-24T19:11:51.084703Z",
+     "shell.execute_reply": "2021-01-24T19:11:51.085437Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "x_test.shape[1]: 784\n",
+      "encoded_imgs.shape[1]: 32\n",
+      "Compression ratio: 1/25\n"
+     ]
+    }
+   ],
+   "source": [
+    "encoded_imgs = autoencoder.transform(x_test)\n",
+    "print(f\"x_test.shape[1]: {x_test.shape[1]}\")\n",
+    "print(f\"encoded_imgs.shape[1]: {encoded_imgs.shape[1]}\")\n",
+    "cr = round((encoded_imgs.nbytes/x_test.nbytes), 2)\n",
+    "print(f\"Compression ratio: 1/{1/cr:.0f}\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "jupytext": {
+   "formats": "ipynb,md"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
