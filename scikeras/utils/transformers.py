@@ -385,8 +385,6 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
             Keras Model predictions cast to the dtype and shape of the input
             targets.
         """
-        if y.dtype.name == "float32":
-            y = y.astype(np.float64, copy=False)
         y = y.reshape(-1, *self._y_shape[1:])
         return y
 
