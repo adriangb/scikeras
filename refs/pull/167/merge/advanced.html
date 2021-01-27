@@ -292,36 +292,16 @@ SciKeras.fit(features, labels)                    dataset_transformer → keras.
 </pre></div>
 </div>
 <p>Within SciKeras, this is roughly implemented as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">FunctionTransformer</span>
-
-<span class="kn">from</span> <span class="nn">scikeras.utils.transformers</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ClassifierLabelEncoder</span><span class="p">,</span>
-    <span class="n">RegressorTargetEncoder</span><span class="p">,</span>
-    <span class="n">ClassWeightDataTransformer</span>
-<span class="p">)</span>
-
-
-<span class="k">class</span> <span class="nc">BaseWrapper</span><span class="p">:</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">target_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">ClassifierLabelEncoder</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">feature_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">FunctionTransformer</span><span class="p">()</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dataset_transformer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">FunctionTransformer</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PseudoBaseWrapper</span><span class="p">:</span>
 
     <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_keras_model</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer</span><span class="o">.</span><span class="n">fit</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">))</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span><span class="o">.</span><span class="n">transform</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">)</span>  <span class="c1"># tf.keras.Model.fit</span>
         <span class="k">return</span> <span class="bp">self</span>
 
@@ -330,42 +310,21 @@ SciKeras.fit(features, labels)                    dataset_transformer → keras.
         <span class="n">X</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
         <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)</span>
-
-<span class="k">class</span> <span class="nc">KerasClassifier</span><span class="p">(</span><span class="n">BaseWrapper</span><span class="p">):</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">target_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">ClassifierLabelEncoder</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dataset_transformer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">ClassWeightDataTransformer</span><span class="p">(</span><span class="n">class_weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_weight</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">X</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
-        <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">return_proba</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-
-<span class="k">class</span> <span class="nc">KerasRegressor</span><span class="p">(</span><span class="n">BaseWrapper</span><span class="p">):</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">target_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">RegressorTargetEncoder</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>One important thing to note is that <code class="docutils literal notranslate"><span class="pre">feature_encoder</span></code> and <code class="docutils literal notranslate"><span class="pre">target_encoder</span></code>
-are run before building the Keras Model, while <code class="docutils literal notranslate"><span class="pre">data_transformer</span></code> is run after
-the Model is built. This means that the former two will not have access to the Model
-(eg. to get the number of outputs) but <em>will</em> be able to inject data into the model building
-function (more on this below). On the other hand,
-<code class="docutils literal notranslate"><span class="pre">data_transformer</span></code> <em>will</em> get access to the built Model, but it cannot pass any data to model building
-function.</p>
-<p>Although you could just implement everything in <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code>,
+<p><code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> is the last step before passing the data to Keras, and it allows for the greatest
+degree of customization because SciKeras does not make any assumptions about the output data
+and passes it directly to <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.fit()</span></code>.
+Its signature is <code class="docutils literal notranslate"><span class="pre">dataset_transformer.fit_transform((X,</span> <span class="pre">y,</span> <span class="pre">sample_weight))</span></code>,
+that is, a 3 element tuple corresponding to the <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">sample_weight</span></code>
+arguments in <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.fit()</span></code>.</p>
+<p>The output must be a 3 element tuple as well, and it will be passed untouched
+to <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.fit()</span></code>, so that the second and/or third
+elements are allowed to be <code class="docutils literal notranslate"><span class="pre">None</span></code>, but the first must always have a value.</p>
+<p>Although you could implement <em>all</em> data transformations in a single <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code>,
 having several distinct dependency injections points allows for more modularity,
 for example to keep the default processing of string-encoded labels but convert
-the data to a <code class="docutils literal notranslate"><span class="pre">Dataset</span></code> before passing to Keras.</p>
+the data to a <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.data.Dataset()</span></code> before passing to Keras.</p>
 <p>For a complete examples implementing custom data processing, see the examples in the
 <a class="reference internal" href="tutorials.html#tutorials"><span class="std std-ref">Tutorials</span></a> section.</p>
 <div class="section" id="multi-input-and-output-models-via-feature-encoder-and-target-encoder">
@@ -457,18 +416,6 @@ and <a class="reference internal" href="generated/scikeras.utils.transformers.ht
 <a class="reference internal" href="generated/scikeras.wrappers.KerasClassifier.html#scikeras.wrappers.KerasClassifier" title="scikeras.wrappers.KerasClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.KerasClassifier</span></code></a> and <a class="reference internal" href="generated/scikeras.wrappers.KerasRegressor.html#scikeras.wrappers.KerasRegressor" title="scikeras.wrappers.KerasRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.KerasRegressor</span></code></a> respectively.</p>
 <p>As per the table above, if you find that your target is classified as
 <code class="docutils literal notranslate"><span class="pre">&quot;multiclass-multioutput&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;unknown&quot;</span></code>, you will have to implement your own data processing routine.</p>
-</div>
-<div class="section" id="whole-dataset-manipulation-via-data-transformer">
-<h4>Whole dataset manipulation via data_transformer<a class="headerlink" href="#whole-dataset-manipulation-via-data-transformer" title="Permalink to this headline">¶</a></h4>
-<p>This is the last step before passing the data to Keras, and it allows for the greatest
-degree of customization because SciKeras does not make any assumptions about the output data
-and passes it directly to <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.fit()</span></code>.
-Its signature is <code class="docutils literal notranslate"><span class="pre">dataset_transformer.fit_transform((X,</span> <span class="pre">y,</span> <span class="pre">sample_weight))</span></code>,
-that is, a 3 element tuple corresponding to the <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">sample_weight</span></code>
-arguments in <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.fit()</span></code>.</p>
-<p>The output must be a 3 element tuple as well, and it will be passed untouched
-to <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.fit()</span></code>, so that the second and/or third
-elements are allowed to be <code class="docutils literal notranslate"><span class="pre">None</span></code>, but the first must always have a value.</p>
 </div>
 <div class="section" id="get-metadata-method">
 <h4>get_metadata method<a class="headerlink" href="#get-metadata-method" title="Permalink to this headline">¶</a></h4>

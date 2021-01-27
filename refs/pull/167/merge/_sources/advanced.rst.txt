@@ -201,36 +201,16 @@ Within SciKeras, this is roughly implemented as follows:
 
 .. code:: python
 
-    from sklearn.preprocessing import FunctionTransformer
-
-    from scikeras.utils.transformers import (
-        ClassifierLabelEncoder,
-        RegressorTargetEncoder,
-        ClassWeightDataTransformer
-    )
-
-
-    class BaseWrapper:
-
-        @property
-        def target_encoder(self):
-            return ClassifierLabelEncoder(loss=self.loss)
-        
-        @property
-        def feature_encoder(self):
-            return FunctionTransformer()
-        
-        @property
-        def dataset_transformer(self):
-            return FunctionTransformer()
+    class PseudoBaseWrapper:
 
         def fit(self, X, y, sample_weight):
-            self.target_encoder_ = self.target_encoder
-            self.dataset_transformer_ = self.feature_encoder
-            self.feature_encoder_ = self.feature_encoder
-            y = self.target_encoder_.fit_transform(y)
-            X = self.feature_encoder_.fit_transform(X)
-            X, y, sample_weight = self.dataset_transformer_.fit_transform((X, y, sample_weight))
+            self.target_encoder_ = self.target_encoder.fit(X)
+            X = self.feature_encoder_.transform(X)
+            self.feature_encoder_ = self.feature_encoder.fit(y)
+            y = self.target_encoder_.transform(y)
+            self.model_ = self._build_keras_model()
+            self.dataset_transformer_ = self.dataset_transformer.fit((X, y, sample_weight))
+            X, y, sample_weight = self.dataset_transformer_.transform((X, y, sample_weight))
             self.model_.fit(x=X, y=y, sample_weight=sample_weight)  # tf.keras.Model.fit
             return self
 
@@ -240,42 +220,22 @@ Within SciKeras, this is roughly implemented as follows:
             y_pred = self.model_.predict(X)
             return self.target_encoder_.inverse_transform(y_pred)
 
-    class KerasClassifier(BaseWrapper):
 
-        @property
-        def target_encoder(self):
-            return ClassifierLabelEncoder(loss=self.loss)
-        
-        @property
-        def dataset_transformer(self):
-            return ClassWeightDataTransformer(class_weight=self.class_weight)
-        
-        def predict_proba(self, X):
-            X = self.feature_encoder_.transform(X)
-            X, _, _ = self.dataset_transformer_.fit_transform((X, None, None))
-            y_pred = self.model_.predict(X)
-            return self.target_encoder_.inverse_transform(y_pred, return_proba=True)
+``dataset_transformer`` is the last step before passing the data to Keras, and it allows for the greatest
+degree of customization because SciKeras does not make any assumptions about the output data
+and passes it directly to :py:func:`tensorflow.keras.Model.fit`.
+Its signature is ``dataset_transformer.fit_transform((X, y, sample_weight))``,
+that is, a 3 element tuple corresponding to the ``x``, ``y`` and ``sample_weight``
+arguments in :py:func:`tensorflow.keras.Model.fit`.
 
+The output must be a 3 element tuple as well, and it will be passed untouched
+to :py:func:`tensorflow.keras.Model.fit`, so that the second and/or third
+elements are allowed to be ``None``, but the first must always have a value.
 
-    class KerasRegressor(BaseWrapper):
-
-        @property
-        def target_encoder(self):
-            return RegressorTargetEncoder()
-
-
-One important thing to note is that ``feature_encoder`` and ``target_encoder``
-are run before building the Keras Model, while ``data_transformer`` is run after
-the Model is built. This means that the former two will not have access to the Model
-(eg. to get the number of outputs) but *will* be able to inject data into the model building
-function (more on this below). On the other hand,
-``data_transformer`` *will* get access to the built Model, but it cannot pass any data to model building
-function.
-
-Although you could just implement everything in ``dataset_transformer``,
+Although you could implement *all* data transformations in a single ``dataset_transformer``,
 having several distinct dependency injections points allows for more modularity,
 for example to keep the default processing of string-encoded labels but convert
-the data to a ``Dataset`` before passing to Keras.
+the data to a :py:func:`tensorflow.data.Dataset` before passing to Keras.
 
 For a complete examples implementing custom data processing, see the examples in the
 :ref:`tutorials` section.
@@ -336,20 +296,6 @@ and :py:class:`scikeras.utils.transformers.RegressorTargetEncoder` for
 
 As per the table above, if you find that your target is classified as
 ``"multiclass-multioutput"`` or ``"unknown"``, you will have to implement your own data processing routine.
-
-Whole dataset manipulation via data_transformer
-+++++++++++++++++++++++++++++++++++++++++++++++
-
-This is the last step before passing the data to Keras, and it allows for the greatest
-degree of customization because SciKeras does not make any assumptions about the output data
-and passes it directly to :py:func:`tensorflow.keras.Model.fit`.
-Its signature is ``dataset_transformer.fit_transform((X, y, sample_weight))``,
-that is, a 3 element tuple corresponding to the ``x``, ``y`` and ``sample_weight``
-arguments in :py:func:`tensorflow.keras.Model.fit`.
-
-The output must be a 3 element tuple as well, and it will be passed untouched
-to :py:func:`tensorflow.keras.Model.fit`, so that the second and/or third
-elements are allowed to be ``None``, but the first must always have a value.
 
 get_metadata method
 +++++++++++++++++++
