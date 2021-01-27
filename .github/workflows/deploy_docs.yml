@@ -1,0 +1,49 @@
+
+name: Deploy Docs
+
+on:
+  workflow_run:
+    workflows:
+      - Build Docs
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Deploy Docs
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Checkout docs branch
+        uses: actions/checkout@v2
+        with:
+          ref: refs/heads/docs
+
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: ${{ github.event.workflow_run.name }}
+          run_id: ${{ github.event.workflow_run.id }}
+          name: docs
+
+      - name: Update versions
+        run: python update_versions.py
+
+      - name: Deploy docs
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add -A
+          if ! git diff-index --quiet HEAD --; then
+            echo "Deploying changes"
+            git status
+            git commit -m "Deploy docs from ${{ github.event.workflow_run.head_branch }}"
+            git push -f
+          else
+            echo "No changes to deploy"
+            exit 0
+          fi
