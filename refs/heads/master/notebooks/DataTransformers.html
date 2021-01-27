@@ -615,8 +615,8 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.5117267]
- [0.4953886]]
+[[0.45619416]
+ [0.48791745]]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -633,8 +633,8 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.15965152 0.23019725 0.21857315 0.1917844  0.19979365]
- [0.14900023 0.24086286 0.20251091 0.20458873 0.20303723]]
+[[0.21593313 0.18697688 0.18057011 0.19249171 0.22402808]
+ [0.22439957 0.20538802 0.18371049 0.16779147 0.21871041]]
 </pre></div></div>
 </div>
 <p>As you can see, our <code class="docutils literal notranslate"><span class="pre">predict</span></code> output is also a list of arrays, except it contains probabilities instead of the class predictions.</p>
@@ -726,7 +726,7 @@ docs</a>.</p>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 `y`, as will be passed to Keras:
-[array([0, 0, 1, 0]), array([1, 2, 2, 1])]
+[array([0, 0, 0, 0]), array([0, 0, 2, 1])]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -754,11 +754,11 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[1, 1],
-       [0, 1],
-       [1, 1],
-       [1, 4],
-       [1, 1]])
+array([[0, 4],
+       [0, 0],
+       [0, 0],
+       [0, 4],
+       [0, 4]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -835,7 +835,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.22999999999999998
+0.23500000000000001
 </pre></div></div>
 </div>
 </div>
@@ -852,11 +852,11 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
     <span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
 
 
-    <span class="k">class</span> <span class="nc">MultiOutputTransformer</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">MultiInputTransformer</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
         <span class="o">...</span>
 
 
-    <span class="k">class</span> <span class="nc">MultiOutputClassifier</span><span class="p">(</span><span class="n">KerasClassifier</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">MultiInputClassifier</span><span class="p">(</span><span class="n">KerasClassifier</span><span class="p">):</span>
 
         <span class="nd">@property</span>
         <span class="k">def</span> <span class="nf">feature_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -925,7 +925,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--2.237281497843818
+-3.7320784356824985
 </pre></div></div>
 </div>
 <p>Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.</p>
@@ -974,7 +974,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--3.300911929528673
+-2.4924202194091487
 </pre></div></div>
 </div>
 </div>
@@ -992,6 +992,15 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+11493376/11490434 [==============================] - 0s 0us/step
+</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
@@ -1157,25 +1166,25 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/10
-422/422 [==============================] - 44s 102ms/step - loss: 0.6527 - val_loss: 0.0817
+422/422 [==============================] - 51s 120ms/step - loss: 0.6527 - val_loss: 0.0817
 Epoch 2/10
-422/422 [==============================] - 43s 101ms/step - loss: 0.1155 - val_loss: 0.0613
+422/422 [==============================] - 49s 116ms/step - loss: 0.1155 - val_loss: 0.0613
 Epoch 3/10
-422/422 [==============================] - 42s 101ms/step - loss: 0.0832 - val_loss: 0.0457
+422/422 [==============================] - 43s 103ms/step - loss: 0.0832 - val_loss: 0.0457
 Epoch 4/10
-422/422 [==============================] - 43s 102ms/step - loss: 0.0699 - val_loss: 0.0431
+422/422 [==============================] - 43s 103ms/step - loss: 0.0699 - val_loss: 0.0431
 Epoch 5/10
-422/422 [==============================] - 42s 99ms/step - loss: 0.0620 - val_loss: 0.0402
+422/422 [==============================] - 43s 101ms/step - loss: 0.0620 - val_loss: 0.0402
 Epoch 6/10
-422/422 [==============================] - 47s 111ms/step - loss: 0.0549 - val_loss: 0.0360
+422/422 [==============================] - 42s 100ms/step - loss: 0.0549 - val_loss: 0.0360
 Epoch 7/10
-422/422 [==============================] - 48s 114ms/step - loss: 0.0514 - val_loss: 0.0404
+422/422 [==============================] - 42s 101ms/step - loss: 0.0514 - val_loss: 0.0404
 Epoch 8/10
-422/422 [==============================] - 38s 90ms/step - loss: 0.0487 - val_loss: 0.0367
+422/422 [==============================] - 42s 99ms/step - loss: 0.0487 - val_loss: 0.0367
 Epoch 9/10
-422/422 [==============================] - 27s 64ms/step - loss: 0.0440 - val_loss: 0.0340
+422/422 [==============================] - 48s 115ms/step - loss: 0.0440 - val_loss: 0.0340
 Epoch 10/10
-422/422 [==============================] - 27s 64ms/step - loss: 0.0424 - val_loss: 0.0331
+422/422 [==============================] - 47s 112ms/step - loss: 0.0424 - val_loss: 0.0331
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1185,7 +1194,7 @@ Epoch 10/10
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 MultiDimensionalClassifier(
-        model=&lt;function get_model at 0x7faa3e728310&gt;
+        model=&lt;function get_model at 0x7f23cd4e83a0&gt;
         build_fn=None
         warm_start=False
         random_state=0
@@ -1218,7 +1227,7 @@ MultiDimensionalClassifier(
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-79/79 [==============================] - 1s 16ms/step
+79/79 [==============================] - 2s 26ms/step
 Test score (accuracy): 0.99
 </pre></div></div>
 </div>
