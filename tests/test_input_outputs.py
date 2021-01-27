@@ -351,7 +351,7 @@ def test_output_shapes_and_dtypes_against_sklearn_reg(y_dtype, y_val, est_pair):
     # returns float64, except that we avoid a pointless conversion from
     # float32 -> float64 that would just be adding noise if TF is using float32
     # internally.
-    assert y_out_scikeras.dtype.name == "float64"
+    assert y_out_scikeras.dtype.name == tf.keras.backend.floatx()
 
 
 @pytest.mark.parametrize(

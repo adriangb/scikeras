@@ -252,13 +252,12 @@ clf.fit(X, y_sklearn).score(X, y_sklearn)
 
 The process for multiple inputs is similar, but instead of overriding the transformer in `target_encoder` we override `feature_encoder`.
 
+
 ```python .noeval
-class MultiOutputTransformer(BaseEstimator, TransformerMixin):
+class MultiInputTransformer(BaseEstimator, TransformerMixin):
     ...
 
-
-class MultiOutputClassifier(KerasClassifier):
-
+class MultiInputClassifier(KerasClassifier):
     @property
     def feature_encoder(self):
         return MultiInputTransformer(...)
