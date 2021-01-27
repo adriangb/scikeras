@@ -231,7 +231,7 @@ Its signature is:
     from sklearn.base import BaseEstimator, TransformerMixin
 
     class DatasetTransformer(BaseEstimator, TransformerMixin):
-        def fit(self, data, dummy=None) -> "DatasetTransformer":
+        def fit(self, data) -> "DatasetTransformer":
             X, y, sample_weight = data  # sample_weight might be None
             ...
             return self

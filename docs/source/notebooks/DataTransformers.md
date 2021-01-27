@@ -524,7 +524,8 @@ class RaggedClassifier(KerasClassifier):
         t1 = FunctionTransformer(ragged_transformer)
         t2 = super().dataset_transformer  # ClassWeightDataTransformer
         t3 = FunctionTransformer(dataset_transformer)
-        return make_pipeline(t1, t2, t3)
+        t4 = "passthrough"  # see https://scikit-learn.org/stable/modules/compose.html#pipeline-chaining-estimators
+        return make_pipeline(t1, t2, t3, t4)
 ```
 
 Now we can define a Model. We need some way to handle/flatten our ragged arrays within our model. For this example, we use a custom mean layer, but you could use an Embedding layer, LSTM, etc.
@@ -580,7 +581,8 @@ class RaggedClassifier(KerasClassifier):
         t1 = FunctionTransformer(ragged_transformer)
         t2 = super().dataset_transformer  # ClassWeightDataTransformer
         t3 = FunctionTransformer(dataset_transformer)
-        return make_pipeline(t1, t2, t3)
+        t4 = "passthrough"  # see https://scikit-learn.org/stable/modules/compose.html#pipeline-chaining-estimators
+        return make_pipeline(t1, t2, t3, t4)
     
     def _keras_build_fn(self):
         inp_shape = self.X_shape_[1] - 1

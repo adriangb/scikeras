@@ -25,15 +25,13 @@ class TargetReshaper(BaseEstimator, TransformerMixin):
         Dimensions of y that the transformer was trained on.
     """
 
-    def fit(self, y: np.ndarray, dummy: None = None) -> "TargetReshaper":
+    def fit(self, y: np.ndarray) -> "TargetReshaper":
         """Fit the transformer to a target y.
 
         Parameters
         ----------
         y : np.ndarray
             The target data to be transformed.
-        dummy: None
-            Unused argument, kept for compatibility with sklearn Pipelines.
 
         Returns
         -------
@@ -131,7 +129,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             target_type = type_of_target(self.categories[0])
         return target_type
 
-    def fit(self, y: np.ndarray, dummy: None = None) -> "ClassifierLabelEncoder":
+    def fit(self, y: np.ndarray) -> "ClassifierLabelEncoder":
         """Fit the estimator to the target y.
 
         For all targets, this transforms classes into ordinal numbers.
@@ -142,8 +140,6 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         ----------
         y : np.ndarray
             The target data to be transformed.
-        dummy: None
-            Unused argument, kept for compatibility with sklearn Pipelines.
 
         Returns
         -------
@@ -325,7 +321,7 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         Number of outputs the Keras Model is expected to have.
     """
 
-    def fit(self, y: np.ndarray, dummy: None = None) -> "RegressorTargetEncoder":
+    def fit(self, y: np.ndarray) -> "RegressorTargetEncoder":
         """Fit the transformer to the target y.
 
         For RegressorTargetEncoder, this just records the dimensions
@@ -335,8 +331,6 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         ----------
         y : np.ndarray
             The target data to be transformed.
-        dummy: None
-            Unused argument, kept for compatibility with sklearn Pipelines.
 
         Returns
         -------
@@ -418,9 +412,7 @@ class ClassWeightDataTransformer(BaseEstimator, TransformerMixin):
         self.class_weight = class_weight
 
     def fit(
-        self,
-        data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]],
-        dummy: None = None,
+        self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]],
     ) -> "ClassWeightDataTransformer":
         return self
 
