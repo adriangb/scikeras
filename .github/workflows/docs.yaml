@@ -1,8 +1,11 @@
-name: Docs
+name: Build Docs
 on:
   push:
     branches: [ master ]
   pull_request:
+  release:
+    types:
+      - published
 
 jobs:
   notebooks:
@@ -37,19 +40,14 @@ jobs:
 
       - name: Build the docs
         run: |
-          poetry run sphinx-build -b html -j 2 docs/source docs/_build
+          poetry run sphinx-build -b html -j 2 docs/source docs/_build/${{ github.ref }}
 
-      - name: Deploy docs
-        uses: JamesIves/github-pages-deploy-action@3.7.1
+      - name: Save docs artifact
+        uses: actions/upload-artifact@v2
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: docs-deploy
-          FOLDER: docs/_build
-          CLEAN: true
-          TARGET_FOLDER: ${{ github.ref }}
-          SINGLE_COMMIT: true
-          PRESERVE: true
-      
+          name: docs
+          path: docs/_build/*
+
       - name: Print docs link
         run: |
           echo "Docs available at https://www.adriangb.com/scikeras/${{ github.ref }}/"
