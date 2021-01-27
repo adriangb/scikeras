@@ -224,13 +224,24 @@ Within SciKeras, this is roughly implemented as follows:
 ``dataset_transformer`` is the last step before passing the data to Keras, and it allows for the greatest
 degree of customization because SciKeras does not make any assumptions about the output data
 and passes it directly to :py:func:`tensorflow.keras.Model.fit`.
-Its signature is ``dataset_transformer.fit_transform((X, y, sample_weight))``,
-that is, a 3 element tuple corresponding to the ``x``, ``y`` and ``sample_weight``
-arguments in :py:func:`tensorflow.keras.Model.fit`.
+Its signature is:
 
-The output must be a 3 element tuple as well, and it will be passed untouched
-to :py:func:`tensorflow.keras.Model.fit`, so that the second and/or third
-elements are allowed to be ``None``, but the first must always have a value.
+.. code:: python
+
+    from sklearn.base import BaseEstimator, TransformerMixin
+
+    class DatasetTransformer(BaseEstimator, TransformerMixin):
+        def fit(self, data, dummy=None) -> "DatasetTransformer":
+            X, y, sample_weight = data  # sample_weight might be None
+            ...
+            return self
+
+        def transform(self, data):  # return a valid input for keras.Model.fit
+            X, y, sample_weight = data  # y and/or sample_weight might be None
+            ...
+            return (X, y, sample_weight)  # option 1
+            return (tensorflow_dataset, None, None)  # option 2
+
 
 Although you could implement *all* data transformations in a single ``dataset_transformer``,
 having several distinct dependency injections points allows for more modularity,
