@@ -1,0 +1,1500 @@
+{
+ "cells": [
+  {
+   "cell_type": "raw",
+   "id": "smart-birthday",
+   "metadata": {},
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Basic_Usage.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "photographic-steal",
+   "metadata": {},
+   "source": [
+    "# Basic usage\n",
+    "\n",
+    "`SciKeras` is designed to maximize interoperability between `sklearn` and `Keras/TensorFlow`. The aim is to keep 99% of the flexibility of `Keras` while being able to leverage most features of `sklearn`. Below, we show the basic usage of `SciKeras` and how it can be combined with `sklearn`.\n",
+    "\n",
+    "This notebook shows you how to use the basic functionality of `SciKeras`.\n",
+    "\n",
+    "## Table of contents\n",
+    "\n",
+    "* [1. Setup](#1.-Setup)\n",
+    "* [2. Training a classifier and making predictions](#2.-Training-a-classifier-and-making-predictions)\n",
+    "  * [2.1 A toy binary classification task](#2.1-A-toy-binary-classification-task)\n",
+    "  * [2.2 Definition of the Keras classification Model](#2.2-Definition-of-the-Keras-classification-Model)\n",
+    "  * [2.3 Defining and training the neural net classifier](#2.3-Defining-and-training-the-neural-net-classifier)\n",
+    "  * [2.4 Making predictions, classification](#2.4-Making-predictions-classification)\n",
+    "* [3 Training a regressor](#3.-Training-a-regressor)\n",
+    "  * [3.1 A toy regression task](#3.1-A-toy-regression-task)\n",
+    "  * [3.2 Definition of the Keras regression Model](#3.2-Definition-of-the-Keras-regression-Model)\n",
+    "  * [3.3 Defining and training the neural net regressor](#3.3-Defining-and-training-the-neural-net-regressor)\n",
+    "  * [3.4 Making predictions, regression](#3.4-Making-predictions-regression)\n",
+    "* [4. Saving and loading a model](#4.-Saving-and-loading-a-model)\n",
+    "  * [4.1 Saving the whole model](#4.1-Saving-the-whole-model)\n",
+    "  * [4.2 Saving using Keras' saving methods](#4.2-Saving-using-Keras-saving-methods)\n",
+    "* [5. Usage with an sklearn Pipeline](#5.-Usage-with-an-sklearn-Pipeline)\n",
+    "* [6. Callbacks](#6.-Callbacks)\n",
+    "* [7. Usage with sklearn GridSearchCV](#7.-Usage-with-sklearn-GridSearchCV)\n",
+    "  * [7.1 Special prefixes](#7.1-Special-prefixes)\n",
+    "  * [7.2 Performing a grid search](#7.2-Performing-a-grid-search)\n",
+    "\n",
+    "## 1. Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "passive-samoa",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:52.594169Z",
+     "iopub.status.busy": "2021-01-27T18:30:52.593581Z",
+     "iopub.status.idle": "2021-01-27T18:30:54.053956Z",
+     "shell.execute_reply": "2021-01-27T18:30:54.053492Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "try:\n",
+    "    import scikeras\n",
+    "except ImportError:\n",
+    "    !python -m pip install scikeras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "laden-gather",
+   "metadata": {},
+   "source": [
+    "Silence TensorFlow logging to keep output succinct."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "peaceful-latitude",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:54.058928Z",
+     "iopub.status.busy": "2021-01-27T18:30:54.058376Z",
+     "iopub.status.idle": "2021-01-27T18:30:54.061933Z",
+     "shell.execute_reply": "2021-01-27T18:30:54.061507Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "from tensorflow import get_logger\n",
+    "get_logger().setLevel('ERROR')\n",
+    "warnings.filterwarnings(\"ignore\", message=\"Setting the random state for TF\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "approved-masters",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:54.065326Z",
+     "iopub.status.busy": "2021-01-27T18:30:54.064796Z",
+     "iopub.status.idle": "2021-01-27T18:30:54.868118Z",
+     "shell.execute_reply": "2021-01-27T18:30:54.868953Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from scikeras.wrappers import KerasClassifier, KerasRegressor\n",
+    "from tensorflow import keras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "european-brown",
+   "metadata": {},
+   "source": [
+    "## 2. Training a classifier and making predictions\n",
+    "\n",
+    "### 2.1 A toy binary classification task\n",
+    "\n",
+    "We load a toy classification task from `sklearn`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "loaded-carpet",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:54.873188Z",
+     "iopub.status.busy": "2021-01-27T18:30:54.872128Z",
+     "iopub.status.idle": "2021-01-27T18:30:54.895598Z",
+     "shell.execute_reply": "2021-01-27T18:30:54.896344Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from sklearn.datasets import make_classification"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "plastic-mount",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:54.899424Z",
+     "iopub.status.busy": "2021-01-27T18:30:54.898455Z",
+     "iopub.status.idle": "2021-01-27T18:30:54.906324Z",
+     "shell.execute_reply": "2021-01-27T18:30:54.906929Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "X, y = make_classification(1000, 20, n_informative=10, random_state=0)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "minute-lightning",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:54.910070Z",
+     "iopub.status.busy": "2021-01-27T18:30:54.909030Z",
+     "iopub.status.idle": "2021-01-27T18:30:54.922028Z",
+     "shell.execute_reply": "2021-01-27T18:30:54.922726Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "((1000, 20), (1000,), 0.5)"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X.shape, y.shape, y.mean()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "senior-hands",
+   "metadata": {},
+   "source": [
+    "### 2.2 Definition of the Keras classification Model\n",
+    "\n",
+    "We define a vanilla neural network with.\n",
+    "\n",
+    "Because we are dealing with 2 classes, the output layer can be constructed in\n",
+    "two different ways:\n",
+    "\n",
+    "1. Single unit with a `\"sigmoid\"` nonlinearity. The loss must be `\"binary_crossentropy\"`.\n",
+    "2. Two units (one for each class) and a `\"softmax\"` nonlinearity. The loss must be `\"sparse_categorical_crossentropy\"`.\n",
+    "\n",
+    "In this example, we choose the first option, which is what you would usually\n",
+    "do for binary classification. The second option is usually reserved for when\n",
+    "you have >2 classes."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "composed-utilization",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:54.925988Z",
+     "iopub.status.busy": "2021-01-27T18:30:54.924969Z",
+     "iopub.status.idle": "2021-01-27T18:30:54.928996Z",
+     "shell.execute_reply": "2021-01-27T18:30:54.929687Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from tensorflow import keras"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "comprehensive-lighter",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:54.932890Z",
+     "iopub.status.busy": "2021-01-27T18:30:54.931631Z",
+     "iopub.status.idle": "2021-01-27T18:30:54.937971Z",
+     "shell.execute_reply": "2021-01-27T18:30:54.938640Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def get_clf(meta, hidden_layer_sizes, dropout):\n",
+    "    n_features_in_ = meta[\"n_features_in_\"]\n",
+    "    n_classes_ = meta[\"n_classes_\"]\n",
+    "    model = keras.models.Sequential()\n",
+    "    model.add(keras.layers.Input(shape=(n_features_in_,)))\n",
+    "    for hidden_layer_size in hidden_layer_sizes:\n",
+    "        model.add(keras.layers.Dense(hidden_layer_size, activation=\"relu\"))\n",
+    "        model.add(keras.layers.Dropout(dropout))\n",
+    "    model.add(keras.layers.Dense(1, activation=\"sigmoid\"))\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "certified-ethics",
+   "metadata": {},
+   "source": [
+    "### 2.3 Defining and training the neural net classifier\n",
+    "\n",
+    "We use `KerasClassifier` because we're dealing with a classifcation task. The first argument should be a callable returning a `Keras.Model`, in this case, `get_clf`. As additional arguments, we pass the number of loss function (required) and the optimizer, but the later is optional. We must also pass all of the arguments to `get_clf` as keyword arguments to `KerasClassifier` if they don't have a default value in `get_clf`. Note that if you do not pass an argument to `KerasClassifier`, it will not be avilable for hyperparameter tuning. Finally, we also pass `random_state=0` for reproducible results."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "consecutive-grant",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:54.941838Z",
+     "iopub.status.busy": "2021-01-27T18:30:54.940884Z",
+     "iopub.status.idle": "2021-01-27T18:30:54.944754Z",
+     "shell.execute_reply": "2021-01-27T18:30:54.945421Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from scikeras.wrappers import KerasClassifier"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "mounted-remedy",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:54.948774Z",
+     "iopub.status.busy": "2021-01-27T18:30:54.947475Z",
+     "iopub.status.idle": "2021-01-27T18:30:54.952263Z",
+     "shell.execute_reply": "2021-01-27T18:30:54.952972Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "clf = KerasClassifier(\n",
+    "    model=get_clf,\n",
+    "    loss=\"binary_crossentropy\",\n",
+    "    optimizer=\"adam\",\n",
+    "    hidden_layer_sizes=(100,),\n",
+    "    dropout=0.5,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "mineral-circle",
+   "metadata": {},
+   "source": [
+    "As in `sklearn`, we call `fit` passing the input data `X` and the targets `y`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "circular-replication",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:54.955898Z",
+     "iopub.status.busy": "2021-01-27T18:30:54.954987Z",
+     "iopub.status.idle": "2021-01-27T18:30:55.464887Z",
+     "shell.execute_reply": "2021-01-27T18:30:55.465943Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 1/32 [..............................] - ETA: 11s - loss: 1.2178"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "32/32 [==============================] - 0s 1ms/step - loss: 0.8864\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "KerasClassifier(\n",
+       "\tmodel=<function get_clf at 0x7fd2d8b29700>\n",
+       "\tbuild_fn=None\n",
+       "\twarm_start=False\n",
+       "\trandom_state=None\n",
+       "\toptimizer=adam\n",
+       "\tloss=binary_crossentropy\n",
+       "\tmetrics=None\n",
+       "\tbatch_size=None\n",
+       "\tverbose=1\n",
+       "\tcallbacks=None\n",
+       "\tvalidation_split=0.0\n",
+       "\tshuffle=True\n",
+       "\trun_eagerly=False\n",
+       "\tepochs=1\n",
+       "\thidden_layer_sizes=(100,)\n",
+       "\tdropout=0.5\n",
+       "\tclass_weight=None\n",
+       ")"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "clf.fit(X, y)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "funny-harris",
+   "metadata": {},
+   "source": [
+    "Also, as in `sklearn`, you may call `predict` or `predict_proba` on the fitted model.\n",
+    "\n",
+    "### 2.4 Making predictions, classification"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "optimum-collaboration",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:55.471857Z",
+     "iopub.status.busy": "2021-01-27T18:30:55.471213Z",
+     "iopub.status.idle": "2021-01-27T18:30:55.664304Z",
+     "shell.execute_reply": "2021-01-27T18:30:55.664799Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/1 [==============================] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1/1 [==============================] - 0s 134ms/step\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "array([1, 0, 0, 0, 0])"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "y_pred = clf.predict(X[:5])\n",
+    "y_pred"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "renewable-vermont",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:55.670650Z",
+     "iopub.status.busy": "2021-01-27T18:30:55.668844Z",
+     "iopub.status.idle": "2021-01-27T18:30:55.753794Z",
+     "shell.execute_reply": "2021-01-27T18:30:55.754582Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/1 [==============================] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1/1 [==============================] - 0s 25ms/step\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "array([[0.38829315, 0.61170685],\n",
+       "       [0.66835666, 0.33164334],\n",
+       "       [0.78860635, 0.21139365],\n",
+       "       [0.88545567, 0.11454433],\n",
+       "       [0.8944026 , 0.10559738]], dtype=float32)"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "y_proba = clf.predict_proba(X[:5])\n",
+    "y_proba"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "isolated-edgar",
+   "metadata": {},
+   "source": [
+    "## 3 Training a regressor\n",
+    "\n",
+    "### 3.1 A toy regression task"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "prostate-obligation",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:55.758597Z",
+     "iopub.status.busy": "2021-01-27T18:30:55.757969Z",
+     "iopub.status.idle": "2021-01-27T18:30:55.764469Z",
+     "shell.execute_reply": "2021-01-27T18:30:55.763776Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.datasets import make_regression"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "binary-conspiracy",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:55.768755Z",
+     "iopub.status.busy": "2021-01-27T18:30:55.767380Z",
+     "iopub.status.idle": "2021-01-27T18:30:55.779247Z",
+     "shell.execute_reply": "2021-01-27T18:30:55.779785Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "X_regr, y_regr = make_regression(1000, 20, n_informative=10, random_state=0)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "correct-walker",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:55.784697Z",
+     "iopub.status.busy": "2021-01-27T18:30:55.784020Z",
+     "iopub.status.idle": "2021-01-27T18:30:55.792916Z",
+     "shell.execute_reply": "2021-01-27T18:30:55.793453Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "((1000, 20), (1000,), -649.0148244404172, 615.4505181286091)"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_regr.shape, y_regr.shape, y_regr.min(), y_regr.max()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "stuffed-athens",
+   "metadata": {},
+   "source": [
+    "### 3.2 Definition of the Keras regression Model\n",
+    "\n",
+    "Again, define a vanilla neural network. The main difference is that the output layer always has a single unit and does not apply any nonlinearity."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "anticipated-luther",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:55.802915Z",
+     "iopub.status.busy": "2021-01-27T18:30:55.801730Z",
+     "iopub.status.idle": "2021-01-27T18:30:55.803445Z",
+     "shell.execute_reply": "2021-01-27T18:30:55.802303Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def get_reg(meta, hidden_layer_sizes, dropout):\n",
+    "    n_features_in_ = meta[\"n_features_in_\"]\n",
+    "    model = keras.models.Sequential()\n",
+    "    model.add(keras.layers.Input(shape=(n_features_in_,)))\n",
+    "    for hidden_layer_size in hidden_layer_sizes:\n",
+    "        model.add(keras.layers.Dense(hidden_layer_size, activation=\"relu\"))\n",
+    "        model.add(keras.layers.Dropout(dropout))\n",
+    "    model.add(keras.layers.Dense(1))\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "severe-collaboration",
+   "metadata": {},
+   "source": [
+    "### 3.3 Defining and training the neural net regressor\n",
+    "\n",
+    "Training a regressor is almost the same as training a classifier. Mainly, we use `KerasRegressor` instead of `KerasClassifier` (this is the same terminology as in `sklearn`). We also change the loss function to `KerasRegressor.r_squared`. SciKeras provides this loss function because most of the `sklearn` ecosystem expects `R^2` as the loss function, but Keras does not have a default implementation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "suffering-microwave",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:55.817743Z",
+     "iopub.status.busy": "2021-01-27T18:30:55.816488Z",
+     "iopub.status.idle": "2021-01-27T18:30:55.818319Z",
+     "shell.execute_reply": "2021-01-27T18:30:55.817108Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from scikeras.wrappers import KerasRegressor"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "protective-progress",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:55.829479Z",
+     "iopub.status.busy": "2021-01-27T18:30:55.828325Z",
+     "iopub.status.idle": "2021-01-27T18:30:55.833841Z",
+     "shell.execute_reply": "2021-01-27T18:30:55.828915Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "reg = KerasRegressor(\n",
+    "    model=get_reg,\n",
+    "    loss=KerasRegressor.r_squared,\n",
+    "    optimizer=\"adam\",\n",
+    "    hidden_layer_sizes=(100,),\n",
+    "    dropout=0.5,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "floating-vault",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:55.837909Z",
+     "iopub.status.busy": "2021-01-27T18:30:55.837344Z",
+     "iopub.status.idle": "2021-01-27T18:30:56.410732Z",
+     "shell.execute_reply": "2021-01-27T18:30:56.411424Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 1/32 [..............................] - ETA: 13s - loss: -0.2125"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "32/32 [==============================] - 0s 1ms/step - loss: -0.0632\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "KerasRegressor(\n",
+       "\tmodel=<function get_reg at 0x7fd2607600d0>\n",
+       "\tbuild_fn=None\n",
+       "\twarm_start=False\n",
+       "\trandom_state=None\n",
+       "\toptimizer=adam\n",
+       "\tloss=<function KerasRegressor.r_squared at 0x7fd26e537820>\n",
+       "\tmetrics=None\n",
+       "\tbatch_size=None\n",
+       "\tverbose=1\n",
+       "\tcallbacks=None\n",
+       "\tvalidation_split=0.0\n",
+       "\tshuffle=True\n",
+       "\trun_eagerly=False\n",
+       "\tepochs=1\n",
+       "\thidden_layer_sizes=(100,)\n",
+       "\tdropout=0.5\n",
+       ")"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "reg.fit(X_regr, y_regr)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "formed-issue",
+   "metadata": {},
+   "source": [
+    "### 3.4 Making predictions, regression\n",
+    "\n",
+    "You may call `predict` or `predict_proba` on the fitted model. For regressions, both methods return the same value."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "received-impact",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:56.414723Z",
+     "iopub.status.busy": "2021-01-27T18:30:56.413795Z",
+     "iopub.status.idle": "2021-01-27T18:30:56.476569Z",
+     "shell.execute_reply": "2021-01-27T18:30:56.476142Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/1 [==============================] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1/1 [==============================] - 0s 32ms/step\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "array([-1.14376521,  0.49759582, -0.19369821, -0.36023158, -0.50232565])"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "y_pred = reg.predict(X_regr[:5])\n",
+    "y_pred"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "premier-former",
+   "metadata": {},
+   "source": [
+    "## 4. Saving and loading a model\n",
+    "\n",
+    "Save and load either the whole model by using pickle, or use Keras' specialized save methods on the `KerasClassifier.model_` or `KerasRegressor.model_` attribute that is created after fitting. You will want to use Keras' model saving utilities if any of the following apply:\n",
+    "\n",
+    "1. You wish to save only the weights or only the training configuration of your model.\n",
+    "2. You wish to share your model with collaborators. Pickle is a relatively unsafe protocol and it is not recommended to share or load pickle objects publically.\n",
+    "3. You care about performance, especially if doing in-memory serialization.\n",
+    "\n",
+    "For more information, see Keras' [saving documentation](https://www.tensorflow.org/guide/keras/save_and_serialize).\n",
+    "\n",
+    "### 4.1 Saving the whole model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "infectious-landing",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:56.480393Z",
+     "iopub.status.busy": "2021-01-27T18:30:56.479880Z",
+     "iopub.status.idle": "2021-01-27T18:30:56.483008Z",
+     "shell.execute_reply": "2021-01-27T18:30:56.483401Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import pickle"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "eight-invitation",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:56.489986Z",
+     "iopub.status.busy": "2021-01-27T18:30:56.489480Z",
+     "iopub.status.idle": "2021-01-27T18:30:57.020008Z",
+     "shell.execute_reply": "2021-01-27T18:30:57.020855Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "bytes_model = pickle.dumps(reg)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "found-madonna",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:57.024384Z",
+     "iopub.status.busy": "2021-01-27T18:30:57.023311Z",
+     "iopub.status.idle": "2021-01-27T18:30:57.385481Z",
+     "shell.execute_reply": "2021-01-27T18:30:57.386466Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "KerasRegressor(\n",
+       "\tmodel=<function get_reg at 0x7fd2607600d0>\n",
+       "\tbuild_fn=None\n",
+       "\twarm_start=False\n",
+       "\trandom_state=None\n",
+       "\toptimizer=adam\n",
+       "\tloss=<function KerasRegressor.r_squared at 0x7fd26e537820>\n",
+       "\tmetrics=None\n",
+       "\tbatch_size=None\n",
+       "\tverbose=1\n",
+       "\tcallbacks=None\n",
+       "\tvalidation_split=0.0\n",
+       "\tshuffle=True\n",
+       "\trun_eagerly=False\n",
+       "\tepochs=1\n",
+       "\thidden_layer_sizes=(100,)\n",
+       "\tdropout=0.5\n",
+       ")"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "new_reg = pickle.loads(bytes_model)\n",
+    "new_reg"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "broke-annotation",
+   "metadata": {},
+   "source": [
+    "### 4.2 Saving using Keras' saving methods\n",
+    "\n",
+    "This efficiently and safely saves the model to disk, including trained weights.\n",
+    "You should use this method if you plan on sharing your saved models."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "id": "placed-tobacco",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:57.391617Z",
+     "iopub.status.busy": "2021-01-27T18:30:57.390262Z",
+     "iopub.status.idle": "2021-01-27T18:30:57.862674Z",
+     "shell.execute_reply": "2021-01-27T18:30:57.863138Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Save to disk\n",
+    "reg.model_.save(\"/tmp/my_model\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "id": "rapid-brand",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:57.866697Z",
+     "iopub.status.busy": "2021-01-27T18:30:57.865735Z",
+     "iopub.status.idle": "2021-01-27T18:30:58.656984Z",
+     "shell.execute_reply": "2021-01-27T18:30:58.657487Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 1/32 [..............................] - ETA: 13s - loss: -0.0217"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "32/32 [==============================] - 0s 1ms/step - loss: -0.0390\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/1 [==============================] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1/1 [==============================] - 0s 37ms/step\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "array([-1.61539853,  0.79645735, -0.31037256, -0.62409449, -0.62253302])"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Load the model back into memory\n",
+    "new_reg_model = keras.models.load_model(\"/tmp/my_model\")\n",
+    "# Now we need to instantiate a new SciKeras object with this model\n",
+    "# Note that we no longer pass paramters like hidden_layer_sizes, those\n",
+    "# are note \"fixed\"\n",
+    "reg = KerasRegressor(\n",
+    "    new_reg_model,\n",
+    "    loss=KerasRegressor.r_squared,\n",
+    "    optimizer=\"adam\",\n",
+    ")\n",
+    "reg.fit(X_regr, y_regr)\n",
+    "reg.predict(X_regr[:5])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "celtic-democrat",
+   "metadata": {},
+   "source": [
+    "## 5. Usage with an sklearn Pipeline\n",
+    "\n",
+    "It is possible to put the `KerasClassifier` inside an `sklearn Pipeline`, as you would with any `sklearn` classifier."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "id": "lovely-yesterday",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:58.659965Z",
+     "iopub.status.busy": "2021-01-27T18:30:58.659456Z",
+     "iopub.status.idle": "2021-01-27T18:30:58.662304Z",
+     "shell.execute_reply": "2021-01-27T18:30:58.662763Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.pipeline import Pipeline\n",
+    "from sklearn.preprocessing import StandardScaler"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "id": "distant-taylor",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:58.665077Z",
+     "iopub.status.busy": "2021-01-27T18:30:58.664484Z",
+     "iopub.status.idle": "2021-01-27T18:30:58.667627Z",
+     "shell.execute_reply": "2021-01-27T18:30:58.669596Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "pipe = Pipeline([\n",
+    "    ('scale', StandardScaler()),\n",
+    "    ('clf', clf),\n",
+    "])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "id": "municipal-floating",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:58.673350Z",
+     "iopub.status.busy": "2021-01-27T18:30:58.672836Z",
+     "iopub.status.idle": "2021-01-27T18:30:59.159966Z",
+     "shell.execute_reply": "2021-01-27T18:30:59.159082Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 1/32 [..............................] - ETA: 11s - loss: 0.9198"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "32/32 [==============================] - 0s 1ms/step - loss: 0.8117\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "Pipeline(steps=[('scale', StandardScaler()),\n",
+       "                ('clf',\n",
+       "                 KerasClassifier(dropout=0.5, hidden_layer_sizes=(100,), loss='binary_crossentropy', model=<function get_clf at 0x7fd2d8b29700>, optimizer='adam'))])"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "pipe.fit(X, y)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "id": "median-franchise",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:59.166831Z",
+     "iopub.status.busy": "2021-01-27T18:30:59.165009Z",
+     "iopub.status.idle": "2021-01-27T18:30:59.226696Z",
+     "shell.execute_reply": "2021-01-27T18:30:59.226227Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "1/1 [==============================] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "1/1 [==============================] - 0s 32ms/step\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "array([[0.6057639 , 0.39423606],\n",
+       "       [0.66232336, 0.33767664],\n",
+       "       [0.60736805, 0.39263195],\n",
+       "       [0.69363713, 0.30636284],\n",
+       "       [0.6560258 , 0.34397417]], dtype=float32)"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "y_proba = pipe.predict_proba(X[:5])\n",
+    "y_proba"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fitting-journalist",
+   "metadata": {},
+   "source": [
+    "To save the whole pipeline, including the Keras model, use `pickle`.\n",
+    "\n",
+    "## 6. Callbacks\n",
+    "\n",
+    "Adding a new callback to the model is straightforward. Below we show how to add an `EarlyStopping` callback to prevent overfitting."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "id": "laughing-compatibility",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:59.232054Z",
+     "iopub.status.busy": "2021-01-27T18:30:59.231544Z",
+     "iopub.status.idle": "2021-01-27T18:30:59.235760Z",
+     "shell.execute_reply": "2021-01-27T18:30:59.235293Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "es = keras.callbacks.EarlyStopping(monitor='val_binary_accuracy', mode='max', patience=200, verbose=1)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "exclusive-pilot",
+   "metadata": {},
+   "source": [
+    "We now generate a toy dataset using `sklearn.datasets.make_moons`. This dataset was chosen specifically to trigger early stopping."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "id": "collected-average",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:59.240692Z",
+     "iopub.status.busy": "2021-01-27T18:30:59.240174Z",
+     "iopub.status.idle": "2021-01-27T18:30:59.244630Z",
+     "shell.execute_reply": "2021-01-27T18:30:59.245279Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.datasets import make_moons"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "id": "homeless-massage",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:59.249316Z",
+     "iopub.status.busy": "2021-01-27T18:30:59.247529Z",
+     "iopub.status.idle": "2021-01-27T18:30:59.257859Z",
+     "shell.execute_reply": "2021-01-27T18:30:59.258511Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "((100, 2), (100,))"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X, y = make_moons(n_samples=100, noise=0.2, random_state=0)\n",
+    "X.shape, y.shape"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "nuclear-christianity",
+   "metadata": {},
+   "source": [
+    "We will first check fitting without the callback and then with. We will compare the training time and final accuracy."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "id": "velvet-entry",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:59.266649Z",
+     "iopub.status.busy": "2021-01-27T18:30:59.265246Z",
+     "iopub.status.idle": "2021-01-27T18:30:59.269995Z",
+     "shell.execute_reply": "2021-01-27T18:30:59.269010Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import time"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "id": "parliamentary-thesaurus",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:30:59.283932Z",
+     "iopub.status.busy": "2021-01-27T18:30:59.283306Z",
+     "iopub.status.idle": "2021-01-27T18:31:15.500716Z",
+     "shell.execute_reply": "2021-01-27T18:31:15.501419Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Training time: 2.5978098419142144e+18\n",
+      "Final accuracy: 1.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "# First test without the callback\n",
+    "clf = KerasClassifier(\n",
+    "    model=get_clf,\n",
+    "    loss=\"binary_crossentropy\",\n",
+    "    optimizer=\"adam\",\n",
+    "    hidden_layer_sizes=(500,),\n",
+    "    dropout=0.5,\n",
+    "    metrics=[\"binary_accuracy\"],\n",
+    "    fit__validation_split=0.2,\n",
+    "    epochs=500,\n",
+    "    verbose=False,\n",
+    ")\n",
+    "start = time.time()\n",
+    "clf.fit(X, y)\n",
+    "print(f\"Training time: {time.time() * start}\")\n",
+    "print(f\"Final accuracy: {clf.history_['val_binary_accuracy'][-1]}\")  # get last value of last fit/partial_fit call"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "id": "improved-joshua",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:31:15.509315Z",
+     "iopub.status.busy": "2021-01-27T18:31:15.506880Z",
+     "iopub.status.idle": "2021-01-27T18:31:22.773762Z",
+     "shell.execute_reply": "2021-01-27T18:31:22.772940Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 00214: early stopping\n",
+      "Training time: 2.597809879790197e+18\n",
+      "Final accuracy: 1.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Test with the callback\n",
+    "clf = KerasClassifier(\n",
+    "    model=get_clf,\n",
+    "    loss=\"binary_crossentropy\",\n",
+    "    optimizer=\"adam\",\n",
+    "    hidden_layer_sizes=(500,),\n",
+    "    dropout=0.5,\n",
+    "    metrics=[\"binary_accuracy\"],\n",
+    "    fit__validation_split=0.2,\n",
+    "    epochs=500,\n",
+    "    verbose=False,\n",
+    "    callbacks=[es]\n",
+    ")\n",
+    "start = time.time()\n",
+    "clf.fit(X, y)\n",
+    "print(f\"Training time: {time.time() * start}\")\n",
+    "print(f\"Final accuracy: {clf.history_['val_binary_accuracy'][-1]}\")  # get last value of last fit/partial_fit call"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "exterior-western",
+   "metadata": {},
+   "source": [
+    "For information on how to write custom callbacks, have a look at the \n",
+    "\n",
+    "---\n",
+    "\n",
+    "[Advanced_Usage](https://nbviewer.jupyter.org/github/adriangb/scikeras/blob/master/notebooks/Advanced_Usage.ipynb) notebook.\n",
+    "\n",
+    "## 7. Usage with sklearn GridSearchCV\n",
+    "\n",
+    "### 7.1 Special prefixes\n",
+    "\n",
+    "SciKeras allows to direct access to all parameters passed to the wrapper constructors, including deeply nested routed parameters. This allows tunning of\n",
+    "paramters like `hidden_layer_sizes` as well as `optimizer__learning_rate`.\n",
+    "\n",
+    "This is exactly the same logic that allows to access estimator parameters in `sklearn Pipeline`s and `FeatureUnion`s.\n",
+    "\n",
+    "This feature is useful in several ways. For one, it allows to set those parameters in the model definition. Furthermore, it allows you to set parameters in an `sklearn GridSearchCV` as shown below.\n",
+    "\n",
+    "To differentiate paramters like `callbacks` which are accepted by both `tf.keras.Model.fit` and `tf.keras.Model.predict` you can add a `fit__` or `predict__` routing suffix respectively. Similar, the `model__` prefix may be used to specify that a paramter is destined only for `get_clf`/`get_reg` (or whatever callable you pass as your `model` argument).\n",
+    "\n",
+    "For more information on parameter routing with special prefixes, see the [Advanced Usage Docs](https://scikeras.org.readthedocs.build/en/latest/advanced.html#routed-parameters)\n",
+    "\n",
+    "### 7.2 Performing a grid search\n",
+    "\n",
+    "Below we show how to perform a grid search over the learning rate (`optimizer__lr`), the model's number of hidden layers (`model__hidden_layer_sizes`), the model's dropout rate (`model__dropout`)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "id": "together-tennessee",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:31:22.779175Z",
+     "iopub.status.busy": "2021-01-27T18:31:22.778595Z",
+     "iopub.status.idle": "2021-01-27T18:31:22.788510Z",
+     "shell.execute_reply": "2021-01-27T18:31:22.787960Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.model_selection import GridSearchCV"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "id": "demonstrated-throat",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:31:22.793400Z",
+     "iopub.status.busy": "2021-01-27T18:31:22.792649Z",
+     "iopub.status.idle": "2021-01-27T18:31:22.796683Z",
+     "shell.execute_reply": "2021-01-27T18:31:22.797593Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "clf = KerasClassifier(\n",
+    "    model=get_clf,\n",
+    "    loss=\"binary_crossentropy\",\n",
+    "    optimizer=\"adam\",\n",
+    "    optimizer__lr=0.1,\n",
+    "    model__hidden_layer_sizes=(100,),\n",
+    "    model__dropout=0.5,\n",
+    "    verbose=False,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "operational-administrator",
+   "metadata": {},
+   "source": [
+    "*Note*: We set the verbosity level to zero (`verbose=False`) to prevent too much print output from being shown."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 39,
+   "id": "lovely-cheat",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:31:22.801407Z",
+     "iopub.status.busy": "2021-01-27T18:31:22.800213Z",
+     "iopub.status.idle": "2021-01-27T18:31:22.805513Z",
+     "shell.execute_reply": "2021-01-27T18:31:22.806380Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "params = {\n",
+    "    'optimizer__lr': [0.05, 0.1],\n",
+    "    'model__hidden_layer_sizes': [(100, ), (50, 50, ), (33, 33, 33, )],\n",
+    "    'model__dropout': [0, 0.5],\n",
+    "}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "id": "jewish-plaintiff",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:31:22.810229Z",
+     "iopub.status.busy": "2021-01-27T18:31:22.809198Z",
+     "iopub.status.idle": "2021-01-27T18:31:22.814056Z",
+     "shell.execute_reply": "2021-01-27T18:31:22.814860Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "gs = GridSearchCV(clf, params, scoring='accuracy', n_jobs=-1, verbose=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 41,
+   "id": "funded-credits",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:31:22.818605Z",
+     "iopub.status.busy": "2021-01-27T18:31:22.817328Z",
+     "iopub.status.idle": "2021-01-27T18:31:58.762536Z",
+     "shell.execute_reply": "2021-01-27T18:31:58.763455Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Fitting 5 folds for each of 12 candidates, totalling 60 fits\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "GridSearchCV(estimator=KerasClassifier(loss='binary_crossentropy', model=<function get_clf at 0x7fd2d8b29700>, model__dropout=0.5, model__hidden_layer_sizes=(100,), optimizer='adam', optimizer__lr=0.1, verbose=False),\n",
+       "             n_jobs=-1,\n",
+       "             param_grid={'model__dropout': [0, 0.5],\n",
+       "                         'model__hidden_layer_sizes': [(100,), (50, 50),\n",
+       "                                                       (33, 33, 33)],\n",
+       "                         'optimizer__lr': [0.05, 0.1]},\n",
+       "             scoring='accuracy', verbose=True)"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "gs.fit(X, y)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 42,
+   "id": "reasonable-kruger",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-01-27T18:31:58.767499Z",
+     "iopub.status.busy": "2021-01-27T18:31:58.766312Z",
+     "iopub.status.idle": "2021-01-27T18:31:58.777442Z",
+     "shell.execute_reply": "2021-01-27T18:31:58.776847Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0.8699999999999999 {'model__dropout': 0, 'model__hidden_layer_sizes': (50, 50), 'optimizer__lr': 0.05}\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(gs.best_score_, gs.best_params_)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "identical-cancellation",
+   "metadata": {},
+   "source": [
+    "Of course, we could further nest the `KerasClassifier` within an `sklearn Pipeline`, in which case we just prefix the parameter by the name of the net (e.g. `clf__model__hidden_layer_sizes`)."
+   ]
+  }
+ ],
+ "metadata": {
+  "jupytext": {
+   "formats": "ipynb,md"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
