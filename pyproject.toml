@@ -33,6 +33,16 @@ python = ">=3.6.7, <3.9"
 tensorflow = ">=2.4.0"
 scikit-learn = ">=0.22.0"
 
+# docs
+sphinx = { version=">=3.2.1", optional = true }
+numpydoc = { version="^1.1.0", optional = true }
+nbsphinx = { version="^0.8.1", optional = true }
+matplotlib = { version="^3.3.3", optional = true }
+ipykernel = { version="^5.4.2", optional = true }
+jupyter = { version="^1.0.0", optional = true }
+jupytext = { version="^1.9.1", optional = true }
+insipid-sphinx-theme = { version="^0.2.2", optional = true }
+
 [tool.poetry.dev-dependencies]
 pytest = "*"
 pytest-cov = "*"
@@ -40,12 +50,9 @@ pre-commit = "*"
 pytest-xdist = "*"
 pytest-sugar = "*"
 
-# docs
-sphinx = { version=">=3.2.1", optional = true }
-sphinx_rtd_theme = { version=">=0.5.0", optional = true }
 
 [tool.poetry.extras]
-docs = ["sphinx", "sphinx_rtd_theme", "numpydoc"]
+dev_docs = ["sphinx", "numpydoc", "nbsphinx", "matplotlib", "ipykernel", "jupyter", "jupytext", "insipid-sphinx-theme"]
 
 [tool.isort]
 line_length = 88

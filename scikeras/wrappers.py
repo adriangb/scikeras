@@ -256,35 +256,21 @@ class BaseWrapper(BaseEstimator):
             return 0
         return len(self.history_["loss"])
 
+    @staticmethod
     def _validate_sample_weight(
-        self,
-        X: np.ndarray,
-        y: Union[None, np.ndarray],
-        sample_weight: Union[np.ndarray, Iterable],
+        X: np.ndarray, sample_weight: Union[np.ndarray, Iterable],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Validate that the passed sample_weight and ensure it is a Numpy array.
         """
         sample_weight = _check_sample_weight(
             sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
         )
-        # Scikit-Learn expects a 0 in sample_weight to mean
-        # "ignore the sample", but because of how Keras applies
-        # sample_weight to the loss function, this doesn't
-        # exactly work out (as in, sklearn estimator checks fail
-        # because the predictions differ by a small margin).
-        # To get around this, we manually delete these samples here
-        zeros = sample_weight == 0
-        if zeros.sum() == zeros.size:
+        if np.all(sample_weight == 0):
             raise ValueError(
                 "No training samples had any weight; only zeros were passed in sample_weight."
                 " That means there's nothing to train on by definition, so training can not be completed."
             )
-        if np.any(zeros):
-            X = X[~zeros]
-            if y is not None:
-                y = y[~zeros]
-            sample_weight = sample_weight[~zeros]
-        return X, y, sample_weight
+        return X, sample_weight
 
     def _check_model_param(self):
         """Checks ``model`` and returns model building
@@ -762,8 +748,9 @@ class BaseWrapper(BaseEstimator):
             # Given the same RandomState, the seed will always be
             # the same, thus giving reproducible results
             state = self.random_state.get_state()
-            self._random_state = self.random_state.randint(low=1)
-            self.random_state.set_state(state)
+            r = np.random.RandomState()
+            r.set_state(state)
+            self._random_state = r.randint(low=1)
         else:
             # int or None
             self._random_state = self.random_state
@@ -844,7 +831,7 @@ class BaseWrapper(BaseEstimator):
             X, y = self._validate_data(X, y)
 
         if sample_weight is not None:
-            X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
+            X, sample_weight = self._validate_sample_weight(X, sample_weight)
 
         y = self.target_encoder_.transform(y)
         X = self.feature_encoder_.transform(X)
@@ -945,7 +932,7 @@ class BaseWrapper(BaseEstimator):
         return y_pred
 
     @staticmethod
-    def scorer(X, y, **kwargs) -> float:
+    def scorer(y_true, y_pred, **kwargs) -> float:
         """Scoring function for model.
 
         This is not implemented in BaseWrapper, it exists
@@ -992,8 +979,8 @@ class BaseWrapper(BaseEstimator):
         """
         # validate sample weights
         if sample_weight is not None:
-            X, y, sample_weight = self._validate_sample_weight(
-                X=X, y=y, sample_weight=sample_weight
+            X, sample_weight = self._validate_sample_weight(
+                X=X, sample_weight=sample_weight
             )
 
         # validate y
@@ -1020,7 +1007,7 @@ class BaseWrapper(BaseEstimator):
         return {
             k: v
             for k, v in self.__dict__.items()
-            if (len(k) > 1 and k[-1] == "_" and [-2] != "_" and k[0] != "_")
+            if (len(k) > 1 and k[-1] == "_" and k[-2] != "_" and k[0] != "_")
         }
 
     def set_params(self, **params) -> "BaseWrapper":
