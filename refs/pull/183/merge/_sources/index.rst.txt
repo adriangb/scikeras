@@ -1,4 +1,4 @@
-Welcome to SciKeras's TEST A CHANGE!
+Welcome to SciKeras's TEST A  CHNGE!
 ====================================
 
 The goal of scikeras is to make it possible to use Keras/TensorFlow with sklearn. 
