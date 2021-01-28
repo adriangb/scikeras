@@ -499,8 +499,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.57577205]
- [0.52842766]]
+[[0.5188978 ]
+ [0.48248214]]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -517,8 +517,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.22118008 0.2121092  0.14646053 0.245163   0.1750872 ]
- [0.24190857 0.22668001 0.15508789 0.18104017 0.19528344]]
+[[0.2119534  0.20758864 0.17086509 0.21837649 0.19121641]
+ [0.23803061 0.19275326 0.1669015  0.21904297 0.18327169]]
 </pre></div></div>
 </div>
 <p>As you can see, our <code class="docutils literal notranslate"><span class="pre">predict</span></code> output is also a list of arrays, except it contains probabilities instead of the class predictions.</p>
@@ -610,7 +610,7 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 `y`, as will be passed to Keras:
-[array([1, 1, 0, 0]), array([0, 4, 1, 1])]
+[array([1, 0, 0, 1]), array([0, 4, 1, 3])]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -639,10 +639,10 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 array([[1, 3],
-       [1, 0],
-       [1, 0],
+       [0, 0],
        [1, 3],
-       [1, 0]])
+       [0, 3],
+       [1, 3]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -719,7 +719,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.32
+0.355
 </pre></div></div>
 </div>
 </div>
@@ -790,7 +790,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--4.20808906289816
+-3.9999212700879037
 </pre></div></div>
 </div>
 <p>Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.</p>
@@ -839,7 +839,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--3.485965818871261
+-3.4904865242994187
 </pre></div></div>
 </div>
 </div>
@@ -857,6 +857,15 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+11493376/11490434 [==============================] - 0s 0us/step
+</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
@@ -1026,25 +1035,25 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/10
-8/8 [==============================] - 1s 124ms/step - loss: 2.2129 - val_loss: 1.9378
+8/8 [==============================] - 2s 141ms/step - loss: 2.2129 - val_loss: 1.9378
 Epoch 2/10
-8/8 [==============================] - 1s 66ms/step - loss: 1.7355 - val_loss: 1.4332
+8/8 [==============================] - 1s 80ms/step - loss: 1.7355 - val_loss: 1.4332
 Epoch 3/10
-8/8 [==============================] - 1s 74ms/step - loss: 1.2980 - val_loss: 1.1264
+8/8 [==============================] - 1s 81ms/step - loss: 1.2980 - val_loss: 1.1264
 Epoch 4/10
-8/8 [==============================] - 1s 68ms/step - loss: 0.9632 - val_loss: 0.8725
+8/8 [==============================] - 1s 87ms/step - loss: 0.9632 - val_loss: 0.8725
 Epoch 5/10
-8/8 [==============================] - 1s 74ms/step - loss: 0.7774 - val_loss: 0.7834
+8/8 [==============================] - 1s 87ms/step - loss: 0.7774 - val_loss: 0.7834
 Epoch 6/10
-8/8 [==============================] - 1s 70ms/step - loss: 0.6900 - val_loss: 0.8330
+8/8 [==============================] - 1s 99ms/step - loss: 0.6900 - val_loss: 0.8330
 Epoch 7/10
-8/8 [==============================] - 1s 75ms/step - loss: 0.6336 - val_loss: 0.6026
+8/8 [==============================] - 1s 89ms/step - loss: 0.6336 - val_loss: 0.6026
 Epoch 8/10
-8/8 [==============================] - 1s 76ms/step - loss: 0.5648 - val_loss: 0.7786
+8/8 [==============================] - 1s 79ms/step - loss: 0.5648 - val_loss: 0.7786
 Epoch 9/10
-8/8 [==============================] - 1s 78ms/step - loss: 0.5365 - val_loss: 0.5447
+8/8 [==============================] - 1s 83ms/step - loss: 0.5365 - val_loss: 0.5447
 Epoch 10/10
-8/8 [==============================] - 1s 77ms/step - loss: 0.4750 - val_loss: 0.6588
+8/8 [==============================] - 1s 78ms/step - loss: 0.4750 - val_loss: 0.6588
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1054,7 +1063,7 @@ Epoch 10/10
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 MultiDimensionalClassifier(
-        model=&lt;function get_model at 0x7f15e216f4c0&gt;
+        model=&lt;function get_model at 0x7f65d1049700&gt;
         build_fn=None
         warm_start=False
         random_state=0
@@ -1087,7 +1096,7 @@ MultiDimensionalClassifier(
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-8/8 [==============================] - 0s 22ms/step
+8/8 [==============================] - 0s 23ms/step
 Test score (accuracy): 0.76
 </pre></div></div>
 </div>
@@ -1156,7 +1165,7 @@ operations on them.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(&lt;tf.RaggedTensor [[[0.12119632959365845, 0.7541701197624207], [0.3322770893573761, 0.7842832803726196], [0.9587574601173401, 0.38370200991630554]], [[0.5091589093208313, 0.8050683736801147], [0.10306232422590256, 0.18931365013122559]], [[0.13346868753433228, 0.5572854280471802]], [[0.38415661454200745, 0.09372629225254059], [0.7828192710876465, 0.9235793352127075]], [[0.9157521724700928, 0.5003507137298584], [0.05148540437221527, 0.6984803080558777]]]&gt;,
+(&lt;tf.RaggedTensor [[[0.6850429177284241, 0.9918264746665955], [0.5492757558822632, 0.882444441318512], [0.8006505370140076, 0.4668857455253601]], [[0.5574049353599548, 0.21197538077831268], [0.4986094534397125, 0.8345357775688171]], [[0.2537863552570343, 0.6817346215248108]], [[0.12220748513936996, 0.7382768392562866], [0.6313663721084595, 0.27479952573776245]], [[0.21302607655525208, 0.16518817842006683], [0.6397392749786377, 0.5654454231262207]]]&gt;,
  array([[&#39;class1&#39;],
         [&#39;class1&#39;],
         [&#39;class2&#39;],
@@ -1181,7 +1190,7 @@ operations on them.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(&lt;tf.RaggedTensor [[[0.12119632959365845, 0.7541701197624207], [0.3322770893573761, 0.7842832803726196], [0.9587574601173401, 0.38370200991630554]], [[0.5091589093208313, 0.8050683736801147], [0.10306232422590256, 0.18931365013122559]], [[0.13346868753433228, 0.5572854280471802]], [[0.38415661454200745, 0.09372629225254059], [0.7828192710876465, 0.9235793352127075]], [[0.9157521724700928, 0.5003507137298584], [0.05148540437221527, 0.6984803080558777]]]&gt;,
+(&lt;tf.RaggedTensor [[[0.6850429177284241, 0.9918264746665955], [0.5492757558822632, 0.882444441318512], [0.8006505370140076, 0.4668857455253601]], [[0.5574049353599548, 0.21197538077831268], [0.4986094534397125, 0.8345357775688171]], [[0.2537863552570343, 0.6817346215248108]], [[0.12220748513936996, 0.7382768392562866], [0.6313663721084595, 0.27479952573776245]], [[0.21302607655525208, 0.16518817842006683], [0.6397392749786377, 0.5654454231262207]]]&gt;,
  None,
  None)
 </pre></div></div>
@@ -1280,7 +1289,7 @@ operations on them.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-5/5 [==============================] - 0s 1ms/step - loss: 0.8532
+5/5 [==============================] - 0s 1ms/step - loss: 0.5706
 5/5 [==============================] - 0s 1ms/step
 </pre></div></div>
 </div>
@@ -1290,7 +1299,7 @@ operations on them.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;], dtype=&#39;&lt;U6&#39;)
+array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;], dtype=&#39;&lt;U6&#39;)
 </pre></div></div>
 </div>
 <p>If we define our custom layers, transformers and wrappers in their own module, we can easily create a self-contained classifier that is able to handle ragged datasets and has a clean Scikit-Learn compatible API:</p>
@@ -1337,8 +1346,8 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-5/5 [==============================] - 0s 1ms/step - loss: 0.6514
-5/5 [==============================] - 0s 824us/step
+5/5 [==============================] - 0s 2ms/step - loss: 0.8827
+5/5 [==============================] - 0s 1ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1347,7 +1356,7 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;], dtype=&#39;&lt;U6&#39;)
+array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;], dtype=&#39;&lt;U6&#39;)
 </pre></div></div>
 </div>
 </div>
