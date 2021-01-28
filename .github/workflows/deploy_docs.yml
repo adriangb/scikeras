@@ -7,13 +7,12 @@ on:
       - Build Docs
     types:
       - completed
-
 jobs:
   deploy:
     name: Deploy Docs
     runs-on: ubuntu-latest
     steps:
-
+      
       - uses: actions/setup-python@v2
         with:
           python-version: '3.x'
@@ -33,6 +32,13 @@ jobs:
       - name: Update versions
         run: python update_versions.py
 
+      - name: Get SHA & ref
+        run: |
+          echo "GITHUB_SHA_SHORT=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c 1-7)" >> $GITHUB_ENV
+          echo "REF=$(cat ref.txt)" >> $GITHUB_ENV
+          rm -f ref.txt
+          echo ${{ github.event.workflow_run.event.pull_requests[0].number }}
+
       - name: Deploy docs
         run: |
           git config user.name github-actions
@@ -47,3 +53,28 @@ jobs:
             echo "No changes to deploy"
             exit 0
           fi
+
+      - name: Find Comment
+        if: ${{ contains(github.event.workflow_run.event, 'pull_request') }}
+        uses: peter-evans/find-comment@v1
+        id: fc
+        with:
+          issue-number: ${{ github.event.workflow_run.pull_requests[0].number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Docs preview for commit
+
+      - name: Create comment
+        if: ${{ contains(github.event.workflow_run.event, 'pull_request') && steps.fc.outputs.comment-id == 0}}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.workflow_run.pull_requests[0].number }}
+          body: |
+            📝 Docs preview for commit ${{ env.GITHUB_SHA_SHORT }} at: https://www.adriangb.com/scikeras/${{ env.REF }}/
+
+      - name: Update comment
+        if: ${{ contains(github.event.workflow_run.event, 'pull_request') && steps.fc.outputs.comment-id != 0 }}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          body: |
+            📝 Docs preview for commit ${{ env.GITHUB_SHA_SHORT }} at: https://www.adriangb.com/scikeras/${{ env.REF }}/
