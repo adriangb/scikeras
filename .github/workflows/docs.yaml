@@ -1,7 +1,9 @@
 name: Build Docs
 on:
   push:
-    branches: [ master ]
+    branches:
+      - main
+      - develop
   pull_request:
   release:
     types:
@@ -18,36 +20,19 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
-
-      - name: Install pandoc
-        run: |
-          sudo apt-get install pandoc
-
-      - name: Install and Set Up Poetry
-        run: |
-          python -m pip install --upgrade poetry
-          poetry config virtualenvs.in-project true
-          poetry run python -m pip install --upgrade pip
   
       - name: Install Dependencies
         run: |
-          poetry install --extras dev_docs
-
-      - name: Execute the notebooks
-        run: |
-          export TF_CPP_MIN_LOG_LEVEL=3
-          find docs/source/notebooks -type f -name '*.md' -print0 | xargs -0 -n 1 -P 2 poetry run jupytext --set-formats ipynb,md --execute
+          pip install -r requirements.txt
 
       - name: Build the docs
         run: |
-          poetry run sphinx-build -b html -j 2 docs/source docs/_build/${{ github.ref }}
+          sphinx-build -b html -j 2 docs/ docs/_build/${{ github.ref }}
+          echo "${{ github.ref }}" >> docs/_build/ref.txt
 
       - name: Save docs artifact
         uses: actions/upload-artifact@v2
         with:
           name: docs
           path: docs/_build/*
-
-      - name: Print docs link
-        run: |
-          echo "Docs available at https://www.adriangb.com/scikeras/${{ github.ref }}/"
+          retention-days: 1  # should only be needed for a few minutes
