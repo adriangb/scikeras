@@ -41,13 +41,10 @@ jobs:
       - name: Build the docs
         run: |
           poetry run sphinx-build -b html -j 2 docs/source docs/_build/${{ github.ref }}
+          echo "${{ github.ref }}" >> docs/_build/ref.txt
 
       - name: Save docs artifact
         uses: actions/upload-artifact@v2
         with:
           name: docs
           path: docs/_build/*
-
-      - name: Print docs link
-        run: |
-          echo "Docs available at https://www.adriangb.com/scikeras/${{ github.ref }}/"

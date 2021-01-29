@@ -1575,6 +1575,8 @@ class KerasRegressor(BaseWrapper):
             "check_fit_idempotent": "tf does not use sparse tensors",
             "check_no_attributes_set_in_init": "can only pass if all \
             params are hardcoded in __init__",
+            "check_regressor_multioutput": "checks for float64 output \
+            but Keras generally uses float32",
         },
         **BaseWrapper._tags,
     }

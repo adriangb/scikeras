@@ -354,11 +354,11 @@ if False:
     from sklearn.base import BaseEstimator, TransformerMixin
 
 
-    class MultiOutputTransformer(BaseEstimator, TransformerMixin):
+    class MultiInputTransformer(BaseEstimator, TransformerMixin):
         ...
 
 
-    class MultiOutputClassifier(KerasClassifier):
+    class MultiInputClassifier(KerasClassifier):
 
         @property
         def feature_encoder(self):
