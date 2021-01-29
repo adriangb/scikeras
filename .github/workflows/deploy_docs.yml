@@ -68,5 +68,15 @@ jobs:
         uses: peter-evans/create-or-update-comment@v1
         with:
           issue-number: ${{ github.event.workflow_run.pull_requests[0].number }}
+          edit-mode: replace
           body: |
-            "📝 Docs preview for commit ${{ env.GITHUB_SHA_SHORT }} at: https://www.adriangb.com/scikeras/${{ env.REF }}/"
+            📝 Docs preview for commit ${{ env.GITHUB_SHA_SHORT }} at: https://www.adriangb.com/scikeras/${{ env.REF }}/
+
+      - name: Update comment
+        if: ${{ contains(github.event.workflow_run.event, 'pull_request') && steps.fc.outputs.comment-id != 0 }}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          edit-mode: replace
+          body: |
+            📝 Docs preview for commit ${{ env.GITHUB_SHA_SHORT }} at: https://www.adriangb.com/scikeras/${{ env.REF }}/
