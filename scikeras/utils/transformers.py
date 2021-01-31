@@ -412,7 +412,9 @@ class ClassWeightDataTransformer(BaseEstimator, TransformerMixin):
         self.class_weight = class_weight
 
     def fit(
-        self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]],
+        self,
+        data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]],
+        dummy: None = None,
     ) -> "ClassWeightDataTransformer":
         return self
 
