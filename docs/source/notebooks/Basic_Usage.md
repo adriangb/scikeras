@@ -227,7 +227,7 @@ import pickle
 
 bytes_model = pickle.dumps(reg)
 new_reg = pickle.loads(bytes_model)
-new_reg.predict(X_regr);  # model is still trained
+new_reg.predict(X_regr[:5])  # model is still trained
 ```
 
 ### 4.2 Saving using Keras' saving methods
@@ -364,9 +364,8 @@ Below we show how to perform a grid search over the learning rate (`optimizer__l
 
 ```python
 from sklearn.model_selection import GridSearchCV
-```
 
-```python
+
 clf = KerasClassifier(
     model=get_clf,
     loss="binary_crossentropy",
