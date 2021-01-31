@@ -200,7 +200,7 @@ clf = KerasClassifier(
     hidden_layer_sizes=(100, ),
     optimizer="adam",
     optimizer__learning_rate=0.001,
-    epochs=200,
+    epochs=50,
     verbose=0,
 )
 ```
@@ -211,16 +211,14 @@ Before continouing, we will run a small test to make sure we get somewhat reason
 
 ```python
 from sklearn.datasets import make_classification
-from sklearn.model_selection import cross_val_score
-```
 
-```python
+
 X, y = make_classification()
 
 # check that fit works
 clf.fit(X, y)
-# check cross-validation score
-print(np.mean(cross_val_score(clf, X, y)))
+# check score
+print(clf.score(X, y))
 ```
 
 We get a score above 0.7, which is reasonable and indicates that our classifier is generally working.
@@ -300,10 +298,10 @@ class MLPClassifier(KerasClassifier):
 Let's check that our subclassed model works:
 
 ```python
-clf = MLPClassifier()
+clf = MLPClassifier(epochs=20)  # for notebook execution time
 
-# check cross-validation score
-print(np.mean(cross_val_score(clf, X, y)))
+# check score
+print(clf.fit(X, y).score(X, y))
 ```
 
 ## 5. MLPRegressor
@@ -341,17 +339,18 @@ class MLPRegressor(KerasRegressor):
         return model
 ```
 
-```python
-from sklearn.datasets import make_regression
-```
 
 ```python
-reg = MLPRegressor()
+from sklearn.datasets import make_regression
+
+
+reg = MLPRegressor(epochs=20)  # for notebook execution time
 
 # Define a simple linear relationship
 y = np.arange(100)
 X = (y/2).reshape(-1, 1)
 
 # check score
-reg.fit(X, y).score(X, y)
+reg.fit(X, y)
+print(reg.score(X, y))
 ```

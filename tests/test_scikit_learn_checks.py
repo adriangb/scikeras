@@ -1,5 +1,6 @@
 """Tests using Scikit-Learn's bundled estimator_checks."""
 
+from contextlib import contextmanager
 from distutils.version import LooseVersion
 from typing import Any, Dict
 from unittest.mock import patch
@@ -11,6 +12,7 @@ from sklearn import __version__ as sklearn_version
 from sklearn.datasets import load_iris
 from sklearn.utils.estimator_checks import check_no_attributes_set_in_init
 from tensorflow.keras import Model, Sequential, layers
+from tensorflow.keras.backend import floatx, set_floatx
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
@@ -23,6 +25,17 @@ higher_precision = (
     "check_classifiers_classes",
     "check_methods_sample_order_invariance",
 )
+
+
+@contextmanager
+def use_floatx(x: str):
+    """Context manager to temporarily
+    set the keras backend precision.
+    """
+    _floatx = floatx()
+    set_floatx(x)
+    yield
+    set_floatx(_floatx)
 
 
 # Set batch size to a large number
@@ -40,7 +53,9 @@ def relaxed_assert_allclose(*args, **kwargs):
     for lower precision testing.
     """
     if "atol" in kwargs:
-        kwargs["atol"] = max(5e-8, kwargs["atol"])
+        kwargs["atol"] = max(5e-6, kwargs["atol"])
+    if "rtol" in kwargs:
+        kwargs["rtol"] = max(0, kwargs["rtol"])
     return np.testing.assert_allclose(*args, **kwargs)
 
 
@@ -108,7 +123,8 @@ def test_fully_compliant_estimators_high_precision(estimator, check):
     if check_name not in higher_precision:
         pytest.skip("This test does not require high precision.")
     with patch("sklearn.utils._testing.assert_allclose", relaxed_assert_allclose):
-        check(estimator)
+        with use_floatx("float64"):
+            check(estimator)
 
 
 class SubclassedClassifier(KerasClassifier):

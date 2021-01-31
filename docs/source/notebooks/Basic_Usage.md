@@ -78,13 +78,10 @@ We load a toy classification task from `sklearn`.
 ```python
 import numpy as np
 from sklearn.datasets import make_classification
-```
 
-```python
+
 X, y = make_classification(1000, 20, n_informative=10, random_state=0)
-```
 
-```python
 X.shape, y.shape, y.mean()
 ```
 
@@ -104,9 +101,8 @@ you have >2 classes.
 
 ```python
 from tensorflow import keras
-```
 
-```python
+
 def get_clf(meta, hidden_layer_sizes, dropout):
     n_features_in_ = meta["n_features_in_"]
     n_classes_ = meta["n_classes_"]
@@ -125,13 +121,11 @@ We use `KerasClassifier` because we're dealing with a classifcation task. The fi
 
 ```python
 from scikeras.wrappers import KerasClassifier
-```
 
-```python
+
 clf = KerasClassifier(
     model=get_clf,
     loss="binary_crossentropy",
-    optimizer="adam",
     hidden_layer_sizes=(100,),
     dropout=0.5,
 )
@@ -140,7 +134,7 @@ clf = KerasClassifier(
 As in `sklearn`, we call `fit` passing the input data `X` and the targets `y`.
 
 ```python
-clf.fit(X, y)
+clf.fit(X, y);
 ```
 
 Also, as in `sklearn`, you may call `predict` or `predict_proba` on the fitted model.
@@ -163,13 +157,10 @@ y_proba
 
 ```python
 from sklearn.datasets import make_regression
-```
 
-```python
+
 X_regr, y_regr = make_regression(1000, 20, n_informative=10, random_state=0)
-```
 
-```python
 X_regr.shape, y_regr.shape, y_regr.min(), y_regr.max()
 ```
 
@@ -195,20 +186,18 @@ Training a regressor is almost the same as training a classifier. Mainly, we use
 
 ```python
 from scikeras.wrappers import KerasRegressor
-```
 
-```python
+
 reg = KerasRegressor(
     model=get_reg,
     loss=KerasRegressor.r_squared,
-    optimizer="adam",
     hidden_layer_sizes=(100,),
     dropout=0.5,
 )
 ```
 
 ```python
-reg.fit(X_regr, y_regr)
+reg.fit(X_regr, y_regr);
 ```
 
 ### 3.4 Making predictions, regression
@@ -234,15 +223,11 @@ For more information, see Keras' [saving documentation](https://www.tensorflow.o
 
 ```python
 import pickle
-```
 
-```python
+
 bytes_model = pickle.dumps(reg)
-```
-
-```python
 new_reg = pickle.loads(bytes_model)
-new_reg
+new_reg.predict(X_regr[:5])  # model is still trained
 ```
 
 ### 4.2 Saving using Keras' saving methods
@@ -252,120 +237,111 @@ You should use this method if you plan on sharing your saved models.
 
 ```python
 # Save to disk
-reg.model_.save("/tmp/my_model")
+pred_old = reg.predict(X_regr)
+reg.model_.save("/tmp/my_model")  # saves just the Keras model
 ```
 
 ```python
 # Load the model back into memory
 new_reg_model = keras.models.load_model("/tmp/my_model")
-# Now we need to instantiate a new SciKeras object with this model
-# Note that we no longer pass paramters like hidden_layer_sizes, those
-# are note "fixed"
-reg = KerasRegressor(
-    new_reg_model,
-    loss=KerasRegressor.r_squared,
-    optimizer="adam",
-)
-reg.fit(X_regr, y_regr)
-reg.predict(X_regr[:5])
+# Now we need to instantiate a new SciKeras object
+# since we only saved the Keras model
+reg_new = KerasRegressor(new_reg_model)
+# use initialize to avoid re-fitting
+reg_new.initialize(X_regr, y_regr)
+pred_new = reg_new.predict(X_regr)
+np.testing.assert_allclose(pred_old, pred_new)
 ```
 
 ## 5. Usage with an sklearn Pipeline
 
 It is possible to put the `KerasClassifier` inside an `sklearn Pipeline`, as you would with any `sklearn` classifier.
 
+
 ```python
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-```
 
-```python
+
 pipe = Pipeline([
     ('scale', StandardScaler()),
     ('clf', clf),
 ])
-```
 
-```python
-pipe.fit(X, y)
-```
 
-```python
-y_proba = pipe.predict_proba(X[:5])
-y_proba
+y_proba = pipe.fit(X, y).predict(X)
 ```
 
 To save the whole pipeline, including the Keras model, use `pickle`.
 
 ## 6. Callbacks
 
-Adding a new callback to the model is straightforward. Below we show how to add an `EarlyStopping` callback to prevent overfitting.
+Adding a new callback to the model is straightforward. Below we define a threashold callback
+to avoid training past a certain accuracy. This a rudimentary for of
+[early stopping](https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/EarlyStopping).
 
 ```python
-es = keras.callbacks.EarlyStopping(monitor='val_binary_accuracy', mode='max', patience=200, verbose=1)
+class MaxValLoss(keras.callbacks.Callback):
+
+    def __init__(self, monitor: str, threashold: float):
+        self.monitor = monitor
+        self.threashold = threashold
+
+    def on_epoch_end(self, epoch, logs=None):
+        if logs[self.monitor] > self.threashold:
+            print("Threashold reached; stopping training") 
+            self.model.stop_training = True
 ```
 
-We now generate a toy dataset using `sklearn.datasets.make_moons`. This dataset was chosen specifically to trigger early stopping.
+Define a test dataset:
 
 ```python
 from sklearn.datasets import make_moons
-```
 
-```python
+
 X, y = make_moons(n_samples=100, noise=0.2, random_state=0)
-X.shape, y.shape
 ```
 
-We will first check fitting without the callback and then with. We will compare the training time and final accuracy.
+And try fitting it with and without the callback:
 
 ```python
-import time
-```
-
-```python
-# First test without the callback
-clf = KerasClassifier(
+kwargs = dict(
     model=get_clf,
     loss="binary_crossentropy",
-    optimizer="adam",
-    hidden_layer_sizes=(500,),
     dropout=0.5,
+    hidden_layer_sizes=(100,),
     metrics=["binary_accuracy"],
     fit__validation_split=0.2,
-    epochs=500,
+    epochs=20,
     verbose=False,
+    random_state=0
 )
-start = time.time()
+
+# First test without the callback
+clf = KerasClassifier(**kwargs)
 clf.fit(X, y)
-print(f"Training time: {time.time() * start}")
+print(f"Trained {len(clf.history_['loss'])} epochs")
 print(f"Final accuracy: {clf.history_['val_binary_accuracy'][-1]}")  # get last value of last fit/partial_fit call
 ```
+
+And with:
 
 ```python
 # Test with the callback
+
+cb = MaxValLoss(monitor="val_binary_accuracy", threashold=0.75)
+
 clf = KerasClassifier(
-    model=get_clf,
-    loss="binary_crossentropy",
-    optimizer="adam",
-    hidden_layer_sizes=(500,),
-    dropout=0.5,
-    metrics=["binary_accuracy"],
-    fit__validation_split=0.2,
-    epochs=500,
-    verbose=False,
-    callbacks=[es]
+    **kwargs,
+    callbacks=[cb]
 )
-start = time.time()
 clf.fit(X, y)
-print(f"Training time: {time.time() * start}")
+print(f"Trained {len(clf.history_['loss'])} epochs")
 print(f"Final accuracy: {clf.history_['val_binary_accuracy'][-1]}")  # get last value of last fit/partial_fit call
 ```
 
-For information on how to write custom callbacks, have a look at the 
-
----
-
-[Advanced_Usage](https://nbviewer.jupyter.org/github/adriangb/scikeras/blob/master/notebooks/Advanced_Usage.ipynb) notebook.
+For information on how to write custom callbacks, have a look at the
+[Advanced Usage](https://nbviewer.jupyter.org/github/adriangb/scikeras/blob/master/notebooks/Advanced_Usage.ipynb) notebook.
 
 ## 7. Usage with sklearn GridSearchCV
 
@@ -388,9 +364,8 @@ Below we show how to perform a grid search over the learning rate (`optimizer__l
 
 ```python
 from sklearn.model_selection import GridSearchCV
-```
 
-```python
+
 clf = KerasClassifier(
     model=get_clf,
     loss="binary_crossentropy",
@@ -407,21 +382,16 @@ clf = KerasClassifier(
 ```python
 params = {
     'optimizer__lr': [0.05, 0.1],
-    'model__hidden_layer_sizes': [(100, ), (50, 50, ), (33, 33, 33, )],
+    'model__hidden_layer_sizes': [(100, ), (50, 50, )],
     'model__dropout': [0, 0.5],
 }
-```
 
-```python
 gs = GridSearchCV(clf, params, scoring='accuracy', n_jobs=-1, verbose=True)
-```
 
-```python
 gs.fit(X, y)
-```
 
-```python
 print(gs.best_score_, gs.best_params_)
 ```
 
-Of course, we could further nest the `KerasClassifier` within an `sklearn Pipeline`, in which case we just prefix the parameter by the name of the net (e.g. `clf__model__hidden_layer_sizes`).
+Of course, we could further nest the `KerasClassifier` within an `sklearn.pipeline.Pipeline`,
+in which case we just prefix the parameter by the name of the net (e.g. `clf__model__hidden_layer_sizes`).

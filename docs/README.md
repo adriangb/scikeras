@@ -29,7 +29,7 @@ To build the docs, run the following from the project root directory
 
 ```bash
 export TF_CPP_MIN_LOG_LEVEL=3
-find docs/source/notebooks -type f -name '*.md' -print0 | xargs -0 -n 1 -P 8 poetry run jupytext --set-formats ipynb,md --execute
+find docs/source/notebooks -maxdepth 1 -type f -name '*.md' -print0 | xargs -0 -n 1 -P 8 poetry run jupytext --set-formats ipynb,md --execute
 poetry run sphinx-build -b html -j 8 docs/source docs/_build
 ```
 
@@ -37,7 +37,7 @@ Note that you can change `-P 8` and `-j 8` to match the number of cores your pro
 
 ```bash
 export TF_CPP_MIN_LOG_LEVEL=3
-poetry run jupytext --set-formats ipynb,md --execute docs/source/notebooks/*
+poetry run jupytext --set-formats ipynb,md --execute docs/source/notebooks/*.md
 poetry run sphinx-build -b html docs/source docs/_build
 ```
 

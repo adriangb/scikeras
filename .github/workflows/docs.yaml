@@ -36,7 +36,7 @@ jobs:
       - name: Execute the notebooks
         run: |
           export TF_CPP_MIN_LOG_LEVEL=3
-          find docs/source/notebooks -type f -name '*.md' -print0 | xargs -0 -n 1 -P 2 poetry run jupytext --set-formats ipynb,md --execute
+          find docs/source/notebooks -type f -name '*.md' -maxdepth 1 -print0 | xargs -0 -n 1 -P 2 poetry run jupytext --set-formats ipynb,md --execute
 
       - name: Build the docs
         run: |
