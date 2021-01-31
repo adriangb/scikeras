@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "focal-cooperative",
+   "id": "amino-exploration",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "outside-principle",
+   "id": "divided-element",
    "metadata": {},
    "source": [
     "# Autoencoders in SciKeras\n",
@@ -31,13 +31,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "floating-pathology",
+   "id": "minimal-upset",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-01-31T01:00:09.015184Z",
-     "iopub.status.busy": "2021-01-31T01:00:09.014089Z",
-     "iopub.status.idle": "2021-01-31T01:00:10.450206Z",
-     "shell.execute_reply": "2021-01-31T01:00:10.450889Z"
+     "iopub.execute_input": "2021-01-31T06:25:24.772978Z",
+     "iopub.status.busy": "2021-01-31T06:25:24.772276Z",
+     "iopub.status.idle": "2021-01-31T06:25:26.478194Z",
+     "shell.execute_reply": "2021-01-31T06:25:26.479001Z"
     }
    },
    "outputs": [],
@@ -50,7 +50,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "resident-england",
+   "id": "changing-locking",
    "metadata": {},
    "source": [
     "Silence TensorFlow logging to keep output succinct."
@@ -59,13 +59,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "accessory-aircraft",
+   "id": "assumed-madison",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-01-31T01:00:10.457930Z",
-     "iopub.status.busy": "2021-01-31T01:00:10.457390Z",
-     "iopub.status.idle": "2021-01-31T01:00:10.459719Z",
-     "shell.execute_reply": "2021-01-31T01:00:10.460501Z"
+     "iopub.execute_input": "2021-01-31T06:25:26.482852Z",
+     "iopub.status.busy": "2021-01-31T06:25:26.481781Z",
+     "iopub.status.idle": "2021-01-31T06:25:26.486786Z",
+     "shell.execute_reply": "2021-01-31T06:25:26.487520Z"
     }
    },
    "outputs": [],
@@ -79,13 +79,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "married-madison",
+   "id": "wrong-ordering",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-01-31T01:00:10.466178Z",
-     "iopub.status.busy": "2021-01-31T01:00:10.465606Z",
-     "iopub.status.idle": "2021-01-31T01:00:10.844993Z",
-     "shell.execute_reply": "2021-01-31T01:00:10.845433Z"
+     "iopub.execute_input": "2021-01-31T06:25:26.491088Z",
+     "iopub.status.busy": "2021-01-31T06:25:26.490028Z",
+     "iopub.status.idle": "2021-01-31T06:25:26.918471Z",
+     "shell.execute_reply": "2021-01-31T06:25:26.919323Z"
     }
    },
    "outputs": [],
@@ -97,7 +97,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "incoming-humanity",
+   "id": "incomplete-citizenship",
    "metadata": {},
    "source": [
     "## 2. Data\n",
@@ -108,13 +108,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "formed-afternoon",
+   "id": "distributed-collective",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-01-31T01:00:10.852420Z",
-     "iopub.status.busy": "2021-01-31T01:00:10.851495Z",
-     "iopub.status.idle": "2021-01-31T01:00:11.274860Z",
-     "shell.execute_reply": "2021-01-31T01:00:11.275502Z"
+     "iopub.execute_input": "2021-01-31T06:25:26.923227Z",
+     "iopub.status.busy": "2021-01-31T06:25:26.922138Z",
+     "iopub.status.idle": "2021-01-31T06:25:27.769038Z",
+     "shell.execute_reply": "2021-01-31T06:25:27.767541Z"
     }
    },
    "outputs": [
@@ -143,7 +143,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "hybrid-anger",
+   "id": "french-springfield",
    "metadata": {},
    "source": [
     "## 3. Define Keras Model\n",
@@ -160,13 +160,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "fresh-customer",
+   "id": "secure-express",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-01-31T01:00:11.283407Z",
-     "iopub.status.busy": "2021-01-31T01:00:11.282723Z",
-     "iopub.status.idle": "2021-01-31T01:00:11.286434Z",
-     "shell.execute_reply": "2021-01-31T01:00:11.285846Z"
+     "iopub.execute_input": "2021-01-31T06:25:27.778860Z",
+     "iopub.status.busy": "2021-01-31T06:25:27.778266Z",
+     "iopub.status.idle": "2021-01-31T06:25:27.794928Z",
+     "shell.execute_reply": "2021-01-31T06:25:27.793591Z"
     }
    },
    "outputs": [],
@@ -206,7 +206,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "useful-sphere",
+   "id": "modern-wright",
    "metadata": {},
    "source": [
     "Next we create a class that that will enable the `transform` and `fit_transform` methods, as well as integrating all three of our models into a single estimator."
@@ -215,13 +215,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "consolidated-estimate",
+   "id": "superb-status",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-01-31T01:00:11.297437Z",
-     "iopub.status.busy": "2021-01-31T01:00:11.294452Z",
-     "iopub.status.idle": "2021-01-31T01:00:11.299757Z",
-     "shell.execute_reply": "2021-01-31T01:00:11.300417Z"
+     "iopub.execute_input": "2021-01-31T06:25:27.798762Z",
+     "iopub.status.busy": "2021-01-31T06:25:27.797628Z",
+     "iopub.status.idle": "2021-01-31T06:25:27.808822Z",
+     "shell.execute_reply": "2021-01-31T06:25:27.809608Z"
     }
    },
    "outputs": [],
@@ -265,7 +265,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "selective-boost",
+   "id": "another-regression",
    "metadata": {},
    "source": [
     "Next, we wrap the Keras Model with Scikeras. Note that for our encoder/decoder estimators, we do not need to provide a loss function since no training will be done. We do however need to have the `fit_model` and `encoding_dim` so that these will be settable by `BaseWrapper.set_params`."
@@ -274,13 +274,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "injured-pasta",
+   "id": "killing-engineering",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-01-31T01:00:11.304414Z",
-     "iopub.status.busy": "2021-01-31T01:00:11.303783Z",
-     "iopub.status.idle": "2021-01-31T01:00:11.309903Z",
-     "shell.execute_reply": "2021-01-31T01:00:11.310606Z"
+     "iopub.execute_input": "2021-01-31T06:25:27.813058Z",
+     "iopub.status.busy": "2021-01-31T06:25:27.811960Z",
+     "iopub.status.idle": "2021-01-31T06:25:27.821431Z",
+     "shell.execute_reply": "2021-01-31T06:25:27.822170Z"
     }
    },
    "outputs": [],
@@ -292,7 +292,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "sharp-bacon",
+   "id": "equal-peripheral",
    "metadata": {},
    "source": [
     "## 4. Training\n",
@@ -303,13 +303,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "computational-trading",
+   "id": "illegal-longitude",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-01-31T01:00:11.314295Z",
-     "iopub.status.busy": "2021-01-31T01:00:11.313687Z",
-     "iopub.status.idle": "2021-01-31T01:00:32.887492Z",
-     "shell.execute_reply": "2021-01-31T01:00:32.887925Z"
+     "iopub.execute_input": "2021-01-31T06:25:27.825827Z",
+     "iopub.status.busy": "2021-01-31T06:25:27.824614Z",
+     "iopub.status.idle": "2021-01-31T06:25:49.353792Z",
+     "shell.execute_reply": "2021-01-31T06:25:49.352758Z"
     }
    },
    "outputs": [
@@ -325,7 +325,7 @@
      "output_type": "stream",
      "text": [
       "\r",
-      "   1/1875 [..............................] - ETA: 13:07 - loss: 0.6940"
+      "   1/1875 [..............................] - ETA: 16:17 - loss: 0.6944"
      ]
     },
     {
@@ -333,7 +333,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  28/1875 [..............................] - ETA: 3s - loss: 0.5611   "
+      "  28/1875 [..............................] - ETA: 3s - loss: 0.5541   "
      ]
     },
     {
@@ -341,7 +341,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  54/1875 [..............................] - ETA: 3s - loss: 0.4827"
+      "  57/1875 [..............................] - ETA: 3s - loss: 0.4704"
      ]
     },
     {
@@ -349,7 +349,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  83/1875 [>.............................] - ETA: 3s - loss: 0.4354"
+      "  88/1875 [>.............................] - ETA: 3s - loss: 0.4248"
      ]
     },
     {
@@ -357,7 +357,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 107/1875 [>.............................] - ETA: 3s - loss: 0.4100"
+      " 115/1875 [>.............................] - ETA: 3s - loss: 0.3994"
      ]
     },
     {
@@ -365,7 +365,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 133/1875 [=>............................] - ETA: 3s - loss: 0.3898"
+      " 141/1875 [=>............................] - ETA: 3s - loss: 0.3813"
      ]
     },
     {
@@ -373,7 +373,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 154/1875 [=>............................] - ETA: 3s - loss: 0.3768"
+      " 173/1875 [=>............................] - ETA: 2s - loss: 0.3640"
      ]
     },
     {
@@ -381,7 +381,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 175/1875 [=>............................] - ETA: 3s - loss: 0.3659"
+      " 200/1875 [==>...........................] - ETA: 2s - loss: 0.3521"
      ]
     },
     {
@@ -389,7 +389,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 203/1875 [==>...........................] - ETA: 3s - loss: 0.3535"
+      " 222/1875 [==>...........................] - ETA: 3s - loss: 0.3437"
      ]
     },
     {
@@ -397,7 +397,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 225/1875 [==>...........................] - ETA: 3s - loss: 0.3452"
+      " 254/1875 [===>..........................] - ETA: 2s - loss: 0.3331"
      ]
     },
     {
@@ -405,7 +405,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 249/1875 [==>...........................] - ETA: 3s - loss: 0.3371"
+      " 286/1875 [===>..........................] - ETA: 2s - loss: 0.3239"
      ]
     },
     {
@@ -413,7 +413,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 277/1875 [===>..........................] - ETA: 3s - loss: 0.3288"
+      " 319/1875 [====>.........................] - ETA: 2s - loss: 0.3156"
      ]
     },
     {
@@ -421,7 +421,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 302/1875 [===>..........................] - ETA: 3s - loss: 0.3221"
+      " 352/1875 [====>.........................] - ETA: 2s - loss: 0.3083"
      ]
     },
     {
@@ -429,7 +429,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 330/1875 [====>.........................] - ETA: 3s - loss: 0.3154"
+      " 387/1875 [=====>........................] - ETA: 2s - loss: 0.3013"
      ]
     },
     {
@@ -437,7 +437,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 358/1875 [====>.........................] - ETA: 3s - loss: 0.3092"
+      " 418/1875 [=====>........................] - ETA: 2s - loss: 0.2957"
      ]
     },
     {
@@ -445,7 +445,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 386/1875 [=====>........................] - ETA: 2s - loss: 0.3036"
+      " 448/1875 [======>.......................] - ETA: 2s - loss: 0.2908"
      ]
     },
     {
@@ -453,7 +453,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 414/1875 [=====>........................] - ETA: 2s - loss: 0.2985"
+      " 481/1875 [======>.......................] - ETA: 2s - loss: 0.2858"
      ]
     },
     {
@@ -461,7 +461,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 438/1875 [======>.......................] - ETA: 2s - loss: 0.2944"
+      " 514/1875 [=======>......................] - ETA: 2s - loss: 0.2811"
      ]
     },
     {
@@ -469,7 +469,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 463/1875 [======>.......................] - ETA: 2s - loss: 0.2904"
+      " 548/1875 [=======>......................] - ETA: 2s - loss: 0.2767"
      ]
     },
     {
@@ -477,7 +477,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 492/1875 [======>.......................] - ETA: 2s - loss: 0.2861"
+      " 582/1875 [========>.....................] - ETA: 2s - loss: 0.2726"
      ]
     },
     {
@@ -485,7 +485,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 517/1875 [=======>......................] - ETA: 2s - loss: 0.2827"
+      " 616/1875 [========>.....................] - ETA: 2s - loss: 0.2688"
      ]
     },
     {
@@ -493,7 +493,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 541/1875 [=======>......................] - ETA: 2s - loss: 0.2795"
+      " 645/1875 [=========>....................] - ETA: 2s - loss: 0.2657"
      ]
     },
     {
@@ -501,7 +501,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 569/1875 [========>.....................] - ETA: 2s - loss: 0.2760"
+      " 677/1875 [=========>....................] - ETA: 1s - loss: 0.2625"
      ]
     },
     {
@@ -509,7 +509,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 592/1875 [========>.....................] - ETA: 2s - loss: 0.2733"
+      " 708/1875 [==========>...................] - ETA: 1s - loss: 0.2595"
      ]
     },
     {
@@ -517,7 +517,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 613/1875 [========>.....................] - ETA: 2s - loss: 0.2709"
+      " 745/1875 [==========>...................] - ETA: 1s - loss: 0.2562"
      ]
     },
     {
@@ -525,7 +525,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 639/1875 [=========>....................] - ETA: 2s - loss: 0.2681"
+      " 776/1875 [===========>..................] - ETA: 1s - loss: 0.2536"
      ]
     },
     {
@@ -533,7 +533,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 664/1875 [=========>....................] - ETA: 2s - loss: 0.2656"
+      " 806/1875 [===========>..................] - ETA: 1s - loss: 0.2512"
      ]
     },
     {
@@ -541,7 +541,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 694/1875 [==========>...................] - ETA: 2s - loss: 0.2626"
+      " 838/1875 [============>.................] - ETA: 1s - loss: 0.2487"
      ]
     },
     {
@@ -549,7 +549,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 725/1875 [==========>...................] - ETA: 2s - loss: 0.2598"
+      " 870/1875 [============>.................] - ETA: 1s - loss: 0.2464"
      ]
     },
     {
@@ -557,7 +557,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 752/1875 [===========>..................] - ETA: 2s - loss: 0.2574"
+      " 900/1875 [=============>................] - ETA: 1s - loss: 0.2443"
      ]
     },
     {
@@ -565,7 +565,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 779/1875 [===========>..................] - ETA: 2s - loss: 0.2551"
+      " 931/1875 [=============>................] - ETA: 1s - loss: 0.2422"
      ]
     },
     {
@@ -573,7 +573,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 805/1875 [===========>..................] - ETA: 2s - loss: 0.2530"
+      " 963/1875 [==============>...............] - ETA: 1s - loss: 0.2401"
      ]
     },
     {
@@ -581,7 +581,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 834/1875 [============>.................] - ETA: 2s - loss: 0.2507"
+      " 997/1875 [==============>...............] - ETA: 1s - loss: 0.2380"
      ]
     },
     {
@@ -589,7 +589,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 862/1875 [============>.................] - ETA: 1s - loss: 0.2486"
+      "1032/1875 [===============>..............] - ETA: 1s - loss: 0.2359"
      ]
     },
     {
@@ -597,7 +597,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 886/1875 [=============>................] - ETA: 1s - loss: 0.2469"
+      "1068/1875 [================>.............] - ETA: 1s - loss: 0.2338"
      ]
     },
     {
@@ -605,7 +605,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 914/1875 [=============>................] - ETA: 1s - loss: 0.2449"
+      "1102/1875 [================>.............] - ETA: 1s - loss: 0.2319"
      ]
     },
     {
@@ -613,7 +613,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 942/1875 [==============>...............] - ETA: 1s - loss: 0.2431"
+      "1132/1875 [=================>............] - ETA: 1s - loss: 0.2303"
      ]
     },
     {
@@ -621,7 +621,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 970/1875 [==============>...............] - ETA: 1s - loss: 0.2412"
+      "1163/1875 [=================>............] - ETA: 1s - loss: 0.2287"
      ]
     },
     {
@@ -629,7 +629,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 997/1875 [==============>...............] - ETA: 1s - loss: 0.2396"
+      "1195/1875 [==================>...........] - ETA: 1s - loss: 0.2271"
      ]
     },
     {
@@ -637,7 +637,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1024/1875 [===============>..............] - ETA: 1s - loss: 0.2379"
+      "1226/1875 [==================>...........] - ETA: 1s - loss: 0.2256"
      ]
     },
     {
@@ -645,7 +645,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1050/1875 [===============>..............] - ETA: 1s - loss: 0.2364"
+      "1254/1875 [===================>..........] - ETA: 1s - loss: 0.2243"
      ]
     },
     {
@@ -653,7 +653,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1077/1875 [================>.............] - ETA: 1s - loss: 0.2349"
+      "1282/1875 [===================>..........] - ETA: 0s - loss: 0.2231"
      ]
     },
     {
@@ -661,7 +661,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1104/1875 [================>.............] - ETA: 1s - loss: 0.2334"
+      "1310/1875 [===================>..........] - ETA: 0s - loss: 0.2218"
      ]
     },
     {
@@ -669,7 +669,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1132/1875 [=================>............] - ETA: 1s - loss: 0.2319"
+      "1338/1875 [====================>.........] - ETA: 0s - loss: 0.2206"
      ]
     },
     {
@@ -677,7 +677,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1160/1875 [=================>............] - ETA: 1s - loss: 0.2304"
+      "1367/1875 [====================>.........] - ETA: 0s - loss: 0.2194"
      ]
     },
     {
@@ -685,7 +685,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1189/1875 [==================>...........] - ETA: 1s - loss: 0.2289"
+      "1398/1875 [=====================>........] - ETA: 0s - loss: 0.2181"
      ]
     },
     {
@@ -693,7 +693,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1218/1875 [==================>...........] - ETA: 1s - loss: 0.2275"
+      "1430/1875 [=====================>........] - ETA: 0s - loss: 0.2168"
      ]
     },
     {
@@ -701,7 +701,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1247/1875 [==================>...........] - ETA: 1s - loss: 0.2261"
+      "1461/1875 [======================>.......] - ETA: 0s - loss: 0.2156"
      ]
     },
     {
@@ -709,7 +709,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1275/1875 [===================>..........] - ETA: 1s - loss: 0.2248"
+      "1492/1875 [======================>.......] - ETA: 0s - loss: 0.2145"
      ]
     },
     {
@@ -717,7 +717,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1303/1875 [===================>..........] - ETA: 1s - loss: 0.2236"
+      "1522/1875 [=======================>......] - ETA: 0s - loss: 0.2134"
      ]
     },
     {
@@ -725,7 +725,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1330/1875 [====================>.........] - ETA: 1s - loss: 0.2224"
+      "1551/1875 [=======================>......] - ETA: 0s - loss: 0.2123"
      ]
     },
     {
@@ -733,7 +733,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1358/1875 [====================>.........] - ETA: 0s - loss: 0.2212"
+      "1583/1875 [========================>.....] - ETA: 0s - loss: 0.2112"
      ]
     },
     {
@@ -741,7 +741,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1386/1875 [=====================>........] - ETA: 0s - loss: 0.2200"
+      "1619/1875 [========================>.....] - ETA: 0s - loss: 0.2100"
      ]
     },
     {
@@ -749,7 +749,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1414/1875 [=====================>........] - ETA: 0s - loss: 0.2189"
+      "1648/1875 [=========================>....] - ETA: 0s - loss: 0.2090"
      ]
     },
     {
@@ -757,7 +757,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1443/1875 [======================>.......] - ETA: 0s - loss: 0.2177"
+      "1679/1875 [=========================>....] - ETA: 0s - loss: 0.2080"
      ]
     },
     {
@@ -765,7 +765,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1471/1875 [======================>.......] - ETA: 0s - loss: 0.2166"
+      "1711/1875 [==========================>...] - ETA: 0s - loss: 0.2070"
      ]
     },
     {
@@ -773,7 +773,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1499/1875 [======================>.......] - ETA: 0s - loss: 0.2156"
+      "1745/1875 [==========================>...] - ETA: 0s - loss: 0.2059"
      ]
     },
     {
@@ -781,7 +781,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1527/1875 [=======================>......] - ETA: 0s - loss: 0.2145"
+      "1781/1875 [===========================>..] - ETA: 0s - loss: 0.2048"
      ]
     },
     {
@@ -789,7 +789,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1555/1875 [=======================>......] - ETA: 0s - loss: 0.2135"
+      "1811/1875 [===========================>..] - ETA: 0s - loss: 0.2039"
      ]
     },
     {
@@ -797,7 +797,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1582/1875 [========================>.....] - ETA: 0s - loss: 0.2125"
+      "1844/1875 [============================>.] - ETA: 0s - loss: 0.2030"
      ]
     },
     {
@@ -805,87 +805,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1610/1875 [========================>.....] - ETA: 0s - loss: 0.2116"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1638/1875 [=========================>....] - ETA: 0s - loss: 0.2106"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1666/1875 [=========================>....] - ETA: 0s - loss: 0.2097"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1693/1875 [==========================>...] - ETA: 0s - loss: 0.2088"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1722/1875 [==========================>...] - ETA: 0s - loss: 0.2079"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1751/1875 [===========================>..] - ETA: 0s - loss: 0.2070"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1780/1875 [===========================>..] - ETA: 0s - loss: 0.2061"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1809/1875 [===========================>..] - ETA: 0s - loss: 0.2052"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1837/1875 [============================>.] - ETA: 0s - loss: 0.2044"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1866/1875 [============================>.] - ETA: 0s - loss: 0.2036"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1875/1875 [==============================] - 4s 2ms/step - loss: 0.2033\n"
+      "1875/1875 [==============================] - 4s 2ms/step - loss: 0.2021\n"
      ]
     },
     {
@@ -894,7 +814,7 @@
      "text": [
       "Epoch 2/5\n",
       "\r",
-      "   1/1875 [..............................] - ETA: 3s - loss: 0.1122"
+      "   1/1875 [..............................] - ETA: 2s - loss: 0.1157"
      ]
     },
     {
@@ -902,7 +822,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  27/1875 [..............................] - ETA: 3s - loss: 0.1115"
+      "  34/1875 [..............................] - ETA: 2s - loss: 0.1099"
      ]
     },
     {
@@ -910,7 +830,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  54/1875 [..............................] - ETA: 3s - loss: 0.1110"
+      "  67/1875 [>.............................] - ETA: 2s - loss: 0.1097"
      ]
     },
     {
@@ -918,7 +838,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  82/1875 [>.............................] - ETA: 3s - loss: 0.1107"
+      " 102/1875 [>.............................] - ETA: 2s - loss: 0.1093"
      ]
     },
     {
@@ -926,7 +846,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 109/1875 [>.............................] - ETA: 3s - loss: 0.1105"
+      " 132/1875 [=>............................] - ETA: 2s - loss: 0.1090"
      ]
     },
     {
@@ -934,7 +854,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 138/1875 [=>............................] - ETA: 3s - loss: 0.1103"
+      " 161/1875 [=>............................] - ETA: 2s - loss: 0.1088"
      ]
     },
     {
@@ -942,7 +862,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 165/1875 [=>............................] - ETA: 3s - loss: 0.1102"
+      " 190/1875 [==>...........................] - ETA: 2s - loss: 0.1087"
      ]
     },
     {
@@ -950,7 +870,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 196/1875 [==>...........................] - ETA: 3s - loss: 0.1100"
+      " 225/1875 [==>...........................] - ETA: 2s - loss: 0.1086"
      ]
     },
     {
@@ -958,7 +878,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 223/1875 [==>...........................] - ETA: 3s - loss: 0.1099"
+      " 256/1875 [===>..........................] - ETA: 2s - loss: 0.1085"
      ]
     },
     {
@@ -966,7 +886,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 249/1875 [==>...........................] - ETA: 3s - loss: 0.1098"
+      " 285/1875 [===>..........................] - ETA: 2s - loss: 0.1085"
      ]
     },
     {
@@ -974,7 +894,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 278/1875 [===>..........................] - ETA: 2s - loss: 0.1096"
+      " 308/1875 [===>..........................] - ETA: 2s - loss: 0.1084"
      ]
     },
     {
@@ -982,15 +902,29 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 306/1875 [===>..........................] - ETA: 2s - loss: 0.1095"
+      " 335/1875 [====>.........................] - ETA: 2s - loss: 0.1084"
      ]
     },
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " 363/1875 [====>.........................] - ETA: 2s - loss: 0.1083"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 333/1875 [====>.........................] - ETA: 2s - loss: 0.1094"
+      " 393/1875 [=====>........................] - ETA: 2s - loss: 0.1083"
      ]
     },
     {
@@ -998,7 +932,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 362/1875 [====>.........................] - ETA: 2s - loss: 0.1093"
+      " 423/1875 [=====>........................] - ETA: 2s - loss: 0.1082"
      ]
     },
     {
@@ -1006,7 +940,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 391/1875 [=====>........................] - ETA: 2s - loss: 0.1092"
+      " 447/1875 [======>.......................] - ETA: 2s - loss: 0.1082"
      ]
     },
     {
@@ -1014,7 +948,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 420/1875 [=====>........................] - ETA: 2s - loss: 0.1091"
+      " 474/1875 [======>.......................] - ETA: 2s - loss: 0.1081"
      ]
     },
     {
@@ -1022,7 +956,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 450/1875 [======>.......................] - ETA: 2s - loss: 0.1090"
+      " 503/1875 [=======>......................] - ETA: 2s - loss: 0.1081"
      ]
     },
     {
@@ -1030,7 +964,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 480/1875 [======>.......................] - ETA: 2s - loss: 0.1089"
+      " 533/1875 [=======>......................] - ETA: 2s - loss: 0.1080"
      ]
     },
     {
@@ -1038,7 +972,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 510/1875 [=======>......................] - ETA: 2s - loss: 0.1088"
+      " 568/1875 [========>.....................] - ETA: 2s - loss: 0.1079"
      ]
     },
     {
@@ -1046,7 +980,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 539/1875 [=======>......................] - ETA: 2s - loss: 0.1087"
+      " 601/1875 [========>.....................] - ETA: 2s - loss: 0.1078"
      ]
     },
     {
@@ -1054,7 +988,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 568/1875 [========>.....................] - ETA: 2s - loss: 0.1086"
+      " 631/1875 [=========>....................] - ETA: 2s - loss: 0.1077"
      ]
     },
     {
@@ -1062,7 +996,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 599/1875 [========>.....................] - ETA: 2s - loss: 0.1085"
+      " 664/1875 [=========>....................] - ETA: 2s - loss: 0.1077"
      ]
     },
     {
@@ -1070,7 +1004,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 630/1875 [=========>....................] - ETA: 2s - loss: 0.1084"
+      " 700/1875 [==========>...................] - ETA: 1s - loss: 0.1076"
      ]
     },
     {
@@ -1078,7 +1012,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 660/1875 [=========>....................] - ETA: 2s - loss: 0.1084"
+      " 730/1875 [==========>...................] - ETA: 1s - loss: 0.1075"
      ]
     },
     {
@@ -1086,7 +1020,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 690/1875 [==========>...................] - ETA: 2s - loss: 0.1083"
+      " 758/1875 [===========>..................] - ETA: 1s - loss: 0.1075"
      ]
     },
     {
@@ -1094,7 +1028,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 720/1875 [==========>...................] - ETA: 2s - loss: 0.1082"
+      " 785/1875 [===========>..................] - ETA: 1s - loss: 0.1074"
      ]
     },
     {
@@ -1102,7 +1036,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 751/1875 [===========>..................] - ETA: 1s - loss: 0.1081"
+      " 812/1875 [===========>..................] - ETA: 1s - loss: 0.1073"
      ]
     },
     {
@@ -1110,7 +1044,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 781/1875 [===========>..................] - ETA: 1s - loss: 0.1080"
+      " 839/1875 [============>.................] - ETA: 1s - loss: 0.1073"
      ]
     },
     {
@@ -1118,7 +1052,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 810/1875 [===========>..................] - ETA: 1s - loss: 0.1079"
+      " 870/1875 [============>.................] - ETA: 1s - loss: 0.1072"
      ]
     },
     {
@@ -1126,7 +1060,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 838/1875 [============>.................] - ETA: 1s - loss: 0.1079"
+      " 901/1875 [=============>................] - ETA: 1s - loss: 0.1072"
      ]
     },
     {
@@ -1134,7 +1068,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 869/1875 [============>.................] - ETA: 1s - loss: 0.1078"
+      " 926/1875 [=============>................] - ETA: 1s - loss: 0.1071"
      ]
     },
     {
@@ -1142,7 +1076,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 899/1875 [=============>................] - ETA: 1s - loss: 0.1077"
+      " 954/1875 [==============>...............] - ETA: 1s - loss: 0.1071"
      ]
     },
     {
@@ -1150,7 +1084,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 928/1875 [=============>................] - ETA: 1s - loss: 0.1076"
+      " 979/1875 [==============>...............] - ETA: 1s - loss: 0.1070"
      ]
     },
     {
@@ -1158,7 +1092,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 956/1875 [==============>...............] - ETA: 1s - loss: 0.1076"
+      "1007/1875 [===============>..............] - ETA: 1s - loss: 0.1070"
      ]
     },
     {
@@ -1166,7 +1100,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 985/1875 [==============>...............] - ETA: 1s - loss: 0.1075"
+      "1034/1875 [===============>..............] - ETA: 1s - loss: 0.1069"
      ]
     },
     {
@@ -1174,7 +1108,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1014/1875 [===============>..............] - ETA: 1s - loss: 0.1074"
+      "1058/1875 [===============>..............] - ETA: 1s - loss: 0.1069"
      ]
     },
     {
@@ -1182,7 +1116,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1044/1875 [===============>..............] - ETA: 1s - loss: 0.1074"
+      "1087/1875 [================>.............] - ETA: 1s - loss: 0.1068"
      ]
     },
     {
@@ -1190,7 +1124,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1075/1875 [================>.............] - ETA: 1s - loss: 0.1073"
+      "1118/1875 [================>.............] - ETA: 1s - loss: 0.1067"
      ]
     },
     {
@@ -1198,7 +1132,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1105/1875 [================>.............] - ETA: 1s - loss: 0.1072"
+      "1149/1875 [=================>............] - ETA: 1s - loss: 0.1067"
      ]
     },
     {
@@ -1206,7 +1140,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1133/1875 [=================>............] - ETA: 1s - loss: 0.1072"
+      "1181/1875 [=================>............] - ETA: 1s - loss: 0.1066"
      ]
     },
     {
@@ -1214,7 +1148,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1161/1875 [=================>............] - ETA: 1s - loss: 0.1071"
+      "1213/1875 [==================>...........] - ETA: 1s - loss: 0.1066"
      ]
     },
     {
@@ -1222,7 +1156,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1186/1875 [=================>............] - ETA: 1s - loss: 0.1070"
+      "1245/1875 [==================>...........] - ETA: 1s - loss: 0.1065"
      ]
     },
     {
@@ -1230,7 +1164,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1211/1875 [==================>...........] - ETA: 1s - loss: 0.1070"
+      "1267/1875 [===================>..........] - ETA: 1s - loss: 0.1065"
      ]
     },
     {
@@ -1238,7 +1172,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1239/1875 [==================>...........] - ETA: 1s - loss: 0.1069"
+      "1294/1875 [===================>..........] - ETA: 1s - loss: 0.1064"
      ]
     },
     {
@@ -1246,7 +1180,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1264/1875 [===================>..........] - ETA: 1s - loss: 0.1069"
+      "1325/1875 [====================>.........] - ETA: 0s - loss: 0.1064"
      ]
     },
     {
@@ -1254,7 +1188,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1289/1875 [===================>..........] - ETA: 1s - loss: 0.1068"
+      "1356/1875 [====================>.........] - ETA: 0s - loss: 0.1063"
      ]
     },
     {
@@ -1262,7 +1196,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1314/1875 [====================>.........] - ETA: 1s - loss: 0.1068"
+      "1383/1875 [=====================>........] - ETA: 0s - loss: 0.1062"
      ]
     },
     {
@@ -1270,7 +1204,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1333/1875 [====================>.........] - ETA: 0s - loss: 0.1067"
+      "1413/1875 [=====================>........] - ETA: 0s - loss: 0.1062"
      ]
     },
     {
@@ -1278,7 +1212,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1359/1875 [====================>.........] - ETA: 0s - loss: 0.1067"
+      "1438/1875 [======================>.......] - ETA: 0s - loss: 0.1061"
      ]
     },
     {
@@ -1286,7 +1220,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1389/1875 [=====================>........] - ETA: 0s - loss: 0.1066"
+      "1464/1875 [======================>.......] - ETA: 0s - loss: 0.1061"
      ]
     },
     {
@@ -1294,7 +1228,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1419/1875 [=====================>........] - ETA: 0s - loss: 0.1066"
+      "1492/1875 [======================>.......] - ETA: 0s - loss: 0.1061"
      ]
     },
     {
@@ -1302,7 +1236,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1454/1875 [======================>.......] - ETA: 0s - loss: 0.1065"
+      "1520/1875 [=======================>......] - ETA: 0s - loss: 0.1060"
      ]
     },
     {
@@ -1310,7 +1244,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1485/1875 [======================>.......] - ETA: 0s - loss: 0.1064"
+      "1549/1875 [=======================>......] - ETA: 0s - loss: 0.1060"
      ]
     },
     {
@@ -1318,7 +1252,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1516/1875 [=======================>......] - ETA: 0s - loss: 0.1064"
+      "1580/1875 [========================>.....] - ETA: 0s - loss: 0.1059"
      ]
     },
     {
@@ -1326,7 +1260,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1550/1875 [=======================>......] - ETA: 0s - loss: 0.1063"
+      "1608/1875 [========================>.....] - ETA: 0s - loss: 0.1059"
      ]
     },
     {
@@ -1334,7 +1268,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1585/1875 [========================>.....] - ETA: 0s - loss: 0.1062"
+      "1637/1875 [=========================>....] - ETA: 0s - loss: 0.1058"
      ]
     },
     {
@@ -1342,7 +1276,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1617/1875 [========================>.....] - ETA: 0s - loss: 0.1062"
+      "1666/1875 [=========================>....] - ETA: 0s - loss: 0.1058"
      ]
     },
     {
@@ -1350,7 +1284,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1652/1875 [=========================>....] - ETA: 0s - loss: 0.1061"
+      "1687/1875 [=========================>....] - ETA: 0s - loss: 0.1057"
      ]
     },
     {
@@ -1358,7 +1292,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1679/1875 [=========================>....] - ETA: 0s - loss: 0.1061"
+      "1713/1875 [==========================>...] - ETA: 0s - loss: 0.1057"
      ]
     },
     {
@@ -1366,7 +1300,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1713/1875 [==========================>...] - ETA: 0s - loss: 0.1060"
+      "1740/1875 [==========================>...] - ETA: 0s - loss: 0.1056"
      ]
     },
     {
@@ -1374,7 +1308,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1744/1875 [==========================>...] - ETA: 0s - loss: 0.1059"
+      "1764/1875 [===========================>..] - ETA: 0s - loss: 0.1056"
      ]
     },
     {
@@ -1382,7 +1316,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1773/1875 [===========================>..] - ETA: 0s - loss: 0.1059"
+      "1788/1875 [===========================>..] - ETA: 0s - loss: 0.1056"
      ]
     },
     {
@@ -1390,7 +1324,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1808/1875 [===========================>..] - ETA: 0s - loss: 0.1058"
+      "1817/1875 [============================>.] - ETA: 0s - loss: 0.1055"
      ]
     },
     {
@@ -1398,7 +1332,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1843/1875 [============================>.] - ETA: 0s - loss: 0.1058"
+      "1843/1875 [============================>.] - ETA: 0s - loss: 0.1055"
      ]
     },
     {
@@ -1406,7 +1340,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1866/1875 [============================>.] - ETA: 0s - loss: 0.1057"
+      "1864/1875 [============================>.] - ETA: 0s - loss: 0.1054"
      ]
     },
     {
@@ -1414,7 +1348,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1875/1875 [==============================] - 3s 2ms/step - loss: 0.1057\n"
+      "1875/1875 [==============================] - 3s 2ms/step - loss: 0.1054\n"
      ]
     },
     {
@@ -1423,63 +1357,15 @@
      "text": [
       "Epoch 3/5\n",
       "\r",
-      "   1/1875 [..............................] - ETA: 16s - loss: 0.0959"
+      "   1/1875 [..............................] - ETA: 3s - loss: 0.1025"
      ]
     },
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  29/1875 [..............................] - ETA: 3s - loss: 0.0989 "
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  56/1875 [..............................] - ETA: 3s - loss: 0.0988"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  82/1875 [>.............................] - ETA: 3s - loss: 0.0988"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 109/1875 [>.............................] - ETA: 3s - loss: 0.0987"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 133/1875 [=>............................] - ETA: 3s - loss: 0.0988"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 158/1875 [=>............................] - ETA: 3s - loss: 0.0988"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 181/1875 [=>............................] - ETA: 3s - loss: 0.0988"
+      "  27/1875 [..............................] - ETA: 3s - loss: 0.0996"
      ]
     },
     {
@@ -1487,7 +1373,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 209/1875 [==>...........................] - ETA: 3s - loss: 0.0987"
+      "  57/1875 [..............................] - ETA: 3s - loss: 0.0991"
      ]
     },
     {
@@ -1495,7 +1381,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 237/1875 [==>...........................] - ETA: 3s - loss: 0.0987"
+      "  84/1875 [>.............................] - ETA: 3s - loss: 0.0991"
      ]
     },
     {
@@ -1503,7 +1389,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 257/1875 [===>..........................] - ETA: 3s - loss: 0.0986"
+      " 110/1875 [>.............................] - ETA: 3s - loss: 0.0991"
      ]
     },
     {
@@ -1511,7 +1397,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 285/1875 [===>..........................] - ETA: 3s - loss: 0.0986"
+      " 136/1875 [=>............................] - ETA: 3s - loss: 0.0990"
      ]
     },
     {
@@ -1519,7 +1405,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 301/1875 [===>..........................] - ETA: 3s - loss: 0.0986"
+      " 165/1875 [=>............................] - ETA: 3s - loss: 0.0989"
      ]
     },
     {
@@ -1527,7 +1413,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 326/1875 [====>.........................] - ETA: 3s - loss: 0.0986"
+      " 193/1875 [==>...........................] - ETA: 3s - loss: 0.0988"
      ]
     },
     {
@@ -1535,7 +1421,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 349/1875 [====>.........................] - ETA: 3s - loss: 0.0986"
+      " 227/1875 [==>...........................] - ETA: 2s - loss: 0.0987"
      ]
     },
     {
@@ -1543,7 +1429,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 379/1875 [=====>........................] - ETA: 3s - loss: 0.0985"
+      " 261/1875 [===>..........................] - ETA: 2s - loss: 0.0986"
      ]
     },
     {
@@ -1551,7 +1437,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 408/1875 [=====>........................] - ETA: 2s - loss: 0.0985"
+      " 291/1875 [===>..........................] - ETA: 2s - loss: 0.0986"
      ]
     },
     {
@@ -1559,7 +1445,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 437/1875 [=====>........................] - ETA: 2s - loss: 0.0985"
+      " 327/1875 [====>.........................] - ETA: 2s - loss: 0.0985"
      ]
     },
     {
@@ -1567,7 +1453,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 458/1875 [======>.......................] - ETA: 2s - loss: 0.0985"
+      " 362/1875 [====>.........................] - ETA: 2s - loss: 0.0985"
      ]
     },
     {
@@ -1575,7 +1461,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 482/1875 [======>.......................] - ETA: 2s - loss: 0.0984"
+      " 393/1875 [=====>........................] - ETA: 2s - loss: 0.0984"
      ]
     },
     {
@@ -1583,7 +1469,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 508/1875 [=======>......................] - ETA: 2s - loss: 0.0984"
+      " 424/1875 [=====>........................] - ETA: 2s - loss: 0.0984"
      ]
     },
     {
@@ -1591,7 +1477,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 535/1875 [=======>......................] - ETA: 2s - loss: 0.0984"
+      " 454/1875 [======>.......................] - ETA: 2s - loss: 0.0983"
      ]
     },
     {
@@ -1599,7 +1485,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 558/1875 [=======>......................] - ETA: 2s - loss: 0.0984"
+      " 485/1875 [======>.......................] - ETA: 2s - loss: 0.0983"
      ]
     },
     {
@@ -1607,7 +1493,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 586/1875 [========>.....................] - ETA: 2s - loss: 0.0984"
+      " 516/1875 [=======>......................] - ETA: 2s - loss: 0.0983"
      ]
     },
     {
@@ -1615,7 +1501,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 613/1875 [========>.....................] - ETA: 2s - loss: 0.0983"
+      " 546/1875 [=======>......................] - ETA: 2s - loss: 0.0982"
      ]
     },
     {
@@ -1623,7 +1509,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 643/1875 [=========>....................] - ETA: 2s - loss: 0.0983"
+      " 574/1875 [========>.....................] - ETA: 2s - loss: 0.0982"
      ]
     },
     {
@@ -1631,7 +1517,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 671/1875 [=========>....................] - ETA: 2s - loss: 0.0983"
+      " 601/1875 [========>.....................] - ETA: 2s - loss: 0.0982"
      ]
     },
     {
@@ -1639,7 +1525,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 699/1875 [==========>...................] - ETA: 2s - loss: 0.0983"
+      " 628/1875 [=========>....................] - ETA: 2s - loss: 0.0982"
      ]
     },
     {
@@ -1647,7 +1533,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 728/1875 [==========>...................] - ETA: 2s - loss: 0.0983"
+      " 655/1875 [=========>....................] - ETA: 2s - loss: 0.0982"
      ]
     },
     {
@@ -1655,7 +1541,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 753/1875 [===========>..................] - ETA: 2s - loss: 0.0983"
+      " 683/1875 [=========>....................] - ETA: 2s - loss: 0.0981"
      ]
     },
     {
@@ -1663,7 +1549,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 780/1875 [===========>..................] - ETA: 2s - loss: 0.0982"
+      " 713/1875 [==========>...................] - ETA: 1s - loss: 0.0981"
      ]
     },
     {
@@ -1671,7 +1557,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 807/1875 [===========>..................] - ETA: 2s - loss: 0.0982"
+      " 745/1875 [==========>...................] - ETA: 1s - loss: 0.0981"
      ]
     },
     {
@@ -1679,7 +1565,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 835/1875 [============>.................] - ETA: 2s - loss: 0.0982"
+      " 774/1875 [===========>..................] - ETA: 1s - loss: 0.0981"
      ]
     },
     {
@@ -1687,7 +1573,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 864/1875 [============>.................] - ETA: 1s - loss: 0.0982"
+      " 805/1875 [===========>..................] - ETA: 1s - loss: 0.0981"
      ]
     },
     {
@@ -1695,7 +1581,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 898/1875 [=============>................] - ETA: 1s - loss: 0.0982"
+      " 841/1875 [============>.................] - ETA: 1s - loss: 0.0980"
      ]
     },
     {
@@ -1703,7 +1589,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 929/1875 [=============>................] - ETA: 1s - loss: 0.0982"
+      " 873/1875 [============>.................] - ETA: 1s - loss: 0.0980"
      ]
     },
     {
@@ -1711,7 +1597,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 957/1875 [==============>...............] - ETA: 1s - loss: 0.0981"
+      " 904/1875 [=============>................] - ETA: 1s - loss: 0.0980"
      ]
     },
     {
@@ -1719,7 +1605,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 986/1875 [==============>...............] - ETA: 1s - loss: 0.0981"
+      " 934/1875 [=============>................] - ETA: 1s - loss: 0.0980"
      ]
     },
     {
@@ -1727,23 +1613,21 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1016/1875 [===============>..............] - ETA: 1s - loss: 0.0981"
+      " 964/1875 [==============>...............] - ETA: 1s - loss: 0.0980"
      ]
     },
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1039/1875 [===============>..............] - ETA: 1s - loss: 0.0981"
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r"
      ]
     },
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1063/1875 [================>.............] - ETA: 1s - loss: 0.0981"
+      " 994/1875 [==============>...............] - ETA: 1s - loss: 0.0980"
      ]
     },
     {
@@ -1751,7 +1635,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1090/1875 [================>.............] - ETA: 1s - loss: 0.0981"
+      "1024/1875 [===============>..............] - ETA: 1s - loss: 0.0980"
      ]
     },
     {
@@ -1759,7 +1643,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1119/1875 [================>.............] - ETA: 1s - loss: 0.0981"
+      "1060/1875 [===============>..............] - ETA: 1s - loss: 0.0979"
      ]
     },
     {
@@ -1767,7 +1651,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1142/1875 [=================>............] - ETA: 1s - loss: 0.0980"
+      "1096/1875 [================>.............] - ETA: 1s - loss: 0.0979"
      ]
     },
     {
@@ -1775,7 +1659,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1171/1875 [=================>............] - ETA: 1s - loss: 0.0980"
+      "1131/1875 [=================>............] - ETA: 1s - loss: 0.0979"
      ]
     },
     {
@@ -1783,7 +1667,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1201/1875 [==================>...........] - ETA: 1s - loss: 0.0980"
+      "1166/1875 [=================>............] - ETA: 1s - loss: 0.0979"
      ]
     },
     {
@@ -1791,7 +1675,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1227/1875 [==================>...........] - ETA: 1s - loss: 0.0980"
+      "1197/1875 [==================>...........] - ETA: 1s - loss: 0.0979"
      ]
     },
     {
@@ -1799,7 +1683,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1255/1875 [===================>..........] - ETA: 1s - loss: 0.0980"
+      "1227/1875 [==================>...........] - ETA: 1s - loss: 0.0979"
      ]
     },
     {
@@ -1807,7 +1691,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1284/1875 [===================>..........] - ETA: 1s - loss: 0.0980"
+      "1255/1875 [===================>..........] - ETA: 1s - loss: 0.0979"
      ]
     },
     {
@@ -1815,7 +1699,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1310/1875 [===================>..........] - ETA: 1s - loss: 0.0980"
+      "1283/1875 [===================>..........] - ETA: 0s - loss: 0.0979"
      ]
     },
     {
@@ -1823,7 +1707,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1337/1875 [====================>.........] - ETA: 1s - loss: 0.0980"
+      "1314/1875 [====================>.........] - ETA: 0s - loss: 0.0978"
      ]
     },
     {
@@ -1831,7 +1715,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1360/1875 [====================>.........] - ETA: 0s - loss: 0.0980"
+      "1350/1875 [====================>.........] - ETA: 0s - loss: 0.0978"
      ]
     },
     {
@@ -1839,7 +1723,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1384/1875 [=====================>........] - ETA: 0s - loss: 0.0979"
+      "1387/1875 [=====================>........] - ETA: 0s - loss: 0.0978"
      ]
     },
     {
@@ -1847,7 +1731,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1411/1875 [=====================>........] - ETA: 0s - loss: 0.0979"
+      "1422/1875 [=====================>........] - ETA: 0s - loss: 0.0978"
      ]
     },
     {
@@ -1855,7 +1739,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1440/1875 [======================>.......] - ETA: 0s - loss: 0.0979"
+      "1451/1875 [======================>.......] - ETA: 0s - loss: 0.0978"
      ]
     },
     {
@@ -1863,7 +1747,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1461/1875 [======================>.......] - ETA: 0s - loss: 0.0979"
+      "1480/1875 [======================>.......] - ETA: 0s - loss: 0.0978"
      ]
     },
     {
@@ -1871,7 +1755,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1490/1875 [======================>.......] - ETA: 0s - loss: 0.0979"
+      "1509/1875 [=======================>......] - ETA: 0s - loss: 0.0978"
      ]
     },
     {
@@ -1879,7 +1763,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1520/1875 [=======================>......] - ETA: 0s - loss: 0.0979"
+      "1538/1875 [=======================>......] - ETA: 0s - loss: 0.0978"
      ]
     },
     {
@@ -1887,7 +1771,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1550/1875 [=======================>......] - ETA: 0s - loss: 0.0979"
+      "1564/1875 [========================>.....] - ETA: 0s - loss: 0.0977"
      ]
     },
     {
@@ -1895,7 +1779,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1580/1875 [========================>.....] - ETA: 0s - loss: 0.0979"
+      "1598/1875 [========================>.....] - ETA: 0s - loss: 0.0977"
      ]
     },
     {
@@ -1903,7 +1787,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1610/1875 [========================>.....] - ETA: 0s - loss: 0.0979"
+      "1632/1875 [=========================>....] - ETA: 0s - loss: 0.0977"
      ]
     },
     {
@@ -1911,7 +1795,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1641/1875 [=========================>....] - ETA: 0s - loss: 0.0979"
+      "1661/1875 [=========================>....] - ETA: 0s - loss: 0.0977"
      ]
     },
     {
@@ -1919,7 +1803,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1672/1875 [=========================>....] - ETA: 0s - loss: 0.0978"
+      "1692/1875 [==========================>...] - ETA: 0s - loss: 0.0977"
      ]
     },
     {
@@ -1927,7 +1811,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1702/1875 [==========================>...] - ETA: 0s - loss: 0.0978"
+      "1722/1875 [==========================>...] - ETA: 0s - loss: 0.0977"
      ]
     },
     {
@@ -1935,7 +1819,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1732/1875 [==========================>...] - ETA: 0s - loss: 0.0978"
+      "1752/1875 [===========================>..] - ETA: 0s - loss: 0.0977"
      ]
     },
     {
@@ -1943,7 +1827,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1763/1875 [===========================>..] - ETA: 0s - loss: 0.0978"
+      "1783/1875 [===========================>..] - ETA: 0s - loss: 0.0977"
      ]
     },
     {
@@ -1951,7 +1835,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1792/1875 [===========================>..] - ETA: 0s - loss: 0.0978"
+      "1813/1875 [============================>.] - ETA: 0s - loss: 0.0977"
      ]
     },
     {
@@ -1959,7 +1843,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1823/1875 [============================>.] - ETA: 0s - loss: 0.0978"
+      "1843/1875 [============================>.] - ETA: 0s - loss: 0.0977"
      ]
     },
     {
@@ -1967,7 +1851,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1854/1875 [============================>.] - ETA: 0s - loss: 0.0978"
+      "1872/1875 [============================>.] - ETA: 0s - loss: 0.0976"
      ]
     },
     {
@@ -1975,7 +1859,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1875/1875 [==============================] - 4s 2ms/step - loss: 0.0978\n"
+      "1875/1875 [==============================] - 3s 2ms/step - loss: 0.0976\n"
      ]
     },
     {
@@ -1984,7 +1868,7 @@
      "text": [
       "Epoch 4/5\n",
       "\r",
-      "   1/1875 [..............................] - ETA: 3s - loss: 0.0891"
+      "   1/1875 [..............................] - ETA: 3s - loss: 0.0967"
      ]
     },
     {
@@ -1992,7 +1876,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  29/1875 [..............................] - ETA: 3s - loss: 0.0963"
+      "  31/1875 [..............................] - ETA: 3s - loss: 0.0955"
      ]
     },
     {
@@ -2000,7 +1884,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  57/1875 [..............................] - ETA: 3s - loss: 0.0961"
+      "  55/1875 [..............................] - ETA: 3s - loss: 0.0960"
      ]
     },
     {
@@ -2008,7 +1892,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  88/1875 [>.............................] - ETA: 3s - loss: 0.0960"
+      "  84/1875 [>.............................] - ETA: 3s - loss: 0.0963"
      ]
     },
     {
@@ -2016,7 +1900,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 111/1875 [>.............................] - ETA: 3s - loss: 0.0960"
+      " 114/1875 [>.............................] - ETA: 3s - loss: 0.0965"
      ]
     },
     {
@@ -2024,7 +1908,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 138/1875 [=>............................] - ETA: 3s - loss: 0.0960"
+      " 144/1875 [=>............................] - ETA: 3s - loss: 0.0965"
      ]
     },
     {
@@ -2032,7 +1916,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 161/1875 [=>............................] - ETA: 3s - loss: 0.0960"
+      " 174/1875 [=>............................] - ETA: 3s - loss: 0.0966"
      ]
     },
     {
@@ -2040,7 +1924,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 188/1875 [==>...........................] - ETA: 3s - loss: 0.0960"
+      " 204/1875 [==>...........................] - ETA: 2s - loss: 0.0965"
      ]
     },
     {
@@ -2048,7 +1932,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 213/1875 [==>...........................] - ETA: 3s - loss: 0.0960"
+      " 234/1875 [==>...........................] - ETA: 2s - loss: 0.0965"
      ]
     },
     {
@@ -2056,7 +1940,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 235/1875 [==>...........................] - ETA: 3s - loss: 0.0961"
+      " 265/1875 [===>..........................] - ETA: 2s - loss: 0.0964"
      ]
     },
     {
@@ -2064,7 +1948,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 260/1875 [===>..........................] - ETA: 3s - loss: 0.0961"
+      " 295/1875 [===>..........................] - ETA: 2s - loss: 0.0963"
      ]
     },
     {
@@ -2072,7 +1956,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 283/1875 [===>..........................] - ETA: 3s - loss: 0.0961"
+      " 325/1875 [====>.........................] - ETA: 2s - loss: 0.0963"
      ]
     },
     {
@@ -2080,7 +1964,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 304/1875 [===>..........................] - ETA: 3s - loss: 0.0961"
+      " 352/1875 [====>.........................] - ETA: 2s - loss: 0.0963"
      ]
     },
     {
@@ -2088,7 +1972,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 331/1875 [====>.........................] - ETA: 3s - loss: 0.0961"
+      " 381/1875 [=====>........................] - ETA: 2s - loss: 0.0962"
      ]
     },
     {
@@ -2096,7 +1980,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 357/1875 [====>.........................] - ETA: 3s - loss: 0.0961"
+      " 406/1875 [=====>........................] - ETA: 2s - loss: 0.0962"
      ]
     },
     {
@@ -2104,7 +1988,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 382/1875 [=====>........................] - ETA: 2s - loss: 0.0961"
+      " 433/1875 [=====>........................] - ETA: 2s - loss: 0.0962"
      ]
     },
     {
@@ -2112,7 +1996,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 404/1875 [=====>........................] - ETA: 2s - loss: 0.0961"
+      " 464/1875 [======>.......................] - ETA: 2s - loss: 0.0962"
      ]
     },
     {
@@ -2120,7 +2004,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 431/1875 [=====>........................] - ETA: 2s - loss: 0.0961"
+      " 491/1875 [======>.......................] - ETA: 2s - loss: 0.0961"
      ]
     },
     {
@@ -2128,7 +2012,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 457/1875 [======>.......................] - ETA: 2s - loss: 0.0961"
+      " 524/1875 [=======>......................] - ETA: 2s - loss: 0.0961"
      ]
     },
     {
@@ -2136,7 +2020,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 483/1875 [======>.......................] - ETA: 2s - loss: 0.0962"
+      " 558/1875 [=======>......................] - ETA: 2s - loss: 0.0961"
      ]
     },
     {
@@ -2144,7 +2028,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 510/1875 [=======>......................] - ETA: 2s - loss: 0.0962"
+      " 594/1875 [========>.....................] - ETA: 2s - loss: 0.0961"
      ]
     },
     {
@@ -2152,7 +2036,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 538/1875 [=======>......................] - ETA: 2s - loss: 0.0962"
+      " 629/1875 [=========>....................] - ETA: 2s - loss: 0.0961"
      ]
     },
     {
@@ -2160,7 +2044,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 562/1875 [=======>......................] - ETA: 2s - loss: 0.0962"
+      " 665/1875 [=========>....................] - ETA: 2s - loss: 0.0961"
      ]
     },
     {
@@ -2168,7 +2052,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 588/1875 [========>.....................] - ETA: 2s - loss: 0.0962"
+      " 692/1875 [==========>...................] - ETA: 2s - loss: 0.0961"
      ]
     },
     {
@@ -2176,7 +2060,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 614/1875 [========>.....................] - ETA: 2s - loss: 0.0962"
+      " 724/1875 [==========>...................] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2184,7 +2068,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 642/1875 [=========>....................] - ETA: 2s - loss: 0.0962"
+      " 758/1875 [===========>..................] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2192,7 +2076,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 664/1875 [=========>....................] - ETA: 2s - loss: 0.0962"
+      " 792/1875 [===========>..................] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2200,7 +2084,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 690/1875 [==========>...................] - ETA: 2s - loss: 0.0962"
+      " 824/1875 [============>.................] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2208,7 +2092,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 712/1875 [==========>...................] - ETA: 2s - loss: 0.0962"
+      " 854/1875 [============>.................] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2216,7 +2100,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 736/1875 [==========>...................] - ETA: 2s - loss: 0.0962"
+      " 887/1875 [=============>................] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2224,7 +2108,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 762/1875 [===========>..................] - ETA: 2s - loss: 0.0962"
+      " 922/1875 [=============>................] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2232,7 +2116,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 786/1875 [===========>..................] - ETA: 2s - loss: 0.0962"
+      " 957/1875 [==============>...............] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2240,7 +2124,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 811/1875 [===========>..................] - ETA: 2s - loss: 0.0962"
+      " 993/1875 [==============>...............] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2248,7 +2132,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 836/1875 [============>.................] - ETA: 2s - loss: 0.0962"
+      "1026/1875 [===============>..............] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2256,7 +2140,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 862/1875 [============>.................] - ETA: 2s - loss: 0.0962"
+      "1052/1875 [===============>..............] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2264,7 +2148,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 890/1875 [=============>................] - ETA: 1s - loss: 0.0962"
+      "1084/1875 [================>.............] - ETA: 1s - loss: 0.0960"
      ]
     },
     {
@@ -2272,7 +2156,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 920/1875 [=============>................] - ETA: 1s - loss: 0.0962"
+      "1119/1875 [================>.............] - ETA: 1s - loss: 0.0959"
      ]
     },
     {
@@ -2280,7 +2164,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 948/1875 [==============>...............] - ETA: 1s - loss: 0.0962"
+      "1152/1875 [=================>............] - ETA: 1s - loss: 0.0959"
      ]
     },
     {
@@ -2288,7 +2172,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 976/1875 [==============>...............] - ETA: 1s - loss: 0.0962"
+      "1182/1875 [=================>............] - ETA: 1s - loss: 0.0959"
      ]
     },
     {
@@ -2296,7 +2180,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1004/1875 [===============>..............] - ETA: 1s - loss: 0.0962"
+      "1216/1875 [==================>...........] - ETA: 1s - loss: 0.0959"
      ]
     },
     {
@@ -2304,7 +2188,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1032/1875 [===============>..............] - ETA: 1s - loss: 0.0962"
+      "1248/1875 [==================>...........] - ETA: 1s - loss: 0.0959"
      ]
     },
     {
@@ -2312,7 +2196,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1061/1875 [===============>..............] - ETA: 1s - loss: 0.0961"
+      "1281/1875 [===================>..........] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2320,7 +2204,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1086/1875 [================>.............] - ETA: 1s - loss: 0.0961"
+      "1317/1875 [====================>.........] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2328,7 +2212,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1114/1875 [================>.............] - ETA: 1s - loss: 0.0961"
+      "1348/1875 [====================>.........] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2336,7 +2220,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1137/1875 [=================>............] - ETA: 1s - loss: 0.0961"
+      "1381/1875 [=====================>........] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2344,7 +2228,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1162/1875 [=================>............] - ETA: 1s - loss: 0.0961"
+      "1412/1875 [=====================>........] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2352,7 +2236,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1187/1875 [=================>............] - ETA: 1s - loss: 0.0961"
+      "1435/1875 [=====================>........] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2360,7 +2244,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1213/1875 [==================>...........] - ETA: 1s - loss: 0.0961"
+      "1466/1875 [======================>.......] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2368,7 +2252,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1239/1875 [==================>...........] - ETA: 1s - loss: 0.0961"
+      "1504/1875 [=======================>......] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2376,7 +2260,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1264/1875 [===================>..........] - ETA: 1s - loss: 0.0961"
+      "1542/1875 [=======================>......] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2384,7 +2268,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1289/1875 [===================>..........] - ETA: 1s - loss: 0.0961"
+      "1581/1875 [========================>.....] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2392,7 +2276,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1313/1875 [====================>.........] - ETA: 1s - loss: 0.0961"
+      "1619/1875 [========================>.....] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2400,7 +2284,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1340/1875 [====================>.........] - ETA: 1s - loss: 0.0961"
+      "1657/1875 [=========================>....] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2408,7 +2292,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1367/1875 [====================>.........] - ETA: 1s - loss: 0.0961"
+      "1697/1875 [==========================>...] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2416,7 +2300,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1394/1875 [=====================>........] - ETA: 0s - loss: 0.0961"
+      "1735/1875 [==========================>...] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2424,7 +2308,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1424/1875 [=====================>........] - ETA: 0s - loss: 0.0961"
+      "1772/1875 [===========================>..] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2432,7 +2316,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1452/1875 [======================>.......] - ETA: 0s - loss: 0.0961"
+      "1808/1875 [===========================>..] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2440,7 +2324,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1481/1875 [======================>.......] - ETA: 0s - loss: 0.0961"
+      "1845/1875 [============================>.] - ETA: 0s - loss: 0.0959"
      ]
     },
     {
@@ -2448,120 +2332,22 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1511/1875 [=======================>......] - ETA: 0s - loss: 0.0961"
+      "1875/1875 [==============================] - 3s 2ms/step - loss: 0.0959\n"
      ]
     },
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1541/1875 [=======================>......] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1571/1875 [========================>.....] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1600/1875 [========================>.....] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1630/1875 [=========================>....] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1660/1875 [=========================>....] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1689/1875 [==========================>...] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1715/1875 [==========================>...] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1744/1875 [==========================>...] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1774/1875 [===========================>..] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1803/1875 [===========================>..] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1832/1875 [============================>.] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1860/1875 [============================>.] - ETA: 0s - loss: 0.0960"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1875/1875 [==============================] - 4s 2ms/step - loss: 0.0960\n"
+      "Epoch 5/5\n"
      ]
     },
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Epoch 5/5\n",
       "\r",
-      "   1/1875 [..............................] - ETA: 3s - loss: 0.0976"
+      "   1/1875 [..............................] - ETA: 4s - loss: 0.0908"
      ]
     },
     {
@@ -2569,7 +2355,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  30/1875 [..............................] - ETA: 3s - loss: 0.0973"
+      "  38/1875 [..............................] - ETA: 2s - loss: 0.0931"
      ]
     },
     {
@@ -2577,7 +2363,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  57/1875 [..............................] - ETA: 3s - loss: 0.0964"
+      "  76/1875 [>.............................] - ETA: 2s - loss: 0.0941"
      ]
     },
     {
@@ -2585,7 +2371,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "  85/1875 [>.............................] - ETA: 3s - loss: 0.0961"
+      " 116/1875 [>.............................] - ETA: 2s - loss: 0.0944"
      ]
     },
     {
@@ -2593,7 +2379,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 109/1875 [>.............................] - ETA: 3s - loss: 0.0959"
+      " 154/1875 [=>............................] - ETA: 2s - loss: 0.0945"
      ]
     },
     {
@@ -2601,7 +2387,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 134/1875 [=>............................] - ETA: 3s - loss: 0.0958"
+      " 191/1875 [==>...........................] - ETA: 2s - loss: 0.0946"
      ]
     },
     {
@@ -2609,7 +2395,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 163/1875 [=>............................] - ETA: 3s - loss: 0.0957"
+      " 224/1875 [==>...........................] - ETA: 2s - loss: 0.0947"
      ]
     },
     {
@@ -2617,7 +2403,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 190/1875 [==>...........................] - ETA: 3s - loss: 0.0957"
+      " 254/1875 [===>..........................] - ETA: 2s - loss: 0.0947"
      ]
     },
     {
@@ -2625,7 +2411,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 216/1875 [==>...........................] - ETA: 3s - loss: 0.0956"
+      " 283/1875 [===>..........................] - ETA: 2s - loss: 0.0947"
      ]
     },
     {
@@ -2633,7 +2419,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 239/1875 [==>...........................] - ETA: 3s - loss: 0.0956"
+      " 322/1875 [====>.........................] - ETA: 2s - loss: 0.0948"
      ]
     },
     {
@@ -2641,7 +2427,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 269/1875 [===>..........................] - ETA: 3s - loss: 0.0955"
+      " 358/1875 [====>.........................] - ETA: 2s - loss: 0.0948"
      ]
     },
     {
@@ -2649,7 +2435,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 298/1875 [===>..........................] - ETA: 3s - loss: 0.0955"
+      " 393/1875 [=====>........................] - ETA: 2s - loss: 0.0948"
      ]
     },
     {
@@ -2657,7 +2443,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 328/1875 [====>.........................] - ETA: 2s - loss: 0.0955"
+      " 429/1875 [=====>........................] - ETA: 2s - loss: 0.0948"
      ]
     },
     {
@@ -2665,7 +2451,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 357/1875 [====>.........................] - ETA: 2s - loss: 0.0955"
+      " 463/1875 [======>.......................] - ETA: 2s - loss: 0.0948"
      ]
     },
     {
@@ -2673,7 +2459,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 387/1875 [=====>........................] - ETA: 2s - loss: 0.0954"
+      " 500/1875 [=======>......................] - ETA: 1s - loss: 0.0948"
      ]
     },
     {
@@ -2681,7 +2467,22 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 417/1875 [=====>........................] - ETA: 2s - loss: 0.0954"
+      " 537/1875 [=======>......................] - ETA: 1s - loss: 0.0948"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 573/1875 [========>.....................] - ETA: 1s - loss: 0.0948"
      ]
     },
     {
@@ -2689,7 +2490,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 447/1875 [======>.......................] - ETA: 2s - loss: 0.0954"
+      " 609/1875 [========>.....................] - ETA: 1s - loss: 0.0948"
      ]
     },
     {
@@ -2697,7 +2498,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 477/1875 [======>.......................] - ETA: 2s - loss: 0.0954"
+      " 646/1875 [=========>....................] - ETA: 1s - loss: 0.0948"
      ]
     },
     {
@@ -2705,7 +2506,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 506/1875 [=======>......................] - ETA: 2s - loss: 0.0954"
+      " 682/1875 [=========>....................] - ETA: 1s - loss: 0.0948"
      ]
     },
     {
@@ -2713,7 +2514,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 534/1875 [=======>......................] - ETA: 2s - loss: 0.0953"
+      " 719/1875 [==========>...................] - ETA: 1s - loss: 0.0948"
      ]
     },
     {
@@ -2721,7 +2522,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 564/1875 [========>.....................] - ETA: 2s - loss: 0.0953"
+      " 757/1875 [===========>..................] - ETA: 1s - loss: 0.0948"
      ]
     },
     {
@@ -2729,7 +2530,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 593/1875 [========>.....................] - ETA: 2s - loss: 0.0953"
+      " 794/1875 [===========>..................] - ETA: 1s - loss: 0.0948"
      ]
     },
     {
@@ -2737,7 +2538,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 622/1875 [========>.....................] - ETA: 2s - loss: 0.0953"
+      " 833/1875 [============>.................] - ETA: 1s - loss: 0.0948"
      ]
     },
     {
@@ -2745,7 +2546,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 648/1875 [=========>....................] - ETA: 2s - loss: 0.0953"
+      " 868/1875 [============>.................] - ETA: 1s - loss: 0.0949"
      ]
     },
     {
@@ -2753,7 +2554,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 678/1875 [=========>....................] - ETA: 2s - loss: 0.0953"
+      " 906/1875 [=============>................] - ETA: 1s - loss: 0.0949"
      ]
     },
     {
@@ -2761,7 +2562,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 708/1875 [==========>...................] - ETA: 2s - loss: 0.0953"
+      " 942/1875 [==============>...............] - ETA: 1s - loss: 0.0949"
      ]
     },
     {
@@ -2769,7 +2570,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 737/1875 [==========>...................] - ETA: 2s - loss: 0.0953"
+      " 980/1875 [==============>...............] - ETA: 1s - loss: 0.0949"
      ]
     },
     {
@@ -2777,7 +2578,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 765/1875 [===========>..................] - ETA: 2s - loss: 0.0953"
+      "1019/1875 [===============>..............] - ETA: 1s - loss: 0.0949"
      ]
     },
     {
@@ -2785,7 +2586,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 795/1875 [===========>..................] - ETA: 1s - loss: 0.0953"
+      "1057/1875 [===============>..............] - ETA: 1s - loss: 0.0949"
      ]
     },
     {
@@ -2793,7 +2594,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 824/1875 [============>.................] - ETA: 1s - loss: 0.0953"
+      "1092/1875 [================>.............] - ETA: 1s - loss: 0.0949"
      ]
     },
     {
@@ -2801,7 +2602,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 852/1875 [============>.................] - ETA: 1s - loss: 0.0953"
+      "1131/1875 [=================>............] - ETA: 1s - loss: 0.0949"
      ]
     },
     {
@@ -2809,7 +2610,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 878/1875 [=============>................] - ETA: 1s - loss: 0.0953"
+      "1168/1875 [=================>............] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2817,7 +2618,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 905/1875 [=============>................] - ETA: 1s - loss: 0.0953"
+      "1208/1875 [==================>...........] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2825,7 +2626,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 931/1875 [=============>................] - ETA: 1s - loss: 0.0953"
+      "1246/1875 [==================>...........] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2833,7 +2634,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 959/1875 [==============>...............] - ETA: 1s - loss: 0.0953"
+      "1282/1875 [===================>..........] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2841,7 +2642,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 987/1875 [==============>...............] - ETA: 1s - loss: 0.0953"
+      "1320/1875 [====================>.........] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2849,7 +2650,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1017/1875 [===============>..............] - ETA: 1s - loss: 0.0953"
+      "1359/1875 [====================>.........] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2857,7 +2658,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1047/1875 [===============>..............] - ETA: 1s - loss: 0.0953"
+      "1397/1875 [=====================>........] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2865,7 +2666,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1076/1875 [================>.............] - ETA: 1s - loss: 0.0953"
+      "1433/1875 [=====================>........] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2873,7 +2674,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1111/1875 [================>.............] - ETA: 1s - loss: 0.0953"
+      "1471/1875 [======================>.......] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2881,7 +2682,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1141/1875 [=================>............] - ETA: 1s - loss: 0.0953"
+      "1508/1875 [=======================>......] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2889,7 +2690,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1170/1875 [=================>............] - ETA: 1s - loss: 0.0953"
+      "1547/1875 [=======================>......] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2897,7 +2698,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1199/1875 [==================>...........] - ETA: 1s - loss: 0.0953"
+      "1584/1875 [========================>.....] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2905,7 +2706,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1233/1875 [==================>...........] - ETA: 1s - loss: 0.0953"
+      "1622/1875 [========================>.....] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2913,7 +2714,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1266/1875 [===================>..........] - ETA: 1s - loss: 0.0953"
+      "1656/1875 [=========================>....] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2921,7 +2722,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1289/1875 [===================>..........] - ETA: 1s - loss: 0.0953"
+      "1696/1875 [==========================>...] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2929,7 +2730,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1316/1875 [====================>.........] - ETA: 1s - loss: 0.0953"
+      "1731/1875 [==========================>...] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2937,7 +2738,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1345/1875 [====================>.........] - ETA: 0s - loss: 0.0953"
+      "1769/1875 [===========================>..] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2945,7 +2746,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1376/1875 [=====================>........] - ETA: 0s - loss: 0.0953"
+      "1806/1875 [===========================>..] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2953,7 +2754,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1410/1875 [=====================>........] - ETA: 0s - loss: 0.0953"
+      "1844/1875 [============================>.] - ETA: 0s - loss: 0.0949"
      ]
     },
     {
@@ -2961,111 +2762,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1438/1875 [======================>.......] - ETA: 0s - loss: 0.0953"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1472/1875 [======================>.......] - ETA: 0s - loss: 0.0953"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1501/1875 [=======================>......] - ETA: 0s - loss: 0.0953"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1529/1875 [=======================>......] - ETA: 0s - loss: 0.0953"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1558/1875 [=======================>......] - ETA: 0s - loss: 0.0953"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1593/1875 [========================>.....] - ETA: 0s - loss: 0.0953"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1631/1875 [=========================>....] - ETA: 0s - loss: 0.0953"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1669/1875 [=========================>....] - ETA: 0s - loss: 0.0953"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1707/1875 [==========================>...] - ETA: 0s - loss: 0.0952"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1744/1875 [==========================>...] - ETA: 0s - loss: 0.0952"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1782/1875 [===========================>..] - ETA: 0s - loss: 0.0952"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1818/1875 [============================>.] - ETA: 0s - loss: 0.0952"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1844/1875 [============================>.] - ETA: 0s - loss: 0.0952"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "1875/1875 [==============================] - 3s 2ms/step - loss: 0.0952\n"
+      "1875/1875 [==============================] - 3s 1ms/step - loss: 0.0949\n"
      ]
     }
    ],
@@ -3075,7 +2772,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "grateful-organic",
+   "id": "blessed-trauma",
    "metadata": {},
    "source": [
     "Next, we round trip the test dataset and explore the performance of the autoencoder."
@@ -3084,13 +2781,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "herbal-moderator",
+   "id": "fleet-crossing",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-01-31T01:00:32.892374Z",
-     "iopub.status.busy": "2021-01-31T01:00:32.891773Z",
-     "iopub.status.idle": "2021-01-31T01:00:33.441652Z",
-     "shell.execute_reply": "2021-01-31T01:00:33.440473Z"
+     "iopub.execute_input": "2021-01-31T06:25:49.358066Z",
+     "iopub.status.busy": "2021-01-31T06:25:49.357530Z",
+     "iopub.status.idle": "2021-01-31T06:25:49.874577Z",
+     "shell.execute_reply": "2021-01-31T06:25:49.874063Z"
     }
    },
    "outputs": [],
@@ -3100,7 +2797,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "confused-recycling",
+   "id": "organized-trainer",
    "metadata": {},
    "source": [
     "## 5. Explore Results\n",
@@ -3111,19 +2808,19 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "entire-commitment",
+   "id": "joint-perspective",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-01-31T01:00:33.448960Z",
-     "iopub.status.busy": "2021-01-31T01:00:33.448297Z",
-     "iopub.status.idle": "2021-01-31T01:00:35.158244Z",
-     "shell.execute_reply": "2021-01-31T01:00:35.157634Z"
+     "iopub.execute_input": "2021-01-31T06:25:49.881926Z",
+     "iopub.status.busy": "2021-01-31T06:25:49.881366Z",
+     "iopub.status.idle": "2021-01-31T06:25:54.780052Z",
+     "shell.execute_reply": "2021-01-31T06:25:54.779534Z"
     }
    },
    "outputs": [
     {
      "data": {
-      "image/png": "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bWPHjrX4gw8+sPiTTz6J+v34448ZXx/Z0+UUQojHmN5r+u9EtrbddluLf/3116jt888/t3jEiBFRm37nfvnll5zeOxvMtAEAAAAAAEghHtoAAAAAAACkEA9tAAAAAAAAUqha17TREt8hhLDllltaPGHChKht0003tTgpr3i77baz+KuvvrI4U4m+imge27x58yzWctbejBkzou1SXdNG6foVuTr//PMtbtu2bcZ+mkta0TbS64ILLrDYf2cYR4Xx4osvWqwluXOlpU2XLl0atbVo0cJiLTv74YcfRv1WXnnlFd6PYufzubVs85QpUyz+z3/+U2X7tP/++1fZe2F5W2yxRbTdsWPHjH313uall14q2D4Vi4YNG0bbBx98cMa+xx9/vMV631houo7Nq6++mrGfX9PGrweJEM477zyLtYR7tvw6bXvttZfFvmy4rn9TyDUwilXSOjPt27e3WEs9eyNHjrRYf1dOmzYt6te8eXOLdS3TEPKzDiCWp88DTj/9dIv9GFt77bUr/Puvv/462n7nnXcsnjp1atSmv0F0bcVtttkm6qfnhB49ekRtY8aMsVjLhucbM20AAAAAAABSiIc2AAAAAAAAKVSt6VGvvfZa4rbypdr+5MuNdujQwWKd5tS5c+es9+unn36yeNKkSRb7lC2dKqVT07Fi9tlnH4u1dOZqq60W9fvmm28svvjii6O2H374oUB7hxXVsmXLaLtTp04W63gLgdKI+bLrrrtG2xtvvLHFOr0326m+fvqnTk/W0pkhhLDbbrtZnFSO+NRTT7X49ttvz2o/Ss2ll14abesUcZ2K71PU8k2vff67xXTxqpWUsuP5NAIku/7666PtI444wmK9vwwhhCeeeKJK9snbeeedLW7UqFHUdv/991v88MMPV9Uu1RiauhtCCMcee2yF/T799NNoe+7cuRZ369Yt4+vXrVvXYk29CiGERx55xOI5c+b8/c6WOH///+ijj1qs6VAhxOnBSSmDyqdEKb/8BfLvzjvvjLY1rS2pfLc+N/jss88svuSSS6J++rve22GHHSzW+9B777036qfPF/QcEEIIAwcOtPipp56yON+pssy0AQAAAAAASCEe2gAAAAAAAKRQtaZH5cOiRYui7TfeeKPCfkmpV0l06rFPxdKpWIMHD87p9bE8TZfxUyKVfuZvvfVWQfcJ+ePTKVRVVt0odpqGNmjQoKgtabqp0mpeOuXziiuuiPolpSPqa5x00kkWN2jQIOrXv39/i9dYY42o7dZbb7V42bJlf7fbRaVnz54W+4oFkydPtrgqK61pmptPh3rzzTct/vbbb6toj0rXLrvskrHNV6VJSk/E8srLy6Nt/a7PmjUraitkBaA111wz2tap/6eddprFfn+PO+64gu1TMdB0hxBCqFOnjsVabcbfs+j16bDDDrPYp2S0bt3a4saNG0dtzz77rMXdu3e3eOHChdnsekmoXbu2xX4JBF1GYf78+VHbf//7X4tZKiE9/H2dVm064YQToraysjKL9XeBT52/7rrrLM51OYX69etbrFVML7/88qifLtPiUyurCjNtAAAAAAAAUoiHNgAAAAAAACnEQxsAAAAAAIAUqvFr2hRCw4YNLb7tttssXmml+BmXlqMmDzV3Q4YMibb32GOPCvs9+OCD0bYvf4uaYYsttsjYpuuaYMWssspfp/ds17Dxa0P17t3bYp83ni1d0+aaa66x+IYbboj61apVy2L/PRg6dKjFU6ZMyWk/aqpDDjnEYv2MQoivT4WmayT16dPH4t9++y3qd9VVV1lcausPVRUtUaqx53P8R48eXahdKjl77713tK3l1HUtJ78GQ7Z0HZUuXbpEbdttt12Ff/Pkk0/m9F6lavXVV4+2dU2gG2+8MePfafng++67z2I9V4cQQqtWrTK+hq61Usj1kGqyAw44wOKLLrooatMy3Fr2PoQQFi9eXND9Qm78eez888+3WNewCSGEr7/+2mJdW/bDDz/M6b11rZoNNtggatPfli+++KLFfh1b5ff3oYcesriQa/kx0wYAAAAAACCFeGgDAAAAAACQQqRHVeD000+3WMvS+vLin3/+eZXtU7Fp0qSJxX56t05Z1ZQMnXYfQghLly4t0N4h33Q697HHHhu1ffLJJxYPHz68yvYJf9BS0b5EbK4pUZlompOm2IQQQufOnfP6XjVV3bp1o+1MqRAh5J56kQst167pdhMmTIj6vfHGG1W2T6Uq27FSld+PYnTzzTdH2127drW4adOmUZuWXtep8/vtt19O762v4Ut5qy+//NJiX3IaybRct6fpbz6FP5NOnTpl/d4jR460mHvZiiWlfup948yZM6tid7CCNEUphOVTq9Wvv/5q8bbbbmtxz549o36bbLJJhX//448/RtubbrpphXEI8X1uo0aNMu6Tmjt3brRdVWnhzLQBAAAAAABIIR7aAAAAAAAApBDpUSGEHXfcMdr2q5T/SVcyDyGEsWPHFmqXit5TTz1lcf369TP2e/jhhy0utaoxxaRbt24W16tXL2obNmyYxVqVAfnjK98pnXpaaDrl3+9T0j5efvnlFh955JF536808RVN1l9/fYsfe+yxqt4d07p16wr/O9fBqpeUhpGPykX4w0cffRRtb7nllhZ36NAhattrr70s1qoo8+bNi/o98MADWb23ViMZM2ZMxn7vvfeexdwjVY4/n2oqm6Yg+hQMrYB54IEHWuyrzehY9G0nnniixXqsx48fn82ulwSfCqN0vP373/+O2p599lmLqZiXHq+//nq0ranU+hshhBCaN29u8S233GJxUqqoplv5VKwkmVKifv/992j7mWeesfjMM8+M2mbPnp31+60IZtoAAAAAAACkEA9tAAAAAAAAUoiHNgAAAAAAACnEmjYhhB49ekTbq666qsWvvfaaxe+//36V7VMx0nzhrbfeOmO/N99802Kfq4qaqX379hb7nNQnn3yyqnenJJxyyikW+9zc6rLvvvtavNVWW0Vtuo9+f3VNm2L33XffRduak69raoQQrw+1cOHCvO5Hw4YNo+1M6wuMGDEir++Liu20004WH3744Rn7LV682GJK4ebXokWLLPal7XX7wgsvXOH3atWqlcW6FlgI8TnhvPPOW+H3KlWvvvpqtK1jR9et8evMZFpXw7/e6aefbvHzzz8ftW200UYW6/oYet0udQ0aNLDY3xPo2m+XXXZZ1HbppZdafMcdd1isZdZDiNdNmTx5ssXjxo3LuE/t2rWLtvV3IefbZL4Mt64Htc4660Rturasrju7YMGCqN+MGTMs1u+E/uYIIYRtttmm0vt71113RduXXHKJxbpeVVVipg0AAAAAAEAK8dAGAAAAAAAghUo2PWrNNde0WEvHhRDCL7/8YrGm5yxbtqzwO1ZEfClvnVqmKWieTv1dunRp3vcLVaNx48YW77zzzhZ//vnnUT8to4f80VSkqqRTmkMIYbPNNrNYzwFJfJncUjr3+inEWsb34IMPjtpeeOEFi2+44YZKv9fmm28ebWtKRsuWLaO2TCkBaUm9K3Z6PV1ppcz/v2348OFVsTsoME358GNP06/8uRLZ8ymlvXr1sljTtuvW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\n",
+      "image/png": "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mWeitqTppkqreemUz6uvvjrql5SOqK/xj3/8w+LatWtH/fr06WPxuuuuG7XdeeedFq9YsWJVu11QunfvbrGvWDB58mSLK7LSmqa5+XSod955x+LvvvuugvaoeO29994Z23xVmqT0RKyspKQk2tbv+jfffBO15bMC0HrrrRdt69T/U0891WK/v8cff3ze9qkQaLpDCCFsuOGGFmu1GX/Poteno446ymKfktG4cWOL69WrF7W98sorFh944IEWL1q0KJtdLwobbLCBxX4JBF1GYeHChVHbzTffbDFLJaSHv6/Tqk0nnnhi1FatWjWL9XeBT52/6aabLC7vcgo1a9a0WKuYXnXVVVE/XabFp1ZWFGbaAAAAAAAApBAPbQAAAAAAAFKIhzYAAAAAAAApVOXXtMmHOnXqWHz33Xdb/Je/xM+4tBw1eajl9/LLL0fbnTp1KrXfY489Fm378reoGnbaaaeMbbquCVbPmmv+eXrPdg0bvzZUz549LfZ549nSNW1uvPFGi/v27Rv1q169usX+e9C/f3+Lp0yZUq79qKp69OhhsX5GIcTXp3zTNZJ69+5t8W+//Rb1u+666ywutvWHKoqWKNXY8zn+n3/+eb52qeh07do12tZy6rqWk1+DIVu6jsq+++4bte26666l/k2/fv3K9V7Fap111om2dU2gW2+9NePfafnghx9+2GI9V4cQwtZbb53xNXStlXyuh1SVHXrooRZffPHFUZuW4day9yGEsGTJkrzuF8rHn8cuuOACi3UNmxBC+Prrry3WtWU//PDDcr23rlWzxRZbRG3623LgwIEW+3Vsld/fxx9/3OJ8ruXHTBsAAAAAAIAU4qENAAAAAABACpEeVYrTTjvNYi1L68uLT5w4scL2qdDUr1/fYj+9W6esakqGTrsPIYSlS5fmae+Qazqd+7jjjovaPvvsM4vffPPNCtsn/EFLRfsSseVNicpE05w0xSaEENq0aZPT96qqatSoEW1nSoUIofypF+Wh5do13W78+PFRv6FDh1bYPhWrbMdKRX4/CtFtt90Wbbdv397iBg0aRG1ael2nzh988MHlem99DV/KW02dOtViX3IaybRct6fpbz6FP5PWrVtn/d6jRo2ymHvZ0iWlfup94+zZsytid7CaNEUphJVTq9Wvv/5qcbt27Szu3r171G/77bcv9e+XLVsWbe+www6lxiHE97l169bNuE9q3rx50XZFpYUz0wYAAAAAACCFeGgDAAAAAACQQqRHhRD22GOPaNuvUv4/upJ5CCGMGTMmX7tU8F544QWLa9asmbHfE088YXGxVY0pJB07drR40003jdoGDRpksVZlQO74yndKp57mm0759/uUtI9XXXWVxX//+99zvl9p4iuabLbZZhY//fTTFb07pnHjxqX+d66DFS8pDSMXlYvwh08++STabt68ucUtW7aM2g444ACLtSrKggULon6PPvpoVu+t1UhGjx6dsd/IkSMt5h6pbPz5VFPZNAXRp2BoBczDDjvMYl9tRseibzvppJMs1mM9bty4bHa9KPhUGKXj7corr4zaXnnlFYupmJceb7/9drStqdT6GyGEELbcckuLb7/9douTUkU13cqnYiXJlBL1+++/R9svvfSSxWeeeWbUNmfOnKzfb3Uw0wYAAAAAACCFeGgDAAAAAACQQjy0AQAAAAAASCHWtAkhdOnSJdpea621LH7rrbcsfv/99ytsnwqR5gvvsssuGfu98847FvtcVVRNLVq0sNjnpPbr16+id6conHLKKRb73NzK0q1bN4t33nnnqE330e+vrmlT6H744YdoW3PydU2NEOL1oRYtWpTT/ahTp060nWl9geHDh+f0fVG6Pffc0+JevXpl7LdkyRKLKYWbW4sXL7bYl7bX7Ysuumi132vrrbe2WNcCCyE+J5x//vmr/V7FasiQIdG2jh1dt8avM5NpXQ3/eqeddprFr776atS2zTbbWKzrY+h1u9jVrl3bYn9PoGu/XXHFFVHb5ZdfbvG9995rsZZZDyFeN2Xy5MkWjx07NuM+NW3aNNrW34Wcb5P5Mty6HtTGG28ctenasrru7Lfffhv1mzlzpsX6ndDfHCGE0LZt2zLv7/333x9tX3rppRbrelUViZk2AAAAAAAAKcRDGwAAAAAAgBQq2vSo9dZbz2ItHRdCCL/88ovFmp6zYsWK/O9YAfGlvHVqmaageTr1d+nSpTnfL1SMevXqWbzXXntZPHHixKifltFD7mgqUkXSKc0hhLDjjjtarOeAJL5MbjGde/0UYi3je/jhh0dtr732msV9+/Yt83s1a9Ys2taUjEaNGkVtmVIC0pJ6V+j0evqXv2T+/21vvvlmRewO8kxTPvzY0/Qrf65E9nxK6RFHHGGxpm3XqFEj42vccccdFvu0uOXLl1v84osvRm2a/tG5c2eLGzduHPUr5jLuN998s8Xnnntu1n+n58dTTz211DhXdPzp0g49e/bM+XsVMp9upOOjPB577LFoOyk9SlPS9Xv2yCOPRP20pHhlYaYNAAAAAABACvHQBgAAAAAAIIV4aAMAAAAAAJBCRbumzQUXXGCxLz07aNAgi0eOHFlh+1RozjvvvGi7TZs2pfZ7+eWXo23KfBeGY4891mItH/z6669Xwt6golx22WXRtpY9TTJ9+nSLjznmmKhNyzoWGz0f+tK/Xbt2tfjpp58u82svXLgw2ta1M2rVqpXVa/i8b+RHppLrfi2A++67rwL2BrnWo0ePaPvoo4+2WNdcCGHlsrfIDS3ZreOtV69eUT8dc7r2kK5h41177bXR9g477GDxwQcfXOrrhbDytbCY6Lomzz77bNT21FNPWbzmmvFP2S222MLipPW/ckHX8NPvjJYdDyGE6667Lq/7gRAuvPBCi8uyptApp5xicXnuoyoSM20AAAAAAABSiIc2AAAAAAAAKVQ06VE6jTyEEP71r39Z/P3330dt11xzTYXsU6HLtkTf6aefHm1T5rswNGzYsNT/vnjx4greE+TbwIEDLd5uu+3K9Rrjxo2zePjw4au9T4ViwoQJFmtJ2hBCaNmypcVNmjQp82trWVvv0UcfjbZ79+5daj9fohy5sfnmm0fbPkXjf2bPnh1tf/zxx3nbJ+TPgQcemLHt1VdfjbY//fTTfO9O0dNUKY3Ly58nNd1H06Pat28f9dt0000t9iXKC52WWPbntW233Tbj33Xo0MHitdZay+Krrroq6pdpyYby0vTlVq1a5fS1UboTTzzRYk1J8ylzauzYsdH2iy++mPsdyxNm2gAAAAAAAKQQD20AAAAAAABSqKDTo2rWrGnx7bffHrWtscYaFuvU/hBCGDVqVH53DBGd/hlCCCtWrCjzayxZsiTja+j0yBo1amR8jY033jjazja9S6dwXnTRRVHbTz/9lNVrFKKDDjqo1P8+YMCACt6T4qRTdZMqKCRNy7///vstbtCgQcZ++vq///57trsY6datW7n+rph9/vnnpca5MHXq1Kz6NWvWLNoeM2ZMTvejWO2+++7RdqYx7Ksvomry5+Eff/zR4ltuuaWidwd59txzz1ms6VFHHnlk1E+XD2Dphuy89dZbpf53TScOIU6P+vXXXy1++OGHo34PPPCAxWeffXbUliltFfnRtm3baFvPjRtssEHGv9NlN7RaVAgh/Pzzzznau/xjpg0AAAAAAEAK8dAGAAAAAAAghXhoAwAAAAAAkEIFt6aNrlUzaNAgi7faaquo35QpUyzW8t+oeF988cVqv8bzzz8fbc+ZM8fiunXrWuzzhXNt7ty50fb111+f1/dLkz333DParlevXiXtCUII4Z577rG4T58+GftpOdmk9WiyXasm23733ntvVv1QOXRNpNK2/4c1bPJD1+TzFi5caPFtt91WEbuDPNC1FfQ+JYQQ5s+fbzElvguPXif1+nzIIYdE/a688kqLn3nmmaht0qRJedq7wjR48OBoW+/PtUT0SSedFPVr0qSJxfvuu29W7zV79uxy7CFWxa99uOGGG5baT9cECyFeN2rEiBG537EKwkwbAAAAAACAFOKhDQAAAAAAQAoVXHpU48aNLW7VqlXGflrOWVOlkDu+lLqf9plLPXr0KNffaZm/pLSO/v37W/zxxx9n7Pfee++Vaz8KwWGHHRZta6riZ599ZvG7775bYftUzF588UWLL7jggqitdu3aeXvfBQsWRNvjx4+3+B//+IfFmsKI9CkpKUncRn517tw5Y9vMmTMtXrJkSUXsDvJA06P8+Hrttdcy/p2mBGyyySYW6/cCVcfnn39u8RVXXBG13XTTTRbfcMMNUdvf//53i5ctW5afnSsgei8SQlx2/Ygjjsj4d+3bt8/Y9ttvv1msY/biiy8uzy6iFHq+u/DCC7P6myeffDLafuedd3K5S5WGmTYAAAAAAAApxEMbAAAAAACAFOKhDQAAAAAAQApV+TVtGjZsGG37km7/49d00DK3yI+//vWv0bbmIq611lpZvUbTpk0tLku57oceesji6dOnZ+z3wgsvWDxhwoSsXx9/qF69usVdunTJ2K9fv34Waw4w8mfGjBkW9+zZM2o79NBDLT7rrLNy+r6+zP1dd92V09dHxVh33XUztrF+Qn7odVHX5/OWL19u8YoVK/K6T6gcep3s3bt31HbOOedYPHbsWIuPOeaY/O8Y8uqxxx6Ltk8++WSL/T31NddcY/EXX3yR3x0rAP66dfbZZ1u8wQYbWNy6deuoX506dSz2vycef/xxi6+66qrV30mEEOLjMW7cOIuTfjvqGNBjW0iYaQMAAAAAAJBCPLQBAAAAAABIoSqfHqUlZEMIYcsttyy137Bhw6JtypdWvD59+qzW3/fq1StHe4Jc0an5ixcvjtq0TPptt91WYfuElfky67qtKaX+fNqtWzeL9Xjef//9Ub9q1apZrFNZUXUdd9xx0fZ3331n8bXXXlvBe1Mcfv/9d4s//vjjqK1Zs2YWT548ucL2CZXjxBNPtPiEE06I2h588EGLGYuFZcGCBdF2x44dLfapORdddJHFPoUOqzZv3jyL9V5HS6mHEMKuu+5q8dVXXx21zZ8/P097V9z2228/izfffHOLk367a9qophAXEmbaAAAAAAAApBAPbQAAAAAAAFKoWlnShKpVq5aKnKI999zT4oEDB0ZtuuK0atu2bbTtpx6nXUlJSbVV91q1tBzDIvVJSUlJ61V3WzWOY+VhLBYExuIqDBgwINru27evxUOHDq3o3SlVIY/FBg0aRNvXXXedxZ988onFBVCdrWjHot7LaiWgEOIU1nvuuSdq01TkX375JU97VzaFPBbTwlfH3W233Sxu166dxauRoly0Y7GQFMJYHD16tMU77bRTxn433XSTxZouWABKHYvMtAEAAAAAAEghHtoAAAAAAACkEA9tAAAAAAAAUqhKlvzea6+9LM60hk0IIUyZMsXipUuX5nWfAAAoFFoCFRXvm2++ibaPP/74StoT5Mvw4cMt1hK3QGm6d+8ebeu6H02aNLF4Nda0AVJh0003tbhatT+X6PEl1v/zn/9U1C6lAjNtAAAAAAAAUoiHNgAAAAAAAClUJdOjkuh0wQ4dOli8aNGiytgdAAAAACi377//PtreaqutKmlPgPzq27dvqfG1114b9ZszZ06F7VMaMNMGAAAAAAAghXhoAwAAAAAAkEI8tAEAAAAAAEihaiUlJdl3rlYt+87IqZKSkmqr7rVqHMNK9UlJSUnrXLwQx7HyMBYLAmOxADAWCwJjsQAwFgsCY7EAMBYLQqljkZk2AAAAAAAAKcRDGwAAAAAAgBQqa8nvhSGEGfnYESRqmMPX4hhWHo5j1ccxLAwcx6qPY1gYOI5VH8ewMHAcqz6OYWEo9TiWaU0bAAAAAAAAVAzSowAAAAAAAFKIhzYAAAAAAAApxEMbAAAAAACAFOKhDQAAAAAAQArx0AYAAAAAACCFeGgDAAAAAACQQjy0AQAAAAAASCEe2gAAAAAAAKQQD20AAAAAAABSiIc2AAAAAAAAKcRDGwAAAAAAgBTioQ0AAAAAAEAK8dAGAAAAAAAghXhoAwAAAAAAkEI8tAEAAAAAAEghHtoAAAAAAACkEA9tAAAAAAAAUoiHNgAAAAAAACnEQxsAAAAAAIAU4qENAAAAAABACvHQBgAAAAAAIIV4aAMAAAAAAJBCa5alc7Vq1UrytSNIVlJSUi0Xr8MxrFQLS0pKaufihTiOlYexWBAYiwWAsVgQGIsFgLFYEBiLBYCxWBBKHYvMtAEqzozK3gEAIQTGIpAWjEUgHRiLQDqUOhZ5aAMAAAAAAJBCPLQBAAAAAABIIR7aAAAAAAAApBAPbQAAAAAAAFKoTNWjgHyoVi1e6LykhAXLAQAAAABgpg0AAAAAAEAK8dAGAAAAAAAghUiPQk6tscYaFm+88cZR27777mtx7969LW7Xrl3Ur3r16hZr6tSCBQuifqNGjbL4gw8+iNrefvtti6dOnWrxb7/9FvX79ddfLSYtq3LoMfapcirp+HDs8m/NNTNfLvTz98fi999/z9s+AQBQlel9T9J1dsWKFRWxO8iBtdZaK9r+y1/+nCPhjyP3SMgWM20AAAAAAABSiIc2AAAAAAAAKcRDGwAAAAAAgBRiTRvk1EYbbWRxx44do7YLLrjA4m233dZiXcMmhHhdHFWjRo1oe6uttrK4a9euUdt6661n8f3332/xDz/8EPVjLZSKoTnba6+9dtS2xRZbWLzHHntk/LsvvvjC4okTJ0b9fvrpJ4s5puXn87DbtGlj8SmnnGJxo0aNon5Lliyx+I477oja3nrrLYv9mlJYPTo+NGc+qZ/mz/uxkjR2ktabyhZjM//0+umvrfod+fnnn0uNQ+A4lUemsZi0XgWfMzz/ndA1bvx41nGr6zNqXAySrn0qH2vH6PHZfvvtLd5///2jft9++63F33zzTdT22WefWaz3UsV2HLFqzLQBAAAAAABIIR7aAAAAAAAApBDpUcgpndrpS37rNEKdAujL3+l2UinEdddd12KdehhCXPJ76dKlFlNar/L56b81a9a0uHnz5lGbpj3NnTvX4q+++ipPe1fc/PTrdu3aWbz33ntb7FMVNe1p0KBBUduQIUNyuYtFzaeO6nFYf/31S41DCOHHH3+0+LvvvrNYx1cIyaXbM+3HOuusE7XpedpP79bp/EmpcsWUNqLXuPL8u33aWt26dS3u1atX1Kbpyx999JHFer0MIf6+4E+ahrHhhhtGbfXr17d44cKFFi9fvjzqp9tJqYoqqU33yacea7qrv3/Ssaj3XH5ccs+ULCltNNvxrP2Szos+fVmPt45tf17X7UI5nvp99t97pdcg/2/P9Fn419ttt90sPuqoo6K2Vq1aWazLPujvE/9e/ro4depUi2+//XaLX3311ajfvHnzVrnvKGzMtAEAAAAAAEghHtoAAAAAAACkUKrSo3S6m59yrX755ReLmcpZufzUUE2J2m677aI2TWHSlIn+/ftH/caNG2exTttt3Lhx1O+8886zuEGDBlGbVoniO1H5kqb/arqGT+vQv5s/f77Ffso5yk+n1x944IFR2xVXXGHxBhtskPE1li1bZvFBBx0UtT3//PMWa9oA47Ls/HWxRYsWFrdv395iP71bK3iNHDnSYn8Msq0epdfqevXqRf022WQTizWlMYR4DGebGlJofKWTbCt7ZeKvwXrd1WtkCHH647vvvmvxiBEjon5U4/uD/2w1lffoo4+O2jQtbfjw4RZ//vnnUb8FCxZYrPeySe+dVOVNx6Kv6qfnB58e9cEHH1icdG1N2sdi4VNdtEqQfie0wmUI8T1vttc7f6z1fslXedPrgb6+T3PW63Oh0BQj/5llqkDrx4De03To0MHiG264IerXsGFDi7OtVJWUNufT3Jo0aWKxpl99//33UT/9rVSIxzSf9Lj5+yg9HjqO/GechuqnzLQBAAAAAABIIR7aAAAAAAAApBAPbQAAAAAAAFKoQta00fx6LZO41VZbRf2aNWtmsV+/RHPjp0+fbrGWcw4hXh9j8eLFFvscT83T9TmKuq35bVpSz7+G7lMIhVlirzR+DRLNofaf18CBAy1+8MEHLdZjlkTzrkOIvy+aTx5CCJ06dbJ4ypQpFqchJ7GqyUVJyyS1a9e22B9HzQnX4+hLJhbzugura/PNN7f4tttui9q0pHTS90DPr61bt47a7rrrLouvvvpqiydPnhz1Y52i0unnXqdOnaitd+/eFjdt2tRiv47GV199ZXEucuF1n7bccsuo7YADDrD4lVdeidp0TaNsy4sXAv28/P3G6v7b/foNxx57rMX++6L7ofdlrFtSuvXWWy/a1nUvjjzyyKhNy6R//PHHFuv6eiHEn7XeG/rzq34vku4h9Z7G33NpyfdJkyZFbV9++aXFunagv7YWK12fUa9hIYTQpUsXi/U3yNtvvx310zXhZs2aFbWVZ40bf2x0jRZ9PT+eC/386ulY0vOjX5dvjz32sPjiiy+22P82TVpfSse9Xt/8byP9Pvljr79Vn3rqKYsHDRoU9SvWdWwyHc8Q4s9Z16pp165d1O+www6zuHPnzlGbnudnzpxp8RtvvBH1e+mllyzW82cI8f1rPn9nMtMGAAAAAAAghXhoAwAAAAAAkEJ5SY/y5bQ0JUqn4nft2jXqt/vuu1us0/JDiKek6XRTTZ8IIZ56rKVHtaRaCHEJP/8aOt1Np035MqpTp061uE+fPlFbUlnVqk4/Y/+Z6Gc5YMCAqE2njvopw9no2bNntK3pUX7KYps2bSy+7777LM7HtLWkqZNVlf6bktJiVLb/dl/uUKcab7rpplGbTjPXachl+ZwL8fisLk1neu655yzWVLUQsj/2OmXVT9Hfc889LdZ0mcGDB0f9rrnmGovnzJmT1fsWAz3f7rbbblGblmjXFIfbb7896vf1119brGPAH99sx4qOYT8NWa+1/vtUrGW+k8ZRtmMsE1+OeP/997fYp2Lp9e/555+3WNO5QyiuY+Pp8ahVq1bUduihh1qs97IhhPDNN99YrOPNl+3N9T2IHis/3jQ9btq0aVHb7NmzLdZS0oV2v1oWmsKiqSl6PxlCPK50/G2zzTZRv+7du1v8wgsvRG36+WebkubHpaZk6PnfH8NCP6b+d4geRz23+bG3aNEiixcsWGCxL62u9PdECPF9i/6u8alY++yzj8V+GYCPPvrI4okTJ5a674XOXwf1HqNBgwYWd+vWLerXvn17i/X3g19iRc/lPsVKx9XWW29t8THHHBP109TvTz/9NGq79tprLU4a26s7FplpAwAAAAAAkEI8tAEAAAAAAEghHtoAAAAAAACkUF7WtPE5XFqmTHP+NAc4hLjsmS9Zp3nBM2bMsFhL3oUQQqNGjSzWUmA+t1vfy5fr1v3XEtY+X1hzFlu2bBm1vf/++6FQaU6ez9fOVEYyhPLlZ2pu6pVXXhm16TH135cHHnjA4nyXsCz0/H8/dlRSfmamtTP8ONKyi34NAS2/l20uqM+N1f3Pdn8Ljf9MzjjjDItbtWqVsV8m/rPSMebzwTV/WNdYOOKII6J+er4+++yzozbNPS82+rmcdNJJUZueHzXH+p133on66fHRY+zXl9Lx4c+b+ne65pxfZ0fzynV9uBDyWwqzqsh2fZuk85H287n7fj1Apdfrl19+2eKy5Nln2v9COX/q9cJfq/Sz1nXBQojvb3RdivJet7L9PHUNMb/un663Mm7cuKhN14gr9DVPlH7Ofj0oXQtM17FJWhtqzJgxFvvzrq731alTp6jtoYcesljXf0y6T/bfiWzLwhciXcemYcOGUZtedzT2n5+umfivf/3L4r333jvqN3ToUItHjx4dtfnfOf+jvzFDiNfz89+nYjmO/hynv99r1qwZtR111FEW9+rVy2Jfjl3X0NVjnVRWXc99IcRrkOn9q94bhxDCtttua7GufRNCfE4499xzS92nEFZ/jU1m2gAAAAAAAKQQD20AAAAAAABSKC/pUX4KtKZHzZ8/3+I333wz6jd+/HiL/dRsTaXS6YNakjuEEOrXr2+xL7+nRowYYfGSJUuiNp0Ce+utt1pcr169qJ9Oz/P/5kKe4qb8cfLpUuWh6RQ6bVTTBPx733DDDVGbpqcVyrTtyuI/v0zlwJP66XTQpk2bRv10aqtPg5k7d27G18/ETz3V71OxTEP1tGRiCCFcdtllFvsUU6WfkZ4n/TlTp4hPmTIlatPzaVK6qZav9uml9957r8XFNp419bZZs2YZ++n11E/N1rGo48GXvtQ0U/8567hq3bq1xb7k93fffVdqHEJxjTmVdN7RzzXTudXT49a5c+eoTe9LktIB/LHJpLzpplWV/nt16n0IcTqN/1x07GRKmfD0s/Rli/U1/HHUFERN6enQoUPUb+zYsRa//fbbGV+/mOhn7kt5azlhPb5aWjuEuMyzpjn5NB29bvnfI1r2eeTIkRbr76UQiu96l4m/r9NroV6PQgihf//+Futvs6SS6bq0g97PhBAfk/Ke8/S9iylNONO9Rwjxb+rLL788auvRo4fF+jvfH8PJkydb/Nxzz1msv/FDiFOgfAqi3gNratyuu+4a9dPrgT9fb7HFFhbrv9l/X1Z3PDPTBgAAAAAAIIV4aAMAAAAAAJBCeUmP8nR6kK6k7Cv+aAqUT7vJNKXIT1HV9CudGuormiRNT8tUscbvg04vHj58eNRWiNOGs1GeqV9JlW10epr/THW674033hi1ZTq+SVPOmYb6p2yn82f7PdcqNR07dozadKq3r3Dh03Cy4afRru5q7VWV/rtPPPHEqE0r3yl/3h0yZIjFt912m8ULFiyI+ulq/HoODiGeBn7ttdda3LVr16ifVr054YQTorbHHnvMYr8af6HxFZ322msvi/14++qrryx+5JFHLPbXVv3ea+yn/SeND50afPrpp1u8ySabRP00pVErPa7q9QtZtmmZ2VaM0spFhx9+eNRPp3r78fzwww9bnO0UfX/N1CnuhXifo8fAjyO959PzWgjxuNXza9L5asMNNyz1b0KIr31adS+EOCVKzw++Ksott9xi8bRp06K2YhmLSd/fXXbZJePfzZs3z+Lu3btHbaNGjSr1b3z6qqYG+0pVmvJRiOMo1/yxOueccyz+4osvojYdB0nfc/3ck1KDM1VC9YplTJWF3o/7ins6Xnx1NT03airnBx98EPXTSqMTJkywuCxVg/W99t1331L/ewjJvyW+/fZbi5Mqlq0uZtoAAAAAAACkEA9tAAAAAAAAUoiHNgAAAAAAAClUIWvaKM3v8iUHM+XdZ/t6IcR5iUk5isrnKGrZcC3j5XPABw0aZPHEiRMT9wsx/cy32267qE1zFPUz15zBEEI488wzLU4qX5lUcq5Yy/CVhf8uJ63zpDKtwbDPPvtk7Pf6669HbX7NjWzeyyvWfPGNN97YYr+mjX5emvv73//+N+qneePaz+fn6/jz60Bofrmu/XXQQQdF/XRs+vUi9DysecuFqGbNmtG2ruvlS3nrOjZa0jLpO59UAjVJkyZNLG7VqpXFfuxpuXa/v8jN+XTLLbe0eIcddsj4N/7z13Xgsj32/vgW+r2N/vv8GjG6po2/X2jQoIHF7du3t3jq1KlRP10nYccdd7TYj1ldG+zoo4+O2nTdBTVw4MBo+80338y4v8VK15Jp1KhR1KbrcZ177rkW+zVs9LPU17vyyiujfnrf4z//WbNmWexLEOMPep/Rt2/fqE3XQ/Hr6GVbzp77//zIdD+u96QhhHDyySdbrOW/Q4jXwtH1pfz6pXo/qMfQrw2or+d/Bx588MEWa6lxvz6m8mN2wIABFufzNwczbQAAAAAAAFKIhzYAAAAAAAApVKnpUbmYZpuL8mt+GlWvXr0s3mijjSzW6YwhxOUzk0qs4g96rDTd4Zlnnon6aXlLnd594YUXRv2mTJlisf+89b3WXnvtUv97CCsfN6xaeabVa2qFTiMPIZ6SPHjw4KitPGVpy5t+UNX57/Z+++1nsZZVDyH+TLQs8yWXXBL1y5Se5qeGJp3XNa1Kx6x/bR2nfn91GrumohbK8UxKF9VUscmTJ0dtmk6Y7ZTcbD8zP4W4Z8+eFuux8uXfH3zwQYuZcr5q5Tkeeo+i6RkhxN8Dn266cOHCrN5Lv4/+vFLe9LqqQv9NWnY7hBA++ugji/10/ho1alh80kknWeyPj5ZkX7RokcV6bgwhhNatW1u8++67R23rrLOOxXPmzLH4hhtuiPpxf7Py91fT037++eeoTVM79Xj419Dzn6au7bzzzlE//S750u/jx4+3WNOAii0dMYmmQOl4CCEeR/5+oTyfWXk/Z02hKeZjpTLdD2pabwhxeqhPRdK/07YWLVpE/b7//nuLdfz5EvF6z+p/g+y///4Wr7/++iETvfZNmzYtatPU/3x+D5hpAwAAAAAAkEI8tAEAAAAAAEihCk+PygWdKuWnEmY7RVxfQ6fghRDCoYceavGyZcssfvzxx6N+Ok2/WCvUlIWuHN6/f3+LfTqAplNodZRXXnklYz8v00rhflV5jlv+aNrhHnvsYfEGG2wQ9dMpybNnz47acjHNtViP8QknnGCxTiUOIZ42/+STT1rs0wGyle1x+uabbyz2lVl0Wmq21R8KhV7HfLquTp1PSkvL9X5ssskmUVu3bt0s1rQCrZoQQgjjxo3L2/4VM03r6NKli8U+jU2/I/fcc0/UVp50NX8Mi+mY+oqVet+i1dpCCKFly5YWawVSf+7Vz++dd96xWO81QwihU6dOFms6lH+NYcOGWTxz5syV/g3FLun766uraWq+/g7QVKYQ4mNz+OGHW6xpUyHE1zi/vIJ+R/bcc0+LteJXCPE1uZjGXghxVR9/ntNxpRUWQ4grMGrloaTPL9vKff43p16vs61YXKw0HTSE+LP0qZz6uWr6m1acCiGEiy66yGJdzsSfd5N+B2RKcfPnZK2+eP3110dtmqZKehQAAAAAAECR4aENAAAAAABACvHQBgAAAAAAIIWqzJo2mp+mJRT92ge+hN//+DxEzde//PLLozbNn/vwww8t1nzmEMhfXBW/NsPtt99u8Q477GCxPzaffvqpxbfccovFfg2MJHo8tLQwxym3knJ9dQ2Gdu3aWezzRIcOHWpxtiVK/XtpTmqxrmHjc3g1v96XU9TP+fnnn7c42/Hh+/njoTQXfbPNNrNY17jy++hf/4svvijzPlYl+m/3Y0DXNPAlM7t27Wqxrrn23XffRf10TOjx8N8ZXVfo1FNPjdr02Om5+JNPPon6UWY4N/yY1WOvJUv9+U7XNdF198r73sW2po3++/y6eWPHjrXYl+h+8cUXs3p9vR/R1/f3S3ofqutJhRDf5/bt29fi8qxZFEJ8/i7046vnLv9v3X777S3eZ599LPZl23Vbj+eoUaOifpMmTbK4SZMmUVvTpk0tvuSSSyxu3Lhx1E/vm/2aZoVI129q06aNxUn3GA0bNoy2dSy+8cYbFuv6cCHEx+6DDz6w2K9hpNc0vZcNIV6j8bnnnrM402/RYqNjbMaMGVHbVVddZXGPHj2itkaNGlmsv/P9vY1eF6tXr26xv34mrYWr5029ft5xxx1Rv6eeespiv95Z0hqrucRMGwAAAAAAgBTioQ0AAAAAAEAKpTY9yk9t0lJeOu3fT1HKNLXTl4vr2LGjxTvuuGPUtmDBAov79etn8fTp06N+5Z2KWiy23XbbaDtTmVJ/DI877jiLfYm4bGX6HpR36m9SGlCxpeNk+iz8mK1Xr57Fmg7n0yc++ugji5PGlL6XH8+q0Kd3Z+I/E52267+zOpUz27RDfQ1f2lQ/c/9eeuz/+9//WqypOJ5Pey30aeH6mfmy95qSsddee0Vtf/vb3yxu3ry5xcOHD4/66ZRivZb6VEU9jh06dIja9Hj5tCpVbOfDXNLvgf+M9Z5Fx7Y/Z2rJ4GzHtj936H4U8/H0/3YdH/6zXd3rjv97nfbvr5kjRoywWFPgsi1bHELmdIGKmuZfUfxnop/l5MmTM/5djRo1LPafnf4W0PS0d999N+qnY/ioo46K2vQ+d/PNN7e4d+/eUT9N9fnqq6+itkK819HrjF73/bVKU5388WnZsqXFrVq1sjjpuqXfC/0NGEI81uvWrRu1aRqUpvTcdtttUb8ffvjB4kI8bpnov9Xfxz3zzDMWv/TSS1FbpiUP/PVOlzo55ZRTSo1DiMvA+9f48ssvLT7//PMt1pS5EOJ0usrCTBsAAAAAAIAU4qENAAAAAABACvHQBgAAAAAAIIWqzJo2mgv3/fffW5xt/q3mjIYQwjnnnGOxL+c3cOBAi1977TWLfU4lVqZlK3v27Bm16ToYmgd68803R/2mTp1qcbb59EnlALPNH/WvofmvSeWTNc/Rr8VR6JLWMtGSlpoH7POFZ82aZXHS8dbP3R8DzVEtpnxhVZZ1RrSMtJ5Pk+i6F1qWM4Q4v7xFixZRm5airlOnTsbX1+OmazaEEOeDFyL9/s6fPz9qe/bZZy32x3Hrrbe2WEvK1qpVK+r3448/Wqz5+f5z1vOXlhwOIT636/jz3wXkhv9cDzjgAIszXUtDiEvcJt0fJZVA1e9ZsZ5PS5PPz0LXwwghhEMOOcRiX+b20ksvtVjHdtL++WumXi8KeX3GpHtDXS8shLi89hZbbGHx559/HvX75JNPLE5aq0Q/4/79+0dtu+66q8W6fo5fL26zzTazeNq0aVFbId5v6vVpwIABFus9Swjx/cjGG28ctek6eltttZXFSd8Fvb75+xS9f01aT/HCCy+0eM6cOVHb008/bbFf26VYzrH+36nnnfKuWzhv3jyLBw8ebPFJJ52U8b39Wql9+vSxWNexScMaNh4zbQAAAAAAAFKIhzYAAAAAAAAplNr0KD8NXKcAZzuVTKcmamnUEEJo3Lixxb6U91133WWxpnIUyxS2svDTDRs2bGjxQQcdFLVpCoWW19P0mBCS02CUTlMsbxlunRKp01BDiFMMdMqqTyfR74ifElmI5VIzpUTpZxlCXKJWyzhqymEIK5d8z0ZSKdZi5VMh9HvqP5/q1atb3K5dO4s1tcL/XVJKjJYvveCCC6I2n2aTyYwZMyw+++yzo7ZCnr4fQvx99tOE33//fYvHjBkTtenU77Zt21rsz4d6/fz0008tHj9+fNRvww03tNgfA31NjTU9A6tHP1ctZRpCPOVf+2k6cQhxylvSeVHbOJ/+KSmFQuXiM9Jr5plnnhm16Vh89dVXozZN68n2HsPvr/5dId6nZKL/1tmzZ0dtc+fOtVivp35pBH2NpO+L9tPS7CGEcO2111qsaTULFy6M+um52193dR8LZczqb4N+/fpZrKXPQ0g+BnvuuafF999/v8W1a9eO+unf6fv6463n4qTfJHpfdfDBB0dtmurlX79Qjl1l0N+Vt956q8X+vlO/L6NHj47a9Jrp043Thpk2AAAAAAAAKcRDGwAAAAAAgBSqMulR5bHjjjta7Kee6pSqQYMGRW0TJkywmGlryXzFmjZt2ljs040yVZ8544wzon66Griulu+nJerq/vXr14/aFi9eXOp7bbTRRlE/3cdmzZpFbVpxbNiwYaW+dgghTJo0qdR9D6G4ph3Xq1cv2u7UqZPFml728ccfR/2yrQCXNB2WcbpyCtHkyZMt3m233aI2HQf//ve/LdbpvSHE6TP6GieeeGLUr2XLlhb7Kdx6rPQ4zZw5M+rXoUOHjG3FxJ8ztIKBn7qrVRA0dUrTEUOIp2Nr+pV/L61G4qtY6bHT75pOK0fu6LU0hLhCih63oUOHRv3KU2nNnz85n/7BV4rRc5kfO5mu9f6z1NeoWbOmxQceeGDG9/bVi8pTNcjvX9K/pZDp/Ya/99BjlTQG9LPT45T0nfDnyS+//NLiO+64w2JdYsDzlaX02lCIFTSTUm+T/o1vvvmmxd27d7fYp/zqMhn6WyYpjSpbvkqqXncL5fhUBl/tWc+N22yzTca/03ule+65J2rTe520Hxtm2gAAAAAAAKQQD20AAAAAAABSiIc2AAAAAAAAKZTaNW3KS3M+tfxXjRo1on669oiWhAsh+zU2sHL+n5YZ9mXtlK5P07p166jtmWeesfi7774r9bVDCKFOnToWb7DBBlGb5qAmlUXUPGOfJ67vrWvfLFmyJOqn36W6detGbV9//XUoZHoce/XqFbU1aNDAYs23HjlyZNSvmPLp88mft55//nmLu3XrFrXpGlBaSvixxx6L+ukY1nVSfHl3v/aD0uM7btw4iw8//PCo3/Tp0y1Oe15xZfGfi44rzZkvb0lRfT1/ntM2XWtAz5NYPTqOdC2GEOI1F3QtC3//4te2yoQxtmpJ69GU5e8y0XOvX0dDz5vlWafI8/terNdd/Xdne5z8eoo6FrWtLGvk6P2m3if6UsW6rWXgQ4jPA0n321VVec9Rehw++ugji6+88sqon96z6j2SXzsoie6jrpvSv3//qF951qHCH3SM+TVodR0bPcfp2AghhPPPP9/igQMHRm1V6Tc/M20AAAAAAABSiIc2AAAAAAAAKVTl06P8NP1jjz3WYl/mVj3wwAMWz549O+f7VSz8VOwPP/zQ4iFDhkRtOv1Qp3z6Y1irVi2LN9lkk4zvpVPm/PRVnSan0xL9NGMt3/3aa69FbZ999pnF3377balxCCFMnDjRYj8lr9DpdN0uXbpEbTqFWKf/FnrKWGXxU4l1WvCnn34atXXu3NlinQrsS3777Wz40qYffPCBxUceeaTFc+fOjfqRrpE75f0sNT0nKZVUS2TOmDGjXO+Flen5tGnTplGbXtN07OTi/sWnzhTzWMxU2j6E5JSibD8zHWN6v+pTvHXKvpZ7DyG+tvrzbbYypXoV07FPSnfLVNbbbyel32f73hr71Bw91j49SlNT9d6zmI7hquiYnTVrVtT2888/W6y/NfxvEv0N4dOcli5darH+rnzvvfeifjpOOT5lo2lsu+++e9SmY0c/17vvvjvqp6n/VTk1lJk2AAAAAAAAKcRDGwAAAAAAgBTioQ0AAAAAAEAKVck1bTSfdI899ojatKSb9ps2bVrUT8uBk19Yfv6zW7hwocX//Oc/o7Z///vfFvfs2dPiHj16RP00t1tzTn3+sebw+lxfzTPWPNYJEyZE/fr162fx6NGjozZd/0ZzIHOR116V6XHYaKONLF5nnXWifprrO2DAgFL/ez72qRiOQTb0cz7uuOOitmeffdbivffe2+JsS136MaDj/v/+7/+itrvuusvi8q6/gIqh514t8R5CvJbXpEmTLF533XWjfnrdrcq54xVFz1261ptf40TXV5k6darF5T3fZVpTw+N8+qdcfBa6dobev/p1U/R4b7755lGbrnGjZYbLMt6SylFXdeX9bmtfXSfRv4beX2ZbLti/hq5Vo2uo+POp3mP5eydd0+ann36ymPNu6fyxWrBggcW6Tphfm1I/Z13DMoQQnnnmGYtHjBhhsS/BzjEpm9q1a1t8+eWXW+zPkzqGhw0bZvFFF10U9SuUz5+ZNgAAAAAAACnEQxsAAAAAAIAUqjLpUTq1sEaNGhafccYZUT+deqpT8e+8886o348//pjrXUSIp6r5VAidUn/NNdeUGpeFTpPzqTk6tVX3yU+PpAzf6tH0tSeeeCJq05Q1nUKaixQZStSWjU6hDyEuz96mTRuL/fm0QYMGFk+ePNnixx9/POo3atQoi4ut7H0ulDe9L2nqv8r0mnqeDCEeszp1PIQQvvrqK4vnzJljsab0hBBP9ffnW8bpyvQYakrUvHnzMv7N9OnTLdY0C/96SZ93plSQEOKp5Byz3KpevbrFmoLtx4reo/oyw5lew19bi/U45iLdL9vS79m+XlJ6lKZA6e+bEOK0J/890NfwYxgr88dR70v79+9vca1ataJ+S5YssXjx4sVRm97vFEoKTmXwaU+6hEb9+vUt9sdQU/N1GYBs0xaT+DGVhpRSRjkAAAAAAEAK8dAGAAAAAAAghVKbHuWnEmr6y1577WXxPvvsE/XTKVY6vXvo0KFRv2KaKlqodJqcTiFFfunY0TF27733Rv0yVVgo79jTv/PTUBnPZaPTrEeOHFlqjIqTizGRi7/XKhk+3bFevXoWa+rGzJkzo3763WJcrpqey7S6oVbCDCG+Bxo/frzF33//fdQvF+kfHLf80WvmDTfcYPGRRx4Z9dMUxKeffjpqmz9/vsWaokx6xh/K+znk83vvX1vTambMmGGxrxqnqVPjxo2L2vS7RGXGVfPfC63GpbGOL+SP/l7fbLPNorZmzZpZrClpfhxpBWA9Z+Zin3x6lF4nSY8CAAAAAACA4aENAAAAAABACvHQBgAAAAAAIIVStaZNUsk6LSt61VVXWVyzZs2Mf6Pl8HyZNgCrT3OEly1bVmHvy5oLwOrz40jXR3n33XejNl1nTq+tfj0Uv43s6ToXQ4YMidpyXW6Uc2jl0PX3Xn75ZYvffvvtjP30exECx64q8sdM1yL69ttvLfbr1mgJ8KSS7np+5vuBNPJr1ep6TY0bN47a9t9/f4t1PT3/O0Ovk7ko861jKo1rhDHTBgAAAAAAIIV4aAMAAAAAAJBCqUqP0qlIPlVK29Zff/1S/3sI8fSrV1991eJ58+blbD8BACg02abgkAKVf2mcmo3cWrFihcWaIoPCp79VdKxrimoIcTrIokWLojbSoFCV+O+rLlvilzDR9EFtu/HGG6N+gwcPtjgX9yVpH1PMtAEAAAAAAEghHtoAAAAAAACkEA9tAAAAAAAAUihVa9oon889d+5ci5s3b25xrVq1on5Lly61eMmSJRanPU8NAAAAQGHT3yRaytuX9QaKweeffx5t77DDDpWzIynHTBsAAAAAAIAU4qENAAAAAABACpU1PWphCGFGPnakLJYvX27x7NmzK3FPKkzDHL5WKo5hkeI4Vn0cw8LAcaz6OIaFgeNY9XEMCwPHserjGBaGUo9jNdZ6AQAAAAAASB/SowAAAAAAAFKIhzYAAAAAAAApxEMbAAAAAACAFOKhDQAAAAAAQArx0AYAAAAAACCFeGgDAAAAAACQQjy0AQAAAAAASCEe2gAAAAAAAKQQD20AAAAAAABS6P8BslDdZlZ9DgEAAAAASUVORK5CYII=\n",
       "text/plain": [
        "<Figure size 1440x288 with 20 Axes>"
       ]
@@ -3159,7 +2856,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "dimensional-worse",
+   "id": "curious-colony",
    "metadata": {},
    "source": [
     "What about the compression? Let's check the sizes of the arrays."
@@ -3168,13 +2865,13 @@
   {
    "cell_type": "code",
    "execution_count": 11,
-   "id": "middle-mexico",
+   "id": "opening-rouge",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-01-31T01:00:35.163697Z",
-     "iopub.status.busy": "2021-01-31T01:00:35.163051Z",
-     "iopub.status.idle": "2021-01-31T01:00:35.484527Z",
-     "shell.execute_reply": "2021-01-31T01:00:35.483891Z"
+     "iopub.execute_input": "2021-01-31T06:25:54.785681Z",
+     "iopub.status.busy": "2021-01-31T06:25:54.785106Z",
+     "iopub.status.idle": "2021-01-31T06:25:55.077068Z",
+     "shell.execute_reply": "2021-01-31T06:25:55.076421Z"
     }
    },
    "outputs": [
