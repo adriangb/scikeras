@@ -101,11 +101,11 @@ clf = KerasClassifier(
 
 Because SciKeras estimators are fully compliant with the Scikit-Learn API, we can make use of Scikit-Learn's built in utilities. In particular example, we will use `AdaBoostClassifier` from `sklearn.ensemble.AdaBoostClassifier`, but the process is the same for most Scikit-Learn meta-estimators.
 
-```python
-from sklearn.ensemble import AdaBoostClassifier
-```
 
 ```python
+from sklearn.ensemble import AdaBoostClassifier
+
+
 adaboost = AdaBoostClassifier(base_estimator=clf, random_state=0)
 ```
 
@@ -113,17 +113,16 @@ adaboost = AdaBoostClassifier(base_estimator=clf, random_state=0)
 
 Before continouing, we will run a small test to make sure we get somewhat reasonable results.
 
+
 ```python
 from sklearn.datasets import make_moons
-from sklearn.model_selection import cross_val_score
-```
 
-```python
+
 X, y = make_moons()
 
-single_score = np.mean(cross_val_score(clf, X, y))
+single_score = clf.fit(X, y).score(X, y)
 
-adaboost_score = np.mean(cross_val_score(adaboost, X, y))
+adaboost_score = adaboost.fit(X, y).score(X, y)
 
 print(f"Single score: {single_score:.2f}")
 print(f"AdaBoost score: {adaboost_score:.2f}")
@@ -131,9 +130,6 @@ print(f"AdaBoost score: {adaboost_score:.2f}")
 
 We see that the score for the AdaBoost classifier is slightly higher than that of an individual MLPRegressor instance. We can explore the individual classifiers, and see that each one is composed of a Keras Model with it's own individual weights.
 
-```python
-adaboost.fit(X, y)  # we need to fit outside of cross_val_score before accessing the weights
-```
 
 ```python
 print(adaboost.estimators_[0].model_.get_weights()[0][0, :5])  # first sub-estimator
@@ -146,12 +142,11 @@ For comparison, we run the same test with an ensemble built using `sklearn.ensem
 
 ```python
 from sklearn.ensemble import BaggingClassifier
-```
 
-```python
+
 bagging = BaggingClassifier(base_estimator=clf, random_state=0, n_jobs=-1)
 
-bagging_score = np.mean(cross_val_score(bagging, X, y))
+bagging_score = bagging.fit(X, y).score(X, y)
 
 print(f"Bagging score: {bagging_score:.2f}")
 ```
