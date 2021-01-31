@@ -47,7 +47,7 @@ jobs:
           if ! git diff-index --quiet HEAD --; then
             echo "Deploying changes"
             git status
-            git commit -m "Deploy docs from ${{ github.event.workflow_run.head_branch }}"
+            git commit -m "Deploy docs from ${{ github.event.workflow_run.head_branch }} @ ${{ env.GITHUB_SHA_SHORT }}"
             git push -f
           else
             echo "No changes to deploy"
