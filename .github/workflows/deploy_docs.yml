@@ -41,13 +41,13 @@ jobs:
 
       - name: Deploy docs
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A
           if ! git diff-index --quiet HEAD --; then
             echo "Deploying changes"
             git status
-            git commit -m "Deploy docs from ${{ github.event.workflow_run.head_branch }}"
+            git commit -m "Deploy docs from ${{ github.event.workflow_run.head_branch }} @ ${{ env.GITHUB_SHA_SHORT }}"
             git push -f
           else
             echo "No changes to deploy"
@@ -68,6 +68,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v1
         with:
           issue-number: ${{ github.event.workflow_run.pull_requests[0].number }}
+          edit-mode: replace
           body: |
             📝 Docs preview for commit ${{ env.GITHUB_SHA_SHORT }} at: https://www.adriangb.com/scikeras/${{ env.REF }}/
 
@@ -76,5 +77,6 @@ jobs:
         uses: peter-evans/create-or-update-comment@v1
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
+          edit-mode: replace
           body: |
             📝 Docs preview for commit ${{ env.GITHUB_SHA_SHORT }} at: https://www.adriangb.com/scikeras/${{ env.REF }}/
