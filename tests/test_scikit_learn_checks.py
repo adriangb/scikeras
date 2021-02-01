@@ -47,18 +47,6 @@ def use_floatx(x: str):
 batch_size = 1000
 
 
-def relaxed_assert_allclose(*args, **kwargs):
-    """A more relaxed version of `assert_allclose`
-    that gets monkey-patched into the sklearn checks to allow
-    for lower precision testing.
-    """
-    if "atol" in kwargs:
-        kwargs["atol"] = max(5e-6, kwargs["atol"])
-    if "rtol" in kwargs:
-        kwargs["rtol"] = max(0, kwargs["rtol"])
-    return np.testing.assert_allclose(*args, **kwargs)
-
-
 @parametrize_with_checks(
     estimators=[
         MultiOutputClassifier(
@@ -91,7 +79,9 @@ def test_fully_compliant_estimators_low_precision(estimator, check):
         # These tests have bugs that are fixed in 0.23.0
         pytest.skip("This test is broken in sklearn<=0.23.0")
     if check_name in higher_precision:
-        pytest.skip("This test requires high precision.")
+        pytest.skip(
+            "This test is run as part of test_fully_compliant_estimators_high_precision."
+        )
     check(estimator)
 
 
@@ -116,15 +106,15 @@ def test_fully_compliant_estimators_low_precision(estimator, check):
     ids=["KerasClassifier", "KerasRegressor"],
 )
 def test_fully_compliant_estimators_high_precision(estimator, check):
-    """Checks that require lower tolerances (via `relaxed_assert_allclose`)
-    and/or many training epochs.
+    """Checks that require higher training epochs.
     """
     check_name = check.func.__name__
     if check_name not in higher_precision:
-        pytest.skip("This test does not require high precision.")
-    with patch("sklearn.utils._testing.assert_allclose", relaxed_assert_allclose):
-        with use_floatx("float64"):
-            check(estimator)
+        pytest.skip(
+            "This test is run as part of test_fully_compliant_estimators_low_precision."
+        )
+    with use_floatx("float64"):
+        check(estimator)
 
 
 class SubclassedClassifier(KerasClassifier):
