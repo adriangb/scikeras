@@ -72,11 +72,11 @@ class BaseWrapper(BaseEstimator):
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.
-    batch_size : Union[int, str, None] = None, default None
+    batch_size : Union[int, None], default None
         Number of samples per gradient update.
         This will be applied to both `fit` and `predict`. To specify different numbers,
         pass `fit__batch_size=32` and `predict__batch_size=1000` (for example).
-        To auto-adjust the batch size to use all samples, pass `batch_size="all"`.
+        To auto-adjust the batch size to use all samples, pass `batch_size=-1`.
 
     Attributes
     ----------
@@ -208,8 +208,8 @@ class BaseWrapper(BaseEstimator):
             ],
             None,
         ] = None,
-        batch_size: Union[int, str, None] = None,
-        validation_batch_size: Union[int, str, None] = None,
+        batch_size: Union[int, None] = None,
+        validation_batch_size: Union[int, None] = None,
         verbose: int = 1,
         callbacks: Union[
             List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
@@ -489,12 +489,12 @@ class BaseWrapper(BaseEstimator):
         fit_args.update(kwargs)
         for bs_kwarg in ("batch_size", "validation_batch_size"):
             if bs_kwarg in fit_args:
-                if fit_args[bs_kwarg] == "all":
+                if fit_args[bs_kwarg] == -1:
                     try:
                         fit_args[bs_kwarg] = X.shape[0]
                     except AttributeError:
                         raise ValueError(
-                            f'`{bs_kwarg}="all"` requires that `X` implement `shape`'
+                            f"`{bs_kwarg}=-1` requires that `X` implement `shape`"
                         )
 
         if self._random_state is not None:
@@ -926,12 +926,12 @@ class BaseWrapper(BaseEstimator):
         )
         pred_args.update(kwargs)
         if "batch_size" in pred_args:
-            if pred_args["batch_size"] == "all":
+            if pred_args["batch_size"] == -1:
                 try:
                     pred_args["batch_size"] = X.shape[0]
                 except AttributeError:
                     raise ValueError(
-                        '`batch_size="all"` requires that `X` implement `shape`'
+                        "`batch_size=-1` requires that `X` implement `shape`"
                     )
 
         # predict with Keras model
@@ -1146,11 +1146,11 @@ class KerasClassifier(BaseWrapper):
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.
-    batch_size : Union[int, str, None] = None, default None
+    batch_size : Union[int, None], default None
         Number of samples per gradient update.
         This will be applied to both `fit` and `predict`. To specify different numbers,
         pass `fit__batch_size=32` and `predict__batch_size=1000` (for example).
-        To auto-adjust the batch size to use all samples, pass `batch_size="all"`.
+        To auto-adjust the batch size to use all samples, pass `batch_size=-1`.
     class_weight : Union[Dict[Any, float], str, None], default None
         Weights associated with classes in the form ``{class_label: weight}``.
         If not given, all classes are supposed to have weight one.
@@ -1256,8 +1256,8 @@ class KerasClassifier(BaseWrapper):
             ],
             None,
         ] = None,
-        batch_size: Union[int, str, None] = None,
-        validation_batch_size: Union[int, str, None] = None,
+        batch_size: Union[int, None] = None,
+        validation_batch_size: Union[int, None] = None,
         verbose: int = 1,
         callbacks: Union[
             List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
@@ -1505,11 +1505,11 @@ class KerasRegressor(BaseWrapper):
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.
-    batch_size : Union[int, str, None] = None, default None
+    batch_size : Union[int, None], default None
         Number of samples per gradient update.
         This will be applied to both `fit` and `predict`. To specify different numbers,
         pass `fit__batch_size=32` and `predict__batch_size=1000` (for example).
-        To auto-adjust the batch size to use all samples, pass `batch_size="all"`.
+        To auto-adjust the batch size to use all samples, pass `batch_size=-1`.
 
     Attributes
     ----------
