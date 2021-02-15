@@ -356,7 +356,7 @@ This feature is useful in several ways. For one, it allows to set those paramete
 
 To differentiate paramters like `callbacks` which are accepted by both `tf.keras.Model.fit` and `tf.keras.Model.predict` you can add a `fit__` or `predict__` routing suffix respectively. Similar, the `model__` prefix may be used to specify that a paramter is destined only for `get_clf`/`get_reg` (or whatever callable you pass as your `model` argument).
 
-For more information on parameter routing with special prefixes, see the [Advanced Usage Docs](https://scikeras.org.readthedocs.build/en/latest/advanced.html#routed-parameters)
+For more information on parameter routing with special prefixes, see the [Advanced Usage Docs](https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#routed-parameters)
 
 ### 7.2 Performing a grid search
 

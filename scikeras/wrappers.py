@@ -467,7 +467,7 @@ class BaseWrapper(BaseEstimator):
                 "\n 1. Provide a loss function via the loss parameter."
                 "\n 2. Compile your model with a loss function inside the"
                 " model-building method."
-                "\n\nSee https://scikeras.readthedocs.io/en/latest/advanced.html#compilation-of-model"
+                "\n\nSee https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#compilation-of-model"
                 " for more information on compiling SciKeras models."
                 "\n\nSee https://www.tensorflow.org/api_docs/python/tf/keras/losses"
                 " for more information on Keras losses."
