@@ -1,7 +1,13 @@
 """Top-level package for Scikit-Learn Wrapper for Keras."""
 
 __author__ = """Adrian Garcia Badaracco"""
-__version__ = "0.2.1"
+
+try:
+    import importlib.metadata as importlib_metadata
+except ModuleNotFoundError:
+    import importlib_metadata  # python <3.8
+
+__version__ = importlib_metadata.version("scikeras")
 
 from tensorflow import keras as _keras
 

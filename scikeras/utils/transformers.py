@@ -172,7 +172,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                 " * https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html"
                 " * https://scikit-learn.org/stable/modules/multiclass.html"
                 "\n\nFor information on the SciKeras data transformation interface, see:"
-                " * https://scikeras.readthedocs.io/en/latest/advanced.html#data-transformers"
+                " * https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers"
             )
         self._final_encoder = encoders[target_type].fit(y)
 
@@ -272,7 +272,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                     " * https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html"
                     " * https://scikit-learn.org/stable/modules/multiclass.html"
                     "\n\nFor information on the SciKeras data transformation interface, see:"
-                    " * https://scikeras.readthedocs.io/en/latest/advanced.html#data-transforms"
+                    " * https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers"
                 )
 
         if return_proba:
