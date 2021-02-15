@@ -192,8 +192,8 @@ def create_model(activation, n_units):
     return get_model
 
 
-mlp_kwargs = {"hidden_layer_sizes": [200], "max_iter": 10, "random_state": 0}
-scikeras_kwargs = {"hidden_layer_sizes": [200], "epochs": 10, "random_state": 0}
+mlp_kwargs = {"hidden_layer_sizes": [200], "max_iter": 15, "random_state": 0}
+scikeras_kwargs = {"hidden_layer_sizes": [200], "epochs": 15, "random_state": 0}
 
 
 @dataclass
@@ -298,40 +298,16 @@ def single_output_multiclass_one_hot():
         )
 
 
-def multilabel_indicator_single_softmax():
-    y1 = np.random.randint(low=0, high=2, size=(500,))
-    X = y1.reshape(-1, 1)
-    y2 = 1 - y1
-    y = np.column_stack([y1, y2])
-    sklearn_est = MLPClassifier(**mlp_kwargs)
-    scikeras_est = MultiOutputClassifier(
-        create_model("softmax", [2]),
-        loss="categorical_crossentropy",
-        split=False,
-        **scikeras_kwargs,
-    )
-    for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
-        y_ = y.astype(dtype)
-        yield TestParams(
-            sklearn_est=sklearn_est,
-            scikeras_est=scikeras_est,
-            X=X,
-            y=y_,
-            X_expected_dtype_keras=X.dtype,
-            y_expected_dtype_keras=dtype,
-            min_score=0.95,
-            scorer=accuracy_score,
-        )
-
-
 def multilabel_indicator_single_sigmoid():
-    y1 = np.random.randint(low=0, high=2, size=(500,))
-    X = y1.reshape(-1, 1)
-    y2 = 1 - y1
-    y = np.column_stack([y1, y2])
+    X = np.random.randint(low=0, high=4, size=(1000, 1))
+    y = np.zeros((1000, 2))
+    y[X[:, 0] == 1, [0]] = 1
+    y[X[:, 0] == 2, [1]] = 1
+    y[X[:, 0] == 3, [0]] = 1
+    y[X[:, 0] == 3, [1]] = 1
     sklearn_est = MLPClassifier(**mlp_kwargs)
-    scikeras_est = MultiOutputClassifier(
-        create_model("sigmoid", [2]), loss="bce", split=False, **scikeras_kwargs
+    scikeras_est = KerasClassifier(
+        create_model("sigmoid", [2]), loss="bce", **scikeras_kwargs
     )
     for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
         y_ = y.astype(dtype)
@@ -342,16 +318,18 @@ def multilabel_indicator_single_sigmoid():
             y=y_,
             X_expected_dtype_keras=X.dtype,
             y_expected_dtype_keras=dtype,
-            min_score=0.95,
+            min_score=0.4,
             scorer=accuracy_score,
         )
 
 
 def multilabel_indicator_multiple_sigmoid():
-    y1 = np.random.randint(low=0, high=2, size=(500,))
-    X = y1.reshape(-1, 1)
-    y2 = 1 - y1
-    y = np.column_stack([y1, y2])
+    X = np.random.randint(low=0, high=4, size=(1000, 1))
+    y = np.zeros((1000, 2))
+    y[X[:, 0] == 1, [0]] = 1
+    y[X[:, 0] == 2, [1]] = 1
+    y[X[:, 0] == 3, [0]] = 1
+    y[X[:, 0] == 3, [1]] = 1
     sklearn_est = MLPClassifier(**mlp_kwargs)
     scikeras_est = MultiOutputClassifier(
         create_model("sigmoid", [1, 1]), loss="bce", split=True, **scikeras_kwargs
@@ -365,7 +343,7 @@ def multilabel_indicator_multiple_sigmoid():
             y=y_,
             X_expected_dtype_keras=X.dtype,
             y_expected_dtype_keras=dtype,
-            min_score=0.95,
+            min_score=0.4,
             scorer=accuracy_score,
         )
 
@@ -406,13 +384,15 @@ def multiclass_multioutput():
         single_output_binary_softmax(),
         single_output_multiclass_sparse(),
         single_output_multiclass_one_hot(),
-        multilabel_indicator_single_softmax(),
         multilabel_indicator_single_sigmoid(),
         multilabel_indicator_multiple_sigmoid(),
         multiclass_multioutput(),
     ),
 )
 def test_output_shapes_and_dtypes_against_sklearn_cls(test_data: TestParams):
+    """Tests that ensure that SciKeras can cover all common Scikit-Learn
+    output situations by comparing to MLPClassifier.
+    """
     X, y = test_data.X, test_data.y
     X_train, X_test, y_train, y_test = train_test_split(X, y)
     sklearn_est, scikeras_est = test_data.sklearn_est, test_data.scikeras_est
@@ -486,7 +466,10 @@ def continuous_multioutput():
 
 
 @pytest.mark.parametrize("test_data", chain(continuous(), continuous_multioutput()))
-def test_output_shapes_and_dtypes_against_sklearn_reg_2(test_data: TestParams):
+def test_output_shapes_and_dtypes_against_sklearn_reg(test_data: TestParams):
+    """Tests that ensure that SciKeras can cover all common Scikit-Learn
+    output situations by comparing to MLPRegressor.
+    """
     X, y = test_data.X, test_data.y
     X_train, X_test, y_train, y_test = train_test_split(X, y)
     sklearn_est, scikeras_est = test_data.sklearn_est, test_data.scikeras_est
