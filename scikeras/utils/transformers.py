@@ -257,7 +257,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             # array([.8, .1, .1], [.1, .8, .1]) -> array([[1, 0, 0], [0, 1, 0]])
             idx = np.argmax(y, axis=-1)
             class_predictions = np.zeros(y.shape, dtype=int)
-            class_predictions[np.arange(idx.size), idx] = 1
+            class_predictions[np.arange(len(idx)), idx] = 1
         elif self._target_type == "multilabel-indicator":
             class_predictions = np.around(y).astype(int, copy=False)
         else:

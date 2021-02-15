@@ -22,7 +22,7 @@ def test_kerasregressor_r2():
         """Wrap Keras operations to numpy."""
         y_true = convert_to_tensor(y_true)
         y_pred = convert_to_tensor(y_pred)
-        return 1 - KerasRegressor.r_squared(y_true, y_pred).numpy()
+        return KerasRegressor.r_squared(y_true, y_pred).numpy()
 
     for (y_true, y_pred) in datasets:
         np.testing.assert_almost_equal(

@@ -1631,6 +1631,6 @@ class KerasRegressor(BaseWrapper):
             tf.math.squared_difference(y_true, tf.math.reduce_mean(y_true, axis=0)),
             axis=0,
         )
-        return 1 - tf.math.reduce_mean(
+        return tf.math.reduce_mean(
             1 - ss_res / (ss_tot + tf.keras.backend.epsilon()), axis=-1
         )
