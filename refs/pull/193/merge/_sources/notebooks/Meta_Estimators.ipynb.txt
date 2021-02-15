@@ -1,0 +1,358 @@
+{
+ "cells": [
+  {
+   "cell_type": "raw",
+   "id": "postal-emphasis",
+   "metadata": {},
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Meta_Estimators.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "meaningful-estate",
+   "metadata": {},
+   "source": [
+    "# Meta Estimators in SciKeras\n",
+    "\n",
+    "In this notebook, we implement sklearn ensemble and tree meta-estimators backed by a Keras MLP model.\n",
+    "\n",
+    "## Table of contents\n",
+    "\n",
+    "* [1. Setup](#1.-Setup)\n",
+    "* [2. Defining the Keras Model](#2.-Defining-the-Keras-Model)\n",
+    "  * [2.1 Building a boosting ensemble](#2.1-Building-a-boosting-ensemble)\n",
+    "* [3. Testing with a toy dataset](#3.-Testing-with-a-toy-dataset)\n",
+    "* [4. Bagging ensemble](#4.-Bagging-ensemble)\n",
+    "\n",
+    "## 1. Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "sustained-harvey",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-02-15T06:16:27.961789Z",
+     "iopub.status.busy": "2021-02-15T06:16:27.961212Z",
+     "iopub.status.idle": "2021-02-15T06:16:29.644164Z",
+     "shell.execute_reply": "2021-02-15T06:16:29.644982Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "try:\n",
+    "    import scikeras\n",
+    "except ImportError:\n",
+    "    !python -m pip install scikeras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "through-donna",
+   "metadata": {},
+   "source": [
+    "Silence TensorFlow logging to keep output succinct."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "suspected-mouth",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-02-15T06:16:29.648313Z",
+     "iopub.status.busy": "2021-02-15T06:16:29.647369Z",
+     "iopub.status.idle": "2021-02-15T06:16:29.651797Z",
+     "shell.execute_reply": "2021-02-15T06:16:29.652470Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "from tensorflow import get_logger\n",
+    "get_logger().setLevel('ERROR')\n",
+    "warnings.filterwarnings(\"ignore\", message=\"Setting the random state for TF\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "younger-attraction",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-02-15T06:16:29.656015Z",
+     "iopub.status.busy": "2021-02-15T06:16:29.654776Z",
+     "iopub.status.idle": "2021-02-15T06:16:30.016130Z",
+     "shell.execute_reply": "2021-02-15T06:16:30.016926Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from scikeras.wrappers import KerasClassifier, KerasRegressor\n",
+    "from tensorflow import keras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "excited-sight",
+   "metadata": {},
+   "source": [
+    "## 2. Defining the Keras Model\n",
+    "\n",
+    "We borrow our MLPClassifier implementation from the [MLPClassifier notebook](https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MLPClassifier_and_MLPRegressor.ipynb)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "sealed-medication",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-02-15T06:16:30.020352Z",
+     "iopub.status.busy": "2021-02-15T06:16:30.019266Z",
+     "iopub.status.idle": "2021-02-15T06:16:30.033321Z",
+     "shell.execute_reply": "2021-02-15T06:16:30.033983Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from typing import Dict, Iterable, Any\n",
+    "\n",
+    "\n",
+    "def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any], compile_kwargs: Dict[str, Any]):\n",
+    "    model = keras.Sequential()\n",
+    "    inp = keras.layers.Input(shape=(meta[\"n_features_in_\"]))\n",
+    "    model.add(inp)\n",
+    "    for hidden_layer_size in hidden_layer_sizes:\n",
+    "        layer = keras.layers.Dense(hidden_layer_size, activation=\"relu\")\n",
+    "        model.add(layer)\n",
+    "    if meta[\"target_type_\"] == \"binary\":\n",
+    "        n_output_units = 1\n",
+    "        output_activation = \"sigmoid\"\n",
+    "        loss = \"binary_crossentropy\"\n",
+    "    elif meta[\"target_type_\"] == \"multiclass\":\n",
+    "        n_output_units = meta[\"n_classes_\"]\n",
+    "        output_activation = \"softmax\"\n",
+    "        loss = \"sparse_categorical_crossentropy\"\n",
+    "    else:\n",
+    "        raise NotImplementedError(f\"Unsupported task type: {meta['target_type_']}\")\n",
+    "    out = keras.layers.Dense(n_output_units, activation=output_activation)\n",
+    "    model.add(out)\n",
+    "    model.compile(loss=loss, optimizer=compile_kwargs[\"optimizer\"])\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "advisory-judges",
+   "metadata": {},
+   "source": [
+    "Next we wrap this Keras model with SciKeras"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "neither-expense",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-02-15T06:16:30.038061Z",
+     "iopub.status.busy": "2021-02-15T06:16:30.037228Z",
+     "iopub.status.idle": "2021-02-15T06:16:30.045623Z",
+     "shell.execute_reply": "2021-02-15T06:16:30.046010Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "clf = KerasClassifier(\n",
+    "    model=get_clf_model,\n",
+    "    hidden_layer_sizes=(100, ),\n",
+    "    optimizer=\"adam\",\n",
+    "    optimizer__learning_rate=0.001,\n",
+    "    verbose=0,\n",
+    "    random_state=0,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "convinced-action",
+   "metadata": {},
+   "source": [
+    "### 2.1 Building a boosting ensemble\n",
+    "\n",
+    "Because SciKeras estimators are fully compliant with the Scikit-Learn API, we can make use of Scikit-Learn's built in utilities. In particular example, we will use `AdaBoostClassifier` from `sklearn.ensemble.AdaBoostClassifier`, but the process is the same for most Scikit-Learn meta-estimators.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "premier-wichita",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-02-15T06:16:30.049716Z",
+     "iopub.status.busy": "2021-02-15T06:16:30.049249Z",
+     "iopub.status.idle": "2021-02-15T06:16:30.107515Z",
+     "shell.execute_reply": "2021-02-15T06:16:30.107936Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.ensemble import AdaBoostClassifier\n",
+    "\n",
+    "\n",
+    "adaboost = AdaBoostClassifier(base_estimator=clf, random_state=0)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "above-teens",
+   "metadata": {},
+   "source": [
+    "## 3. Testing with a toy dataset\n",
+    "\n",
+    "Before continouing, we will run a small test to make sure we get somewhat reasonable results.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "ancient-telescope",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-02-15T06:16:30.113143Z",
+     "iopub.status.busy": "2021-02-15T06:16:30.112234Z",
+     "iopub.status.idle": "2021-02-15T06:16:59.349337Z",
+     "shell.execute_reply": "2021-02-15T06:16:59.348909Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Single score: 0.38\n",
+      "AdaBoost score: 0.82\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.datasets import make_moons\n",
+    "\n",
+    "\n",
+    "X, y = make_moons()\n",
+    "\n",
+    "single_score = clf.fit(X, y).score(X, y)\n",
+    "\n",
+    "adaboost_score = adaboost.fit(X, y).score(X, y)\n",
+    "\n",
+    "print(f\"Single score: {single_score:.2f}\")\n",
+    "print(f\"AdaBoost score: {adaboost_score:.2f}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "advised-darkness",
+   "metadata": {},
+   "source": [
+    "We see that the score for the AdaBoost classifier is slightly higher than that of an individual MLPRegressor instance. We can explore the individual classifiers, and see that each one is composed of a Keras Model with it's own individual weights.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "korean-confirmation",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-02-15T06:16:59.353589Z",
+     "iopub.status.busy": "2021-02-15T06:16:59.353131Z",
+     "iopub.status.idle": "2021-02-15T06:16:59.359663Z",
+     "shell.execute_reply": "2021-02-15T06:16:59.358895Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[-0.12522668  0.08298432 -0.08259653  0.17572533 -0.15013115]\n",
+      "[ 0.06898978 -0.21111451  0.19642644 -0.07443083 -0.00962013]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(adaboost.estimators_[0].model_.get_weights()[0][0, :5])  # first sub-estimator\n",
+    "print(adaboost.estimators_[1].model_.get_weights()[0][0, :5])  # second sub-estimator"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "banner-scale",
+   "metadata": {},
+   "source": [
+    "## 4. Bagging ensemble\n",
+    "\n",
+    "For comparison, we run the same test with an ensemble built using `sklearn.ensemble.BaggingClassifier`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "wooden-treasury",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-02-15T06:16:59.364238Z",
+     "iopub.status.busy": "2021-02-15T06:16:59.363789Z",
+     "iopub.status.idle": "2021-02-15T06:17:18.666678Z",
+     "shell.execute_reply": "2021-02-15T06:17:18.666196Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Bagging score: 0.66\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.ensemble import BaggingClassifier\n",
+    "\n",
+    "\n",
+    "bagging = BaggingClassifier(base_estimator=clf, random_state=0, n_jobs=-1)\n",
+    "\n",
+    "bagging_score = bagging.fit(X, y).score(X, y)\n",
+    "\n",
+    "print(f\"Bagging score: {bagging_score:.2f}\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "jupytext": {
+   "formats": "ipynb,md"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.7"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
