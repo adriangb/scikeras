@@ -1,7 +1,11 @@
 """Top-level package for Scikit-Learn Wrapper for Keras."""
 
 __author__ = """Adrian Garcia Badaracco"""
-__version__ = "0.2.1"
+
+from importlib import metadata
+
+
+__version__ = metadata.version("scikeras")
 
 from tensorflow import keras as _keras
 
