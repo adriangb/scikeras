@@ -66,7 +66,7 @@ def dynamic_regressor(
     n_features_in_ = meta["n_features_in_"]
     n_outputs_ = meta["n_outputs_"]
 
-    compile_kwargs["loss"] = compile_kwargs["loss"] or KerasRegressor.r_squared
+    compile_kwargs["loss"] = compile_kwargs["loss"] or "mse"
 
     inp = Input(shape=(n_features_in_,))
 
