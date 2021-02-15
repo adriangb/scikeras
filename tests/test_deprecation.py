@@ -20,8 +20,7 @@ def test_build_fn_deprecation():
 
 
 @pytest.mark.parametrize(
-    "wrapper,builder",
-    [(KerasClassifier, dynamic_classifier), (KerasRegressor, dynamic_regressor),],
+    "wrapper,builder", [(KerasClassifier, dynamic_classifier), (KerasRegressor, dynamic_regressor),],
 )
 def test_kwarg_deprecation(wrapper, builder):
     """Test that SciKeras supports the **kwarg interface in fit and predict
@@ -29,9 +28,7 @@ def test_kwarg_deprecation(wrapper, builder):
     """
     original_batch_size = 128
     kwarg_batch_size = 90
-    kwarg_epochs = (
-        2  # epochs is a special case for fit since SciKeras also uses it internally
-    )
+    kwarg_epochs = 2  # epochs is a special case for fit since SciKeras also uses it internally
     extra_kwargs = {"workers": 1}  # chosen because it is not a SciKeras hardcoded param
     est = wrapper(
         model=builder,
@@ -46,12 +43,8 @@ def test_kwarg_deprecation(wrapper, builder):
     match_txt = r"``\*\*kwargs`` has been deprecated in SciKeras"
     # check fit
     with pytest.warns(UserWarning, match=match_txt):
-        with mock.patch.object(
-            est.model_, "fit", side_effect=est.model_.fit
-        ) as mock_fit:
-            est.fit(
-                X, y, batch_size=kwarg_batch_size, epochs=kwarg_epochs, **extra_kwargs
-            )
+        with mock.patch.object(est.model_, "fit", side_effect=est.model_.fit) as mock_fit:
+            est.fit(X, y, batch_size=kwarg_batch_size, epochs=kwarg_epochs, **extra_kwargs)
             call_args = mock_fit.call_args_list
             assert len(call_args) == 1
             call_kwargs = call_args[0][1]
@@ -61,9 +54,7 @@ def test_kwarg_deprecation(wrapper, builder):
             assert len(est.history_["loss"]) == kwarg_epochs
     # check predict
     with pytest.warns(UserWarning, match=match_txt):
-        with mock.patch.object(
-            est.model_, "predict", side_effect=est.model_.predict
-        ) as mock_predict:
+        with mock.patch.object(est.model_, "predict", side_effect=est.model_.predict) as mock_predict:
             est.predict(X, batch_size=kwarg_batch_size, **extra_kwargs)
             call_args = mock_predict.call_args_list
             assert len(call_args) == 1
@@ -81,8 +72,4 @@ def test_kwarg_deprecation(wrapper, builder):
     for param_name in ("batch_size", "fit__batch_size", "predict__batch_size"):
         assert getattr(est, param_name) == original_batch_size
     for k in extra_kwargs.keys():
-        assert (
-            not hasattr(est, k)
-            or hasattr(est, "fit__" + k)
-            or hasattr(est, "predict__" + k)
-        )
+        assert not hasattr(est, k) or hasattr(est, "fit__" + k) or hasattr(est, "predict__" + k)

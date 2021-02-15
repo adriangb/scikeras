@@ -37,9 +37,7 @@ class MultiLabelTransformer(ClassifierLabelEncoder):
             return np.split(y, y.shape[1], axis=1)
         return y
 
-    def inverse_transform(
-        self, y: List[np.ndarray], return_proba: bool = False
-    ) -> np.ndarray:
+    def inverse_transform(self, y: List[np.ndarray], return_proba: bool = False) -> np.ndarray:
         if self._target_type not in ("multilabel-indicator", "multiclass-multioutput"):
             return super().inverse_transform(y, return_proba=return_proba)
         if not return_proba and self.split:

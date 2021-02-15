@@ -17,11 +17,7 @@ def test_X_shape_change():
     changes shape in subsequent partial fit calls.
     """
 
-    estimator = KerasRegressor(
-        model=dynamic_regressor,
-        loss=KerasRegressor.r_squared,
-        hidden_layer_sizes=(100,),
-    )
+    estimator = KerasRegressor(model=dynamic_regressor, loss=KerasRegressor.r_squared, hidden_layer_sizes=(100,),)
     X = np.array([[1, 2], [3, 4]]).reshape(2, 2, 1)
     y = np.array([[0, 1, 0], [1, 0, 0]])
 
@@ -37,10 +33,7 @@ def test_unknown_param():
     friendly error message.
     """
     est = BaseWrapper()
-    err = (
-        r"Invalid parameter test for estimator [\S\s]*"
-        "This issue can likely be resolved by setting this parameter"
-    )
+    err = r"Invalid parameter test for estimator [\S\s]*" "This issue can likely be resolved by setting this parameter"
     with pytest.raises(ValueError, match=err):
         est.set_params(test=1)
 
@@ -48,9 +41,7 @@ def test_unknown_param():
 def test_not_fitted_error():
     """Tests error when trying to use predict before fit.
     """
-    estimator = KerasClassifier(
-        model=dynamic_classifier, loss=KerasRegressor.r_squared,
-    )
+    estimator = KerasClassifier(model=dynamic_classifier, loss=KerasRegressor.r_squared,)
     X = np.random.rand(10, 20)
     with pytest.raises(NotFittedError):
         # This is in BaseWrapper so it covers
@@ -100,9 +91,7 @@ def test_sample_weights_all_zero():
     are all zero.
     """
     # build estimator
-    estimator = KerasClassifier(
-        model=dynamic_classifier, model__hidden_layer_sizes=(100,),
-    )
+    estimator = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,),)
 
     # we create 20 points
     n, d = 50, 4
@@ -144,10 +133,7 @@ def test_no_loss(loss, compile):
     def get_model(compile, meta, compile_kwargs):
         inp = Input(shape=(meta["n_features_in_"],))
         hidden = Dense(10, activation="relu")(inp)
-        out = [
-            Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden)
-            for i in range(meta["n_outputs_"])
-        ]
+        out = [Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden) for i in range(meta["n_outputs_"])]
         model = Model(inp, out)
         if compile:
             model.compile(**compile_kwargs)
@@ -163,19 +149,14 @@ def test_no_optimizer(compile):
     def get_model(compile, meta, compile_kwargs):
         inp = Input(shape=(meta["n_features_in_"],))
         hidden = Dense(10, activation="relu")(inp)
-        out = [
-            Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden)
-            for i in range(meta["n_outputs_"])
-        ]
+        out = [Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden) for i in range(meta["n_outputs_"])]
         model = Model(inp, out)
         if compile:
             model.compile(**compile_kwargs)
         return model
 
     est = KerasRegressor(model=get_model, loss="mse", compile=compile, optimizer=None,)
-    with pytest.raises(
-        ValueError, match="Could not interpret optimizer identifier"  # Keras error
-    ):
+    with pytest.raises(ValueError, match="Could not interpret optimizer identifier"):  # Keras error
         est.fit([[0], [1]], [0, 1])
 
 
@@ -212,8 +193,7 @@ def test_target_shape_changes_incremental_fit_clf():
     est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
     est.fit(X, y)
     with pytest.raises(
-        ValueError,
-        match="The number of features in X is different to the number",  # raised by transformers
+        ValueError, match="The number of features in X is different to the number",  # raised by transformers
     ):
         est.partial_fit(X, np.column_stack([y, y]))
 

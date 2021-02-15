@@ -59,11 +59,7 @@ def test_routing_basic(wrapper, builder, expected_meta):
         assert set(meta.keys()) == expected_meta
         assert set(compile_kwargs.keys()).issubset(wrapper._compile_kwargs)
         assert foo is foo_val
-        return builder(
-            hidden_layer_sizes=hidden_layer_sizes,
-            compile_kwargs=compile_kwargs,
-            meta=meta,
-        )
+        return builder(hidden_layer_sizes=hidden_layer_sizes, compile_kwargs=compile_kwargs, meta=meta,)
 
     est = wrapper(model=build_fn, model__hidden_layer_sizes=(100,), model__foo=foo_val)
     est.fit(X, y)

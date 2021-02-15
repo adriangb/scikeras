@@ -106,9 +106,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
     """
 
     def __init__(
-        self,
-        loss: Union[None, str, Loss] = None,
-        categories: Union[str, List[np.ndarray]] = "auto",
+        self, loss: Union[None, str, Loss] = None, categories: Union[str, List[np.ndarray]] = "auto",
     ):
         self.loss = loss
         self.categories = categories
@@ -144,23 +142,16 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         keras_dtype = np.dtype(tf.keras.backend.floatx())
         self._y_shape = y.shape
         encoders = {
-            "binary": make_pipeline(
-                TargetReshaper(),
-                OrdinalEncoder(dtype=keras_dtype, categories=self.categories),
-            ),
+            "binary": make_pipeline(TargetReshaper(), OrdinalEncoder(dtype=keras_dtype, categories=self.categories),),
             "multiclass": make_pipeline(
-                TargetReshaper(),
-                OrdinalEncoder(dtype=keras_dtype, categories=self.categories),
+                TargetReshaper(), OrdinalEncoder(dtype=keras_dtype, categories=self.categories),
             ),
             "multiclass-multioutput": FunctionTransformer(),
             "multilabel-indicator": FunctionTransformer(),
         }
         if is_categorical_crossentropy(self.loss):
             encoders["multiclass"] = make_pipeline(
-                TargetReshaper(),
-                OneHotEncoder(
-                    sparse=False, dtype=keras_dtype, categories=self.categories
-                ),
+                TargetReshaper(), OneHotEncoder(sparse=False, dtype=keras_dtype, categories=self.categories),
             )
         if target_type not in encoders:
             raise ValueError(
@@ -176,11 +167,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             )
         self._final_encoder = encoders[target_type].fit(y)
 
-        if (
-            target_type == "multilabel-indicator"
-            and y.min() == 0
-            and (y.sum(axis=1) == 1).all()
-        ):
+        if target_type == "multilabel-indicator" and y.min() == 0 and (y.sum(axis=1) == 1).all():
             target_type = "multiclass-onehot"
 
         self.n_outputs_ = 1
@@ -216,9 +203,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         # self.classes_ and self.n_classes_ are validated by the transformers themselves
         return self._final_encoder.transform(y)
 
-    def inverse_transform(
-        self, y: np.ndarray, return_proba: bool = False
-    ) -> np.ndarray:
+    def inverse_transform(self, y: np.ndarray, return_proba: bool = False) -> np.ndarray:
         """Restore the data types, shape and classes of the input y
         to the output of the Keras Model.
 
@@ -346,10 +331,8 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         if n_outputs_ != self.n_outputs_:
             raise ValueError(
-                f"Detected ``y`` to have {n_outputs_} outputs"
-                f" with ``y.shape = {y.shape}``",
-                f" but this {self.__class__.__name__} has"
-                f" {self.n_outputs_} outputs.",
+                f"Detected ``y`` to have {n_outputs_} outputs" f" with ``y.shape = {y.shape}``",
+                f" but this {self.__class__.__name__} has" f" {self.n_outputs_} outputs.",
             )
         return y
 

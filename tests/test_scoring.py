@@ -26,7 +26,5 @@ def test_kerasregressor_r2():
 
     for (y_true, y_pred) in datasets:
         np.testing.assert_almost_equal(
-            keras_backend_r2(y_true, y_pred),
-            sklearn_r2_score(y_true, y_pred),
-            decimal=5,
+            keras_backend_r2(y_true, y_pred), sklearn_r2_score(y_true, y_pred), decimal=5,
         )

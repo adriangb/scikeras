@@ -60,15 +60,9 @@ class TestAutoencoder:
             "random_state": 0,
         }
 
-        autoencoder = BaseWrapper(
-            model=autoencoder_model, **compile_params, **fit_params
-        )
-        encoder = AutoEncoderTransformer(
-            model=encoder_model, **compile_params, **fit_params
-        )
-        decoder = AutoEncoderTransformer(
-            model=decoder_model, **compile_params, **fit_params
-        )
+        autoencoder = BaseWrapper(model=autoencoder_model, **compile_params, **fit_params)
+        encoder = AutoEncoderTransformer(model=encoder_model, **compile_params, **fit_params)
+        decoder = AutoEncoderTransformer(model=decoder_model, **compile_params, **fit_params)
 
         # Initialize autoencoder
         autoencoder.initialize(x_train, x_train)

@@ -50,10 +50,7 @@ class TFRandomState:
 
 
 def route_params(
-    params: Dict[str, Any],
-    destination: str,
-    pass_filter: Union[None, Iterable[str]],
-    strict: bool = False,
+    params: Dict[str, Any], destination: str, pass_filter: Union[None, Iterable[str]], strict: bool = False,
 ) -> Dict[str, Any]:
     """Route and trim parameter names.
 
@@ -114,11 +111,7 @@ def has_param(func: Callable, param: str) -> bool:
 def accepts_kwargs(func: Callable) -> bool:
     """Check if ``func`` accepts kwargs.
     """
-    return any(
-        True
-        for param in inspect.signature(func).parameters.values()
-        if param.kind == param.VAR_KEYWORD
-    )
+    return any(True for param in inspect.signature(func).parameters.values() if param.kind == param.VAR_KEYWORD)
 
 
 def unflatten_params(items, params, base_params=None):
@@ -132,10 +125,7 @@ def unflatten_params(items, params, base_params=None):
         kwargs = {**base_params, **new_base_params}
         for p, v in kwargs.items():
             kwargs[p] = unflatten_params(
-                items=v,
-                params=route_params(
-                    params=params, destination=f"{p}", pass_filter=set(), strict=False,
-                ),
+                items=v, params=route_params(params=params, destination=f"{p}", pass_filter=set(), strict=False,),
             )
         return item(**kwargs)
     if isinstance(items, (list, tuple)):
@@ -143,25 +133,15 @@ def unflatten_params(items, params, base_params=None):
         res = list()
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for idx, item in enumerate(items):
-            item_params = route_params(
-                params=params, destination=f"{idx}", pass_filter=set(), strict=False,
-            )
-            res.append(
-                unflatten_params(
-                    items=item, params=item_params, base_params=new_base_params
-                )
-            )
+            item_params = route_params(params=params, destination=f"{idx}", pass_filter=set(), strict=False,)
+            res.append(unflatten_params(items=item, params=item_params, base_params=new_base_params))
         return iter_type_(res)
     if isinstance(items, (dict,)):
         res = dict()
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for key, item in items.items():
-            item_params = route_params(
-                params=params, destination=f"{key}", pass_filter=set(), strict=False,
-            )
-            res[key] = unflatten_params(
-                items=item, params=item_params, base_params=new_base_params,
-            )
+            item_params = route_params(params=params, destination=f"{key}", pass_filter=set(), strict=False,)
+            res[key] = unflatten_params(items=item, params=item_params, base_params=new_base_params,)
         return res
     # non-compilable item, check if it has any routed parameters
     item = items
@@ -182,12 +162,7 @@ def _class_from_strings(items: Union[str, dict, tuple, list], class_getter: Call
     """
     if isinstance(items, str):
         item = items
-        if class_getter is tf.keras.metrics.get and item in (
-            "acc",
-            "accuracy",
-            "ce",
-            "crossentropy",
-        ):
+        if class_getter is tf.keras.metrics.get and item in ("acc", "accuracy", "ce", "crossentropy",):
             # Keras matches "acc" and others in this list to the right function
             # based on the Model's loss function, output shape, etc.
             # We pass them through here to let Keras deal with these.

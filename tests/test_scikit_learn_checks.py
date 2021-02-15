@@ -49,16 +49,9 @@ batch_size = 1000
 
 @parametrize_with_checks(
     estimators=[
-        MultiOutputClassifier(
-            model=dynamic_classifier,
-            batch_size=batch_size,
-            model__hidden_layer_sizes=[],
-        ),
+        MultiOutputClassifier(model=dynamic_classifier, batch_size=batch_size, model__hidden_layer_sizes=[],),
         KerasRegressor(
-            model=dynamic_regressor,
-            batch_size=batch_size,
-            loss=KerasRegressor.r_squared,
-            model__hidden_layer_sizes=[],
+            model=dynamic_regressor, batch_size=batch_size, loss=KerasRegressor.r_squared, model__hidden_layer_sizes=[],
         ),
     ],
     ids=["KerasClassifier", "KerasRegressor"],
@@ -79,9 +72,7 @@ def test_fully_compliant_estimators_low_precision(estimator, check):
         # These tests have bugs that are fixed in 0.23.0
         pytest.skip("This test is broken in sklearn<=0.23.0")
     if check_name in higher_precision:
-        pytest.skip(
-            "This test is run as part of test_fully_compliant_estimators_high_precision."
-        )
+        pytest.skip("This test is run as part of test_fully_compliant_estimators_high_precision.")
     check(estimator)
 
 
@@ -110,9 +101,7 @@ def test_fully_compliant_estimators_high_precision(estimator, check):
     """
     check_name = check.func.__name__
     if check_name not in higher_precision:
-        pytest.skip(
-            "This test is run as part of test_fully_compliant_estimators_low_precision."
-        )
+        pytest.skip("This test is run as part of test_fully_compliant_estimators_low_precision.")
     with use_floatx("float64"):
         check(estimator)
 
@@ -127,14 +116,8 @@ class SubclassedClassifier(KerasClassifier):
         self.loss = loss
         self.optimizer = "sgd"
 
-    def _keras_build_fn(
-        self, hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
-    ) -> Model:
-        return dynamic_classifier(
-            hidden_layer_sizes=hidden_layer_sizes,
-            meta=meta,
-            compile_kwargs=compile_kwargs,
-        )
+    def _keras_build_fn(self, hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],) -> Model:
+        return dynamic_classifier(hidden_layer_sizes=hidden_layer_sizes, meta=meta, compile_kwargs=compile_kwargs,)
 
 
 def test_no_attributes_set_init_sublcassed():

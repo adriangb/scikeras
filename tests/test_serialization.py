@@ -45,18 +45,14 @@ class CustomLoss(keras.losses.MeanSquaredError):
 def test_custom_loss_function():
     """Test that a custom loss function can be serialized.
     """
-    estimator = KerasRegressor(
-        model=dynamic_regressor, loss=CustomLoss(), model__hidden_layer_sizes=(100,),
-    )
+    estimator = KerasRegressor(model=dynamic_regressor, loss=CustomLoss(), model__hidden_layer_sizes=(100,),)
     check_pickle(estimator, load_boston)
 
 
 # ---------------------- Subclassed Model Tests ------------------
 
 
-def build_fn_custom_model_registered(
-    meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
-) -> Model:
+def build_fn_custom_model_registered(meta: Dict[str, Any], compile_kwargs: Dict[str, Any],) -> Model:
     """Dummy custom Model subclass that is registered to be serializable.
     """
 
@@ -83,9 +79,7 @@ def test_custom_model_registered():
     check_pickle(estimator, load_boston)
 
 
-def build_fn_custom_model_unregistered(
-    meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
-) -> Model:
+def build_fn_custom_model_unregistered(meta: Dict[str, Any], compile_kwargs: Dict[str, Any],) -> Model:
     """Dummy custom Model subclass that is not registed to be serializable.
     """
 
@@ -118,10 +112,7 @@ def test_run_eagerly():
     """Test that models compiled with run_eagerly can be serialized.
     """
     estimator = KerasRegressor(
-        model=dynamic_regressor,
-        run_eagerly=True,
-        loss=KerasRegressor.r_squared,
-        model__hidden_layer_sizes=(100,),
+        model=dynamic_regressor, run_eagerly=True, loss=KerasRegressor.r_squared, model__hidden_layer_sizes=(100,),
     )
     check_pickle(estimator, load_boston)
 
@@ -159,9 +150,7 @@ def test_partial_fit_pickle(optim):
     """
     X, y = make_regression(n_features=8, n_samples=100)
 
-    m1 = KerasRegressor(
-        model=dynamic_regressor, optimizer=optim, random_state=42, hidden_layer_sizes=[]
-    )
+    m1 = KerasRegressor(model=dynamic_regressor, optimizer=optim, random_state=42, hidden_layer_sizes=[])
     m2 = clone(m1)
 
     # Ensure we can roundtrip before training

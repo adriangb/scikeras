@@ -184,9 +184,7 @@ def project_linkcode_resolve(domain, info):
         info,
         package="scikeras",
         revision=_linkcode_git_revision,
-        url_fmt="https://github.com/adriangb/scikeras/"
-        "blob/{revision}/"
-        "{package}/{path}#L{lineno}",
+        url_fmt="https://github.com/adriangb/scikeras/" "blob/{revision}/" "{package}/{path}#L{lineno}",
     )
 
 

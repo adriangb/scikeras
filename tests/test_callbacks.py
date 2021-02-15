@@ -1,8 +1,6 @@
 import pickle
 
-from sklearn.utils.estimator_checks import (
-    check_estimators_partial_fit_n_features,  # noqa
-)
+from sklearn.utils.estimator_checks import check_estimators_partial_fit_n_features  # noqa
 from sklearn.utils.estimator_checks import check_estimators_pickle
 from tensorflow.keras.callbacks import Callback
 
@@ -27,10 +25,7 @@ def test_callbacks():
     """Test estimators with callbacks.
     """
     estimator = KerasClassifier(
-        model=dynamic_classifier,
-        callbacks=(SentinalCallback(),),
-        optimizer="adam",
-        model__hidden_layer_sizes=(100,),
+        model=dynamic_classifier, callbacks=(SentinalCallback(),), optimizer="adam", model__hidden_layer_sizes=(100,),
     )
     # Check for picklign and partial fit
     check_estimators_pickle("KerasClassifier", estimator)

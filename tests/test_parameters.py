@@ -19,11 +19,7 @@ class TestRandomState:
     @pytest.mark.parametrize(
         "estimator",
         [
-            KerasRegressor(
-                model=dynamic_regressor,
-                loss=KerasRegressor.r_squared,
-                model__hidden_layer_sizes=(100,),
-            ),
+            KerasRegressor(model=dynamic_regressor, loss=KerasRegressor.r_squared, model__hidden_layer_sizes=(100,),),
             KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
         ],
     )
@@ -55,11 +51,7 @@ class TestRandomState:
     @pytest.mark.parametrize(
         "estimator",
         [
-            KerasRegressor(
-                model=dynamic_regressor,
-                loss=KerasRegressor.r_squared,
-                model__hidden_layer_sizes=(100,),
-            ),
+            KerasRegressor(model=dynamic_regressor, loss=KerasRegressor.r_squared, model__hidden_layer_sizes=(100,),),
             KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
         ],
     )
@@ -117,12 +109,7 @@ def test_sample_weights_fit():
     has the intended effect.
     """
     # build estimator
-    estimator = KerasClassifier(
-        model=dynamic_classifier,
-        model__hidden_layer_sizes=(100,),
-        epochs=10,
-        random_state=0,
-    )
+    estimator = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,), epochs=10, random_state=0,)
     estimator1 = clone(estimator)
     estimator2 = clone(estimator)
 
@@ -151,9 +138,7 @@ def test_sample_weights_fit():
     # train estimator 2 without weights
     estimator2.fit(X, y)
     # both estimators should have about the same predictions
-    np.testing.assert_allclose(
-        actual=estimator1.predict_proba(X), desired=estimator2.predict_proba(X)
-    )
+    np.testing.assert_allclose(actual=estimator1.predict_proba(X), desired=estimator2.predict_proba(X))
 
 
 def test_sample_weights_score():
@@ -161,12 +146,7 @@ def test_sample_weights_score():
     `score` has the intended effect.
     """
     # build estimator
-    estimator = KerasRegressor(
-        model=dynamic_regressor,
-        model__hidden_layer_sizes=(100,),
-        epochs=10,
-        random_state=0,
-    )
+    estimator = KerasRegressor(model=dynamic_regressor, model__hidden_layer_sizes=(100,), epochs=10, random_state=0,)
     estimator1 = clone(estimator)
     estimator2 = clone(estimator)
 
@@ -211,9 +191,7 @@ class TestMetricsParam:
         matches to the loss function and hence should be passed through
         as a string and not as a retrieved function.
         """
-        est = KerasClassifier(
-            model=dynamic_classifier, model__hidden_layer_sizes=(100,), metrics=[metric]
-        )
+        est = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,), metrics=[metric])
         X, y = make_classification()
         est.fit(X, y)
         assert len(est.history_[metric]) == 1
@@ -225,16 +203,12 @@ def test_class_weight_param():
 
     Tests that fit and partial_fit correctly handle the class_weight parameter.
     """
-    clf = KerasClassifier(
-        model=dynamic_classifier, model__hidden_layer_sizes=(100,), random_state=0,
-    )
+    clf = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,), random_state=0,)
     problems = (2, 3)
     for n_centers in problems:
         # create a very noisy dataset
         X, y = make_blobs(centers=n_centers, random_state=0, cluster_std=20)
-        X_train, X_test, y_train, _ = train_test_split(
-            X, y, test_size=0.5, random_state=0
-        )
+        X_train, X_test, y_train, _ = train_test_split(X, y, test_size=0.5, random_state=0)
 
         n_centers = len(np.unique(y_train))
 

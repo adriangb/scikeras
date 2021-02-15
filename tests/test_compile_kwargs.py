@@ -15,10 +15,7 @@ from tests.multi_output_models import MultiOutputClassifier
 def get_model(num_hidden=10, meta=None, compile_kwargs=None):
     inp = Input(shape=(meta["n_features_in_"],))
     hidden = Dense(num_hidden, activation="relu")(inp)
-    out = [
-        Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden)
-        for i in range(meta["n_outputs_"])
-    ]
+    out = [Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden) for i in range(meta["n_outputs_"])]
     model = Model(inp, out)
     model.compile(**compile_kwargs)
     return model
@@ -61,9 +58,7 @@ def test_optimizer_invalid_string():
 
     optimizer = "sgf"  # sgf is not a loss
 
-    est = KerasClassifier(
-        model=get_model, optimizer=optimizer, loss="binary_crossentropy",
-    )
+    est = KerasClassifier(model=get_model, optimizer=optimizer, loss="binary_crossentropy",)
     with pytest.raises(ValueError, match="Unknown optimizer"):
         est.fit(X, y)
 
@@ -90,11 +85,7 @@ def test_compiling_of_routed_parameters():
             return losses_module.binary_crossentropy(y_true, y_pred)
 
     est = KerasClassifier(
-        model=get_model,
-        loss=MyLoss,
-        loss__param1=[Foo, Foo],
-        loss__param1__foo_kwarg=1,
-        loss__param1__0__foo_kwarg=2,
+        model=get_model, loss=MyLoss, loss__param1=[Foo, Foo], loss__param1__foo_kwarg=1, loss__param1__0__foo_kwarg=2,
     )
     est.fit(X, y)
     assert est.model_.loss.param1[0].foo_kwarg == 2
@@ -142,9 +133,7 @@ def test_loss_uncompilable():
     loss = losses_module.binary_crossentropy
 
     est = KerasClassifier(model=get_model, loss=loss, loss__from_logits=True,)
-    with pytest.raises(
-        TypeError, match="does not accept parameters because it's not a class"
-    ):
+    with pytest.raises(TypeError, match="does not accept parameters because it's not a class"):
         est.fit(X, y)
 
 
@@ -195,11 +184,7 @@ def test_loss_routed_params_dict(loss, n_outputs_):
     y = np.column_stack([y for _ in range(n_outputs_)]).squeeze()
 
     # Test dict with global routed param
-    est = MultiOutputClassifier(
-        model=get_model,
-        loss={"out1": loss},
-        loss__from_logits=True,  # default is False
-    )
+    est = MultiOutputClassifier(model=get_model, loss={"out1": loss}, loss__from_logits=True,)  # default is False
     est.fit(X, y)
     assert est.model_.loss["out1"].from_logits == True
 
@@ -237,9 +222,7 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
-        metrics=[
-            metrics if not isinstance(metrics, metrics_module.Metric) else metrics()
-        ],
+        metrics=[metrics if not isinstance(metrics, metrics_module.Metric) else metrics()],
     )
     est.fit(X, y)
     assert est.model_.metrics[metric_idx].name == prefix + expected_name
@@ -248,10 +231,7 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
-        metrics=[
-            [metrics if not isinstance(metrics, metrics_module.Metric) else metrics()]
-            for _ in range(n_outputs_)
-        ],
+        metrics=[[metrics if not isinstance(metrics, metrics_module.Metric) else metrics()] for _ in range(n_outputs_)],
     )
     est.fit(X, y)
     assert prefix + expected_name == est.model_.metrics[metric_idx].name
@@ -261,9 +241,7 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         model=get_model,
         loss="binary_crossentropy",
         metrics={
-            f"out{i+1}": metrics
-            if not isinstance(metrics, metrics_module.Metric)
-            else metrics()
+            f"out{i+1}": metrics if not isinstance(metrics, metrics_module.Metric) else metrics()
             for i in range(n_outputs_)
         },
     )
@@ -275,9 +253,7 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         model=get_model,
         loss="binary_crossentropy",
         metrics={
-            f"out{i+1}": metrics
-            if not isinstance(metrics, metrics_module.Metric)
-            else metrics()
+            f"out{i+1}": metrics if not isinstance(metrics, metrics_module.Metric) else metrics()
             for i in range(n_outputs_)
         },
     )
@@ -305,13 +281,9 @@ def test_metrics_two_metric_per_output(n_outputs_):
     if n_outputs_ == 1:
         metrics_ = [metric_class(name="1"), metric_class(name="2")]
     else:
-        metrics_ = [
-            [metric_class(name="1"), metric_class(name="2")] for _ in range(n_outputs_)
-        ]
+        metrics_ = [[metric_class(name="1"), metric_class(name="2")] for _ in range(n_outputs_)]
 
-    est = MultiOutputClassifier(
-        model=get_model, loss="binary_crossentropy", metrics=metrics_,
-    )
+    est = MultiOutputClassifier(model=get_model, loss="binary_crossentropy", metrics=metrics_,)
     est.fit(X, y)
     if n_outputs_ == 1:
         assert est.model_.metrics[metric_idx].name == "1"
@@ -323,15 +295,10 @@ def test_metrics_two_metric_per_output(n_outputs_):
     if n_outputs_ == 1:
         metrics_ = {"out1": [metric_class(name="1"), metric_class(name="2")]}
     else:
-        metrics_ = {
-            f"out{i+1}": [metric_class(name="1"), metric_class(name="2")]
-            for i in range(n_outputs_)
-        }
+        metrics_ = {f"out{i+1}": [metric_class(name="1"), metric_class(name="2")] for i in range(n_outputs_)}
 
     # Dict of metrics
-    est = MultiOutputClassifier(
-        model=get_model, loss="binary_crossentropy", metrics=metrics_,
-    )
+    est = MultiOutputClassifier(model=get_model, loss="binary_crossentropy", metrics=metrics_,)
     est.fit(X, y)
     if n_outputs_ == 1:
         assert est.model_.metrics[metric_idx].name == "1"
@@ -355,10 +322,7 @@ def test_metrics_routed_params_iterable(n_outputs_):
     metric_idx = 1 + (n_outputs_ if n_outputs_ > 1 else 0)
 
     est = MultiOutputClassifier(
-        model=get_model,
-        loss="binary_crossentropy",
-        metrics=[metrics],
-        metrics__0__name="custom_name",
+        model=get_model, loss="binary_crossentropy", metrics=[metrics], metrics__0__name="custom_name",
     )
     est.fit(X, y)
     compiled_metrics = est.model_.metrics
@@ -406,10 +370,7 @@ def test_metrics_routed_params_dict():
     metric_idx = 1 + n_outputs_
 
     est = MultiOutputClassifier(
-        model=get_model,
-        loss="binary_crossentropy",
-        metrics={"out1": metrics},
-        metrics__out1__name="custom_name",
+        model=get_model, loss="binary_crossentropy", metrics={"out1": metrics}, metrics__out1__name="custom_name",
     )
     est.fit(X, y)
     assert est.model_.metrics[metric_idx].name == "out1_custom_name"
@@ -457,13 +418,6 @@ def test_metrics_uncompilable():
         metrics_module.get("accuracy"),
     ]  # a function
 
-    est = KerasClassifier(
-        model=get_model,
-        loss="binary_crossentropy",
-        metrics=metrics,
-        metrics__name="custom_name",
-    )
-    with pytest.raises(
-        TypeError, match="does not accept parameters because it's not a class"
-    ):
+    est = KerasClassifier(model=get_model, loss="binary_crossentropy", metrics=metrics, metrics__name="custom_name",)
+    with pytest.raises(TypeError, match="does not accept parameters because it's not a class"):
         est.fit(X, y)

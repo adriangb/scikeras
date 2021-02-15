@@ -181,34 +181,17 @@ class BaseWrapper(BaseEstimator):
         self,
         model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
         *,
-        build_fn: Union[
-            None, Callable[..., tf.keras.Model], tf.keras.Model
-        ] = None,  # for backwards compatibility
+        build_fn: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,  # for backwards compatibility
         warm_start: bool = False,
         random_state: Union[int, np.random.RandomState, None] = None,
-        optimizer: Union[
-            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
-        ] = "rmsprop",
-        loss: Union[
-            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
-        ] = None,
+        optimizer: Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]] = "rmsprop",
+        loss: Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None] = None,
         metrics: Union[
-            List[
-                Union[
-                    str,
-                    tf.keras.metrics.Metric,
-                    Type[tf.keras.metrics.Metric],
-                    Callable,
-                ]
-            ],
-            None,
+            List[Union[str, tf.keras.metrics.Metric, Type[tf.keras.metrics.Metric], Callable,]], None,
         ] = None,
         batch_size: Union[int, None] = None,
         verbose: int = 1,
-        callbacks: Union[
-            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
-            None,
-        ] = None,
+        callbacks: Union[List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]], None,] = None,
         validation_split: float = 0.0,
         shuffle: bool = True,
         run_eagerly: bool = False,
@@ -262,9 +245,7 @@ class BaseWrapper(BaseEstimator):
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Validate that the passed sample_weight and ensure it is a Numpy array.
         """
-        sample_weight = _check_sample_weight(
-            sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
-        )
+        sample_weight = _check_sample_weight(sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx()))
         if np.all(sample_weight == 0):
             raise ValueError(
                 "No training samples had any weight; only zeros were passed in sample_weight."
@@ -291,10 +272,7 @@ class BaseWrapper(BaseEstimator):
         if model is None:
             # no model, use this class' _keras_build_fn
             if not hasattr(self, "_keras_build_fn"):
-                raise ValueError(
-                    "If not using the ``build_fn`` param, "
-                    "you must implement ``_keras_build_fn``"
-                )
+                raise ValueError("If not using the ``build_fn`` param, " "you must implement ``_keras_build_fn``")
             final_build_fn = self._keras_build_fn
         elif isinstance(model, Model):
             # pre-built Keras Model
@@ -303,16 +281,11 @@ class BaseWrapper(BaseEstimator):
 
         elif inspect.isfunction(model):
             if hasattr(self, "_keras_build_fn"):
-                raise ValueError(
-                    "This class cannot implement ``_keras_build_fn`` if"
-                    " using the `model` parameter"
-                )
+                raise ValueError("This class cannot implement ``_keras_build_fn`` if" " using the `model` parameter")
             # a callable method/function
             final_build_fn = model
         else:
-            raise TypeError(
-                "``model`` must be a callable, a Keras Model instance or None"
-            )
+            raise TypeError("``model`` must be a callable, a Keras Model instance or None")
 
         return final_build_fn
 
@@ -328,35 +301,21 @@ class BaseWrapper(BaseEstimator):
             Dictionary of kwargs for `Model.compile`.
         """
         init_params = self.get_params()
-        compile_kwargs = route_params(
-            init_params, destination="compile", pass_filter=self._compile_kwargs,
-        )
-        compile_kwargs["optimizer"] = _class_from_strings(
-            compile_kwargs["optimizer"], optimizers_module.get
-        )
+        compile_kwargs = route_params(init_params, destination="compile", pass_filter=self._compile_kwargs,)
+        compile_kwargs["optimizer"] = _class_from_strings(compile_kwargs["optimizer"], optimizers_module.get)
         compile_kwargs["optimizer"] = unflatten_params(
             items=compile_kwargs["optimizer"],
-            params=route_params(
-                init_params, destination="optimizer", pass_filter=set(), strict=True,
-            ),
+            params=route_params(init_params, destination="optimizer", pass_filter=set(), strict=True,),
         )
-        compile_kwargs["loss"] = _class_from_strings(
-            compile_kwargs["loss"], losses_module.get
-        )
+        compile_kwargs["loss"] = _class_from_strings(compile_kwargs["loss"], losses_module.get)
         compile_kwargs["loss"] = unflatten_params(
             items=compile_kwargs["loss"],
-            params=route_params(
-                init_params, destination="loss", pass_filter=set(), strict=False,
-            ),
+            params=route_params(init_params, destination="loss", pass_filter=set(), strict=False,),
         )
-        compile_kwargs["metrics"] = _class_from_strings(
-            compile_kwargs["metrics"], metrics_module.get
-        )
+        compile_kwargs["metrics"] = _class_from_strings(compile_kwargs["metrics"], metrics_module.get)
         compile_kwargs["metrics"] = unflatten_params(
             items=compile_kwargs["metrics"],
-            params=route_params(
-                init_params, destination="metrics", pass_filter=set(), strict=False,
-            ),
+            params=route_params(init_params, destination="metrics", pass_filter=set(), strict=False,),
         )
         return compile_kwargs
 
@@ -378,18 +337,12 @@ class BaseWrapper(BaseEstimator):
 
         # collect parameters
         params = self.get_params()
-        build_params = route_params(
-            params,
-            destination="model",
-            pass_filter=getattr(self, "_user_params", set()),
-        )
+        build_params = route_params(params, destination="model", pass_filter=getattr(self, "_user_params", set()),)
         compile_kwargs = None
         if has_param(final_build_fn, "meta") or accepts_kwargs(final_build_fn):
             # build_fn accepts `meta`, add it
             build_params["meta"] = self._get_metadata()
-        if has_param(final_build_fn, "compile_kwargs") or accepts_kwargs(
-            final_build_fn
-        ):
+        if has_param(final_build_fn, "compile_kwargs") or accepts_kwargs(final_build_fn):
             # build_fn accepts `compile_kwargs`, add it
             compile_kwargs = self._get_compile_kwargs()
             build_params["compile_kwargs"] = compile_kwargs
@@ -451,13 +404,9 @@ class BaseWrapper(BaseEstimator):
         # Make sure model has a loss function
         loss = self.model_.loss
         no_loss = False
-        if isinstance(loss, list) and not any(
-            callable(loss_) or isinstance(loss_, str) for loss_ in loss
-        ):
+        if isinstance(loss, list) and not any(callable(loss_) or isinstance(loss_, str) for loss_ in loss):
             no_loss = True
-        if isinstance(loss, dict) and not any(
-            callable(loss_) or isinstance(loss_, str) for loss_ in loss.values()
-        ):
+        if isinstance(loss, dict) and not any(callable(loss_) or isinstance(loss_, str) for loss_ in loss.values()):
             no_loss = True
         if no_loss:
             raise ValueError(
@@ -522,8 +471,7 @@ class BaseWrapper(BaseEstimator):
         if "loss" in init_params:
             default_val = init_params["loss"].default
             if all(
-                isinstance(x, (str, losses_module.Loss, type))
-                for x in [self.loss, self.model_.loss]
+                isinstance(x, (str, losses_module.Loss, type)) for x in [self.loss, self.model_.loss]
             ):  # filter out loss list/dicts/etc.
                 if default_val is not None:
                     default_val = loss_name(default_val)
@@ -566,9 +514,7 @@ class BaseWrapper(BaseEstimator):
         def _check_array_dtype(arr, force_numeric):
             if not isinstance(arr, np.ndarray):
                 return _check_array_dtype(np.asarray(arr), force_numeric=force_numeric)
-            elif (
-                arr.dtype.kind not in ("O", "U", "S") or not force_numeric
-            ):  # object, unicode or string
+            elif arr.dtype.kind not in ("O", "U", "S") or not force_numeric:  # object, unicode or string
                 # already numeric
                 return None  # check_array won't do any casting with dtype=None
             else:
@@ -586,12 +532,7 @@ class BaseWrapper(BaseEstimator):
             )
 
         if y is not None:
-            y = check_array(
-                y,
-                ensure_2d=False,
-                allow_nd=False,
-                dtype=_check_array_dtype(y, force_numeric=y_numeric),
-            )
+            y = check_array(y, ensure_2d=False, allow_nd=False, dtype=_check_array_dtype(y, force_numeric=y_numeric),)
             y_dtype_ = y.dtype
             y_ndim_ = y.ndim
             if reset:
@@ -611,9 +552,7 @@ class BaseWrapper(BaseEstimator):
                         f" is expecting {self.y_ndim_} dimensions in y."
                     )
         if X is not None:
-            X = check_array(
-                X, allow_nd=True, dtype=_check_array_dtype(X, force_numeric=True)
-            )
+            X = check_array(X, allow_nd=True, dtype=_check_array_dtype(X, force_numeric=True))
             X_dtype_ = X.dtype
             X_shape_ = X.shape
             n_features_in_ = X.shape[1]
@@ -639,9 +578,7 @@ class BaseWrapper(BaseEstimator):
                 if n_features_in_ != self.n_features_in_:
                     raise ValueError(
                         "X has {} features, but {} is expecting {} features "
-                        "as input.".format(
-                            n_features_in_, self.__class__.__name__, self.n_features_in_
-                        )
+                        "as input.".format(n_features_in_, self.__class__.__name__, self.n_features_in_)
                     )
         return X, y
 
@@ -713,9 +650,7 @@ class BaseWrapper(BaseEstimator):
             )
 
         # epochs via kwargs > fit__epochs > epochs
-        kwargs["epochs"] = kwargs.get(
-            "epochs", getattr(self, "fit__epochs", self.epochs)
-        )
+        kwargs["epochs"] = kwargs.get("epochs", getattr(self, "fit__epochs", self.epochs))
         kwargs["initial_epoch"] = kwargs.get("initial_epoch", 0)
 
         self._fit(
@@ -737,9 +672,7 @@ class BaseWrapper(BaseEstimator):
         """
         return hasattr(self, "model_")
 
-    def _initialize(
-        self, X: np.ndarray, y: Union[np.ndarray, None] = None
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    def _initialize(self, X: np.ndarray, y: Union[np.ndarray, None] = None) -> Tuple[np.ndarray, np.ndarray]:
 
         # Handle random state
         if isinstance(self.random_state, np.random.RandomState):
@@ -792,16 +725,7 @@ class BaseWrapper(BaseEstimator):
         self._initialize(X, y)
         return self  # to allow chained calls like initialize(...).predict(...)
 
-    def _fit(
-        self,
-        X,
-        y,
-        sample_weight,
-        warm_start: bool,
-        epochs: int,
-        initial_epoch: int,
-        **kwargs,
-    ) -> None:
+    def _fit(self, X, y, sample_weight, warm_start: bool, epochs: int, initial_epoch: int, **kwargs,) -> None:
         """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
 
         Parameters
@@ -871,12 +795,7 @@ class BaseWrapper(BaseEstimator):
             (ex: instance.partial_fit(X, y).transform(X) )
         """
         self._fit(
-            X,
-            y,
-            sample_weight=sample_weight,
-            warm_start=True,
-            epochs=1,
-            initial_epoch=self.current_epoch,
+            X, y, sample_weight=sample_weight, warm_start=True, epochs=1, initial_epoch=self.current_epoch,
         )
         return self
 
@@ -907,9 +826,7 @@ class BaseWrapper(BaseEstimator):
 
         # check if fitted
         if not self.initialized_:
-            raise NotFittedError(
-                "Estimator needs to be fit before `predict` " "can be called"
-            )
+            raise NotFittedError("Estimator needs to be fit before `predict` " "can be called")
         # basic input checks
         X, _ = self._validate_data(X=X, y=None)
 
@@ -918,9 +835,7 @@ class BaseWrapper(BaseEstimator):
 
         # filter kwargs and get attributes for predict
         params = self.get_params()
-        pred_args = route_params(
-            params, destination="predict", pass_filter=self._predict_kwargs
-        )
+        pred_args = route_params(params, destination="predict", pass_filter=self._predict_kwargs)
         pred_args.update(kwargs)
 
         # predict with Keras model
@@ -979,9 +894,7 @@ class BaseWrapper(BaseEstimator):
         """
         # validate sample weights
         if sample_weight is not None:
-            X, sample_weight = self._validate_sample_weight(
-                X=X, sample_weight=sample_weight
-            )
+            X, sample_weight = self._validate_sample_weight(X=X, sample_weight=sample_weight)
 
         # validate y
         _, y = self._validate_data(X=None, y=y)
@@ -1005,9 +918,7 @@ class BaseWrapper(BaseEstimator):
             Dictionary of meta parameters
         """
         return {
-            k: v
-            for k, v in self.__dict__.items()
-            if (len(k) > 1 and k[-1] == "_" and k[-2] != "_" and k[0] != "_")
+            k: v for k, v in self.__dict__.items() if (len(k) > 1 and k[-1] == "_" and k[-2] != "_" and k[0] != "_")
         }
 
     def set_params(self, **params) -> "BaseWrapper":
@@ -1030,9 +941,7 @@ class BaseWrapper(BaseEstimator):
             Estimator instance.
         """
         for param, value in params.items():
-            if any(
-                param.startswith(prefix + "__") for prefix in self._routing_prefixes
-            ):
+            if any(param.startswith(prefix + "__") for prefix in self._routing_prefixes):
                 # routed param
                 setattr(self, param, value)
             else:
@@ -1053,9 +962,7 @@ class BaseWrapper(BaseEstimator):
 
     def _get_param_names(self):
         """Get parameter names for the estimator"""
-        return (
-            k for k in self.__dict__ if not k.endswith("_") and not k.startswith("_")
-        )
+        return (k for k in self.__dict__ if not k.endswith("_") and not k.startswith("_"))
 
     def _more_tags(self):
         """Get sklearn tags for the estimator"""
@@ -1194,34 +1101,17 @@ class KerasClassifier(BaseWrapper):
         self,
         model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
         *,
-        build_fn: Union[
-            None, Callable[..., tf.keras.Model], tf.keras.Model
-        ] = None,  # for backwards compatibility
+        build_fn: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,  # for backwards compatibility
         warm_start: bool = False,
         random_state: Union[int, np.random.RandomState, None] = None,
-        optimizer: Union[
-            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
-        ] = "rmsprop",
-        loss: Union[
-            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
-        ] = None,
+        optimizer: Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]] = "rmsprop",
+        loss: Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None] = None,
         metrics: Union[
-            List[
-                Union[
-                    str,
-                    tf.keras.metrics.Metric,
-                    Type[tf.keras.metrics.Metric],
-                    Callable,
-                ]
-            ],
-            None,
+            List[Union[str, tf.keras.metrics.Metric, Type[tf.keras.metrics.Metric], Callable,]], None,
         ] = None,
         batch_size: Union[int, None] = None,
         verbose: int = 1,
-        callbacks: Union[
-            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
-            None,
-        ] = None,
+        callbacks: Union[List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]], None,] = None,
         validation_split: float = 0.0,
         shuffle: bool = True,
         run_eagerly: bool = False,
@@ -1385,9 +1275,7 @@ class KerasClassifier(BaseWrapper):
             A reference to the instance that can be chain called
             (ex: instance.fit(X,y).transform(X) )
         """
-        self.classes_ = (
-            classes if classes is not None else getattr(self, "classes_", None)
-        )
+        self.classes_ = classes if classes is not None else getattr(self, "classes_", None)
         if self.class_weight is not None:
             sample_weight = 1 if sample_weight is None else sample_weight
             sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
@@ -1425,9 +1313,7 @@ class KerasClassifier(BaseWrapper):
 
         # check if fitted
         if not self.initialized_:
-            raise NotFittedError(
-                "Estimator needs to be fit before `predict` " "can be called"
-            )
+            raise NotFittedError("Estimator needs to be fit before `predict` " "can be called")
 
         # basic input checks
         X, _ = self._validate_data(X=X, y=None)
@@ -1436,9 +1322,7 @@ class KerasClassifier(BaseWrapper):
         X = self.feature_encoder_.transform(X)
 
         # collect arguments
-        predict_args = route_params(
-            self.get_params(), destination="predict", pass_filter=self._predict_kwargs,
-        )
+        predict_args = route_params(self.get_params(), destination="predict", pass_filter=self._predict_kwargs,)
         predict_args.update(kwargs)
 
         # call the Keras model's predict
@@ -1637,10 +1521,5 @@ class KerasRegressor(BaseWrapper):
         y_true = tf.cast(y_true, dtype=y_pred.dtype)
         # Calculate R^2
         ss_res = tf.math.reduce_sum(tf.math.squared_difference(y_true, y_pred), axis=0)
-        ss_tot = tf.math.reduce_sum(
-            tf.math.squared_difference(y_true, tf.math.reduce_mean(y_true, axis=0)),
-            axis=0,
-        )
-        return tf.math.reduce_mean(
-            1 - ss_res / (ss_tot + tf.keras.backend.epsilon()), axis=-1
-        )
+        ss_tot = tf.math.reduce_sum(tf.math.squared_difference(y_true, tf.math.reduce_mean(y_true, axis=0)), axis=0,)
+        return tf.math.reduce_mean(1 - ss_res / (ss_tot + tf.keras.backend.epsilon()), axis=-1)
