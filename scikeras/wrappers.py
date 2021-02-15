@@ -513,8 +513,8 @@ class BaseWrapper(BaseEstimator):
             if self.n_outputs_expected_ != len(self.model_.outputs):
                 raise ValueError(
                     "Detected a Keras model input of size"
-                    f" {y[0].shape[0]}, but {self.model_} has"
-                    f" {self.model_.outputs} outputs"
+                    f" {self.n_outputs_expected_ }, but {self.model_} has"
+                    f" {len(self.model_.outputs)} outputs"
                 )
         # check that if the user gave us a loss function it ended up in
         # the actual model
