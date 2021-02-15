@@ -392,10 +392,10 @@ def multiclass_multioutput():
             X_expected_dtype_keras=X.dtype,
             y_expected_dtype_keras=dtype,
             min_score=0.55,
-            # note that ALL classes must be correct, so 0.55 is a reasonable score (and is similar to MLPClassifier)
+            # note that ALL classes must be correct, so 0.55 is a reasonable score (and is ±10% vs MLPClassifier)
             scorer=lambda y, y_pred: np.mean(
-                np.all(y == y_pred, axis=1)
-            ),  # copied from sklearn MultiOutputClassifier
+                np.all(y == y_pred, axis=1)  # copied from sklearn MultiOutputClassifier
+            ),
         )
 
 
@@ -444,7 +444,7 @@ def test_output_shapes_and_dtypes_against_sklearn_cls(test_data: TestParams):
 
 
 def continuous():
-    # use ints so that we get measurable scores when castint to int
+    # use ints so that we get measurable scores when castint to uint8
     y = np.random.randint(low=0, high=2, size=(1000,))
     X = y.reshape(-1, 1)
     sklearn_est = MLPRegressor(**mlp_kwargs)
@@ -464,7 +464,7 @@ def continuous():
 
 
 def continuous_multioutput():
-    # use ints so that we get measurable scores when castint to int
+    # use ints so that we get measurable scores when casting to uint8
     y = np.random.randint(low=0, high=2, size=(1000,))
     X = y.reshape(-1, 1)
     y = np.column_stack([y, y])
