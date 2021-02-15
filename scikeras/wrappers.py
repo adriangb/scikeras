@@ -1613,6 +1613,8 @@ class KerasRegressor(BaseWrapper):
         """A simple Keras implementation of R^2 that can be used as a Keras
         metric function.
 
+        Larger values indicate a better fit, with 1.0 representing a perfect fit.
+
         Parameters
         ----------
         y_true : array-like of shape (n_samples,) or (n_samples, n_outputs)
