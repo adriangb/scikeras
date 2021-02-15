@@ -1,20 +1,25 @@
-from typing import Any, Dict
+from itertools import chain
+from typing import Any, Callable, Dict
 from unittest.mock import patch
 
 import numpy as np
 import pytest
 import tensorflow as tf
 
+from attr import dataclass
+from sklearn.base import BaseEstimator
+from sklearn.datasets import make_classification, make_regression
+from sklearn.metrics import accuracy_score, r2_score
+from sklearn.model_selection import train_test_split
 from sklearn.multioutput import (
     MultiOutputClassifier as ScikitLearnMultiOutputClassifier,
 )
 from sklearn.neural_network import MLPClassifier, MLPRegressor
-from sklearn.preprocessing import FunctionTransformer
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
 from tensorflow.python.keras.layers import Concatenate, Dense, Input
-from tensorflow.python.keras.models import Model, Sequential
-from tensorflow.python.keras.testing_utils import get_test_data
+from tensorflow.python.keras.models import Model
 
-from scikeras.wrappers import KerasClassifier, KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .multi_output_models import MultiOutputClassifier
@@ -173,185 +178,348 @@ def test_incompatible_output_dimensions():
 
 
 def create_model(activation, n_units):
-    def model(meta: Dict[str, Any]) -> Model:
+    def get_model(meta: Dict[str, Any], hidden_layer_sizes=[200]) -> Model:
         # get params
         n_features_in_ = meta["n_features_in_"]
         inp = Input((n_features_in_,))
-        x1 = Dense(1)(inp)
-        out = [Dense(n, activation=activation)(x1) for n in n_units]
+        x = inp
+        for lsize in hidden_layer_sizes:
+            x = Dense(lsize)(x)
+        out = [Dense(n, activation=activation)(x) for n in n_units]
         model = Model([inp], out)
         return model
 
-    return model
+    return get_model
 
 
-y_vals_cls = (
-    [0, 1, 0],  # single-output, binary
-    [0, 1, 2],  # single output, multiclass
-    [
-        [1, 0, 1],
-        [0, 1, 0],
-        [0, 0, 1],
-    ],  # multilabel-indicator (single multi unit output)
-    [
-        [1, 0, 1],
-        [0, 1, 0],
-        [0, 0, 1],
-    ],  # multilabel-indicator (multiple single unit outputs)
-    [
-        [1, 0, 2],
-        [0, 1, 0],
-        [0, 0, 1],
-    ],  # multiclass-multioutput (multiple multi-unit outputs)
-)
-task_names_cls = (
-    "binary",
-    "multiclass",
-    "multilabel-indicator",
-    "multilabel-indicator",
-    "multiclass-multioutput",
-)
-y_vals_reg = (
-    [0, 1, 2],  # single-output
-    [[1, 0, 2], [0, 1, 0], [0, 0, 1]],  # multi-output
-)
-task_names_reg = (
-    "continuous",
-    "continuous-multioutput",
-)
-mlp_kwargs = {"hidden_layer_sizes": [], "max_iter": 1}
-est_paris_cls = (
-    (
-        MLPClassifier(**mlp_kwargs),
-        KerasClassifier(dynamic_classifier, hidden_layer_sizes=[]),
-    ),
-    (
-        MLPClassifier(**mlp_kwargs),
-        KerasClassifier(dynamic_classifier, hidden_layer_sizes=[]),
-    ),
-    (
-        MLPClassifier(**mlp_kwargs),
-        MultiOutputClassifier(
-            create_model("sigmoid", [3]), loss="binary_crossentropy", split=False
-        ),
-    ),
-    (
-        MLPClassifier(**mlp_kwargs),
-        MultiOutputClassifier(
-            create_model("sigmoid", [1, 1, 1]), loss="binary_crossentropy"
-        ),
-    ),
-    (
-        ScikitLearnMultiOutputClassifier(MLPClassifier()),
-        MultiOutputClassifier(
-            create_model("softmax", [3, 3, 3]), loss="sparse_categorical_crossentropy"
-        ),
-    ),
-)
-est_paris_reg = (
-    (MLPRegressor(), KerasRegressor(dynamic_regressor, hidden_layer_sizes=[])),
-    (MLPRegressor(), KerasRegressor(dynamic_regressor, hidden_layer_sizes=[])),
-)
+mlp_kwargs = {"hidden_layer_sizes": [200], "max_iter": 10, "random_state": 0}
+scikeras_kwargs = {"hidden_layer_sizes": [200], "epochs": 10, "random_state": 0}
 
 
-@pytest.mark.parametrize(
-    "y_dtype",
-    ("float32", "float64", "int64", "int32", "uint8", "uint16", "object", "str"),
-)
-@pytest.mark.parametrize(
-    "y_val,est_pair,task_name", zip(y_vals_cls, est_paris_cls, task_names_cls)
-)
-def test_output_shapes_and_dtypes_against_sklearn_cls(
-    y_dtype, y_val, task_name, est_pair
-):
-    """Tests the output shape and dtype for all supported classification tasks
-    and target dtypes (except string and object, those are incompatible with 
-    multilabel-indicator and are already tested in other tests).
+@dataclass
+class TestParams:
+    sklearn_est: BaseEstimator
+    scikeras_est: BaseWrapper
+    X: np.ndarray
+    y: np.ndarray
+    X_expected_dtype_keras: np.dtype
+    y_expected_dtype_keras: np.dtype
+    min_score: float
+    scorer: Callable
 
-    The outputs' dtype and shape get compared to sklearn's MLPClassifier and are
-    expected to match.
 
-    Since `y` gets transformed (by LabelEncoder or OneHotEncoder) within
-    KerasClassifier's default transfomer, we also check that this conversion
-    goes directly to Keras' internal dtype (that is, we check that we don't
-    convert to another intermediary dtype when applying the transformer).
-    """
-    if task_name == "multilabel-indicator" and y_dtype in ("object", "str"):
-        pytest.skip(
-            "`multilabel-indicator` tasks are incompatible with object/str target dtypes."
+def single_output_binary_sigmoid():
+    y = np.random.randint(low=0, high=2, size=(500,))
+    X = y.reshape(-1, 1)
+    sklearn_est = MLPClassifier(**mlp_kwargs)
+    scikeras_est = KerasClassifier(
+        create_model("sigmoid", [1]), **scikeras_kwargs, loss="binary_crossentropy"
+    )
+    for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16", "<U1"):
+        y_ = y.astype(dtype)
+        yield TestParams(
+            sklearn_est=sklearn_est,
+            scikeras_est=scikeras_est,
+            X=X,
+            y=y_,
+            X_expected_dtype_keras=X.dtype,
+            y_expected_dtype_keras=tf.keras.backend.floatx(),
+            min_score=0.95,
+            scorer=accuracy_score,
         )
-    if y_dtype == "object":
-        if task_name == "multiclass-multioutput":
-            y_val = [[str(y__) for y__ in y_] for y_ in y_val]
-        else:
-            y_val = [str(y_) for y_ in y_val]
-    y = np.array(y_val, dtype=y_dtype)
-    X = np.random.uniform(size=(y.shape[0], 2))
-    y_out_sklearn = est_pair[0].fit(X, y).predict(X)
-    y_out_scikeras = est_pair[1].fit(X, y).predict(X)
-    fit_orig = est_pair[1].model_.fit
 
-    def check_dtypes(*args, **kwargs):
-        y = kwargs["y"]
+
+def single_output_binary_softmax():
+    y = np.random.randint(low=0, high=2, size=(500,))
+    X = y.reshape(-1, 1)
+    y = np.column_stack([y, 1 - y])
+    sklearn_est = MLPClassifier(**mlp_kwargs)
+    scikeras_est = KerasClassifier(
+        create_model("softmax", [2]), **scikeras_kwargs, loss="categorical_crossentropy"
+    )
+    for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
+        y_ = y.astype(dtype)
+        yield TestParams(
+            sklearn_est=sklearn_est,
+            scikeras_est=scikeras_est,
+            X=X,
+            y=y_,
+            X_expected_dtype_keras=X.dtype,
+            y_expected_dtype_keras=tf.keras.backend.floatx(),
+            min_score=0.95,
+            scorer=accuracy_score,
+        )
+
+
+def single_output_multiclass_sparse():
+    y = np.random.randint(low=0, high=3, size=(1000,))
+    X = y.reshape(-1, 1)
+    sklearn_est = MLPClassifier(**mlp_kwargs)
+    scikeras_est = KerasClassifier(
+        create_model("softmax", [3]),
+        **scikeras_kwargs,
+        loss="sparse_categorical_crossentropy",
+    )
+    for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16", "<U1"):
+        y_ = y.astype(dtype)
+        yield TestParams(
+            sklearn_est=sklearn_est,
+            scikeras_est=scikeras_est,
+            X=X,
+            y=y_,
+            X_expected_dtype_keras=X.dtype,
+            y_expected_dtype_keras=tf.keras.backend.floatx(),
+            min_score=0.95,
+            scorer=accuracy_score,
+        )
+
+
+def single_output_multiclass_one_hot():
+    y = np.random.randint(low=0, high=3, size=(1000,))
+    X = y.reshape(-1, 1)
+    # For compatibility with Keras, accept one-hot-encoded inputs
+    # with categorical_crossentropy loss
+    y = OneHotEncoder(sparse=False).fit_transform(y.reshape(-1, 1))
+    sklearn_est = MLPClassifier(**mlp_kwargs)
+    scikeras_est = KerasClassifier(
+        create_model("softmax", [3]), **scikeras_kwargs, loss="categorical_crossentropy"
+    )
+    for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
+        y_ = y.astype(dtype)
+        yield TestParams(
+            sklearn_est=sklearn_est,
+            scikeras_est=scikeras_est,
+            X=X,
+            y=y_,
+            X_expected_dtype_keras=X.dtype,
+            y_expected_dtype_keras=tf.keras.backend.floatx(),
+            min_score=0.95,
+            scorer=accuracy_score,
+        )
+
+
+def multilabel_indicator_single_softmax():
+    y1 = np.random.randint(low=0, high=2, size=(500,))
+    X = y1.reshape(-1, 1)
+    y2 = 1 - y1
+    y = np.column_stack([y1, y2])
+    sklearn_est = MLPClassifier(**mlp_kwargs)
+    scikeras_est = MultiOutputClassifier(
+        create_model("softmax", [2]),
+        loss="categorical_crossentropy",
+        split=False,
+        **scikeras_kwargs,
+    )
+    for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
+        y_ = y.astype(dtype)
+        yield TestParams(
+            sklearn_est=sklearn_est,
+            scikeras_est=scikeras_est,
+            X=X,
+            y=y_,
+            X_expected_dtype_keras=X.dtype,
+            y_expected_dtype_keras=dtype,
+            min_score=0.95,
+            scorer=accuracy_score,
+        )
+
+
+def multilabel_indicator_single_sigmoid():
+    y1 = np.random.randint(low=0, high=2, size=(500,))
+    X = y1.reshape(-1, 1)
+    y2 = 1 - y1
+    y = np.column_stack([y1, y2])
+    sklearn_est = MLPClassifier(**mlp_kwargs)
+    scikeras_est = MultiOutputClassifier(
+        create_model("sigmoid", [2]), loss="bce", split=False, **scikeras_kwargs
+    )
+    for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
+        y_ = y.astype(dtype)
+        yield TestParams(
+            sklearn_est=sklearn_est,
+            scikeras_est=scikeras_est,
+            X=X,
+            y=y_,
+            X_expected_dtype_keras=X.dtype,
+            y_expected_dtype_keras=dtype,
+            min_score=0.95,
+            scorer=accuracy_score,
+        )
+
+
+def multilabel_indicator_multiple_sigmoid():
+    y1 = np.random.randint(low=0, high=2, size=(500,))
+    X = y1.reshape(-1, 1)
+    y2 = 1 - y1
+    y = np.column_stack([y1, y2])
+    sklearn_est = MLPClassifier(**mlp_kwargs)
+    scikeras_est = MultiOutputClassifier(
+        create_model("sigmoid", [1, 1]), loss="bce", split=True, **scikeras_kwargs
+    )
+    for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
+        y_ = y.astype(dtype)
+        yield TestParams(
+            sklearn_est=sklearn_est,
+            scikeras_est=scikeras_est,
+            X=X,
+            y=y_,
+            X_expected_dtype_keras=X.dtype,
+            y_expected_dtype_keras=dtype,
+            min_score=0.95,
+            scorer=accuracy_score,
+        )
+
+
+def multiclass_multioutput():
+    y1 = np.random.randint(low=0, high=3, size=(2000,))
+    X = y1.reshape(-1, 1)
+    y2 = y1 == 1
+    y = np.column_stack([y1, y2])
+    sklearn_est = ScikitLearnMultiOutputClassifier(MLPClassifier(**mlp_kwargs))
+    scikeras_est = MultiOutputClassifier(
+        create_model("softmax", [3, 2]),
+        loss="sparse_categorical_crossentropy",
+        split=True,
+        **scikeras_kwargs,
+    )
+    for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16", "<U1"):
+        y_ = y.astype(dtype)
+        yield TestParams(
+            sklearn_est=sklearn_est,
+            scikeras_est=scikeras_est,
+            X=X,
+            y=y_,
+            X_expected_dtype_keras=X.dtype,
+            y_expected_dtype_keras=dtype,
+            min_score=0.55,
+            # note that ALL classes must be correct, so 0.55 is a reasonable score (and is similar to MLPClassifier)
+            scorer=lambda y, y_pred: np.mean(
+                np.all(y == y_pred, axis=1)
+            ),  # copied from sklearn MultiOutputClassifier
+        )
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    chain(
+        single_output_binary_sigmoid(),
+        single_output_binary_softmax(),
+        single_output_multiclass_sparse(),
+        single_output_multiclass_one_hot(),
+        multilabel_indicator_single_softmax(),
+        multilabel_indicator_single_sigmoid(),
+        multilabel_indicator_multiple_sigmoid(),
+        multiclass_multioutput(),
+    ),
+)
+def test_output_shapes_and_dtypes_against_sklearn_cls(test_data: TestParams):
+    X, y = test_data.X, test_data.y
+    X_train, X_test, y_train, y_test = train_test_split(X, y)
+    sklearn_est, scikeras_est = test_data.sklearn_est, test_data.scikeras_est
+
+    scikeras_est.initialize(X_train, y_train)
+
+    keras_model_fit = scikeras_est.model_.fit
+
+    def check_dtypes(x, y, **kwargs):
         if isinstance(y, list):
-            assert all(y_.dtype.name == tf.keras.backend.floatx() for y_ in y)
+            assert all(y_.dtype.name == test_data.y_expected_dtype_keras for y_ in y)
         else:
             # array
-            assert y.dtype.name == tf.keras.backend.floatx()
-        return fit_orig(*args, **kwargs)
+            assert y.dtype.name == test_data.y_expected_dtype_keras
+        assert X.dtype.name == test_data.X_expected_dtype_keras
+        return keras_model_fit(x=x, y=y, **kwargs)
 
-    with patch.object(est_pair[1].model_, "fit", new=check_dtypes):
-        est_pair[1].partial_fit(X, y)
-    # Check shape, should agree with sklearn for all cases
+    with patch.object(scikeras_est.model_, "fit", new=check_dtypes):
+        with pytest.warns(UserWarning, match="Setting the random state for TF"):
+            scikeras_est.fit(X_train, y_train)
+
+    y_out_scikeras = scikeras_est.predict(X_test)
+    y_out_sklearn = sklearn_est.fit(X_train, y_train).predict(X_test)
+
     assert y_out_scikeras.shape == y_out_sklearn.shape
-    # Check dtype, should agree with sklearn for all cases except
-    # object dtypes: sklearn returns a unicode type for string arrays
-    # with object dtype, we return object just like the input.
-    # A quirk about sklearn: multilabel-indicator models _always_ return np.int64.
-    # We match this in MultiOutputClassifier/MultiLabelTransformer
-    if y_dtype == "object":
-        assert y_out_scikeras.dtype.name == "object"
-    else:
-        assert y_out_scikeras.dtype == y_out_sklearn.dtype
+    assert y_out_scikeras.dtype == y_out_sklearn.dtype
+    scikeras_score = test_data.scorer(y_test, y_out_scikeras)
+    assert scikeras_score >= test_data.min_score
 
 
-@pytest.mark.parametrize(
-    "y_dtype", ("float32", "float64", "int64", "int32", "uint8", "uint16")
-)
-@pytest.mark.parametrize("y_val,est_pair", zip(y_vals_reg, est_paris_reg))
-def test_output_shapes_and_dtypes_against_sklearn_reg(y_dtype, y_val, est_pair):
-    """Tests the output shape and dtype for all supported regression tasks
-    and target dtypes.
+def continuous():
+    # use ints so that we get measurable scores when castint to int
+    y = np.random.randint(low=0, high=2, size=(1000,))
+    X = y.reshape(-1, 1)
+    sklearn_est = MLPRegressor(**mlp_kwargs)
+    scikeras_est = KerasRegressor(dynamic_regressor, **scikeras_kwargs)
+    for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
+        y_ = y.astype(dtype)
+        yield TestParams(
+            sklearn_est=sklearn_est,
+            scikeras_est=scikeras_est,
+            X=X,
+            y=y_,
+            X_expected_dtype_keras=X.dtype,
+            y_expected_dtype_keras=dtype,
+            min_score=0.99,
+            scorer=r2_score,
+        )
 
-    The outputs' dtype and shape get compared to sklearn's MLPRegressor and are
-    expected to match except for the output dtype, which in MLPRegressor is always
-    float64 but in SciKeras depends on the TF backend dtype (usually float32).
 
-    Since `y` is _not_ transformed by KerasRegressor's default transformer,
-    we check that when it is passed to the Keras model it's dtype is unchanged.
-    """
-    y = np.array(y_val, dtype=y_dtype)
-    X = np.random.uniform(size=(y.shape[0], 2))
-    y_out_sklearn = est_pair[0].fit(X, y).predict(X)
-    y_out_scikeras = est_pair[1].fit(X, y).predict(X)
-    fit_orig = est_pair[1].model_.fit
+def continuous_multioutput():
+    # use ints so that we get measurable scores when castint to int
+    y = np.random.randint(low=0, high=2, size=(1000,))
+    X = y.reshape(-1, 1)
+    y = np.column_stack([y, y])
 
-    def check_dtypes(*args, **kwargs):
-        y = kwargs["y"]
-        assert y.dtype.name == y_dtype
-        return fit_orig(*args, **kwargs)
+    sklearn_est = MLPRegressor(**mlp_kwargs)
+    scikeras_est = KerasRegressor(dynamic_regressor, **scikeras_kwargs)
+    for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
+        y_ = y.astype(dtype)
+        yield TestParams(
+            sklearn_est=sklearn_est,
+            scikeras_est=scikeras_est,
+            X=X,
+            y=y_,
+            X_expected_dtype_keras=X.dtype,
+            y_expected_dtype_keras=dtype,
+            min_score=0.99,
+            scorer=r2_score,
+        )
 
-    with patch.object(est_pair[1].model_, "fit", new=check_dtypes):
-        est_pair[1].partial_fit(X, y)
-    # Check shape, should agree with sklearn for all cases
+
+@pytest.mark.parametrize("test_data", chain(continuous(), continuous_multioutput()))
+def test_output_shapes_and_dtypes_against_sklearn_reg_2(test_data: TestParams):
+    X, y = test_data.X, test_data.y
+    X_train, X_test, y_train, y_test = train_test_split(X, y)
+    sklearn_est, scikeras_est = test_data.sklearn_est, test_data.scikeras_est
+
+    scikeras_est.initialize(X_train, y_train)
+
+    keras_model_fit = scikeras_est.model_.fit
+
+    def check_dtypes(x, y, **kwargs):
+        if isinstance(y, list):
+            assert all(y_.dtype.name == test_data.y_expected_dtype_keras for y_ in y)
+        else:
+            # array
+            assert y.dtype.name == test_data.y_expected_dtype_keras
+        assert X.dtype.name == test_data.X_expected_dtype_keras
+        return keras_model_fit(x=x, y=y, **kwargs)
+
+    with patch.object(scikeras_est.model_, "fit", new=check_dtypes):
+        scikeras_est.fit(X_train, y_train)
+
+    y_out_scikeras = scikeras_est.predict(X_test)
+    y_out_sklearn = sklearn_est.fit(X_train, y_train).predict(X_test)
+
     assert y_out_scikeras.shape == y_out_sklearn.shape
     # Check dtype
     # By default, KerasRegressor (or rather it's default target_encoder)
     # always returns tf.keras.backend.floatx(). This is similar to sklearn, which always
     # returns float64, except that we avoid a pointless conversion from
     # float32 -> float64 that would just be adding noise if TF is using float32
-    # internally.
+    # internally (which is usually the case).
     assert y_out_scikeras.dtype.name == tf.keras.backend.floatx()
+    scikeras_score = test_data.scorer(y_test, y_out_scikeras)
+    assert scikeras_score >= test_data.min_score
 
 
 @pytest.mark.parametrize(

@@ -42,13 +42,26 @@ class MultiLabelTransformer(ClassifierLabelEncoder):
     ) -> np.ndarray:
         if self._target_type not in ("multilabel-indicator", "multiclass-multioutput"):
             return super().inverse_transform(y, return_proba=return_proba)
-        if not return_proba and self.split:
-            y = [np.argmax(y_, axis=1).astype(self._y_dtype, copy=False) for y_ in y]
-        y = np.squeeze(np.column_stack(y))
+        if return_proba:
+            return y
         if self._target_type == "multilabel-indicator":
+            if self.split:
+                y = np.column_stack(y)
             # RandomForestClassifier and sklearn's MultiOutputClassifier always return int64
             # for multilabel-indicator
-            y = y.astype(int)
+            y = np.around(y).astype(int, copy=False)
+        else:  # mutlitclass-multioutput
+            if self.split:
+                y = np.column_stack(
+                    [
+                        np.argmax(y_, axis=1).astype(self._y_dtype, copy=False)
+                        for y_ in y
+                    ]
+                )
+            else:
+                raise NotImplementedError(
+                    "multiclass-multioutput must be handled by a multi-output Model"
+                )
         return y
 
 

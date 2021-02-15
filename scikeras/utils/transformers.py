@@ -259,7 +259,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             class_predictions = np.zeros(y.shape, dtype=int)
             class_predictions[np.arange(idx.size), idx] = 1
         elif self._target_type == "multilabel-indicator":
-            class_predictions = np.around(y)
+            class_predictions = np.around(y).astype(int, copy=False)
         else:
             if not return_proba:
                 raise NotImplementedError(
@@ -277,9 +277,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
 
         if return_proba:
             return np.squeeze(y)
-        res = class_predictions.astype(self._y_dtype, copy=False)
-        res = res.reshape(-1, *self._y_shape[1:])
-        return res
+        return class_predictions.reshape(-1, *self._y_shape[1:])
 
     def get_metadata(self) -> Dict[str, Any]:
         """Returns a dictionary of meta-parameters generated when this transfromer
