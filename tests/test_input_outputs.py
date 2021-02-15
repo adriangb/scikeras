@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from itertools import chain
 from typing import Any, Callable, Dict
 from unittest.mock import patch
@@ -6,7 +7,6 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from attr import dataclass
 from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification, make_regression
 from sklearn.metrics import accuracy_score, r2_score
