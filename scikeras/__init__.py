@@ -2,10 +2,12 @@
 
 __author__ = """Adrian Garcia Badaracco"""
 
-from importlib import metadata
+try:
+    import importlib.metadata as importlib_metadata
+except ModuleNotFoundError:
+    import importlib_metadata  # python <3.8
 
-
-__version__ = metadata.version("scikeras")
+__version__ = importlib_metadata.version("scikeras")
 
 from tensorflow import keras as _keras
 
