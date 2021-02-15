@@ -389,9 +389,7 @@ def test_warm_start():
     X, y = data.data[:100], data.target[:100]
     # Initial fit
     estimator = KerasRegressor(
-        model=dynamic_regressor,
-        loss=KerasRegressor.r_squared,
-        model__hidden_layer_sizes=(100,),
+        model=dynamic_regressor, model__hidden_layer_sizes=(100,),
     )
     estimator.fit(X, y)
     model = estimator.model_
@@ -421,9 +419,7 @@ class TestPartialFit:
         data = load_boston()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
-            model=dynamic_regressor,
-            loss=KerasRegressor.r_squared,
-            model__hidden_layer_sizes=[100,],
+            model=dynamic_regressor, model__hidden_layer_sizes=[100,],
         )
 
         estimator.partial_fit(X, y)
@@ -441,7 +437,6 @@ class TestPartialFit:
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
             model=dynamic_regressor,
-            loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=[100,],
             metrics=["mse", CustomMetric(name="custom_metric")],
         )
@@ -467,7 +462,6 @@ class TestPartialFit:
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
             model=dynamic_regressor,
-            loss=KerasRegressor.r_squared,
             metrics="mean_squared_error",
             model__hidden_layer_sizes=[100,],
         )
@@ -490,10 +484,7 @@ class TestPartialFit:
         partial_fit_iter = 4
 
         estimator = KerasRegressor(
-            model=dynamic_regressor,
-            loss=KerasRegressor.r_squared,
-            model__hidden_layer_sizes=[100,],
-            epochs=epochs,
+            model=dynamic_regressor, model__hidden_layer_sizes=[100,], epochs=epochs,
         )
 
         # Check that each partial_fit call trains for 1 epoch
@@ -526,7 +517,6 @@ class TestPartialFit:
 
         estimator = KerasRegressor(
             model=dynamic_regressor,
-            loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=[],
             warm_start=warm_start,
         )
@@ -653,7 +643,6 @@ class TestHistory:
         """
         est = KerasRegressor(
             model=force_compile_shorthand,
-            loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=(100,),
             metrics=["mae"],  # shorthand
         )

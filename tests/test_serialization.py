@@ -118,10 +118,7 @@ def test_run_eagerly():
     """Test that models compiled with run_eagerly can be serialized.
     """
     estimator = KerasRegressor(
-        model=dynamic_regressor,
-        run_eagerly=True,
-        loss=KerasRegressor.r_squared,
-        model__hidden_layer_sizes=(100,),
+        model=dynamic_regressor, run_eagerly=True, model__hidden_layer_sizes=(100,),
     )
     check_pickle(estimator, load_boston)
 

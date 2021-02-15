@@ -5,8 +5,10 @@ from tensorflow.python.framework.ops import convert_to_tensor
 
 from scikeras.wrappers import KerasRegressor
 
+from .mlp_models import dynamic_regressor
 
-def test_kerasregressor_r2():
+
+def test_kerasregressor_r2_correctness():
     """Test custom R^2 implementation against scikit-learn's."""
     n_samples = 50
 
@@ -30,3 +32,22 @@ def test_kerasregressor_r2():
             sklearn_r2_score(y_true, y_pred),
             decimal=5,
         )
+
+
+def test_kerasregressor_r2_as_metric():
+    """Test custom R^2 implementation against scikit-learn's."""
+    est = KerasRegressor(
+        dynamic_regressor, metrics=[KerasRegressor.r_squared], epochs=10, random_state=0
+    )
+
+    y = np.random.randint(low=0, high=2, size=(1000,))
+    X = y.reshape((-1, 1))
+
+    est.fit(X, y)
+
+    current_score = est.score(X, y)
+    last_hist = est.history_["r_squared"][-1]
+    np.testing.assert_almost_equal(current_score, last_hist, decimal=3)
+
+    current_eval = est.model_.evaluate(X, y, return_dict=True)["r_squared"]
+    np.testing.assert_almost_equal(current_score, current_eval, decimal=3)
