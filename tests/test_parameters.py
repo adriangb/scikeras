@@ -8,6 +8,7 @@ import pytest
 from sklearn.base import clone
 from sklearn.datasets import make_blobs, make_classification
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import FunctionTransformer
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
@@ -307,4 +308,62 @@ def test_batch_size_all_predict(length, prefix, base):
         return pred_orig(**kwargs)
 
     with patch.object(est.model_, "predict", new=check_batch_size):
+        est.predict(X)
+
+
+@pytest.mark.parametrize("length", (10, 100))
+@pytest.mark.parametrize("prefix", ("", "fit__"))
+@pytest.mark.parametrize("base", ("validation_batch_size", "batch_size"))
+def test_batch_size_all_fit(length, prefix, base):
+
+    kw = prefix + base
+
+    y = np.random.random((length,))
+    X = y.reshape((-1, 1))
+    est = KerasRegressor(dynamic_regressor, hidden_layer_sizes=[], **{kw: "all"})
+
+    est.initialize(X, y)
+
+    fit_orig = est.model_.fit
+
+    def check_batch_size(**kwargs):
+        assert kwargs[base] == X.shape[0]
+        return fit_orig(**kwargs)
+
+    with patch.object(est.model_, "fit", new=check_batch_size):
+        est.fit(X, y)
+
+
+@pytest.mark.parametrize("prefix", ("", "fit__"))
+@pytest.mark.parametrize("base", ("validation_batch_size", "batch_size"))
+def test_batch_size_all_fit_non_array(prefix, base):
+
+    kw = prefix + base
+
+    class CustomReg(KerasRegressor):
+        @property
+        def feature_encoder(self):
+            return FunctionTransformer(lambda x: [x])
+
+    y = np.random.random((100,))
+    X = y.reshape((-1, 1))
+    est = CustomReg(dynamic_regressor, hidden_layer_sizes=[], **{kw: "all"})
+
+    with pytest.raises(ValueError, match="requires that `X` implement `shape`"):
+        est.fit(X, y)
+
+
+def test_batch_size_all_predict_non_array():
+    class CustomReg(KerasRegressor):
+        @property
+        def feature_encoder(self):
+            return FunctionTransformer(lambda x: [x])
+
+    y = np.random.random((100,))
+    X = y.reshape((-1, 1))
+    est = CustomReg(dynamic_regressor, hidden_layer_sizes=[], predict__batch_size="all")
+
+    est.fit(X, y)
+
+    with pytest.raises(ValueError, match="requires that `X` implement `shape`"):
         est.predict(X)
