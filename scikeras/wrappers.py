@@ -576,7 +576,7 @@ class BaseWrapper(BaseEstimator):
                 # instead of float64 (sklearn's default)
                 return tf.keras.backend.floatx()
 
-        if X is not None and y is not None:
+        if not isinstance(X, tf.data.Dataset) and X is not None and y is not None:
             X, y = check_X_y(
                 X,
                 y,
@@ -611,38 +611,48 @@ class BaseWrapper(BaseEstimator):
                         f" is expecting {self.y_ndim_} dimensions in y."
                     )
         if X is not None:
-            X = check_array(
-                X, allow_nd=True, dtype=_check_array_dtype(X, force_numeric=True)
-            )
-            X_dtype_ = X.dtype
-            X_shape_ = X.shape
-            n_features_in_ = X.shape[1]
+            if isinstance(X, tf.data.Dataset):
+                X_dtype_ = None
+                X_shape_ = None
+                n_features_in_ = None
+            else:
+                X = check_array(
+                    X, allow_nd=True, dtype=_check_array_dtype(X, force_numeric=True)
+                )
+                X_dtype_ = X.dtype
+                X_shape_ = X.shape
+                n_features_in_ = X.shape[1]
             if reset:
                 self.X_dtype_ = X_dtype_
                 self.X_shape_ = X_shape_
                 self.n_features_in_ = n_features_in_
             else:
-                if not np.can_cast(X_dtype_, self.X_dtype_):
-                    raise ValueError(
-                        f"Got X with dtype {X_dtype_},"
-                        f" but this {self.__name__} expected {self.X_dtype_}"
-                        f" and casting from {X_dtype_} to {self.X_dtype_} is not safe!"
-                    )
-                if len(X_shape_) != len(self.X_shape_):
-                    raise ValueError(
-                        f"X has {len(X_shape_)} dimensions, but this {self.__name__}"
-                        f" is expecting {len(self.X_shape_)} dimensions in X."
-                    )
-                # The following check is a backport from
-                # sklearn.base.BaseEstimator._check_n_features
-                # since this method is not available in sklearn <= 0.22.0
-                if n_features_in_ != self.n_features_in_:
-                    raise ValueError(
-                        "X has {} features, but {} is expecting {} features "
-                        "as input.".format(
-                            n_features_in_, self.__class__.__name__, self.n_features_in_
+                if not (X_dtype_ is None or self.X_dtype_ is None):
+                    if not np.can_cast(X_dtype_, self.X_dtype_):
+                        raise ValueError(
+                            f"Got X with dtype {X_dtype_},"
+                            f" but this {self.__name__} expected {self.X_dtype_}"
+                            f" and casting from {X_dtype_} to {self.X_dtype_} is not safe!"
                         )
-                    )
+                if not (X_shape_ is None or self.X_shape_ is None):
+                    if len(X_shape_) != len(self.X_shape_):
+                        raise ValueError(
+                            f"X has {len(X_shape_)} dimensions, but this {self.__name__}"
+                            f" is expecting {len(self.X_shape_)} dimensions in X."
+                        )
+                if not (n_features_in_ is None or self.n_features_in_ is None):
+                    # The following check is a backport from
+                    # sklearn.base.BaseEstimator._check_n_features
+                    # since this method is not available in sklearn <= 0.22.0
+                    if n_features_in_ != self.n_features_in_:
+                        raise ValueError(
+                            "X has {} features, but {} is expecting {} features "
+                            "as input.".format(
+                                n_features_in_,
+                                self.__class__.__name__,
+                                self.n_features_in_,
+                            )
+                        )
         return X, y
 
     def _type_of_target(self, y: np.ndarray) -> str:
@@ -682,7 +692,7 @@ class BaseWrapper(BaseEstimator):
         """
         return FunctionTransformer()
 
-    def fit(self, X, y, sample_weight=None, **kwargs) -> "BaseWrapper":
+    def fit(self, X, y=None, sample_weight=None, **kwargs) -> "BaseWrapper":
         """Constructs a new model with ``model`` & fit the model to ``(X, y)``.
 
         Parameters
@@ -690,8 +700,8 @@ class BaseWrapper(BaseEstimator):
         X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
             Training samples, where n_samples is the number of samples
             and n_features is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
-            True labels for X.
+        y : Optional[Union[array-like, sparse matrix, dataframe]] of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for X. None can be used to tf.data.Datasets or if training a transformer.
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
@@ -806,11 +816,11 @@ class BaseWrapper(BaseEstimator):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
-                Training samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
-        y :Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
-            True labels for X.
+        X : Union[array-like, sparse matrix, dataframe, Dataset] of shape (n_samples, n_features)
+            Training samples, where n_samples is the number of samples and n_features is the number of features.
+            Can be a Dataset instance, in which case both the data for X and y is contained in X.
+        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for X. Can be None if X is a Dataset.
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
@@ -848,18 +858,17 @@ class BaseWrapper(BaseEstimator):
             **kwargs,
         )
 
-    def partial_fit(self, X, y, sample_weight=None) -> "BaseWrapper":
+    def partial_fit(self, X, y=None, sample_weight=None) -> "BaseWrapper":
         """Fit the estimator for a single epoch, preserving the current
         training history and model parameters.
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
-            Training samples where n_samples is the number of samples
-            and n_features is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape \
-            (n_samples,) or (n_samples, n_outputs)
-            True labels for X.
+        X : Union[array-like, sparse matrix, dataframe, Dataset] of shape (n_samples, n_features)
+            Training samples, where n_samples is the number of samples and n_features is the number of features.
+            Can be a Dataset instance, in which case both the data for X and y is contained in X.
+        y : Optional[Union[array-like, sparse matrix, dataframe]] of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for X. None can be used for tf.data.Dataset inputs or if training a transformer.
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
@@ -1312,7 +1321,7 @@ class KerasClassifier(BaseWrapper):
         categories = "auto" if self.classes_ is None else [self.classes_]
         return ClassifierLabelEncoder(loss=self.loss, categories=categories)
 
-    def initialize(self, X, y) -> "KerasClassifier":
+    def initialize(self, X, y=None) -> "KerasClassifier":
         """Initialize the model without any fitting.
         You only need to call this model if you explicitly do not want to do any fitting
         (for example with a pretrained model). You should _not_ call this
@@ -1320,12 +1329,11 @@ class KerasClassifier(BaseWrapper):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
-                Training samples where n_samples is the number of samples
-                and `n_features` is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape \
-            (n_samples,) or (n_samples, n_outputs), default None
-            True labels for X.
+        X : Union[array-like, sparse matrix, dataframe, Dataset] of shape (n_samples, n_features)
+            Training samples, where n_samples is the number of samples and n_features is the number of features.
+            Can be a Dataset instance, in which case both the data for X and y is contained in X.
+        y : Optional[Union[array-like, sparse matrix, dataframe]] of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for X. None can be used for tf.data.Dataset inputs or if training a transformer.
 
         Returns
         -------
@@ -1336,16 +1344,16 @@ class KerasClassifier(BaseWrapper):
         super().initialize(X=X, y=y)
         return self
 
-    def fit(self, X, y, sample_weight=None, **kwargs) -> "KerasClassifier":
+    def fit(self, X, y=None, sample_weight=None, **kwargs) -> "KerasClassifier":
         """Constructs a new classifier with ``model`` & fit the model to ``(X, y)``.
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
-            Training samples, where n_samples is the number of samples
-            and n_features is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
-            True labels for X.
+        X : Union[array-like, sparse matrix, dataframe, Dataset] of shape (n_samples, n_features)
+            Training samples, where n_samples is the number of samples and n_features is the number of features.
+            Can be a Dataset instance, in which case both the data for X and y is contained in X.
+        y : Optional[Union[array-like, sparse matrix, dataframe]] of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for X. None can be used for tf.data.Dataset inputs or if training a transformer.
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
@@ -1368,17 +1376,19 @@ class KerasClassifier(BaseWrapper):
         super().fit(X=X, y=y, sample_weight=sample_weight, **kwargs)
         return self
 
-    def partial_fit(self, X, y, classes=None, sample_weight=None) -> "KerasClassifier":
+    def partial_fit(
+        self, X, y=None, classes=None, sample_weight=None
+    ) -> "KerasClassifier":
         """Fit classifier for a single epoch, preserving the current epoch
         and all model parameters and state.
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
-            Training samples, where n_samples is the number of samples
-            and n_features is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
-            True labels for X.
+        X : Union[array-like, sparse matrix, dataframe, Dataset] of shape (n_samples, n_features)
+            Training samples, where n_samples is the number of samples and n_features is the number of features.
+            Can be a Dataset instance, in which case both the data for X and y is contained in X.
+        y : Optional[Union[array-like, sparse matrix, dataframe]] of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for X. None can be used for tf.data.Dataset inputs or if training a transformer.
         classes: ndarray of shape (n_classes,), default=None
             Classes across all calls to partial_fit. Can be obtained by via
             np.unique(y_all), where y_all is the target vector of the entire dataset.

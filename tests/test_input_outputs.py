@@ -10,11 +10,11 @@ from sklearn.multioutput import (
 )
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.preprocessing import FunctionTransformer
-from tensorflow.python.keras.layers import Concatenate, Dense, Input
-from tensorflow.python.keras.models import Model, Sequential
-from tensorflow.python.keras.testing_utils import get_test_data
+from tensorflow.data import Dataset
+from tensorflow.keras.layers import Concatenate, Dense, Input
+from tensorflow.keras.models import Model
 
-from scikeras.wrappers import KerasClassifier, KerasRegressor
+from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .multi_output_models import MultiOutputClassifier
@@ -385,3 +385,31 @@ def test_input_dtype_conversion(X_dtype, est):
 
     with patch.object(est.model_, "fit", new=check_dtypes):
         est.partial_fit(X, y)
+
+
+def test_dataset_input():
+    def simple_model():
+        inp = Input((1,))
+        out = Dense(1, activation="sigmoid")(inp)
+        model = Model([inp], [out])
+        return model
+
+    est = BaseWrapper(simple_model, loss="bce")
+
+    X = np.random.uniform(size=(100, 1))
+    y = np.random.randint(low=0, high=2, size=(100, 1))
+    est.fit(X, y)
+    data = Dataset.from_tensor_slices((X, y))
+
+    def check_fit(**kwargs):
+        assert kwargs["x"] is data
+        return est.model_.fit(**kwargs)
+
+    with patch.object(est.model_, "fit", new=check_fit):
+        # Fit mixess of dataset and numpy arrays
+        # All validation should be disabled, so no errors should be raised
+        est.fit(data)
+        est.partial_fit(data)
+        est.partial_fit(X, y)
+        est.fit(X, y)
+        est.partial_fit(data)
