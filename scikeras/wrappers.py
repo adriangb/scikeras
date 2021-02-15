@@ -880,24 +880,11 @@ class BaseWrapper(BaseEstimator):
         )
         return self
 
-    def predict(self, X, **kwargs):
-        """Returns predictions for the given test data.
+    def _predict_raw(self, X, **kwargs):
+        """Obtain raw predictions from Keras Model.
 
-        Parameters
-        ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
-            Training samples where n_samples is the number of samples
-            and n_features is the number of features.
-        **kwargs : Dict[str, Any]
-            Extra arguments to route to ``Model.predict``.
-            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
-            These parameters can also be specified by prefixing `predict__` to a parameter at initialization;
-            e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
-
-        Returns
-        -------
-        array-like
-            Predictions, of shape shape (n_samples,) or (n_samples, n_outputs).
+        For classification, this corresponds to predict_proba.
+        For regression, this corresponds to predict.
         """
         for k, v in kwargs.items():
             warnings.warn(
@@ -925,6 +912,30 @@ class BaseWrapper(BaseEstimator):
 
         # predict with Keras model
         y_pred = self.model_.predict(X, **pred_args)
+
+        return y_pred
+
+    def predict(self, X, **kwargs):
+        """Returns predictions for the given test data.
+
+        Parameters
+        ----------
+        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+            Training samples where n_samples is the number of samples
+            and n_features is the number of features.
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.predict``.
+            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
+            These parameters can also be specified by prefixing `predict__` to a parameter at initialization;
+            e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
+
+        Returns
+        -------
+        array-like
+            Predictions, of shape shape (n_samples,) or (n_samples, n_outputs).
+        """
+        # predict with Keras model
+        y_pred = self._predict_raw(X=X, **kwargs)
 
         # post process y
         y_pred = self.target_encoder_.inverse_transform(y_pred)
@@ -1417,32 +1428,8 @@ class KerasClassifier(BaseWrapper):
             SciKeras will return an array of shape (n_samples, 2)
             (instead of `(n_sample, 1)` as in Keras).
         """
-        for k, v in kwargs.items():
-            warnings.warn(
-                "``**kwargs`` has been deprecated in SciKeras 0.2.1 and support will be removed be 1.0.0."
-                f" Instead, set predict_proba arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
-            )
-
-        # check if fitted
-        if not self.initialized_:
-            raise NotFittedError(
-                "Estimator needs to be fit before `predict` " "can be called"
-            )
-
-        # basic input checks
-        X, _ = self._validate_data(X=X, y=None)
-
-        # pre process X
-        X = self.feature_encoder_.transform(X)
-
-        # collect arguments
-        predict_args = route_params(
-            self.get_params(), destination="predict", pass_filter=self._predict_kwargs,
-        )
-        predict_args.update(kwargs)
-
         # call the Keras model's predict
-        outputs = self.model_.predict(X, **predict_args)
+        outputs = self._predict_raw(X=X, **kwargs)
 
         # post process y
         y = self.target_encoder_.inverse_transform(outputs, return_proba=True)
