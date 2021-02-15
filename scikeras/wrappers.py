@@ -1611,7 +1611,9 @@ class KerasRegressor(BaseWrapper):
     @register_keras_serializable()
     def r_squared(y_true, y_pred):
         """A simple Keras implementation of R^2 that can be used as a Keras
-        loss function.
+        metric function.
+
+        Larger values indicate a better fit, with 1.0 representing a perfect fit.
 
         Parameters
         ----------
