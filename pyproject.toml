@@ -1,82 +1,85 @@
 [tool.poetry]
-name = "scikeras"
-version = "0.2.1"
-description = "Scikit-Learn API wrapper for Keras."
 authors = ["Adrian Garcia Badaracco <1755071+adriangb@users.noreply.github.com>"]
-license = "MIT"
-readme = "README.md"
-homepage = "https://github.com/adriangb/scikeras"
-repository = "https://github.com/adriangb/scikeras"
-documentation = "https://scikeras.readthedocs.io/en/latest/"
-keywords = ["keras", "tensorflow", "scikit-learn", "deep-learning", "python"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
-    "Operating System :: OS Independent",
-    "Topic :: Software Development :: Libraries",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Education",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Natural Language :: English",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
+  "Development Status :: 2 - Pre-Alpha",
+  "Operating System :: OS Independent",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
 ]
+description = "Scikit-Learn API wrapper for Keras."
+documentation = "https://www.adriangb.com/scikeras/"
+homepage = "https://github.com/adriangb/scikeras"
 include = [
-    "LICENSE",
+  "LICENSE",
 ]
+keywords = ["keras", "tensorflow", "scikit-learn", "deep-learning", "python"]
+license = "MIT"
+name = "scikeras"
+readme = "README.md"
+repository = "https://github.com/adriangb/scikeras"
+version = "0.2.1"
 
 [tool.poetry.dependencies]
 python = ">=3.6.7, <3.9"
-tensorflow = ">=2.4.0"
-scikit-learn = ">=0.22.0"
+scikit-learn = "^0.22.0"
+tensorflow = "^2.4.0"
 
 # docs
-sphinx = { version=">=3.2.1", optional = true }
-numpydoc = { version="^1.1.0", optional = true }
-nbsphinx = { version="^0.8.1", optional = true }
-matplotlib = { version="^3.3.3", optional = true }
-ipykernel = { version="^5.4.2", optional = true }
-jupyter = { version="^1.0.0", optional = true }
-jupytext = { version="^1.9.1", optional = true }
-insipid-sphinx-theme = { version="^0.2.2", optional = true }
+insipid-sphinx-theme = {version = "^0.2.2", optional = true}
+ipykernel = {version = "^5.4.2", optional = true}
+jupyter = {version = "^1.0.0", optional = true}
+jupytext = {version = "^1.9.1", optional = true}
+matplotlib = {version = "^3.3.3", optional = true}
+nbsphinx = {version = "^0.8.1", optional = true}
+numpydoc = {version = "^1.1.0", optional = true}
+sphinx = {version = ">=3.2.1", optional = true}
 
 [tool.poetry.dev-dependencies]
-pytest = "*"
-pytest-cov = "*"
-pre-commit = "*"
-pytest-xdist = "*"
-pytest-sugar = "*"
-
+coverage = {extras = ["toml"], version = "^5.4"}
+pre-commit = "^2.10.1"
+pytest = "^6.2.2"
+pytest-cov = "^2.11.1"
+pytest-sugar = "^0.9.4"
+pytest-xdist = "^2.2.1"
 
 [tool.poetry.extras]
 dev_docs = ["sphinx", "numpydoc", "nbsphinx", "matplotlib", "ipykernel", "jupyter", "jupytext", "insipid-sphinx-theme"]
 
 [tool.isort]
-line_length = 88
 atomic = true
+filter_files = true
 include_trailing_comma = true
+known_first_party = "scikeras"
+known_third_party = [
+  "tensorflow",
+  "sklearn",
+]
+line_length = 88
 lines_after_imports = 2
 lines_between_types = 1
 multi_line_output = 3
-use_parentheses = true
 skip_glob = ["*/setup.py"]
-filter_files = true
-
-known_first_party = "scikeras"
-known_third_party = [
-    "tensorflow",
-    "sklearn"
-]
+use_parentheses = true
 
 [tool.black]
+line-length = 88
 target-version = ['py36', 'py38']
+
+[tool.coverage.run]
+source = ["scikeras/"]
 
 [tool.coverage.report]
 show_missing = true
 
 [build-system]
-requires = ["poetry>=1.0.10"]
 build-backend = "poetry.masonry.api"
+requires = ["poetry>=1.0.10"]
