@@ -1626,6 +1626,9 @@ class KerasRegressor(BaseWrapper):
         """A simple Keras implementation of R^2 that can be used as a Keras
         loss function.
 
+        Note that this returns 1-R^2 so that it can be minimized as a loss
+        function.
+
         Parameters
         ----------
         y_true : array-like of shape (n_samples,) or (n_samples, n_outputs)
