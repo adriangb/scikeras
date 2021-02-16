@@ -9,11 +9,11 @@ git clone git@github.com:adriangb/scikeras.git
 cd scikeras
 ```
 
-Now, you will need to install the required dependency for Poetry and be sure that the current
-tests are passing on your machine:
+To set up the project, you need [Poetry](https://python-poetry.org/docs/#installation).
+If you have Poetry, just run:
 
 ```bash
-poetry install
+poetry install --extras dev_docs  # needed to edit docs
 poetry run pytest tests/
 ```
 
