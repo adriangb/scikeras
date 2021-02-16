@@ -419,4 +419,5 @@ class ClassWeightDataTransformer(BaseEstimator, TransformerMixin):
         sample_weight = 1 if sample_weight is None else sample_weight
         sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
         data["sample_weight"] = sample_weight
+        data["class_weight"] = None
         return data

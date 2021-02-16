@@ -817,8 +817,6 @@ class BaseWrapper(BaseEstimator):
         self.dataset_transformer_ = self.dataset_transformer.fit(
             dict(x=X, y=y, sample_weight=sample_weight)
         )
-        dataset_meta = getattr(self.dataset_transformer_, "get_metadata", dict)()
-        vars(self).update(**dataset_meta)
 
         return X, y, sample_weight
 
