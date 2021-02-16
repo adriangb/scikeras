@@ -209,21 +209,24 @@ Within SciKeras, this is roughly implemented as follows:
             self.feature_encoder_ = self.feature_encoder.fit(y)
             y = self.target_encoder_.transform(y)
             self.model_ = self._build_keras_model()
-            self.dataset_transformer_ = self.dataset_transformer.fit((X, y, sample_weight))
-            X, y, sample_weight = self.dataset_transformer_.transform((X, y, sample_weight))
+            fit_kwargs = dict(x=X, y=y, sample_weight=sample_weight)
+            self.dataset_transformer_ = self.dataset_transformer.fit(fit_kwargs)
+            fit_kwargs = self.dataset_transformer_.transform(fit_kwargs)
             self.model_.fit(x=X, y=y, sample_weight=sample_weight)  # tf.keras.Model.fit
             return self
 
         def predict(self, X):
             X = self.feature_encoder_.transform(X)
-            X, _, _ = self.dataset_transformer_.fit_transform((X, None, None))
-            y_pred = self.model_.predict(X)
+            predict_kwargs = dict(x=X)
+            predict_kwargs = self.dataset_transformer_.fit_transform(predict_kwargs)
+            y_pred = self.model_.predict(**predict_kwargs)
             return self.target_encoder_.inverse_transform(y_pred)
 
 
 ``dataset_transformer`` is the last step before passing the data to Keras, and it allows for the greatest
 degree of customization because SciKeras does not make any assumptions about the output data
 and passes it directly to :py:func:`tensorflow.keras.Model.fit`.
+
 Its signature is:
 
 .. code:: python
@@ -231,17 +234,26 @@ Its signature is:
     from sklearn.base import BaseEstimator, TransformerMixin
 
     class DatasetTransformer(BaseEstimator, TransformerMixin):
-        def fit(self, data) -> "DatasetTransformer":
-            X, y, sample_weight = data  # sample_weight might be None
+        def fit(self, data: Dict[str, Any]) -> "DatasetTransformer":
+            assert data.keys() == {"x", "y", "sample_weight"}  # fixed keys
             ...
             return self
 
         def transform(self, data):  # return a valid input for keras.Model.fit
-            X, y, sample_weight = data  # y and/or sample_weight might be None
+            # data includes x, y, sample_weight
+            assert "x" in data  # "x" is always a keys
+            if "y" in data:
+                # called from fit
+            else:
+                # called from predict
+            # as well as other Model.fit or Model.predict arguments
+            assert "batch_size" in data
             ...
-            return (X, y, sample_weight)  # option 1
-            return (tensorflow_dataset, None, None)  # option 2
+            return data
 
+
+You can modify ``data`` in-place within ``transoform`` but **must** still return
+it.
 
 Although you could implement *all* data transformations in a single ``dataset_transformer``,
 having several distinct dependency injections points allows for more modularity,
