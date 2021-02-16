@@ -1,17 +1,22 @@
-"""Writes a list like:
+"""This script is run from docs_deploy.yml
 
-    refs/heads/main,latest
-    v1.0.0,stable
-    v0.9.0,v0.9.0
+It writes JSON like this:
 
-To a file called versions.txt
+    {"latest": "refs/heads/main"}
+
+To a file called versions.json at the root
+of the docs branch.
+
+It will also update index.html to point to the
+latest stable (released) version, or if no released versions
+exist, the the main branch's version.
 """
 
 from json import dumps
 import os
 
 base = "refs"
-branch_names = {"master": "latest"}
+branch_names = {"main": "latest"}
 stable = None
 
 versions = dict()
@@ -26,7 +31,7 @@ if os.path.exists(os.path.join(base, "tags")):
     tags = []
     for tag in os.listdir(os.path.join(base, "tags")):
         tags.append(tag)
-    tags.sort(key=lambda s: map(int, s.strip("v").split('.')))
+    tags.sort(key=lambda s: tuple(map(int, s.strip("v").split('.'))))
     for tag in tags[:-1]:
         versions[tag] = "/".join((base, "tags", tag))
     stable = "/".join((base, "tags", tags[-1]))
