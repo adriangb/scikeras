@@ -45,6 +45,9 @@ the [data transformer docs](https://www.adriangb.com/scikeras/refs/heads/master/
   * [4.2 Test](#4.2-Test)
 * [5. Ragged datasets with tf.data.Dataset](#5.-Ragged-datasets-with-tf.data.Dataset)
 * [6. Multi-output class_weight](#6.-Multi-output-class_weight)
+* [7. Custom validation dataset](#6.-Custom-validation-dataset)
+* [8. Dynamically setting batch_size](#6.-Dynamically-setting-batch_size)
+
 
 ## 1. Setup
 
@@ -753,7 +756,7 @@ print(counts_bin)
 print(counts_cat)
 ```
 
-## 6. Custom validation dataset
+## 7. Custom validation dataset
 
 Although `dataset_transformer` is primarily designed for data transformations, because it returns valid `**kwargs` to fit it can be used for other advanced use cases.
 In this example, we use `dataset_transformer` to implement a custom test/train split for Keras' internal validation. We'll use sklearn's
@@ -857,7 +860,7 @@ print(f"val_binary_accuracy = {clf.history_['val_binary_accuracy'][-1]}")
 Much better!
 
 
-## 7. Dynamically setting batch_size
+## 8. Dynamically setting batch_size
 
 
 In this tutorial, we use the `data_transformer` interface to implement a dynamic batch_size, similar to sklearn's [MLPClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html). We will implement `batch_size` as `batch_size=min(200, n_samples)`.
