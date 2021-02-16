@@ -499,8 +499,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.46035847]
- [0.47143883]]
+[[0.50457096]
+ [0.5732947 ]]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -517,8 +517,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.23288818 0.21794158 0.17313302 0.20644698 0.16959032]
- [0.2117041  0.19962578 0.21535489 0.1963139  0.17700136]]
+[[0.21620297 0.19993152 0.1773452  0.20900589 0.19751444]
+ [0.2721818  0.20056686 0.19387873 0.1573472  0.17602547]]
 </pre></div></div>
 </div>
 <p>As you can see, our <code class="docutils literal notranslate"><span class="pre">predict</span></code> output is also a list of arrays, except it contains probabilities instead of the class predictions.</p>
@@ -610,7 +610,7 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 `y`, as will be passed to Keras:
-[array([0, 1, 0, 0]), array([3, 0, 4, 2])]
+[array([1, 1, 0, 0]), array([1, 0, 1, 1])]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -638,11 +638,11 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0, 0],
-       [0, 2],
-       [0, 4],
-       [0, 3],
-       [0, 4]])
+array([[1, 0],
+       [1, 0],
+       [1, 3],
+       [1, 1],
+       [1, 1]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -719,7 +719,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.365
+0.33999999999999997
 </pre></div></div>
 </div>
 </div>
@@ -790,7 +790,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--4.674910582645151
+-4.647469060501675
 </pre></div></div>
 </div>
 <p>Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.</p>
@@ -839,7 +839,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--3.0813111117500007
+-2.2731825537726205
 </pre></div></div>
 </div>
 </div>
@@ -857,15 +857,6 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
-11493376/11490434 [==============================] - 0s 0us/step
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
@@ -1025,60 +1016,35 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span></span><span class="n">_</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
+<div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/10
-8/8 [==============================] - 1s 121ms/step - loss: 2.2129 - val_loss: 1.9378
+8/8 [==============================] - 3s 265ms/step - loss: 2.2129 - val_loss: 1.9378
 Epoch 2/10
-8/8 [==============================] - 1s 90ms/step - loss: 1.7355 - val_loss: 1.4332
+8/8 [==============================] - 1s 122ms/step - loss: 1.7355 - val_loss: 1.4332
 Epoch 3/10
-8/8 [==============================] - 1s 85ms/step - loss: 1.2980 - val_loss: 1.1264
+8/8 [==============================] - 1s 131ms/step - loss: 1.2980 - val_loss: 1.1264
 Epoch 4/10
-8/8 [==============================] - 1s 92ms/step - loss: 0.9632 - val_loss: 0.8725
+8/8 [==============================] - 1s 122ms/step - loss: 0.9632 - val_loss: 0.8725
 Epoch 5/10
-8/8 [==============================] - 1s 96ms/step - loss: 0.7774 - val_loss: 0.7834
+8/8 [==============================] - 1s 125ms/step - loss: 0.7774 - val_loss: 0.7834
 Epoch 6/10
-8/8 [==============================] - 1s 87ms/step - loss: 0.6900 - val_loss: 0.8330
+8/8 [==============================] - 1s 126ms/step - loss: 0.6900 - val_loss: 0.8330
 Epoch 7/10
-8/8 [==============================] - 1s 93ms/step - loss: 0.6336 - val_loss: 0.6026
+8/8 [==============================] - 1s 120ms/step - loss: 0.6336 - val_loss: 0.6026
 Epoch 8/10
-8/8 [==============================] - 1s 84ms/step - loss: 0.5648 - val_loss: 0.7786
+8/8 [==============================] - 1s 122ms/step - loss: 0.5648 - val_loss: 0.7812
 Epoch 9/10
-8/8 [==============================] - 1s 96ms/step - loss: 0.5365 - val_loss: 0.5447
+8/8 [==============================] - 1s 123ms/step - loss: 0.5369 - val_loss: 0.5447
 Epoch 10/10
-8/8 [==============================] - 1s 84ms/step - loss: 0.4750 - val_loss: 0.6588
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-MultiDimensionalClassifier(
-        model=&lt;function get_model at 0x7f6085b1c0d0&gt;
-        build_fn=None
-        warm_start=False
-        random_state=0
-        optimizer=rmsprop
-        loss=None
-        metrics=None
-        batch_size=128
-        verbose=1
-        callbacks=None
-        validation_split=0.1
-        shuffle=True
-        run_eagerly=False
-        epochs=10
-        class_weight=None
-)
+8/8 [==============================] - 1s 134ms/step - loss: 0.4750 - val_loss: 0.6593
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1096,7 +1062,7 @@ MultiDimensionalClassifier(
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-8/8 [==============================] - 0s 21ms/step
+8/8 [==============================] - 0s 38ms/step
 Test score (accuracy): 0.76
 </pre></div></div>
 </div>
@@ -1105,7 +1071,7 @@ Test score (accuracy): 0.76
 <div class="section" id="5.-Ragged-datasets-with-tf.data.Dataset">
 <h2>5. Ragged datasets with tf.data.Dataset<a class="headerlink" href="#5.-Ragged-datasets-with-tf.data.Dataset" title="Permalink to this headline">¶</a></h2>
 <p>SciKeras provides a third dependency injection point that operates on the entire dataset: X, y &amp; sample_weight. This <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> is applied after <code class="docutils literal notranslate"><span class="pre">target_transformer</span></code> and <code class="docutils literal notranslate"><span class="pre">feature_transformer</span></code>. One use case for this dependency injection point is to transform data from tabular/array-like to the <code class="docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> format, which only requires iteration. We can use this to create a <code class="docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> of ragged tensors.</p>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> should accept a single <strong>3 element tuple</strong> as its argument and return value; more details on this are in the <a class="reference external" href="https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers">docs</a>.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> should accept a single single dictionary as its argument to <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">fit</span></code>, and return a single dictionary as well. More details on this are in the <a class="reference external" href="https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers">docs</a>.</p>
 <p>Let’s start by defining our data. We’ll have an extra “feature” that marks the observation index, but we’ll remove it when we deconstruct our data in the transformer.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
@@ -1129,73 +1095,73 @@ operations on them.</p>
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
 
-<span class="k">def</span> <span class="nf">ragged_transformer</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">RaggedTensor</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-    <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weights</span> <span class="o">=</span> <span class="n">data</span>
+<span class="k">def</span> <span class="nf">ragged_transformer</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sample_weight&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">RaggedTensor</span><span class="o">.</span><span class="n">from_value_rowids</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">X</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">row_starts</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()]</span>
-    <span class="k">if</span> <span class="n">sample_weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">sample_weights</span> <span class="o">=</span> <span class="n">sample_weights</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_weights</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">sample_weights</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">sample_weights</span> <span class="o">=</span> <span class="n">sample_weights</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">RaggedTensor</span><span class="o">.</span><span class="n">from_value_rowids</span><span class="p">(</span><span class="n">sample_weights</span><span class="p">,</span> <span class="n">X</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">row_starts</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()]</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">RaggedTensor</span><span class="o">.</span><span class="n">from_value_rowids</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">X</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weights</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">RaggedTensor</span><span class="o">.</span><span class="n">from_value_rowids</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">row_starts</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="n">sample_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">sample_weight</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_weight</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">sample_weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">sample_weight</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">RaggedTensor</span><span class="o">.</span><span class="n">from_value_rowids</span><span class="p">(</span><span class="n">sample_weight</span><span class="p">,</span> <span class="n">x</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">row_starts</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">RaggedTensor</span><span class="o">.</span><span class="n">from_value_rowids</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">if</span> <span class="s2">&quot;y&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span>
+    <span class="k">if</span> <span class="s2">&quot;sample_weight&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sample_weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_weight</span>
+    <span class="k">return</span> <span class="n">data</span>
 </pre></div>
 </div>
 </div>
-<p>In this case, we chose to keep <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">sample_weights</span></code> as numpy arrays, which will allow us to re-use ClassWeightDataTransformer, the default <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> for <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code>.</p>
+<p>In this case, we chose to keep <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">sample_weight</span></code> as numpy arrays, which will allow us to re-use ClassWeightDataTransformer, the default <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> for <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code>.</p>
 <p>Lets quickly test our transformer:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">data</span> <span class="o">=</span> <span class="n">ragged_transformer</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
-<span class="n">data</span>
+<span></span><span class="n">data</span> <span class="o">=</span> <span class="n">ragged_transformer</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(&lt;tf.RaggedTensor [[[0.6039828658103943, 0.14394311606884003], [0.14573360979557037, 0.895762026309967], [0.6425812244415283, 0.2927854061126709]], [[0.6371216773986816, 0.10064717382192612], [0.577718198299408, 0.8096828460693359]], [[0.663972020149231, 0.7589415907859802]], [[0.10806237906217575, 0.8295683264732361], [0.9509028196334839, 0.004518588539212942]], [[0.5500152111053467, 0.9995275139808655], [0.9387983083724976, 0.010633467696607113]]]&gt;,
- array([[&#39;class1&#39;],
-        [&#39;class1&#39;],
-        [&#39;class2&#39;],
-        [&#39;class2&#39;],
-        [&#39;class2&#39;]], dtype=&#39;&lt;U6&#39;),
- None)
+&lt;class &#39;tensorflow.python.ops.ragged.ragged_tensor.RaggedTensor&#39;&gt;
+(5, None, 2)
 </pre></div></div>
 </div>
+<p>And the <code class="docutils literal notranslate"><span class="pre">y=None</span></code> case:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">data</span> <span class="o">=</span> <span class="n">ragged_transformer</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
-<span class="n">data</span>
+<span></span><span class="n">data</span> <span class="o">=</span> <span class="n">ragged_transformer</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(&lt;tf.RaggedTensor [[[0.6039828658103943, 0.14394311606884003], [0.14573360979557037, 0.895762026309967], [0.6425812244415283, 0.2927854061126709]], [[0.6371216773986816, 0.10064717382192612], [0.577718198299408, 0.8096828460693359]], [[0.663972020149231, 0.7589415907859802]], [[0.10806237906217575, 0.8295683264732361], [0.9509028196334839, 0.004518588539212942]], [[0.5500152111053467, 0.9995275139808655], [0.9387983083724976, 0.010633467696607113]]]&gt;,
- None,
- None)
+&lt;class &#39;tensorflow.python.ops.ragged.ragged_tensor.RaggedTensor&#39;&gt;
+(5, None, 2)
 </pre></div></div>
 </div>
-<p>Our shapes look good, and we can handle the <code class="docutils literal notranslate"><span class="pre">y=None</span></code> case.</p>
+<p>Everything looks good!</p>
 <p>Because Keras will not accept a RaggedTensor directly, we will need to wrap our entire dataset into a tensorflow <code class="docutils literal notranslate"><span class="pre">Dataset</span></code>. We can do this by adding one more transformation step:</p>
 <p>Next, we can add our transormers to our model. We use an sklearn <code class="docutils literal notranslate"><span class="pre">Pipeline</span></code> (generated via <code class="docutils literal notranslate"><span class="pre">make_pipeline</span></code>) to keep ClassWeightDataTransformer operational while implementing our custom transformation.</p>
 <div class="nbinput nblast docutils container">
@@ -1203,8 +1169,16 @@ operations on them.</p>
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">def</span> <span class="nf">dataset_transformer</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span></span><span class="k">def</span> <span class="nf">dataset_transformer</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">x_y_s</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sample_weight&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span><span class="n">x_y_s</span><span class="p">)</span>
+    <span class="c1"># don&#39;t blindly assign y &amp; sw; if being called from</span>
+    <span class="c1"># predict they should not just be None, they should not be present at all!</span>
+    <span class="k">if</span> <span class="s2">&quot;y&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">&quot;sample_weight&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sample_weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">data</span>
 </pre></div>
 </div>
 </div>
@@ -1289,7 +1263,7 @@ operations on them.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-5/5 [==============================] - 0s 1ms/step - loss: 0.7534
+5/5 [==============================] - 1s 2ms/step - loss: 0.6450
 5/5 [==============================] - 0s 1ms/step
 </pre></div></div>
 </div>
@@ -1299,7 +1273,7 @@ operations on them.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;], dtype=&#39;&lt;U6&#39;)
+array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;], dtype=&#39;&lt;U6&#39;)
 </pre></div></div>
 </div>
 <p>If we define our custom layers, transformers and wrappers in their own module, we can easily create a self-contained classifier that is able to handle ragged datasets and has a clean Scikit-Learn compatible API:</p>
@@ -1346,8 +1320,8 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-5/5 [==============================] - 0s 1ms/step - loss: 0.7849
-5/5 [==============================] - 0s 829us/step
+5/5 [==============================] - 0s 2ms/step - loss: 0.6905
+5/5 [==============================] - 0s 1ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1356,13 +1330,13 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;], dtype=&#39;&lt;U6&#39;)
+array([&#39;class1&#39;, &#39;class2&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;], dtype=&#39;&lt;U6&#39;)
 </pre></div></div>
 </div>
 </div>
 <div class="section" id="6.-Multi-output-class_weight">
 <h2>6. Multi-output class_weight<a class="headerlink" href="#6.-Multi-output-class_weight" title="Permalink to this headline">¶</a></h2>
-<p>In this example, we will use <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> to support multi-output class weights. We will re-use our <code class="docutils literal notranslate"><span class="pre">MultiOutputTransformer</span></code> from our previous example to split the output, then we will create <code class="docutils literal notranslate"><span class="pre">sample_weights</span></code> from <code class="docutils literal notranslate"><span class="pre">class_weight</span></code></p>
+<p>In this example, we will use <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> to support multi-output class weights. We will re-use our <code class="docutils literal notranslate"><span class="pre">MultiOutputTransformer</span></code> from our previous example to split the output, then we will create <code class="docutils literal notranslate"><span class="pre">sample_weight</span></code> from <code class="docutils literal notranslate"><span class="pre">class_weight</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
 </pre></div>
@@ -1376,25 +1350,24 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 
 <span class="k">class</span> <span class="nc">DatasetTransformer</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_names</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">class_weight</span> <span class="o">=</span> <span class="n">class_weight</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_names</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>
 
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="s2">&quot;DatasetTransformer&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;DatasetTransformer&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">class_weight</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class_weight&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">class_weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">data</span>
-        <span class="n">class_weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_weight</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">class_weight</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>  <span class="c1"># handle &quot;balanced&quot;</span>
             <span class="n">class_weight_</span> <span class="o">=</span> <span class="n">class_weight</span>
             <span class="n">class_weight</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">class_weight_</span><span class="p">)</span>
-        <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weights</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="k">assert</span> <span class="n">sample_weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot use class_weight &amp; sample_weights together&quot;</span>
+        <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sample_weight&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">sample_weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot use class_weight &amp; sample_weight together&quot;</span>
         <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># y should be a list of arrays, as split up by MultiOutputTransformer</span>
-            <span class="n">sample_weights</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">sample_weight</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">output_name</span><span class="p">:</span> <span class="n">compute_sample_weight</span><span class="p">(</span><span class="n">class_weight</span><span class="p">[</span><span class="n">output_num</span><span class="p">],</span> <span class="n">output_data</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">output_num</span><span class="p">,</span> <span class="p">(</span><span class="n">output_name</span><span class="p">,</span> <span class="n">output_data</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
             <span class="p">}</span>
@@ -1402,17 +1375,12 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
             <span class="c1"># see https://scikit-learn.org/stable/modules/generated/sklearn.utils.class_weight.compute_sample_weight.html</span>
             <span class="c1"># It is trivial to change the expected format to match Keras&#39; ({output_name: weights, ...})</span>
             <span class="c1"># see https://github.com/keras-team/keras/issues/4735#issuecomment-267473722</span>
-        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weights</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sample_weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_weight</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;class_weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">data</span>
 
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">def</span> <span class="nf">get_model</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">compile_kwargs</span><span class="p">):</span>
+
+<span class="k">def</span> <span class="nf">get_model</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">compile_kwargs</span><span class="p">):</span>
     <span class="n">inp</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;n_features_in_&quot;</span><span class="p">]))</span>
     <span class="n">x1</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">inp</span><span class="p">)</span>
     <span class="n">out_bin</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;sigmoid&quot;</span><span class="p">)(</span><span class="n">x1</span><span class="p">)</span>
@@ -1435,14 +1403,13 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
     <span class="k">def</span> <span class="nf">dataset_transformer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DatasetTransformer</span><span class="p">(</span>
             <span class="n">output_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">output_names</span><span class="p">,</span>
-            <span class="n">class_weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_weight</span>
         <span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <p>Next, we define the data. We’ll use <code class="docutils literal notranslate"><span class="pre">sklearn.datasets.make_blobs</span></code> to generate a relatively noisy dataset:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1458,7 +1425,7 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </div>
 <p>Test the model without specifying class weighting:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1483,7 +1450,7 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </div>
 <p>As you can see, without <code class="docutils literal notranslate"><span class="pre">class_weight=&quot;balanced&quot;</span></code>, our classifier only predicts mainly a single class for the first output. Now with <code class="docutils literal notranslate"><span class="pre">class_weight=&quot;balanced&quot;</span></code>:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1508,7 +1475,7 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </div>
 <p>Now, we get (mostly) balanced classes. But what if we want to specify our classes manually? You will notice that in when we defined <code class="docutils literal notranslate"><span class="pre">DatasetTransformer</span></code>, we gave it the ability to handle a list of class weights. For demonstration purposes, we will highly bias towards the second class in each output:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1533,7 +1500,7 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </div>
 <p>Or mixing the two methods, because our first output is unbalanced but our second is (presumably) balanced:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1554,6 +1521,249 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 <div class="highlight"><pre>
 [57 43]
 [30 25 45]
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="6.-Custom-validation-dataset">
+<h2>6. Custom validation dataset<a class="headerlink" href="#6.-Custom-validation-dataset" title="Permalink to this headline">¶</a></h2>
+<p>Although <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> is primarily designed for data transformations, because it returns valid <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> to fit it can be used for other advanced use cases. In this example, we use <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> to implement a custom test/train split for Keras’ internal validation. We’ll use sklearn’s <code class="docutils literal notranslate"><span class="pre">train_test_split</span></code>, but this could be implemented via an arbitrary user function, eg. to ensure balanced class distribution.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+
+
+<span class="k">def</span> <span class="nf">get_clf</span><span class="p">(</span><span class="n">meta</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="n">inp</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;n_features_in_&quot;</span><span class="p">],))</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">inp</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;sigmoid&quot;</span><span class="p">)(</span><span class="n">x1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inp</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">CustomSplit</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_size</span> <span class="o">=</span> <span class="n">test_size</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;CustomSplit&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sw</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sample_weight&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span>
+        <span class="k">if</span> <span class="n">sw</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x_train</span><span class="p">,</span> <span class="n">x_val</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_val</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_size</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">validation_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">)</span>
+            <span class="n">sw_train</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x_train</span><span class="p">,</span> <span class="n">x_val</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="n">sw_train</span><span class="p">,</span> <span class="n">sw_val</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sw</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_size</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">validation_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="n">sw_val</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;validation_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">validation_data</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sample_weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">sw_train</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">class</span> <span class="nc">CustomClassifier</span><span class="p">(</span><span class="n">KerasClassifier</span><span class="p">):</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dataset_transformer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CustomSplit</span><span class="p">(</span><span class="n">test_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">validation_split</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>And now lets test with a toy dataset. We specifically choose to make the target strings to show that with this approach, we can preserve all of the nice data pre-processing that SciKeras does for us, while still being able to split the final data before passing it to Keras.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[48]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">900</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">900</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>To get a base measurment to compare against, we’ll run first with KerasClassifier as a benchmark.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[49]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="n">get_clf</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;bce&quot;</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;binary_accuracy&quot;</span><span class="p">],</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">10</span>
+<span class="p">)</span>
+
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;binary_accuracy = </span><span class="si">{</span><span class="n">clf</span><span class="o">.</span><span class="n">history_</span><span class="p">[</span><span class="s1">&#39;binary_accuracy&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;val_binary_accuracy = </span><span class="si">{</span><span class="n">clf</span><span class="o">.</span><span class="n">history_</span><span class="p">[</span><span class="s1">&#39;val_binary_accuracy&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+binary_accuracy = 1.0
+val_binary_accuracy = 0.0
+</pre></div></div>
+</div>
+<p>We see that we get near zero validation accuracy. Because one of our classes was only found in the tail end of our dataset and we specified <code class="docutils literal notranslate"><span class="pre">validation_split=0.1</span></code>, we validated with a class we had never seen before.</p>
+<p>We could specify <code class="docutils literal notranslate"><span class="pre">shuffle=True</span></code> (this is actually the default), but for highly imbalanced classes, this may not be as good as stratified splitting.</p>
+<p>So lets test our new <code class="docutils literal notranslate"><span class="pre">CustomClassifier</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[50]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">CustomClassifier</span><span class="p">(</span>
+    <span class="n">get_clf</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;bce&quot;</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;binary_accuracy&quot;</span><span class="p">],</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">10</span>
+<span class="p">)</span>
+
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;binary_accuracy = </span><span class="si">{</span><span class="n">clf</span><span class="o">.</span><span class="n">history_</span><span class="p">[</span><span class="s1">&#39;binary_accuracy&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;val_binary_accuracy = </span><span class="si">{</span><span class="n">clf</span><span class="o">.</span><span class="n">history_</span><span class="p">[</span><span class="s1">&#39;val_binary_accuracy&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+binary_accuracy = 1.0
+val_binary_accuracy = 1.0
+</pre></div></div>
+</div>
+<p>Much better!</p>
+</div>
+<div class="section" id="7.-Dynamically-setting-batch_size">
+<h2>7. Dynamically setting batch_size<a class="headerlink" href="#7.-Dynamically-setting-batch_size" title="Permalink to this headline">¶</a></h2>
+<p>In this tutorial, we use the <code class="docutils literal notranslate"><span class="pre">data_transformer</span></code> interface to implement a dynamic batch_size, similar to sklearn’s <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html">MLPClassifier</a>. We will implement <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> as <code class="docutils literal notranslate"><span class="pre">batch_size=min(200,</span> <span class="pre">n_samples)</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[51]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+
+
+<span class="k">def</span> <span class="nf">check_batch_size</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check the batch_size used in training.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bs</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">bs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;batch_size=</span><span class="si">{</span><span class="n">bs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">get_clf</span><span class="p">(</span><span class="n">meta</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="n">inp</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;n_features_in_&quot;</span><span class="p">],))</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">inp</span><span class="p">)</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">check_batch_size</span><span class="p">)(</span><span class="n">x1</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;sigmoid&quot;</span><span class="p">)(</span><span class="n">x2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inp</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">DynamicBatch</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;DynamicBatch&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">class</span> <span class="nc">DynamicBatchClassifier</span><span class="p">(</span><span class="n">KerasClassifier</span><span class="p">):</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dataset_transformer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DynamicBatch</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>Since this is happening inside SciKeras, this will work even if we are doing cross validation (which adjusts the split according to <code class="docutils literal notranslate"><span class="pre">cv</span></code>).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[52]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">cross_val_score</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">DynamicBatchClassifier</span><span class="p">(</span>
+    <span class="n">get_clf</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;bce&quot;</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+
+<span class="n">_</span> <span class="o">=</span> <span class="n">cross_val_score</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>  <span class="c1"># note: 1000 / 6 = 167</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+batch_size=167
+batch_size=167
+batch_size=167
+batch_size=167
+batch_size=166
+batch_size=166
+</pre></div></div>
+</div>
+<p>But if we train with larger inputs, we can hit the cap of 200 we set:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">_</span> <span class="o">=</span> <span class="n">cross_val_score</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
+batch_size=200
 </pre></div></div>
 </div>
 </div>
@@ -1625,7 +1835,7 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
       </div>
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.0.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/notebooks/DataTransformers.ipynb.txt" rel="nofollow">Show Source</a>.
     </footer>

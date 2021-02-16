@@ -532,7 +532,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 807us/step - loss: 0.7400
+32/32 [==============================] - 1s 1ms/step - loss: 0.7790
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -542,7 +542,7 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 KerasClassifier(
-        model=&lt;function get_clf at 0x7f692b183ee0&gt;
+        model=&lt;function get_clf at 0x7fa8a5f68b80&gt;
         build_fn=None
         warm_start=False
         random_state=None
@@ -581,7 +581,7 @@ KerasClassifier(
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 65ms/step
+1/1 [==============================] - 0s 75ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -608,7 +608,7 @@ array([1, 0, 0, 0, 0])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 13ms/step
+1/1 [==============================] - 0s 16ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -617,11 +617,11 @@ array([1, 0, 0, 0, 0])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.18883276, 0.81116724],
-       [0.8419285 , 0.15807155],
-       [0.77756345, 0.22243655],
-       [0.84163153, 0.1583685 ],
-       [0.7848409 , 0.21515912]], dtype=float32)
+array([[0.35483438, 0.6451656 ],
+       [0.90556777, 0.0944322 ],
+       [0.65227437, 0.34772563],
+       [0.9159667 , 0.08403331],
+       [0.71106863, 0.28893137]], dtype=float32)
 </pre></div></div>
 </div>
 </div>
@@ -677,7 +677,7 @@ array([[0.18883276, 0.81116724],
 </div>
 <div class="section" id="3.3-Defining-and-training-the-neural-net-regressor">
 <h3>3.3 Defining and training the neural net regressor<a class="headerlink" href="#3.3-Defining-and-training-the-neural-net-regressor" title="Permalink to this headline">¶</a></h3>
-<p>Training a regressor is almost the same as training a classifier. Mainly, we use <code class="docutils literal notranslate"><span class="pre">KerasRegressor</span></code> instead of <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> (this is the same terminology as in <code class="docutils literal notranslate"><span class="pre">sklearn</span></code>). We also change the loss function to <code class="docutils literal notranslate"><span class="pre">KerasRegressor.r_squared</span></code>. SciKeras provides this loss function because most of the <code class="docutils literal notranslate"><span class="pre">sklearn</span></code> ecosystem expects <code class="docutils literal notranslate"><span class="pre">R^2</span></code> as the loss function, but Keras does not have a default implementation.</p>
+<p>Training a regressor has nearly the same data flow as training a classifier. The differences include using <code class="docutils literal notranslate"><span class="pre">KerasRegressor</span></code> instead of <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> and adding <code class="docutils literal notranslate"><span class="pre">KerasRegressor.r_squared</span></code> as a metric. Most of the Scikit-learn regressors use the coefficient of determination or R^2 as a metric function, which measures correlation between the true labels and predicted labels.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
@@ -688,7 +688,8 @@ array([[0.18883276, 0.81116724],
 
 <span class="n">reg</span> <span class="o">=</span> <span class="n">KerasRegressor</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">get_reg</span><span class="p">,</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">KerasRegressor</span><span class="o">.</span><span class="n">r_squared</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">KerasRegressor</span><span class="o">.</span><span class="n">r_squared</span><span class="p">],</span>
     <span class="n">hidden_layer_sizes</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,),</span>
     <span class="n">dropout</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
 <span class="p">)</span>
@@ -709,7 +710,7 @@ array([[0.18883276, 0.81116724],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 788us/step - loss: -0.0465
+32/32 [==============================] - 1s 1ms/step - loss: 44749.2971 - r_squared: -0.0436
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -719,13 +720,13 @@ array([[0.18883276, 0.81116724],
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 KerasRegressor(
-        model=&lt;function get_reg at 0x7f692b183f70&gt;
+        model=&lt;function get_reg at 0x7fa832c40e50&gt;
         build_fn=None
         warm_start=False
         random_state=None
         optimizer=rmsprop
-        loss=&lt;function KerasRegressor.r_squared at 0x7f692b183e50&gt;
-        metrics=None
+        loss=mse
+        metrics=[&lt;function KerasRegressor.r_squared at 0x7fa83ebe9ee0&gt;]
         batch_size=None
         verbose=1
         callbacks=None
@@ -757,7 +758,7 @@ KerasRegressor(
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 29ms/step
+1/1 [==============================] - 0s 39ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -766,7 +767,7 @@ KerasRegressor(
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([ 0.08031267, -0.338481  ,  0.28144094, -0.11817016, -0.6942289 ],
+array([ 0.3967833 , -0.9357802 , -0.76903564, -0.34984076, -0.39331412],
       dtype=float32)
 </pre></div></div>
 </div>
@@ -802,7 +803,7 @@ array([ 0.08031267, -0.338481  ,  0.28144094, -0.11817016, -0.6942289 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 29ms/step
+1/1 [==============================] - 0s 143ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -811,7 +812,7 @@ array([ 0.08031267, -0.338481  ,  0.28144094, -0.11817016, -0.6942289 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([ 0.08031267, -0.338481  ,  0.28144094, -0.11817016, -0.6942289 ],
+array([ 0.3967833 , -0.9357802 , -0.76903564, -0.34984076, -0.39331412],
       dtype=float32)
 </pre></div></div>
 </div>
@@ -835,7 +836,7 @@ array([ 0.08031267, -0.338481  ,  0.28144094, -0.11817016, -0.6942289 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 552us/step
+32/32 [==============================] - 0s 886us/step
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -860,7 +861,7 @@ array([ 0.08031267, -0.338481  ,  0.28144094, -0.11817016, -0.6942289 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 450us/step
+32/32 [==============================] - 0s 916us/step
 </pre></div></div>
 </div>
 </div>
@@ -892,8 +893,8 @@ array([ 0.08031267, -0.338481  ,  0.28144094, -0.11817016, -0.6942289 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 813us/step - loss: 0.7489
-32/32 [==============================] - 0s 650us/step
+32/32 [==============================] - 1s 1ms/step - loss: 0.7555
+32/32 [==============================] - 0s 870us/step
 </pre></div></div>
 </div>
 <p>To save the whole pipeline, including the Keras model, use <code class="docutils literal notranslate"><span class="pre">pickle</span></code>.</p>
@@ -1007,7 +1008,7 @@ Final accuracy: 0.949999988079071
 <p>This is exactly the same logic that allows to access estimator parameters in <code class="docutils literal notranslate"><span class="pre">sklearn</span> <span class="pre">Pipeline</span></code>s and <code class="docutils literal notranslate"><span class="pre">FeatureUnion</span></code>s.</p>
 <p>This feature is useful in several ways. For one, it allows to set those parameters in the model definition. Furthermore, it allows you to set parameters in an <code class="docutils literal notranslate"><span class="pre">sklearn</span> <span class="pre">GridSearchCV</span></code> as shown below.</p>
 <p>To differentiate paramters like <code class="docutils literal notranslate"><span class="pre">callbacks</span></code> which are accepted by both <code class="docutils literal notranslate"><span class="pre">tf.keras.Model.fit</span></code> and <code class="docutils literal notranslate"><span class="pre">tf.keras.Model.predict</span></code> you can add a <code class="docutils literal notranslate"><span class="pre">fit__</span></code> or <code class="docutils literal notranslate"><span class="pre">predict__</span></code> routing suffix respectively. Similar, the <code class="docutils literal notranslate"><span class="pre">model__</span></code> prefix may be used to specify that a paramter is destined only for <code class="docutils literal notranslate"><span class="pre">get_clf</span></code>/<code class="docutils literal notranslate"><span class="pre">get_reg</span></code> (or whatever callable you pass as your <code class="docutils literal notranslate"><span class="pre">model</span></code> argument).</p>
-<p>For more information on parameter routing with special prefixes, see the <a class="reference external" href="https://scikeras.org.readthedocs.build/en/latest/advanced.html#routed-parameters">Advanced Usage Docs</a></p>
+<p>For more information on parameter routing with special prefixes, see the <a class="reference external" href="https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#routed-parameters">Advanced Usage Docs</a></p>
 </div>
 <div class="section" id="7.2-Performing-a-grid-search">
 <h3>7.2 Performing a grid search<a class="headerlink" href="#7.2-Performing-a-grid-search" title="Permalink to this headline">¶</a></h3>
@@ -1052,13 +1053,29 @@ Final accuracy: 0.949999988079071
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Fitting 5 folds for each of 8 candidates, totalling 40 fits
-0.8800000000000001 {&#39;model__dropout&#39;: 0, &#39;model__hidden_layer_sizes&#39;: (50, 50), &#39;optimizer__lr&#39;: 0.05}
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+[Parallel(n_jobs=-1)]: Using backend LokyBackend with 2 concurrent workers.
+[Parallel(n_jobs=-1)]: Done  40 out of  40 | elapsed:   22.0s finished
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0.8400000000000001 {&#39;model__dropout&#39;: 0, &#39;model__hidden_layer_sizes&#39;: (100,), &#39;optimizer__lr&#39;: 0.1}
 </pre></div></div>
 </div>
 <p>Of course, we could further nest the <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> within an <code class="docutils literal notranslate"><span class="pre">sklearn.pipeline.Pipeline</span></code>, in which case we just prefix the parameter by the name of the net (e.g. <code class="docutils literal notranslate"><span class="pre">clf__model__hidden_layer_sizes</span></code>).</p>
@@ -1132,7 +1149,7 @@ Fitting 5 folds for each of 8 candidates, totalling 40 fits
       </div>
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.0.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/notebooks/Basic_Usage.ipynb.txt" rel="nofollow">Show Source</a>.
     </footer>
