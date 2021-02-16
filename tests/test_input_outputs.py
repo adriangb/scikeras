@@ -11,9 +11,7 @@ from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification, make_regression
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
-from sklearn.multioutput import (
-    MultiOutputClassifier as ScikitLearnMultiOutputClassifier,
-)
+from sklearn.multioutput import MultiOutputClassifier as ScikitLearnMultiOutputClassifier
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
 from tensorflow.python.keras.layers import Concatenate, Dense, Input
@@ -26,11 +24,12 @@ from .multi_output_models import MultiOutputClassifier
 
 
 class FunctionalAPIMultiInputClassifier(KerasClassifier):
-    """Tests Functional API Classifier with 2 inputs.
-    """
+    """Tests Functional API Classifier with 2 inputs."""
 
     def _keras_build_fn(
-        self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+        self,
+        meta: Dict[str, Any],
+        compile_kwargs: Dict[str, Any],
     ) -> Model:
         # get params
         n_classes_ = meta["n_classes_"]
@@ -53,12 +52,13 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
 
     @property
     def feature_encoder(self):
-        return FunctionTransformer(func=lambda X: [X[:, 0], X[:, 1:4]],)
+        return FunctionTransformer(
+            func=lambda X: [X[:, 0], X[:, 1:4]],
+        )
 
 
 def test_multi_input():
-    """Tests custom multi-input Keras model.
-    """
+    """Tests custom multi-input Keras model."""
     clf = FunctionalAPIMultiInputClassifier()
     X = np.random.uniform(size=(10, 4))
     y = np.arange(0, 10, 1, int)
@@ -124,9 +124,7 @@ def test_KerasClassifier_loss_invariance(y, y_type):
         (np.array(["a", "b", "c"]), "multiclass"),  # categorical
     ],
 )
-@pytest.mark.parametrize(
-    "loss", ["categorical_crossentropy", "sparse_categorical_crossentropy"]
-)
+@pytest.mark.parametrize("loss", ["categorical_crossentropy", "sparse_categorical_crossentropy"])
 def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
     """Test that KerasClassifier can use both
     categorical_crossentropy and sparse_categorical_crossentropy
@@ -136,7 +134,10 @@ def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
         return  # not compatible, see test_KerasClassifier_loss_invariance
     X1, y1 = np.array([[1, 2, 3]]).T, np.array([1, 2, 3])
     clf = KerasClassifier(
-        model=dynamic_classifier, hidden_layer_sizes=(100,), loss=loss, random_state=0,
+        model=dynamic_classifier,
+        hidden_layer_sizes=(100,),
+        loss=loss,
+        random_state=0,
     )
     clf.fit(X1, y1)
     tfs = clf.target_encoder_
@@ -148,14 +149,16 @@ def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
 
 
 def test_incompatible_output_dimensions():
-    """Compares to the scikit-learn RandomForestRegressor classifier.
-    """
+    """Compares to the scikit-learn RandomForestRegressor classifier."""
     # create dataset with 4 outputs
     X = np.random.rand(10, 20)
     y = np.random.randint(low=0, high=3, size=(10,))
 
     # create a model with 2 outputs
-    def build_fn_clf(meta: Dict[str, Any], compile_kwargs: Dict[str, Any],) -> Model:
+    def build_fn_clf(
+        meta: Dict[str, Any],
+        compile_kwargs: Dict[str, Any],
+    ) -> Model:
         # get params
         n_features_in_ = meta["n_features_in_"]
 
@@ -212,9 +215,7 @@ def single_output_binary_sigmoid():
     y = np.random.randint(low=0, high=2, size=(500,))
     X = y.reshape(-1, 1)
     sklearn_est = MLPClassifier(**mlp_kwargs)
-    scikeras_est = KerasClassifier(
-        create_model("sigmoid", [1]), **scikeras_kwargs, loss="binary_crossentropy"
-    )
+    scikeras_est = KerasClassifier(create_model("sigmoid", [1]), **scikeras_kwargs, loss="binary_crossentropy")
     for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16", "<U1"):
         y_ = y.astype(dtype)
         yield TestParams(
@@ -234,9 +235,7 @@ def single_output_binary_softmax():
     X = y.reshape(-1, 1)
     y = np.column_stack([y, 1 - y])
     sklearn_est = MLPClassifier(**mlp_kwargs)
-    scikeras_est = KerasClassifier(
-        create_model("softmax", [2]), **scikeras_kwargs, loss="categorical_crossentropy"
-    )
+    scikeras_est = KerasClassifier(create_model("softmax", [2]), **scikeras_kwargs, loss="categorical_crossentropy")
     for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
         y_ = y.astype(dtype)
         yield TestParams(
@@ -281,9 +280,7 @@ def single_output_multiclass_one_hot():
     # with categorical_crossentropy loss
     y = OneHotEncoder(sparse=False).fit_transform(y.reshape(-1, 1))
     sklearn_est = MLPClassifier(**mlp_kwargs)
-    scikeras_est = KerasClassifier(
-        create_model("softmax", [3]), **scikeras_kwargs, loss="categorical_crossentropy"
-    )
+    scikeras_est = KerasClassifier(create_model("softmax", [3]), **scikeras_kwargs, loss="categorical_crossentropy")
     for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
         y_ = y.astype(dtype)
         yield TestParams(
@@ -306,9 +303,7 @@ def multilabel_indicator_single_sigmoid():
     y[X[:, 0] == 3, [0]] = 1
     y[X[:, 0] == 3, [1]] = 1
     sklearn_est = MLPClassifier(**mlp_kwargs)
-    scikeras_est = KerasClassifier(
-        create_model("sigmoid", [2]), loss="bce", **scikeras_kwargs
-    )
+    scikeras_est = KerasClassifier(create_model("sigmoid", [2]), loss="bce", **scikeras_kwargs)
     for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
         y_ = y.astype(dtype)
         yield TestParams(
@@ -331,9 +326,7 @@ def multilabel_indicator_multiple_sigmoid():
     y[X[:, 0] == 3, [0]] = 1
     y[X[:, 0] == 3, [1]] = 1
     sklearn_est = MLPClassifier(**mlp_kwargs)
-    scikeras_est = MultiOutputClassifier(
-        create_model("sigmoid", [1, 1]), loss="bce", split=True, **scikeras_kwargs
-    )
+    scikeras_est = MultiOutputClassifier(create_model("sigmoid", [1, 1]), loss="bce", split=True, **scikeras_kwargs)
     for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
         y_ = y.astype(dtype)
         yield TestParams(
@@ -371,9 +364,7 @@ def multiclass_multioutput():
             y_expected_dtype_keras=dtype,
             min_score=0.55,
             # note that ALL classes must be correct, so 0.55 is a reasonable score (and is ±10% vs MLPClassifier)
-            scorer=lambda y, y_pred: np.mean(
-                np.all(y == y_pred, axis=1)  # copied from sklearn MultiOutputClassifier
-            ),
+            scorer=lambda y, y_pred: np.mean(np.all(y == y_pred, axis=1)),  # copied from sklearn MultiOutputClassifier
         )
 
 
@@ -512,9 +503,7 @@ def test_output_shapes_and_dtypes_against_sklearn_reg(test_data: TestParams):
         KerasClassifier(dynamic_classifier, model__hidden_layer_sizes=[]),
     ),
 )
-@pytest.mark.parametrize(
-    "X_dtype", ("float32", "float64", "int64", "int32", "uint8", "uint16", "object")
-)
+@pytest.mark.parametrize("X_dtype", ("float32", "float64", "int64", "int32", "uint8", "uint16", "object"))
 def test_input_dtype_conversion(X_dtype, est):
     """Tests that using the default transformers in SciKeras,
     `X` is not converted/modified unless it is of dtype object.

@@ -11,7 +11,8 @@ from scikeras.wrappers import KerasClassifier
 
 class MultiLabelTransformer(ClassifierLabelEncoder):
     def __init__(
-        self, split: bool = True,
+        self,
+        split: bool = True,
     ):
         super().__init__()
         self.split = split
@@ -37,9 +38,7 @@ class MultiLabelTransformer(ClassifierLabelEncoder):
             return np.split(y, y.shape[1], axis=1)
         return y
 
-    def inverse_transform(
-        self, y: List[np.ndarray], return_proba: bool = False
-    ) -> np.ndarray:
+    def inverse_transform(self, y: List[np.ndarray], return_proba: bool = False) -> np.ndarray:
         if self._target_type not in ("multilabel-indicator", "multiclass-multioutput"):
             return super().inverse_transform(y, return_proba=return_proba)
         if return_proba:
@@ -52,16 +51,9 @@ class MultiLabelTransformer(ClassifierLabelEncoder):
             y = np.around(y).astype(int, copy=False)
         else:  # mutlitclass-multioutput
             if self.split:
-                y = np.column_stack(
-                    [
-                        np.argmax(y_, axis=1).astype(self._y_dtype, copy=False)
-                        for y_ in y
-                    ]
-                )
+                y = np.column_stack([np.argmax(y_, axis=1).astype(self._y_dtype, copy=False) for y_ in y])
             else:
-                raise NotImplementedError(
-                    "multiclass-multioutput must be handled by a multi-output Model"
-                )
+                raise NotImplementedError("multiclass-multioutput must be handled by a multi-output Model")
         return y
 
 
@@ -79,8 +71,7 @@ class MultiOutputClassifier(KerasClassifier):
         return MultiLabelTransformer(split=self.split)
 
     def score(self, X, y):
-        """Taken from sklearn.multiouput.MultiOutputClassifier
-        """
+        """Taken from sklearn.multiouput.MultiOutputClassifier"""
         if self.target_type_ != "multilabel-indicator":
             return super().score(X, y)
         return np.mean(np.all(y == self.predict(X), axis=1))

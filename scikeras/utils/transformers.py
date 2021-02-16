@@ -114,8 +114,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         self.categories = categories
 
     def _type_of_target(self, y: np.ndarray) -> str:
-        """Determine the type of target accounting for the self.categories param.
-        """
+        """Determine the type of target accounting for the self.categories param."""
         target_type = type_of_target(y)
         if target_type == "binary" and self.categories != "auto":
             # check that this is not a multiclass problem missing categories
@@ -158,9 +157,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         if is_categorical_crossentropy(self.loss):
             encoders["multiclass"] = make_pipeline(
                 TargetReshaper(),
-                OneHotEncoder(
-                    sparse=False, dtype=keras_dtype, categories=self.categories
-                ),
+                OneHotEncoder(sparse=False, dtype=keras_dtype, categories=self.categories),
             )
         if target_type not in encoders:
             raise ValueError(
@@ -176,11 +173,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             )
         self._final_encoder = encoders[target_type].fit(y)
 
-        if (
-            target_type == "multilabel-indicator"
-            and y.min() == 0
-            and (y.sum(axis=1) == 1).all()
-        ):
+        if target_type == "multilabel-indicator" and y.min() == 0 and (y.sum(axis=1) == 1).all():
             target_type = "multiclass-onehot"
 
         self.n_outputs_ = 1
@@ -216,9 +209,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         # self.classes_ and self.n_classes_ are validated by the transformers themselves
         return self._final_encoder.transform(y)
 
-    def inverse_transform(
-        self, y: np.ndarray, return_proba: bool = False
-    ) -> np.ndarray:
+    def inverse_transform(self, y: np.ndarray, return_proba: bool = False) -> np.ndarray:
         """Restore the data types, shape and classes of the input y
         to the output of the Keras Model.
 
@@ -342,10 +333,8 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         n_outputs_ = 1 if y.ndim == 1 else y.shape[1]
         if n_outputs_ != self.n_outputs_:
             raise ValueError(
-                f"Detected ``y`` to have {n_outputs_} outputs"
-                f" with ``y.shape = {y.shape}``",
-                f" but this {self.__class__.__name__} has"
-                f" {self.n_outputs_} outputs.",
+                f"Detected ``y`` to have {n_outputs_} outputs" f" with ``y.shape = {y.shape}``",
+                f" but this {self.__class__.__name__} has" f" {self.n_outputs_} outputs.",
             )
         return y
 

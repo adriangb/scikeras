@@ -78,9 +78,7 @@ def test_fully_compliant_estimators_low_precision(estimator, check):
         # These tests have bugs that are fixed in 0.23.0
         pytest.skip("This test is broken in sklearn<=0.23.0")
     if check_name in higher_precision:
-        pytest.skip(
-            "This test is run as part of test_fully_compliant_estimators_high_precision."
-        )
+        pytest.skip("This test is run as part of test_fully_compliant_estimators_high_precision.")
     check(estimator)
 
 
@@ -104,20 +102,21 @@ def test_fully_compliant_estimators_low_precision(estimator, check):
     ids=["KerasClassifier", "KerasRegressor"],
 )
 def test_fully_compliant_estimators_high_precision(estimator, check):
-    """Checks that require higher training epochs.
-    """
+    """Checks that require higher training epochs."""
     check_name = check.func.__name__
     if check_name not in higher_precision:
-        pytest.skip(
-            "This test is run as part of test_fully_compliant_estimators_low_precision."
-        )
+        pytest.skip("This test is run as part of test_fully_compliant_estimators_low_precision.")
     with use_floatx("float64"):
         check(estimator)
 
 
 class SubclassedClassifier(KerasClassifier):
     def __init__(
-        self, model__hidden_layer_sizes=(100,), metrics=None, loss=None, **kwargs,
+        self,
+        model__hidden_layer_sizes=(100,),
+        metrics=None,
+        loss=None,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.model__hidden_layer_sizes = model__hidden_layer_sizes
@@ -126,7 +125,10 @@ class SubclassedClassifier(KerasClassifier):
         self.optimizer = "sgd"
 
     def _keras_build_fn(
-        self, hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+        self,
+        hidden_layer_sizes,
+        meta: Dict[str, Any],
+        compile_kwargs: Dict[str, Any],
     ) -> Model:
         return dynamic_classifier(
             hidden_layer_sizes=hidden_layer_sizes,

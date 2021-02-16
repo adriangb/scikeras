@@ -32,10 +32,7 @@ def dynamic_classifier(
     elif target_type_ == "multilabel-indicator":
         compile_kwargs["loss"] = compile_kwargs["loss"] or "binary_crossentropy"
         if isinstance(n_classes_, list):
-            out = [
-                Dense(1, activation="sigmoid")(hidden)
-                for _ in range(n_outputs_expected_)
-            ]
+            out = [Dense(1, activation="sigmoid")(hidden) for _ in range(n_outputs_expected_)]
         else:
             out = Dense(n_classes_, activation="softmax")(hidden)
     elif target_type_ == "multiclass-multioutput":
@@ -43,9 +40,7 @@ def dynamic_classifier(
         out = [Dense(n, activation="softmax")(hidden) for n in n_classes_]
     else:
         # multiclass
-        compile_kwargs["loss"] = (
-            compile_kwargs["loss"] or "sparse_categorical_crossentropy"
-        )
+        compile_kwargs["loss"] = compile_kwargs["loss"] or "sparse_categorical_crossentropy"
         out = [Dense(n_classes_, activation="softmax")(hidden)]
 
     model = Model(inp, out)
@@ -60,8 +55,7 @@ def dynamic_regressor(
     meta: Optional[Dict[str, Any]] = None,
     compile_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Model:
-    """Creates a basic MLP regressor dynamically.
-    """
+    """Creates a basic MLP regressor dynamically."""
     # get parameters
     n_features_in_ = meta["n_features_in_"]
     n_outputs_ = meta["n_outputs_"]

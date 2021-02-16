@@ -290,7 +290,7 @@ class MaxValLoss(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         if logs[self.monitor] > self.threashold:
-            print("Threashold reached; stopping training") 
+            print("Threashold reached; stopping training")
             self.model.stop_training = True
 ```
 

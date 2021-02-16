@@ -148,7 +148,7 @@ class KerasTransformer(BaseWrapper, TransformerMixin):
         X = self.feature_encoder_.transform(X)
         X_tf = self.tf_est_.predict(X)
         return X_tf
-    
+
     def inverse_transform(self, X_tf):
         X = self.inv_tf_est_.predict(X_tf)
         X = self.feature_encoder_.inverse_transform(X)

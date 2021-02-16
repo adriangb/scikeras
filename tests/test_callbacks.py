@@ -1,9 +1,6 @@
 import pickle
 
-from sklearn.utils.estimator_checks import (
-    check_estimators_partial_fit_n_features,  # noqa
-)
-from sklearn.utils.estimator_checks import check_estimators_pickle
+from sklearn.utils.estimator_checks import check_estimators_partial_fit_n_features, check_estimators_pickle  # noqa
 from tensorflow.keras.callbacks import Callback
 
 from scikeras.wrappers import KerasClassifier
@@ -24,8 +21,7 @@ class SentinalCallback(Callback):
 
 
 def test_callbacks():
-    """Test estimators with callbacks.
-    """
+    """Test estimators with callbacks."""
     estimator = KerasClassifier(
         model=dynamic_classifier,
         callbacks=(SentinalCallback(),),

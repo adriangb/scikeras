@@ -47,8 +47,7 @@ def _restore_optimizer_weights(optimizer, weights) -> None:
 
 
 def unpack_keras_model(packed_keras_model, optimizer_weights):
-    """Reconstruct a model from the result of __reduce__
-    """
+    """Reconstruct a model from the result of __reduce__"""
     temp_dir = _get_temp_folder()
     b = BytesIO(packed_keras_model)
     with zipfile.ZipFile(b, "r", zipfile.ZIP_DEFLATED) as zf:
@@ -72,8 +71,7 @@ def unpack_keras_model(packed_keras_model, optimizer_weights):
 
 
 def pack_keras_model(model):
-    """Support for Pythons's Pickle protocol.
-    """
+    """Support for Pythons's Pickle protocol."""
     temp_dir = _get_temp_folder()
     model.save(temp_dir)
     b = BytesIO()
@@ -97,44 +95,38 @@ def pack_keras_model(model):
 
 
 def unpack_keras_optimizer(opt_serialized, weights):
-    """Reconstruct optimizer.
-    """
+    """Reconstruct optimizer."""
     optimizer: keras.optimizers.Optimizer = keras.optimizers.deserialize(opt_serialized)
     _restore_optimizer_weights(optimizer, weights)
     return optimizer
 
 
 def pack_keras_optimizer(optimizer: keras.optimizers.Optimizer):
-    """Support for Pythons's Pickle protocol in Keras Optimizers.
-    """
+    """Support for Pythons's Pickle protocol in Keras Optimizers."""
     opt_serialized = keras.optimizers.serialize(optimizer)
     weights = optimizer.get_weights()
     return unpack_keras_optimizer, (opt_serialized, weights)
 
 
 def unpack_keras_metric(metric_serialized):
-    """Reconstruct metric.
-    """
+    """Reconstruct metric."""
     metric: keras.metrics.Metric = keras.metrics.deserialize(metric_serialized)
     return metric
 
 
 def pack_keras_metric(metric: keras.metrics.Metric):
-    """Support for Pythons's Pickle protocol in Keras Metrics.
-    """
+    """Support for Pythons's Pickle protocol in Keras Metrics."""
     metric_serialized = keras.metrics.serialize(metric)
     return unpack_keras_metric, (metric_serialized,)
 
 
 def unpack_keras_loss(loss_serialized):
-    """Reconstruct loss.
-    """
+    """Reconstruct loss."""
     loss: keras.losses.Loss = keras.losses.deserialize(loss_serialized)
     return loss
 
 
 def pack_keras_loss(loss: keras.losses.Loss):
-    """Support for Pythons's Pickle protocol in Keras Losses.
-    """
+    """Support for Pythons's Pickle protocol in Keras Losses."""
     loss_serialized = keras.losses.serialize(loss)
     return unpack_keras_loss, (loss_serialized,)

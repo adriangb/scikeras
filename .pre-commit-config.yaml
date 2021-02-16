@@ -1,12 +1,23 @@
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+      - id: check-docstring-first
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: requirements-txt-fixer
+      - id: pretty-format-json
+        args: [ --autofix, --no-sort-keys ]
+      - id: trailing-whitespace
+        args: [ --markdown-linebreak-ext=md ]
   - repo: https://github.com/psf/black
-    rev: 19.10b0
+    rev: 20.8b1
     hooks:
       - id: black
-
   - repo: https://github.com/timothycrosley/isort
-    rev: 5.3.2
+    rev: 5.7.0
     hooks:
       - id: isort
         additional_dependencies: [toml]
-        exclude: ^.*/?setup\.py$

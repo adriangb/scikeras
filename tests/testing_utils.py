@@ -7,9 +7,7 @@ import numpy as np
 import pytest
 
 from sklearn import config_context
-from sklearn.utils.estimator_checks import (
-    parametrize_with_checks as _parametrize_with_checks,
-)
+from sklearn.utils.estimator_checks import parametrize_with_checks as _parametrize_with_checks
 
 
 def basic_checks(estimator, loader):

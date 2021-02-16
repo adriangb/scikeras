@@ -12,7 +12,7 @@ users: :py:class:`scikeras.wrappers.KerasClassifier`,
 ``KerasClassifier`` and ``KerasRegressor`` extend this with functionality
 specific to classifiers and regressors respectively. Although you will
 usually be using either ``KerasClassifier`` and ``KerasRegressor``, this document focuses
-on the overall functionality of the wrappers and hence will refer to 
+on the overall functionality of the wrappers and hence will refer to
 :py:class:`scikeras.wrappers.BaseWrapper` as a proxy for both of the wrapper classes.
 Detailed information on usage of specific classes is available in the
 :ref:`scikeras-api` documentation.

@@ -17,7 +17,10 @@ def test_X_shape_change():
     changes shape in subsequent partial fit calls.
     """
 
-    estimator = KerasRegressor(model=dynamic_regressor, hidden_layer_sizes=(100,),)
+    estimator = KerasRegressor(
+        model=dynamic_regressor,
+        hidden_layer_sizes=(100,),
+    )
     X = np.array([[1, 2], [3, 4]]).reshape(2, 2, 1)
     y = np.array([[0, 1, 0], [1, 0, 0]])
 
@@ -33,17 +36,13 @@ def test_unknown_param():
     friendly error message.
     """
     est = BaseWrapper()
-    err = (
-        r"Invalid parameter test for estimator [\S\s]*"
-        "This issue can likely be resolved by setting this parameter"
-    )
+    err = r"Invalid parameter test for estimator [\S\s]*" "This issue can likely be resolved by setting this parameter"
     with pytest.raises(ValueError, match=err):
         est.set_params(test=1)
 
 
 def test_not_fitted_error():
-    """Tests error when trying to use predict before fit.
-    """
+    """Tests error when trying to use predict before fit."""
     estimator = KerasClassifier(dynamic_classifier)
     X = np.random.rand(10, 20)
     with pytest.raises(NotFittedError):
@@ -55,8 +54,7 @@ def test_not_fitted_error():
 
 
 class TestInvalidBuildFn:
-    """Tests various error cases for BuildFn.
-    """
+    """Tests various error cases for BuildFn."""
 
     def test_invalid_build_fn(self):
         class Model:
@@ -83,7 +81,9 @@ class TestInvalidBuildFn:
         def dummy_func():
             return None
 
-        clf = Clf(model=dummy_func,)
+        clf = Clf(
+            model=dummy_func,
+        )
 
         with pytest.raises(ValueError, match="cannot implement ``_keras_build_fn``"):
             clf.fit(np.array([[0], [1]]), np.array([0, 1]))
@@ -95,7 +95,8 @@ def test_sample_weights_all_zero():
     """
     # build estimator
     estimator = KerasClassifier(
-        model=dynamic_classifier, model__hidden_layer_sizes=(100,),
+        model=dynamic_classifier,
+        model__hidden_layer_sizes=(100,),
     )
 
     # we create 20 points
@@ -138,10 +139,7 @@ def test_no_loss(loss, compile):
     def get_model(compile, meta, compile_kwargs):
         inp = Input(shape=(meta["n_features_in_"],))
         hidden = Dense(10, activation="relu")(inp)
-        out = [
-            Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden)
-            for i in range(meta["n_outputs_"])
-        ]
+        out = [Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden) for i in range(meta["n_outputs_"])]
         model = Model(inp, out)
         if compile:
             model.compile(**compile_kwargs)
@@ -157,19 +155,19 @@ def test_no_optimizer(compile):
     def get_model(compile, meta, compile_kwargs):
         inp = Input(shape=(meta["n_features_in_"],))
         hidden = Dense(10, activation="relu")(inp)
-        out = [
-            Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden)
-            for i in range(meta["n_outputs_"])
-        ]
+        out = [Dense(1, activation="sigmoid", name=f"out{i+1}")(hidden) for i in range(meta["n_outputs_"])]
         model = Model(inp, out)
         if compile:
             model.compile(**compile_kwargs)
         return model
 
-    est = KerasRegressor(model=get_model, loss="mse", compile=compile, optimizer=None,)
-    with pytest.raises(
-        ValueError, match="Could not interpret optimizer identifier"  # Keras error
-    ):
+    est = KerasRegressor(
+        model=get_model,
+        loss="mse",
+        compile=compile,
+        optimizer=None,
+    )
+    with pytest.raises(ValueError, match="Could not interpret optimizer identifier"):  # Keras error
         est.fit([[0], [1]], [0, 1])
 
 
@@ -181,7 +179,8 @@ def test_target_dtype_changes_incremental_fit():
     est.fit(X, y)
     est.partial_fit(X, y.astype(np.uint8))
     with pytest.raises(
-        ValueError, match="Got y with dtype",
+        ValueError,
+        match="Got y with dtype",
     ):
         est.partial_fit(X, y.astype(np.float64))
 
@@ -194,7 +193,8 @@ def test_target_dims_changes_incremental_fit():
     est.fit(X, y)
     y_new = y.reshape(-1, 1)
     with pytest.raises(
-        ValueError, match="y has 2 dimensions, but this ",
+        ValueError,
+        match="y has 2 dimensions, but this ",
     ):
         est.partial_fit(X, y_new)
 
@@ -219,7 +219,8 @@ def test_target_shape_changes_incremental_fit_reg():
     est = KerasRegressor(model=dynamic_regressor, hidden_layer_sizes=(100,))
     est.fit(X, y)
     with pytest.raises(
-        ValueError, match="Detected ``y`` to have ",
+        ValueError,
+        match="Detected ``y`` to have ",
     ):
         est.partial_fit(X, np.column_stack([y, y]))
 
@@ -232,7 +233,8 @@ def test_X_dtype_changes_incremental_fit():
     est.fit(X, y)
     est.partial_fit(X.astype(np.uint8), y)
     with pytest.raises(
-        ValueError, match="Got X with dtype",
+        ValueError,
+        match="Got X with dtype",
     ):
         est.partial_fit(X.astype(np.float64), y)
 
@@ -245,7 +247,8 @@ def test_target_classes_change_incremental_fit():
     est.fit(X, y)
     est.partial_fit(X.astype(np.uint8), y)
     with pytest.raises(
-        ValueError, match="Found unknown categories",
+        ValueError,
+        match="Found unknown categories",
     ):
         y[0] = 10
         est.partial_fit(X, y)

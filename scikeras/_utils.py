@@ -112,13 +112,8 @@ def has_param(func: Callable, param: str) -> bool:
 
 
 def accepts_kwargs(func: Callable) -> bool:
-    """Check if ``func`` accepts kwargs.
-    """
-    return any(
-        True
-        for param in inspect.signature(func).parameters.values()
-        if param.kind == param.VAR_KEYWORD
-    )
+    """Check if ``func`` accepts kwargs."""
+    return any(True for param in inspect.signature(func).parameters.values() if param.kind == param.VAR_KEYWORD)
 
 
 def unflatten_params(items, params, base_params=None):
@@ -134,7 +129,10 @@ def unflatten_params(items, params, base_params=None):
             kwargs[p] = unflatten_params(
                 items=v,
                 params=route_params(
-                    params=params, destination=f"{p}", pass_filter=set(), strict=False,
+                    params=params,
+                    destination=f"{p}",
+                    pass_filter=set(),
+                    strict=False,
                 ),
             )
         return item(**kwargs)
@@ -144,23 +142,27 @@ def unflatten_params(items, params, base_params=None):
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for idx, item in enumerate(items):
             item_params = route_params(
-                params=params, destination=f"{idx}", pass_filter=set(), strict=False,
+                params=params,
+                destination=f"{idx}",
+                pass_filter=set(),
+                strict=False,
             )
-            res.append(
-                unflatten_params(
-                    items=item, params=item_params, base_params=new_base_params
-                )
-            )
+            res.append(unflatten_params(items=item, params=item_params, base_params=new_base_params))
         return iter_type_(res)
     if isinstance(items, (dict,)):
         res = dict()
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for key, item in items.items():
             item_params = route_params(
-                params=params, destination=f"{key}", pass_filter=set(), strict=False,
+                params=params,
+                destination=f"{key}",
+                pass_filter=set(),
+                strict=False,
             )
             res[key] = unflatten_params(
-                items=item, params=item_params, base_params=new_base_params,
+                items=item,
+                params=item_params,
+                base_params=new_base_params,
             )
         return res
     # non-compilable item, check if it has any routed parameters
@@ -178,8 +180,7 @@ def unflatten_params(items, params, base_params=None):
 
 
 def _class_from_strings(items: Union[str, dict, tuple, list], class_getter: Callable):
-    """Convert shorthand optimizer/loss/metric names to classes.
-    """
+    """Convert shorthand optimizer/loss/metric names to classes."""
     if isinstance(items, str):
         item = items
         if class_getter is tf.keras.metrics.get and item in (

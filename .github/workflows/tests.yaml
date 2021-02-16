@@ -14,7 +14,7 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v2
-      
+
       - name: Update packages
         run: |
           pip install -U pip wheel
@@ -47,7 +47,7 @@ jobs:
         run: |
           poetry install
 
-      - name: Test with pytest 
+      - name: Test with pytest
         run: |
           poetry run python -m pip freeze
           poetry run python -m pytest -v --cov=scikeras --cov-report xml --numprocesses=auto --color=yes
@@ -127,7 +127,7 @@ jobs:
           poetry add "tensorflow==${{matrix.tf-version}}"
           poetry add "scikit-learn==${{matrix.sklearn-version}}"
 
-      - name: Test with pytest 
+      - name: Test with pytest
         run: |
           poetry run python -m pip freeze
           poetry run python -m pytest -v --cov=scikeras --cov-report xml --numprocesses=auto --color=yes

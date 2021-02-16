@@ -36,9 +36,7 @@ def test_kerasregressor_r2_correctness():
 
 def test_kerasregressor_r2_as_metric():
     """Test custom R^2 implementation against scikit-learn's."""
-    est = KerasRegressor(
-        dynamic_regressor, metrics=[KerasRegressor.r_squared], epochs=10, random_state=0
-    )
+    est = KerasRegressor(dynamic_regressor, metrics=[KerasRegressor.r_squared], epochs=10, random_state=0)
 
     y = np.random.randint(low=0, high=2, size=(1000,))
     X = y.reshape((-1, 1))

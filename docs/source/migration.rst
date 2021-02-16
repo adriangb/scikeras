@@ -82,7 +82,7 @@ Default arguments in build_fn/model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 SciKeras will no longer introspect your callable `model` for *user defined* parameters
-(the behavior for parameters like ``optimizer`` is unchanged). 
+(the behavior for parameters like ``optimizer`` is unchanged).
 You must now "declare" them as keyword arguments to the constructor if you want them to be
 tunable parameters (i.e. settable via ``set_params``):
 

@@ -31,8 +31,7 @@ release = __version__
 
 
 def maybe_skip_member(app, what, name, obj, skip, options) -> bool:
-    """Skip all private members, including __init__
-    """
+    """Skip all private members, including __init__"""
     if name.startswith("_"):
         return True
     return skip
@@ -184,9 +183,7 @@ def project_linkcode_resolve(domain, info):
         info,
         package="scikeras",
         revision=_linkcode_git_revision,
-        url_fmt="https://github.com/adriangb/scikeras/"
-        "blob/{revision}/"
-        "{package}/{path}#L{lineno}",
+        url_fmt="https://github.com/adriangb/scikeras/" "blob/{revision}/" "{package}/{path}#L{lineno}",
     )
 
 

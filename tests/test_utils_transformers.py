@@ -7,9 +7,7 @@ from scikeras.utils.transformers import ClassifierLabelEncoder, TargetReshaper
 
 
 class TestTargetReshaper:
-    @pytest.mark.parametrize(
-        "X", [np.array([1, 1]), np.array([1, 1]).reshape(-1, 1), np.array([[[1], [1]]])]
-    )
+    @pytest.mark.parametrize("X", [np.array([1, 1]), np.array([1, 1]).reshape(-1, 1), np.array([[[1], [1]]])])
     def test_basic_func(self, X):
         tf = TargetReshaper()
         tf.fit(X)
@@ -53,7 +51,5 @@ class TestClassifierLabelEncoder:
         y_probs_new = c.inverse_transform(y_probs, return_proba=True)
         np.testing.assert_equal(y_probs, y_probs_new)
         # inverse_tf with return_proba = False raises a NotImplementedError
-        with pytest.raises(
-            NotImplementedError, match="Class-predictions are not clearly"
-        ):
+        with pytest.raises(NotImplementedError, match="Class-predictions are not clearly"):
             c.inverse_transform(y_probs)

@@ -94,7 +94,7 @@ if False:  # avoid executing pseudocode
             X = self.feature_encoder_.fit_transform(X)
             self.model_.fit(X, y)
             return self
-        
+
         def predict(self, X):
             X = self.feature_encoder_.transform(X)
             y_pred = self.model_.predict(X)
@@ -105,7 +105,7 @@ if False:  # avoid executing pseudocode
         @property
         def target_encoder(self):
             return ClassifierLabelEncoder(loss=self.loss)
-        
+
         def predict_proba(self, X):
             X = self.feature_encoder_.transform(X)
             y_pred = self.model_.predict(X)
@@ -277,7 +277,7 @@ class MultiOutputTransformer(BaseEstimator, TransformerMixin):
         y_pred_bin = self.bin_encoder_.inverse_transform(y_pred_bin)
         y_pred_cat = self.cat_encoder_.inverse_transform(y_pred_cat)
         return np.column_stack([y_pred_bin, y_pred_cat])
-    
+
     def get_metadata(self):
         return {
             "n_classes_": self.n_classes_,
@@ -320,7 +320,7 @@ class MultiOutputClassifier(KerasClassifier):
     @property
     def target_encoder(self):
         return MultiOutputTransformer()
-    
+
     @staticmethod
     def scorer(y_true, y_pred, **kwargs):
         y_bin, y_cat = y_true[:, 0], y_true[:, 1]
