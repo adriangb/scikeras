@@ -259,8 +259,7 @@ class BaseWrapper(BaseEstimator):
     def _validate_sample_weight(
         X: np.ndarray, sample_weight: Union[np.ndarray, Iterable],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Validate that the passed sample_weight and ensure it is a Numpy array.
-        """
+        """Validate that the passed sample_weight and ensure it is a Numpy array."""
         sample_weight = _check_sample_weight(
             sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
         )
@@ -704,6 +703,13 @@ class BaseWrapper(BaseEstimator):
             A reference to the instance that can be chain called
             (ex: instance.fit(X,y).transform(X) )
         """
+        for k, v in kwargs.items():
+            warnings.warn(
+                "Use of `**kwargs` for `fit` is not fully supported by the sklearn API."
+                f" Instead, set fit arguments at initialization (i.e., `BaseWrapper({k}={v})`)"
+            )
+            break  # only warn about the first kwarg
+
         # epochs via kwargs > fit__epochs > epochs
         kwargs["epochs"] = kwargs.get(
             "epochs", getattr(self, "fit__epochs", self.epochs)
@@ -878,6 +884,13 @@ class BaseWrapper(BaseEstimator):
         For classification, this corresponds to predict_proba.
         For regression, this corresponds to predict.
         """
+        for k, v in kwargs.items():
+            warnings.warn(
+                "Use of `**kwargs` for `predict` is not fully supported by the sklearn API."
+                f" Instead, set fit arguments at initialization (i.e., BaseWrapper({k}={v})`)"
+            )
+            break  # only warn about the first kwarg
+
         # check if fitted
         if not self.initialized_:
             raise NotFittedError(
@@ -1008,7 +1021,7 @@ class BaseWrapper(BaseEstimator):
 
     def set_params(self, **params) -> "BaseWrapper":
         """Set the parameters of this estimator.
-    
+
         The method works on simple estimators as well as on nested objects
         (such as pipelines). The latter have parameters of the form
         ``<component>__<parameter>`` so that it's possible to update each
@@ -1445,7 +1458,7 @@ class KerasRegressor(BaseWrapper):
     loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
-        an instance of tf.keras.losses.Loss 
+        an instance of tf.keras.losses.Loss
         or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
 
