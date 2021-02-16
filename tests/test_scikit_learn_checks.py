@@ -57,7 +57,6 @@ batch_size = 1000
         KerasRegressor(
             model=dynamic_regressor,
             batch_size=batch_size,
-            loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=[],
         ),
     ],
@@ -97,7 +96,6 @@ def test_fully_compliant_estimators_low_precision(estimator, check):
         KerasRegressor(
             model=dynamic_regressor,
             batch_size=batch_size,
-            loss=KerasRegressor.r_squared,
             model__hidden_layer_sizes=[],
             optimizer__learning_rate=0.1,
             epochs=20,

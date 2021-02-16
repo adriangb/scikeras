@@ -245,8 +245,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             class_predictions = np.argmax(y, axis=1).reshape(-1, 1)
             class_predictions = self._final_encoder.inverse_transform(class_predictions)
         elif self._target_type == "multiclass":
-            # array([0.8, 0.1, 0.1], [.1, .8, .1]) ->
-            # array(['apple', 'orange'])
+            # array([0.8, 0.1, 0.1], [.1, .8, .1]) -> array(['apple', 'orange'])
             idx = np.argmax(y, axis=-1)
             if not is_categorical_crossentropy(self.loss):
                 class_predictions = idx.reshape(-1, 1)
@@ -255,13 +254,12 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                 class_predictions[:, idx] = 1
             class_predictions = self._final_encoder.inverse_transform(class_predictions)
         elif self._target_type == "multiclass-onehot":
-            # array([.8, .1, .1], [.1, .8, .1]) ->
-            # array([[1, 0, 0], [0, 1, 0]])
+            # array([.8, .1, .1], [.1, .8, .1]) -> array([[1, 0, 0], [0, 1, 0]])
             idx = np.argmax(y, axis=-1)
             class_predictions = np.zeros(y.shape, dtype=int)
-            class_predictions[:, idx] = 1
+            class_predictions[np.arange(len(idx)), idx] = 1
         elif self._target_type == "multilabel-indicator":
-            class_predictions = np.around(y)
+            class_predictions = np.around(y).astype(int, copy=False)
         else:
             if not return_proba:
                 raise NotImplementedError(
@@ -279,9 +277,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
 
         if return_proba:
             return np.squeeze(y)
-        res = np.column_stack(class_predictions).astype(self._y_dtype, copy=False)
-        res = res.reshape(-1, *self._y_shape[1:])
-        return res
+        return class_predictions.reshape(-1, *self._y_shape[1:])
 
     def get_metadata(self) -> Dict[str, Any]:
         """Returns a dictionary of meta-parameters generated when this transfromer

@@ -1,4 +1,3 @@
-
 name: Deploy Docs
 
 on:
@@ -12,15 +11,32 @@ jobs:
     name: Deploy Docs
     runs-on: ubuntu-latest
     steps:
-      
       - uses: actions/setup-python@v2
         with:
           python-version: '3.x'
+      
+      - name: Get GitHub Pages Data
+        uses: actions/github-script@v3
+        id: pages-data
+        with:
+          script: |
+            const result = await github.request('GET /repos/{owner}/{repo}/pages', {
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            })
+            return result.data
+
+      - name: Lock workflow
+        uses: softprops/turnstyle@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          poll-interval-seconds: 10
 
       - name: Checkout docs branch
         uses: actions/checkout@v2
         with:
-          ref: refs/heads/docs-deploy
+          ref: refs/heads/${{ fromJSON(steps.pages-data.outputs.result).source.branch }}
 
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
@@ -37,7 +53,6 @@ jobs:
           echo "GITHUB_SHA_SHORT=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c 1-7)" >> $GITHUB_ENV
           echo "REF=$(cat ref.txt)" >> $GITHUB_ENV
           rm -f ref.txt
-          echo ${{ github.event.workflow_run.event.pull_requests[0].number }}
 
       - name: Deploy docs
         run: |
@@ -70,7 +85,7 @@ jobs:
           issue-number: ${{ github.event.workflow_run.pull_requests[0].number }}
           edit-mode: replace
           body: |
-            📝 Docs preview for commit ${{ env.GITHUB_SHA_SHORT }} at: https://www.adriangb.com/scikeras/${{ env.REF }}/
+            📝 Docs preview for commit ${{ env.GITHUB_SHA_SHORT }} at: ${{ fromJSON(steps.pages-data.outputs.result).html_url }}${{ env.REF }}/
 
       - name: Update comment
         if: ${{ contains(github.event.workflow_run.event, 'pull_request') && steps.fc.outputs.comment-id != 0 }}
@@ -79,4 +94,4 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           edit-mode: replace
           body: |
-            📝 Docs preview for commit ${{ env.GITHUB_SHA_SHORT }} at: https://www.adriangb.com/scikeras/${{ env.REF }}/
+            📝 Docs preview for commit ${{ env.GITHUB_SHA_SHORT }} at: ${{ fromJSON(steps.pages-data.outputs.result).html_url }}${{ env.REF }}/

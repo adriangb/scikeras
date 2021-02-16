@@ -17,11 +17,7 @@ def test_X_shape_change():
     changes shape in subsequent partial fit calls.
     """
 
-    estimator = KerasRegressor(
-        model=dynamic_regressor,
-        loss=KerasRegressor.r_squared,
-        hidden_layer_sizes=(100,),
-    )
+    estimator = KerasRegressor(model=dynamic_regressor, hidden_layer_sizes=(100,),)
     X = np.array([[1, 2], [3, 4]]).reshape(2, 2, 1)
     y = np.array([[0, 1, 0], [1, 0, 0]])
 
@@ -48,9 +44,7 @@ def test_unknown_param():
 def test_not_fitted_error():
     """Tests error when trying to use predict before fit.
     """
-    estimator = KerasClassifier(
-        model=dynamic_classifier, loss=KerasRegressor.r_squared,
-    )
+    estimator = KerasClassifier(dynamic_classifier)
     X = np.random.rand(10, 20)
     with pytest.raises(NotFittedError):
         # This is in BaseWrapper so it covers
