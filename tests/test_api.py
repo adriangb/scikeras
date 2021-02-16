@@ -815,13 +815,21 @@ class TestDatasetTransformer:
         m = Model(inp, out)
         m.compile(loss="bce")
 
-        def dtf(X_y_s: Tuple[np.ndarray, np.ndarray, np.ndarray]):
-            return (tf.data.Dataset.from_tensor_slices(X_y_s), None, None)
+        def transform(fit_kwargs: Dict[str, Any]):
+            x = fit_kwargs.pop("x")
+            y = fit_kwargs.pop("y") if "y" in fit_kwargs else None
+            sample_weight = (
+                fit_kwargs.pop("sample_weight")
+                if "sample_weight" in fit_kwargs
+                else None
+            )
+            fit_kwargs["x"] = tf.data.Dataset.from_tensor_slices((x, y, sample_weight))
+            return fit_kwargs
 
         class MyWrapper(KerasClassifier):
             @property
             def dataset_transformer(self):
-                return FunctionTransformer(dtf)
+                return FunctionTransformer(transform)
 
         est = MyWrapper(m)
         X = np.random.random((100, 1))
@@ -830,7 +838,8 @@ class TestDatasetTransformer:
 
         def check_fit(**kwargs):
             assert isinstance(kwargs["x"], tf.data.Dataset)
-            assert kwargs["y"] is None
+            assert "y" not in kwargs
+            assert "sample_weight" not in kwargs
             return fit_orig(**kwargs)
 
         with patch.object(m, "fit", new=check_fit):
@@ -849,14 +858,22 @@ class TestDatasetTransformer:
         m = Model(inp, out)
         m.compile(loss="bce")
 
-        def dtf(X_y_s: Tuple[np.ndarray, np.ndarray, np.ndarray]):
-            return (tf.data.Dataset.from_tensor_slices(X_y_s), None, None)
+        def transform(fit_kwargs: Dict[str, Any]):
+            x = fit_kwargs.pop("x")
+            y = fit_kwargs.pop("y") if "y" in fit_kwargs else None
+            sample_weight = (
+                fit_kwargs.pop("sample_weight")
+                if "sample_weight" in fit_kwargs
+                else None
+            )
+            fit_kwargs["x"] = tf.data.Dataset.from_tensor_slices((x, y, sample_weight))
+            return fit_kwargs
 
         class MyWrapper(KerasClassifier):
             @property
             def dataset_transformer(self):
                 t1 = super().dataset_transformer
-                t2 = FunctionTransformer(dtf)
+                t2 = FunctionTransformer(transform)
                 return make_pipeline(t1, t2)
 
         est = MyWrapper(m, class_weight="balanced")

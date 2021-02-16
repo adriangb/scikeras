@@ -408,18 +408,15 @@ class ClassWeightDataTransformer(BaseEstimator, TransformerMixin):
         self.class_weight = class_weight
 
     def fit(
-        self,
-        data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]],
-        dummy: None = None,
+        self, data: Dict[str, Any], dummy: None = None
     ) -> "ClassWeightDataTransformer":
         return self
 
-    def transform(
-        self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]
-    ) -> Tuple[np.ndarray, Union[np.ndarray, None], Union[np.ndarray, None]]:
-        X, y, sample_weight = data
+    def transform(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        y, sample_weight = data.get("y", None), data.get("sample_weight", None)
         if self.class_weight is None or y is None:
-            return (X, y, sample_weight)
+            return data
         sample_weight = 1 if sample_weight is None else sample_weight
         sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
-        return (X, y, sample_weight)
+        data["sample_weight"] = sample_weight
+        return data

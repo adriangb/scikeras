@@ -139,6 +139,7 @@ class BaseWrapper(BaseEstimator):
         "validation_split",
         "shuffle",
         "sample_weight",
+        "class_weight",
         "initial_epoch",
         "validation_steps",
         "validation_batch_size",
@@ -478,16 +479,21 @@ class BaseWrapper(BaseEstimator):
         # collect parameters
         params = self.get_params()
         fit_args = route_params(params, destination="fit", pass_filter=self._fit_kwargs)
-        fit_args["sample_weight"] = sample_weight
         fit_args["epochs"] = initial_epoch + epochs
         fit_args["initial_epoch"] = initial_epoch
         fit_args.update(kwargs)
 
+        fit_args["x"] = X
+        fit_args["y"] = y
+        fit_args["sample_weight"] = sample_weight
+
+        fit_args = self.dataset_transformer_.transform(fit_args)
+
         if self._random_state is not None:
             with TFRandomState(self._random_state):
-                hist = self.model_.fit(x=X, y=y, **fit_args)
+                hist = self.model_.fit(**fit_args)
         else:
-            hist = self.model_.fit(x=X, y=y, **fit_args)
+            hist = self.model_.fit(**fit_args)
 
         if not warm_start or not hasattr(self, "history_") or initial_epoch == 0:
             self.history_ = defaultdict(list)
@@ -808,7 +814,9 @@ class BaseWrapper(BaseEstimator):
 
         self.model_ = self._build_keras_model()
 
-        self.dataset_transformer_ = self.dataset_transformer.fit((X, y, sample_weight))
+        self.dataset_transformer_ = self.dataset_transformer.fit(
+            dict(x=X, y=y, sample_weight=sample_weight)
+        )
         dataset_meta = getattr(self.dataset_transformer_, "get_metadata", dict)()
         vars(self).update(**dataset_meta)
 
@@ -882,8 +890,6 @@ class BaseWrapper(BaseEstimator):
             y = self.target_encoder_.transform(y)
             self._check_model_compatibility(y)
 
-        X, y, sample_weight = self.dataset_transformer_.transform((X, y, sample_weight))
-
         self._fit_keras_model(
             X,
             y,
@@ -948,7 +954,6 @@ class BaseWrapper(BaseEstimator):
 
         # pre process X
         X = self.feature_encoder_.transform(X)
-        X, _, _ = self.dataset_transformer_.transform((X, None, None))
 
         # filter kwargs and get attributes for predict
         params = self.get_params()
@@ -956,9 +961,12 @@ class BaseWrapper(BaseEstimator):
             params, destination="predict", pass_filter=self._predict_kwargs
         )
         pred_args.update(kwargs)
+        pred_args["x"] = X
+
+        pred_args = self.dataset_transformer_.transform(pred_args)
 
         # predict with Keras model
-        y_pred = self.model_.predict(X, **pred_args)
+        y_pred = self.model_.predict(**pred_args)
 
         return y_pred
 

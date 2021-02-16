@@ -5,8 +5,8 @@ jupyter:
     text_representation:
       extension: .md
       format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.9.1
+      format_version: '1.3'
+      jupytext_version: 1.10.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -438,7 +438,7 @@ clf = MultiDimensionalClassifier(
 Train and score the model (this takes some time)
 
 ```python
-clf.fit(x_train, y_train)
+_ = clf.fit(x_train, y_train)
 ```
 
 ```python
@@ -448,9 +448,13 @@ print(f"Test score (accuracy): {score:.2f}")
 
 ## 5. Ragged datasets with tf.data.Dataset
 
-SciKeras provides a third dependency injection point that operates on the entire dataset: X, y & sample_weight. This `dataset_transformer` is applied after `target_transformer` and `feature_transformer`. One use case for this dependency injection point is to transform data from tabular/array-like to the `tf.data.Dataset` format, which only requires iteration. We can use this to create a `tf.data.Dataset` of ragged tensors.
+SciKeras provides a third dependency injection point that operates on the entire dataset: X, y & sample_weight.
+This `dataset_transformer` is applied after `target_transformer` and `feature_transformer`.
+One use case for this dependency injection point is to transform data from tabular/array-like to the `tf.data.Dataset` format, which only requires iteration.
+We can use this to create a `tf.data.Dataset` of ragged tensors.
 
-Note that `dataset_transformer` should accept a single **3 element tuple** as its argument and return value; more details on this are in the [docs](https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers).
+Note that `dataset_transformer` should accept a single single dictionary as its argument to `transform` and `fit`, and return a single dictionary as well.
+More details on this are in the [docs](https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers).
 
 Let's start by defining our data. We'll have an extra "feature" that marks the observation index, but we'll remove it when we deconstruct our data in the transformer.
 
@@ -469,47 +473,64 @@ Also note that `dataset_transformer` will _always_ be called with `X` (i.e. the 
 you should check if `y` and `sample_weigh` are None before doing any operations on them.
 
 ```python
-from typing import Tuple, Optional
+from typing import Dict, Any
 
 import tensorflow as tf
 
 
-def ragged_transformer(data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> Tuple[tf.RaggedTensor, None, None]:
-    X, y, sample_weights = data
+def ragged_transformer(data: Dict[str, Any]) -> Dict[str, Any]:
+    x, y, sample_weight = data["x"], data.get("y", None), data.get("sample_weight", None)
     if y is not None:
         y = y.reshape(-1, 1 if len(y.shape) == 1 else y.shape[1])
-        y = y[tf.RaggedTensor.from_value_rowids(y, X[:, -1]).row_starts().numpy()]
-    if sample_weights is not None:
-        sample_weights = sample_weights.reshape(-1, 1 if len(sample_weights.shape) == 1 else sample_weights.shape[1])
-        sample_weights = sample_weights[tf.RaggedTensor.from_value_rowids(sample_weights, X[:, -1]).row_starts().numpy()]
-    X = tf.RaggedTensor.from_value_rowids(X[:, :-1], X[:, -1])
-    return (X, y, sample_weights)
+        y = y[tf.RaggedTensor.from_value_rowids(y, x[:, -1]).row_starts().numpy()]
+    if sample_weight is not None:
+        sample_weight = sample_weight.reshape(-1, 1 if len(sample_weight.shape) == 1 else sample_weight.shape[1])
+        sample_weight = sample_weight[tf.RaggedTensor.from_value_rowids(sample_weight, x[:, -1]).row_starts().numpy()]
+    x = tf.RaggedTensor.from_value_rowids(x[:, :-1], x[:, -1])
+    data["x"] = x
+    if "y" in data:
+        data["y"] = y
+    if "sample_weight" in data:
+        data["sample_weight"] = sample_weight
+    return data
 ```
 
-In this case, we chose to keep `y` and `sample_weights` as numpy arrays, which will allow us to re-use ClassWeightDataTransformer,
+In this case, we chose to keep `y` and `sample_weight` as numpy arrays, which will allow us to re-use ClassWeightDataTransformer,
 the default `dataset_transformer` for `KerasClassifier`.
 
 Lets quickly test our transformer:
 
 ```python
-data = ragged_transformer((X, y, None))
-data
+data = ragged_transformer(dict(x=X, y=y, sample_weight=None))
+print(type(data["x"]))
+print(data["x"].shape)
 ```
+
+And the `y=None` case:
 
 ```python
-data = ragged_transformer((X, None, None))
-data
+data = ragged_transformer(dict(x=X, y=None, sample_weight=None))
+print(type(data["x"]))
+print(data["x"].shape)
 ```
 
-Our shapes look good, and we can handle the `y=None` case.
+Everything looks good!
 
 Because Keras will not accept a RaggedTensor directly, we will need to wrap our entire dataset into a tensorflow `Dataset`. We can do this by adding one more transformation step:
 
 Next, we can add our transormers to our model. We use an sklearn `Pipeline` (generated via `make_pipeline`) to keep ClassWeightDataTransformer operational while implementing our custom transformation.
 
 ```python
-def dataset_transformer(data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> Tuple[tf.data.Dataset, None, None]:
-    return (tf.data.Dataset.from_tensor_slices(data), None, None)
+def dataset_transformer(data: Dict[str, Any]) -> Dict[str, Any]:
+    x_y_s = data["x"], data.get("y", None), data.get("sample_weight", None)
+    data["x"] = tf.data.Dataset.from_tensor_slices(x_y_s)
+    # don't blindly assign y & sw; if being called from
+    # predict they should not just be None, they should not be present at all!
+    if "y" in data:
+        data["y"] = None
+    if "sample_weight" in data:
+        data["sample_weight"] = None
+    return data
 ```
 
 ```python
@@ -603,7 +624,8 @@ y_pred
 
 ## 6. Multi-output class_weight
 
-In this example, we will use `dataset_transformer` to support multi-output class weights. We will re-use our `MultiOutputTransformer` from our previous example to split the output, then we will create `sample_weights` from `class_weight`
+In this example, we will use `dataset_transformer` to support multi-output class weights.
+We will re-use our `MultiOutputTransformer` from our previous example to split the output, then we will create `sample_weight` from `class_weight`.
 
 ```python
 from collections import defaultdict
@@ -614,25 +636,24 @@ from sklearn.utils.class_weight import compute_sample_weight
 
 class DatasetTransformer(BaseEstimator, TransformerMixin):
 
-    def __init__(self, output_names, class_weight=None):
-        self.class_weight = class_weight
+    def __init__(self, output_names):
         self.output_names = output_names
 
-    def fit(self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> "DatasetTransformer":
+    def fit(self, data: Dict[str, Any]) -> "DatasetTransformer":
         return self
 
-    def transform(self, data: Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]) -> Tuple[np.ndarray, Union[np.ndarray, None], Union[np.ndarray, None]]:
-        if self.class_weight is None:
+    def transform(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        class_weight = data.get("class_weight", None)
+        if class_weight is None:
             return data
-        class_weight = self.class_weight
         if isinstance(class_weight, str):  # handle "balanced"
             class_weight_ = class_weight
             class_weight = defaultdict(lambda: class_weight_)
-        X, y, sample_weights = data
-        assert sample_weights is None, "Cannot use class_weight & sample_weights together"
+        y, sample_weight = data.get("y", None), data.get("sample_weight", None)
+        assert sample_weight is None, "Cannot use class_weight & sample_weight together"
         if y is not None:
             # y should be a list of arrays, as split up by MultiOutputTransformer
-            sample_weights = {
+            sample_weight = {
                 output_name: compute_sample_weight(class_weight[output_num], output_data)
                 for output_num, (output_name, output_data) in enumerate(zip(self.output_names, y))
             }
@@ -640,10 +661,11 @@ class DatasetTransformer(BaseEstimator, TransformerMixin):
             # see https://scikit-learn.org/stable/modules/generated/sklearn.utils.class_weight.compute_sample_weight.html
             # It is trivial to change the expected format to match Keras' ({output_name: weights, ...})
             # see https://github.com/keras-team/keras/issues/4735#issuecomment-267473722
-        return X, y, sample_weights
-```
+            data["sample_weight"] = sample_weight
+            data["class_weight"] = None
+        return data
 
-```python
+
 def get_model(meta, compile_kwargs):
     inp = keras.layers.Input(shape=(meta["n_features_in_"]))
     x1 = keras.layers.Dense(100, activation="relu")(inp)
@@ -667,7 +689,6 @@ class CustomClassifier(KerasClassifier):
     def dataset_transformer(self):
         return DatasetTransformer(
             output_names=self.model_.output_names,
-            class_weight=self.class_weight
         )
 ```
 
@@ -730,4 +751,173 @@ y_pred = clf.predict(X)
 print(counts_bin)
 (_, counts_cat) = np.unique(y_pred[:, 1], return_counts=True)
 print(counts_cat)
+```
+
+## 6. Custom validation dataset
+
+Although `dataset_transformer` is primarily designed for data transformations, because it returns valid `**kwargs` to fit it can be used for other advanced use cases.
+In this example, we use `dataset_transformer` to implement a custom test/train split for Keras' internal validation. We'll use sklearn's
+`train_test_split`, but this could be implemented via an arbitrary user function, eg. to ensure balanced class distribution.
+
+```python
+from sklearn.model_selection import train_test_split
+
+
+def get_clf(meta: Dict[str, Any]):
+    inp = keras.layers.Input(shape=(meta["n_features_in_"],))
+    x1 = keras.layers.Dense(100, activation="relu")(inp)
+    out = keras.layers.Dense(1, activation="sigmoid")(x1)
+    return keras.Model(inputs=inp, outputs=out)
+
+
+class CustomSplit(BaseEstimator, TransformerMixin):
+
+    def __init__(self, test_size: float):
+        self.test_size = test_size
+    
+    def fit(self, data: Dict[str, Any]) -> "CustomSplit":
+        return self
+
+    def transform(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        if self.test_size == 0:
+            return data
+        x, y, sw = data["x"], data.get("y", None), data.get("sample_weight", None)
+        if y is None:
+            return data
+        if sw is None:
+            x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=self.test_size, stratify=y)
+            validation_data = (x_val, y_val)
+            sw_train = None
+        else:
+            x_train, x_val, y_train, y_val, sw_train, sw_val = train_test_split(x, y, sw, test_size=self.test_size, stratify=y)
+            validation_data = (x_val, y_val, sw_val)
+        data["validation_data"] = validation_data
+        data["x"], data["y"], data["sample_weight"] = x_train, y_train, sw_train
+        return data
+
+
+class CustomClassifier(KerasClassifier):
+
+    @property
+    def dataset_transformer(self):
+        return CustomSplit(test_size=self.validation_split)
+```
+
+And now lets test with a toy dataset. We specifically choose to make the target strings to show
+that with this approach, we can preserve all of the nice data pre-processing that SciKeras does
+for us, while still being able to split the final data before passing it to Keras.
+
+```python
+y = np.array(["a"] * 900 + ["b"] * 100)
+X = np.array([0] * 900 + [1] * 100).reshape(-1, 1)
+```
+
+To get a base measurment to compare against, we'll run first with KerasClassifier as a benchmark.
+
+```python
+clf = KerasClassifier(
+    get_clf,
+    loss="bce",
+    metrics=["binary_accuracy"],
+    verbose=False,
+    validation_split=0.1,
+    shuffle=False,
+    random_state=0,
+    epochs=10
+)
+
+clf.fit(X, y)
+print(f"binary_accuracy = {clf.history_['binary_accuracy'][-1]}")
+print(f"val_binary_accuracy = {clf.history_['val_binary_accuracy'][-1]}")
+```
+
+We see that we get near zero validation accuracy. Because one of our classes was only found in the tail end of our dataset and we specified `validation_split=0.1`, we validated with a class we had never seen before.
+
+We could specify `shuffle=True` (this is actually the default), but for highly imbalanced classes, this may not be as good as stratified splitting.
+
+So lets test our new `CustomClassifier`.
+
+```python
+clf = CustomClassifier(
+    get_clf,
+    loss="bce",
+    metrics=["binary_accuracy"],
+    verbose=False,
+    validation_split=0.1,
+    shuffle=False,
+    random_state=0,
+    epochs=10
+)
+
+clf.fit(X, y)
+print(f"binary_accuracy = {clf.history_['binary_accuracy'][-1]}")
+print(f"val_binary_accuracy = {clf.history_['val_binary_accuracy'][-1]}")
+```
+
+Much better!
+
+
+## 7. Dynamically setting batch_size
+
+
+In this tutorial, we use the `data_transformer` interface to implement a dynamic batch_size, similar to sklearn's [MLPClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html). We will implement `batch_size` as `batch_size=min(200, n_samples)`.
+
+```python
+from sklearn.model_selection import train_test_split
+
+
+def check_batch_size(x):
+    """Check the batch_size used in training.
+    """
+    bs = x.shape[0]
+    if bs is not None:
+        print(f"batch_size={bs}")
+    return x
+
+
+def get_clf(meta: Dict[str, Any]):
+    inp = keras.layers.Input(shape=(meta["n_features_in_"],))
+    x1 = keras.layers.Dense(100, activation="relu")(inp)
+    x2 = keras.layers.Lambda(check_batch_size)(x1)
+    out = keras.layers.Dense(1, activation="sigmoid")(x2)
+    return keras.Model(inputs=inp, outputs=out)
+
+
+class DynamicBatch(BaseEstimator, TransformerMixin):
+
+    def fit(self, data: Dict[str, Any]) -> "DynamicBatch":
+        return self
+
+    def transform(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        n_samples = data["x"].shape[0]
+        data["batch_size"] = min(200, n_samples)
+        return data
+
+
+class DynamicBatchClassifier(KerasClassifier):
+
+    @property
+    def dataset_transformer(self):
+        return DynamicBatch()
+```
+
+Since this is happening inside SciKeras, this will work even if we are doing cross validation (which adjusts the split according to `cv`).
+
+```python
+from sklearn.model_selection import cross_val_score
+
+clf = DynamicBatchClassifier(
+    get_clf,
+    loss="bce",
+    verbose=False,
+    random_state=0
+)
+
+_ = cross_val_score(clf, X, y, cv=6)  # note: 1000 / 6 = 167
+```
+
+But if we train with larger inputs, we can hit the cap of 200 we set:
+
+```python
+_ = cross_val_score(clf, X, y, cv=5)
 ```
