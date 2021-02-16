@@ -49,9 +49,15 @@ pass your loss function to the constructor:
 Variable keyword arguments in fit and predict
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In a future release of SciKeras, variable keyword arguments (commonly referred to as
-``**kwargs``) will be removed from fit and predict. To future
-proof your code, you should instead declare these parameters in your constructor:
+Keras supports a large number of variable keyword arguments keyword arguments (commonly referred to as
+``**kwargs``) for ``fit`` and ``predict``. SciKeras supports these as well,
+but passing arguments in this way means that they will not be hyperparameter-tunable, can't be
+pickled, etc.
+
+In general, it is better to declare these parameters in the constructor of your model.
+While this is not possibel with all parameters, it is not a problem for the vast majority of them.
+
+As an example, we declare ``batch_size`` in the constructor:
 
 .. code:: diff
 
