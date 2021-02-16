@@ -227,7 +227,8 @@ Within SciKeras, this is roughly implemented as follows:
 degree of customization because SciKeras does not make any assumptions about the output data
 and passes it directly to :py:func:`tensorflow.keras.Model.fit`.
 
-Its signature is:
+It accepts a dict of valid Keras ``**kwargs`` and is expected to return a dict
+of valid Keras ``**kwargs``:
 
 .. code:: python
 
@@ -254,6 +255,10 @@ Its signature is:
 
 You can modify ``data`` in-place within ``transoform`` but **must** still return
 it.
+
+When called from ``fit`` or ``initialize``, you will get and return keys that are valid
+``**kwargs`` to ``tf.keras.Model.fit``. When being called from ``predict`` or ``score``
+you will get and return keys that are valid ``**kwargs`` to ``tf.keras.Model.predict``.
 
 Although you could implement *all* data transformations in a single ``dataset_transformer``,
 having several distinct dependency injections points allows for more modularity,

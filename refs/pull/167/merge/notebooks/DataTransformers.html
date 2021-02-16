@@ -394,6 +394,8 @@ div.rendered_html tbody tr:hover {
 <li><p><a class="reference external" href="#4.2-Test">4.2 Test</a></p></li>
 <li><p><a class="reference external" href="#5.-Ragged-datasets-with-tf.data.Dataset">5. Ragged datasets with tf.data.Dataset</a></p></li>
 <li><p><a class="reference external" href="#6.-Multi-output-class_weight">6. Multi-output class_weight</a></p></li>
+<li><p><a class="reference external" href="#6.-Custom-validation-dataset">7. Custom validation dataset</a></p></li>
+<li><p><a class="reference external" href="#6.-Dynamically-setting-batch_size">8. Dynamically setting batch_size</a></p></li>
 </ul>
 </div>
 <div class="section" id="1.-Setup">
@@ -499,8 +501,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.5030906 ]
- [0.50837505]]
+[[0.44911155]
+ [0.4631702 ]]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -517,8 +519,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.21187878 0.17495695 0.1667967  0.2411633  0.20520423]
- [0.17328386 0.17258763 0.15630282 0.22772512 0.27010056]]
+[[0.16590333 0.17179856 0.2408471  0.24176483 0.17968617]
+ [0.23459992 0.17077774 0.2343911  0.1652047  0.19502656]]
 </pre></div></div>
 </div>
 <p>As you can see, our <code class="docutils literal notranslate"><span class="pre">predict</span></code> output is also a list of arrays, except it contains probabilities instead of the class predictions.</p>
@@ -610,7 +612,7 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 `y`, as will be passed to Keras:
-[array([0, 0, 0, 0]), array([3, 3, 1, 2])]
+[array([0, 1, 0, 0]), array([0, 0, 1, 0])]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -638,11 +640,11 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[1, 3],
-       [1, 4],
-       [0, 4],
-       [0, 4],
-       [1, 4]])
+array([[0, 3],
+       [0, 0],
+       [1, 3],
+       [1, 0],
+       [1, 2]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -719,7 +721,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.36
+0.375
 </pre></div></div>
 </div>
 </div>
@@ -790,7 +792,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--3.1914658655243002
+-4.063976108674661
 </pre></div></div>
 </div>
 <p>Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.</p>
@@ -839,7 +841,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--3.120995371596865
+-2.9408812166104434
 </pre></div></div>
 </div>
 </div>
@@ -1026,25 +1028,25 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/10
-8/8 [==============================] - 2s 198ms/step - loss: 2.2129 - val_loss: 1.9378
+8/8 [==============================] - 2s 182ms/step - loss: 2.2129 - val_loss: 1.9378
 Epoch 2/10
-8/8 [==============================] - 1s 102ms/step - loss: 1.7355 - val_loss: 1.4332
+8/8 [==============================] - 1s 90ms/step - loss: 1.7355 - val_loss: 1.4332
 Epoch 3/10
-8/8 [==============================] - 1s 98ms/step - loss: 1.2980 - val_loss: 1.1264
+8/8 [==============================] - 1s 91ms/step - loss: 1.2980 - val_loss: 1.1264
 Epoch 4/10
-8/8 [==============================] - 1s 97ms/step - loss: 0.9632 - val_loss: 0.8725
+8/8 [==============================] - 1s 87ms/step - loss: 0.9632 - val_loss: 0.8725
 Epoch 5/10
-8/8 [==============================] - 1s 91ms/step - loss: 0.7774 - val_loss: 0.7834
+8/8 [==============================] - 1s 83ms/step - loss: 0.7774 - val_loss: 0.7834
 Epoch 6/10
-8/8 [==============================] - 1s 94ms/step - loss: 0.6900 - val_loss: 0.8330
+8/8 [==============================] - 1s 87ms/step - loss: 0.6900 - val_loss: 0.8330
 Epoch 7/10
-8/8 [==============================] - 1s 97ms/step - loss: 0.6336 - val_loss: 0.6026
+8/8 [==============================] - 1s 95ms/step - loss: 0.6336 - val_loss: 0.6026
 Epoch 8/10
-8/8 [==============================] - 1s 101ms/step - loss: 0.5648 - val_loss: 0.7786
+8/8 [==============================] - 1s 86ms/step - loss: 0.5648 - val_loss: 0.7786
 Epoch 9/10
-8/8 [==============================] - 1s 100ms/step - loss: 0.5365 - val_loss: 0.5447
+8/8 [==============================] - 1s 89ms/step - loss: 0.5365 - val_loss: 0.5447
 Epoch 10/10
-8/8 [==============================] - 1s 102ms/step - loss: 0.4750 - val_loss: 0.6588
+8/8 [==============================] - 1s 87ms/step - loss: 0.4750 - val_loss: 0.6588
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1062,7 +1064,7 @@ Epoch 10/10
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-8/8 [==============================] - 0s 28ms/step
+8/8 [==============================] - 0s 22ms/step
 Test score (accuracy): 0.76
 </pre></div></div>
 </div>
@@ -1263,8 +1265,8 @@ operations on them.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-5/5 [==============================] - 0s 1ms/step - loss: 1.0891
-5/5 [==============================] - 0s 995us/step
+5/5 [==============================] - 0s 2ms/step - loss: 0.6735
+5/5 [==============================] - 0s 946us/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1273,7 +1275,7 @@ operations on them.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;], dtype=&#39;&lt;U6&#39;)
+array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;], dtype=&#39;&lt;U6&#39;)
 </pre></div></div>
 </div>
 <p>If we define our custom layers, transformers and wrappers in their own module, we can easily create a self-contained classifier that is able to handle ragged datasets and has a clean Scikit-Learn compatible API:</p>
@@ -1320,8 +1322,8 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-5/5 [==============================] - 0s 3ms/step - loss: 1.1574
-5/5 [==============================] - 0s 2ms/step
+5/5 [==============================] - 0s 3ms/step - loss: 1.1640
+5/5 [==============================] - 0s 870us/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1524,8 +1526,8 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </pre></div></div>
 </div>
 </div>
-<div class="section" id="6.-Custom-validation-dataset">
-<h2>6. Custom validation dataset<a class="headerlink" href="#6.-Custom-validation-dataset" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="7.-Custom-validation-dataset">
+<h2>7. Custom validation dataset<a class="headerlink" href="#7.-Custom-validation-dataset" title="Permalink to this headline">¶</a></h2>
 <p>Although <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> is primarily designed for data transformations, because it returns valid <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> to fit it can be used for other advanced use cases. In this example, we use <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> to implement a custom test/train split for Keras’ internal validation. We’ll use sklearn’s <code class="docutils literal notranslate"><span class="pre">train_test_split</span></code>, but this could be implemented via an arbitrary user function, eg. to ensure balanced class distribution.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
@@ -1655,8 +1657,8 @@ val_binary_accuracy = 1.0
 </div>
 <p>Much better!</p>
 </div>
-<div class="section" id="7.-Dynamically-setting-batch_size">
-<h2>7. Dynamically setting batch_size<a class="headerlink" href="#7.-Dynamically-setting-batch_size" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="8.-Dynamically-setting-batch_size">
+<h2>8. Dynamically setting batch_size<a class="headerlink" href="#8.-Dynamically-setting-batch_size" title="Permalink to this headline">¶</a></h2>
 <p>In this tutorial, we use the <code class="docutils literal notranslate"><span class="pre">data_transformer</span></code> interface to implement a dynamic batch_size, similar to sklearn’s <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html">MLPClassifier</a>. We will implement <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> as <code class="docutils literal notranslate"><span class="pre">batch_size=min(200,</span> <span class="pre">n_samples)</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[51]:

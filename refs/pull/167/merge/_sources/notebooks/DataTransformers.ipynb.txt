@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "patent-exhaust",
+   "id": "painted-resort",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/DataTransformers.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "moderate-inspection",
+   "id": "complete-grade",
    "metadata": {},
    "source": [
     "# Data Transformers\n",
@@ -41,20 +41,28 @@
     "  * [4.2 Test](#4.2-Test)\n",
     "* [5. Ragged datasets with tf.data.Dataset](#5.-Ragged-datasets-with-tf.data.Dataset)\n",
     "* [6. Multi-output class_weight](#6.-Multi-output-class_weight)\n",
-    "\n",
+    "* [7. Custom validation dataset](#6.-Custom-validation-dataset)\n",
+    "* [8. Dynamically setting batch_size](#6.-Dynamically-setting-batch_size)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "shaped-browse",
+   "metadata": {},
+   "source": [
     "## 1. Setup"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "collective-collect",
+   "id": "missing-johns",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:01.898238Z",
-     "iopub.status.busy": "2021-02-16T06:36:01.897132Z",
-     "iopub.status.idle": "2021-02-16T06:36:07.990123Z",
-     "shell.execute_reply": "2021-02-16T06:36:07.989066Z"
+     "iopub.execute_input": "2021-02-16T15:20:12.914000Z",
+     "iopub.status.busy": "2021-02-16T15:20:12.913366Z",
+     "iopub.status.idle": "2021-02-16T15:20:17.814099Z",
+     "shell.execute_reply": "2021-02-16T15:20:17.815030Z"
     }
    },
    "outputs": [],
@@ -67,7 +75,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "unlikely-potential",
+   "id": "approved-welsh",
    "metadata": {},
    "source": [
     "Silence TensorFlow warnings to keep output succint."
@@ -76,13 +84,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "bigger-spain",
+   "id": "remarkable-manhattan",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:07.995102Z",
-     "iopub.status.busy": "2021-02-16T06:36:07.994544Z",
-     "iopub.status.idle": "2021-02-16T06:36:07.998167Z",
-     "shell.execute_reply": "2021-02-16T06:36:07.997704Z"
+     "iopub.execute_input": "2021-02-16T15:20:17.819709Z",
+     "iopub.status.busy": "2021-02-16T15:20:17.819132Z",
+     "iopub.status.idle": "2021-02-16T15:20:17.821976Z",
+     "shell.execute_reply": "2021-02-16T15:20:17.822697Z"
     }
    },
    "outputs": [],
@@ -96,13 +104,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "electronic-capture",
+   "id": "portuguese-punishment",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:08.002126Z",
-     "iopub.status.busy": "2021-02-16T06:36:08.001595Z",
-     "iopub.status.idle": "2021-02-16T06:36:10.683977Z",
-     "shell.execute_reply": "2021-02-16T06:36:10.684907Z"
+     "iopub.execute_input": "2021-02-16T15:20:17.826422Z",
+     "iopub.status.busy": "2021-02-16T15:20:17.825230Z",
+     "iopub.status.idle": "2021-02-16T15:20:20.050892Z",
+     "shell.execute_reply": "2021-02-16T15:20:20.049610Z"
     }
    },
    "outputs": [],
@@ -114,7 +122,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "designing-dressing",
+   "id": "former-portuguese",
    "metadata": {},
    "source": [
     "## 2. Multiple outputs\n",
@@ -133,13 +141,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "acceptable-weather",
+   "id": "excessive-hollywood",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:10.694454Z",
-     "iopub.status.busy": "2021-02-16T06:36:10.693780Z",
-     "iopub.status.idle": "2021-02-16T06:36:10.697416Z",
-     "shell.execute_reply": "2021-02-16T06:36:10.697851Z"
+     "iopub.execute_input": "2021-02-16T15:20:20.059775Z",
+     "iopub.status.busy": "2021-02-16T15:20:20.059010Z",
+     "iopub.status.idle": "2021-02-16T15:20:20.062149Z",
+     "shell.execute_reply": "2021-02-16T15:20:20.062868Z"
     }
    },
    "outputs": [],
@@ -158,7 +166,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "present-grammar",
+   "id": "severe-complaint",
    "metadata": {},
    "source": [
     "Let's test that this model works with the kind of inputs and outputs we expect."
@@ -167,13 +175,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "recovered-society",
+   "id": "referenced-mambo",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:10.705405Z",
-     "iopub.status.busy": "2021-02-16T06:36:10.704851Z",
-     "iopub.status.idle": "2021-02-16T06:36:11.632255Z",
-     "shell.execute_reply": "2021-02-16T06:36:11.632719Z"
+     "iopub.execute_input": "2021-02-16T15:20:20.069221Z",
+     "iopub.status.busy": "2021-02-16T15:20:20.068680Z",
+     "iopub.status.idle": "2021-02-16T15:20:20.923866Z",
+     "shell.execute_reply": "2021-02-16T15:20:20.924284Z"
     }
    },
    "outputs": [],
@@ -198,13 +206,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "fourth-sunday",
+   "id": "insured-garlic",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:11.638528Z",
-     "iopub.status.busy": "2021-02-16T06:36:11.637057Z",
-     "iopub.status.idle": "2021-02-16T06:36:11.642647Z",
-     "shell.execute_reply": "2021-02-16T06:36:11.643362Z"
+     "iopub.execute_input": "2021-02-16T15:20:20.928827Z",
+     "iopub.status.busy": "2021-02-16T15:20:20.928289Z",
+     "iopub.status.idle": "2021-02-16T15:20:20.936065Z",
+     "shell.execute_reply": "2021-02-16T15:20:20.937001Z"
     }
    },
    "outputs": [
@@ -212,8 +220,8 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "[[0.5030906 ]\n",
-      " [0.50837505]]\n"
+      "[[0.44911155]\n",
+      " [0.4631702 ]]\n"
      ]
     }
    ],
@@ -224,13 +232,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "executed-collection",
+   "id": "widespread-warner",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:11.647840Z",
-     "iopub.status.busy": "2021-02-16T06:36:11.647316Z",
-     "iopub.status.idle": "2021-02-16T06:36:11.651243Z",
-     "shell.execute_reply": "2021-02-16T06:36:11.652095Z"
+     "iopub.execute_input": "2021-02-16T15:20:20.940674Z",
+     "iopub.status.busy": "2021-02-16T15:20:20.940162Z",
+     "iopub.status.idle": "2021-02-16T15:20:20.944657Z",
+     "shell.execute_reply": "2021-02-16T15:20:20.945070Z"
     }
    },
    "outputs": [
@@ -238,8 +246,8 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "[[0.21187878 0.17495695 0.1667967  0.2411633  0.20520423]\n",
-      " [0.17328386 0.17258763 0.15630282 0.22772512 0.27010056]]\n"
+      "[[0.16590333 0.17179856 0.2408471  0.24176483 0.17968617]\n",
+      " [0.23459992 0.17077774 0.2343911  0.1652047  0.19502656]]\n"
      ]
     }
    ],
@@ -249,7 +257,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "searching-slave",
+   "id": "indie-juvenile",
    "metadata": {},
    "source": [
     "As you can see, our `predict` output is also a list of arrays, except it contains probabilities instead of the class predictions.\n",
@@ -267,13 +275,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "assigned-dodge",
+   "id": "given-newfoundland",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:11.655330Z",
-     "iopub.status.busy": "2021-02-16T06:36:11.654767Z",
-     "iopub.status.idle": "2021-02-16T06:36:11.668214Z",
-     "shell.execute_reply": "2021-02-16T06:36:11.668699Z"
+     "iopub.execute_input": "2021-02-16T15:20:20.956713Z",
+     "iopub.status.busy": "2021-02-16T15:20:20.956166Z",
+     "iopub.status.idle": "2021-02-16T15:20:20.959739Z",
+     "shell.execute_reply": "2021-02-16T15:20:20.960460Z"
     }
    },
    "outputs": [],
@@ -333,7 +341,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "driven-array",
+   "id": "aware-thickness",
    "metadata": {},
    "source": [
     "Note that in addition to the usual `transform` and `inverse_transform` methods, we implement the `get_metadata` method to return the `n_classes_` attribute.\n",
@@ -344,13 +352,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "contrary-horizon",
+   "id": "understanding-fundamental",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:11.674621Z",
-     "iopub.status.busy": "2021-02-16T06:36:11.672942Z",
-     "iopub.status.idle": "2021-02-16T06:36:11.680446Z",
-     "shell.execute_reply": "2021-02-16T06:36:11.680978Z"
+     "iopub.execute_input": "2021-02-16T15:20:20.963767Z",
+     "iopub.status.busy": "2021-02-16T15:20:20.962719Z",
+     "iopub.status.idle": "2021-02-16T15:20:20.969943Z",
+     "shell.execute_reply": "2021-02-16T15:20:20.970664Z"
     }
    },
    "outputs": [
@@ -359,7 +367,7 @@
      "output_type": "stream",
      "text": [
       "`y`, as will be passed to Keras:\n",
-      "[array([0, 0, 0, 0]), array([3, 3, 1, 2])]\n"
+      "[array([0, 1, 0, 0]), array([0, 0, 1, 0])]\n"
      ]
     }
    ],
@@ -376,13 +384,13 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "sublime-variance",
+   "id": "accredited-audience",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:11.683669Z",
-     "iopub.status.busy": "2021-02-16T06:36:11.683147Z",
-     "iopub.status.idle": "2021-02-16T06:36:11.693287Z",
-     "shell.execute_reply": "2021-02-16T06:36:11.693811Z"
+     "iopub.execute_input": "2021-02-16T15:20:20.974010Z",
+     "iopub.status.busy": "2021-02-16T15:20:20.972975Z",
+     "iopub.status.idle": "2021-02-16T15:20:20.986559Z",
+     "shell.execute_reply": "2021-02-16T15:20:20.987285Z"
     }
    },
    "outputs": [
@@ -396,11 +404,11 @@
     {
      "data": {
       "text/plain": [
-       "array([[1, 3],\n",
-       "       [1, 4],\n",
-       "       [0, 4],\n",
-       "       [0, 4],\n",
-       "       [1, 4]])"
+       "array([[0, 3],\n",
+       "       [0, 0],\n",
+       "       [1, 3],\n",
+       "       [1, 0],\n",
+       "       [1, 2]])"
       ]
      },
      "execution_count": 1,
@@ -417,13 +425,13 @@
   {
    "cell_type": "code",
    "execution_count": 11,
-   "id": "compact-conviction",
+   "id": "institutional-contribution",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:11.696405Z",
-     "iopub.status.busy": "2021-02-16T06:36:11.695859Z",
-     "iopub.status.idle": "2021-02-16T06:36:11.699604Z",
-     "shell.execute_reply": "2021-02-16T06:36:11.700106Z"
+     "iopub.execute_input": "2021-02-16T15:20:20.990623Z",
+     "iopub.status.busy": "2021-02-16T15:20:20.989586Z",
+     "iopub.status.idle": "2021-02-16T15:20:20.995192Z",
+     "shell.execute_reply": "2021-02-16T15:20:20.995920Z"
     }
    },
    "outputs": [
@@ -441,7 +449,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "increased-reserve",
+   "id": "limited-premium",
    "metadata": {},
    "source": [
     "Since this looks good, we move on to integrating our transformer into our classifier."
@@ -450,13 +458,13 @@
   {
    "cell_type": "code",
    "execution_count": 12,
-   "id": "changing-infection",
+   "id": "certain-agriculture",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:11.706167Z",
-     "iopub.status.busy": "2021-02-16T06:36:11.705627Z",
-     "iopub.status.idle": "2021-02-16T06:36:11.708774Z",
-     "shell.execute_reply": "2021-02-16T06:36:11.709218Z"
+     "iopub.execute_input": "2021-02-16T15:20:20.999311Z",
+     "iopub.status.busy": "2021-02-16T15:20:20.998323Z",
+     "iopub.status.idle": "2021-02-16T15:20:21.004460Z",
+     "shell.execute_reply": "2021-02-16T15:20:21.005157Z"
     }
    },
    "outputs": [],
@@ -480,7 +488,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ordered-reading",
+   "id": "convertible-basics",
    "metadata": {},
    "source": [
     "### 2.3 Test classifier"
@@ -489,13 +497,13 @@
   {
    "cell_type": "code",
    "execution_count": 13,
-   "id": "industrial-stevens",
+   "id": "controversial-singer",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:11.714686Z",
-     "iopub.status.busy": "2021-02-16T06:36:11.713970Z",
-     "iopub.status.idle": "2021-02-16T06:36:11.718162Z",
-     "shell.execute_reply": "2021-02-16T06:36:11.717714Z"
+     "iopub.execute_input": "2021-02-16T15:20:21.008537Z",
+     "iopub.status.busy": "2021-02-16T15:20:21.007484Z",
+     "iopub.status.idle": "2021-02-16T15:20:21.012504Z",
+     "shell.execute_reply": "2021-02-16T15:20:21.013222Z"
     }
    },
    "outputs": [],
@@ -510,20 +518,20 @@
   {
    "cell_type": "code",
    "execution_count": 14,
-   "id": "twenty-vaccine",
+   "id": "organized-phase",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:11.727976Z",
-     "iopub.status.busy": "2021-02-16T06:36:11.721908Z",
-     "iopub.status.idle": "2021-02-16T06:36:12.495066Z",
-     "shell.execute_reply": "2021-02-16T06:36:12.495840Z"
+     "iopub.execute_input": "2021-02-16T15:20:21.016389Z",
+     "iopub.status.busy": "2021-02-16T15:20:21.015424Z",
+     "iopub.status.idle": "2021-02-16T15:20:21.716111Z",
+     "shell.execute_reply": "2021-02-16T15:20:21.716871Z"
     }
    },
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "0.36"
+       "0.375"
       ]
      },
      "execution_count": 1,
@@ -539,7 +547,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "environmental-gabriel",
+   "id": "minus-spread",
    "metadata": {},
    "source": [
     "## 3. Multiple inputs\n",
@@ -565,13 +573,13 @@
   {
    "cell_type": "code",
    "execution_count": 15,
-   "id": "radical-opera",
+   "id": "unlike-gross",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:12.499525Z",
-     "iopub.status.busy": "2021-02-16T06:36:12.498429Z",
-     "iopub.status.idle": "2021-02-16T06:36:12.505424Z",
-     "shell.execute_reply": "2021-02-16T06:36:12.506164Z"
+     "iopub.execute_input": "2021-02-16T15:20:21.720431Z",
+     "iopub.status.busy": "2021-02-16T15:20:21.719361Z",
+     "iopub.status.idle": "2021-02-16T15:20:21.726137Z",
+     "shell.execute_reply": "2021-02-16T15:20:21.726846Z"
     }
    },
    "outputs": [],
@@ -596,7 +604,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "included-coffee",
+   "id": "tribal-facility",
    "metadata": {},
    "source": [
     "And test it with a small mock dataset:"
@@ -605,13 +613,13 @@
   {
    "cell_type": "code",
    "execution_count": 16,
-   "id": "vocational-structure",
+   "id": "sufficient-chest",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:12.509894Z",
-     "iopub.status.busy": "2021-02-16T06:36:12.508690Z",
-     "iopub.status.idle": "2021-02-16T06:36:13.077829Z",
-     "shell.execute_reply": "2021-02-16T06:36:13.078693Z"
+     "iopub.execute_input": "2021-02-16T15:20:21.730273Z",
+     "iopub.status.busy": "2021-02-16T15:20:21.729241Z",
+     "iopub.status.idle": "2021-02-16T15:20:22.244740Z",
+     "shell.execute_reply": "2021-02-16T15:20:22.245584Z"
     }
    },
    "outputs": [],
@@ -629,20 +637,20 @@
   {
    "cell_type": "code",
    "execution_count": 17,
-   "id": "korean-halloween",
+   "id": "monthly-warren",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:13.082557Z",
-     "iopub.status.busy": "2021-02-16T06:36:13.081476Z",
-     "iopub.status.idle": "2021-02-16T06:36:13.088387Z",
-     "shell.execute_reply": "2021-02-16T06:36:13.089124Z"
+     "iopub.execute_input": "2021-02-16T15:20:22.249197Z",
+     "iopub.status.busy": "2021-02-16T15:20:22.248157Z",
+     "iopub.status.idle": "2021-02-16T15:20:22.254832Z",
+     "shell.execute_reply": "2021-02-16T15:20:22.255584Z"
     }
    },
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "-3.1914658655243002"
+       "-4.063976108674661"
       ]
      },
      "execution_count": 1,
@@ -658,7 +666,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "eastern-parker",
+   "id": "qualified-projection",
    "metadata": {},
    "source": [
     "Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.\n",
@@ -672,13 +680,13 @@
   {
    "cell_type": "code",
    "execution_count": 18,
-   "id": "norman-blood",
+   "id": "random-career",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:13.092754Z",
-     "iopub.status.busy": "2021-02-16T06:36:13.091678Z",
-     "iopub.status.idle": "2021-02-16T06:36:13.097169Z",
-     "shell.execute_reply": "2021-02-16T06:36:13.097906Z"
+     "iopub.execute_input": "2021-02-16T15:20:22.258961Z",
+     "iopub.status.busy": "2021-02-16T15:20:22.257955Z",
+     "iopub.status.idle": "2021-02-16T15:20:22.262849Z",
+     "shell.execute_reply": "2021-02-16T15:20:22.263536Z"
     }
    },
    "outputs": [],
@@ -697,7 +705,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "moral-toyota",
+   "id": "interim-october",
    "metadata": {},
    "source": [
     "Note that we did **not** implement `inverse_transform` (that is, we did not pass an `inverse_func` argument to `FunctionTransformer`) because features are never converted back to their original form.\n",
@@ -708,20 +716,20 @@
   {
    "cell_type": "code",
    "execution_count": 19,
-   "id": "cooked-deployment",
+   "id": "covered-africa",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:13.101596Z",
-     "iopub.status.busy": "2021-02-16T06:36:13.100316Z",
-     "iopub.status.idle": "2021-02-16T06:36:13.668034Z",
-     "shell.execute_reply": "2021-02-16T06:36:13.667170Z"
+     "iopub.execute_input": "2021-02-16T15:20:22.266715Z",
+     "iopub.status.busy": "2021-02-16T15:20:22.265703Z",
+     "iopub.status.idle": "2021-02-16T15:20:22.798702Z",
+     "shell.execute_reply": "2021-02-16T15:20:22.799468Z"
     }
    },
    "outputs": [
     {
      "data": {
       "text/plain": [
-       "-3.120995371596865"
+       "-2.9408812166104434"
       ]
      },
      "execution_count": 1,
@@ -739,7 +747,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "hired-effort",
+   "id": "infrared-edition",
    "metadata": {},
    "source": [
     "## 4. Multidimensional inputs with MNIST dataset\n",
@@ -752,13 +760,13 @@
   {
    "cell_type": "code",
    "execution_count": 20,
-   "id": "weighted-queue",
+   "id": "hundred-costs",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:13.677507Z",
-     "iopub.status.busy": "2021-02-16T06:36:13.676960Z",
-     "iopub.status.idle": "2021-02-16T06:36:14.043706Z",
-     "shell.execute_reply": "2021-02-16T06:36:14.044430Z"
+     "iopub.execute_input": "2021-02-16T15:20:22.803038Z",
+     "iopub.status.busy": "2021-02-16T15:20:22.801977Z",
+     "iopub.status.idle": "2021-02-16T15:20:23.146345Z",
+     "shell.execute_reply": "2021-02-16T15:20:23.147114Z"
     }
    },
    "outputs": [
@@ -780,7 +788,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "collected-granny",
+   "id": "controlling-tampa",
    "metadata": {},
    "source": [
     "The outputs (labels) are numbers 0-9:"
@@ -789,13 +797,13 @@
   {
    "cell_type": "code",
    "execution_count": 21,
-   "id": "engaged-portrait",
+   "id": "lesbian-eleven",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:14.048690Z",
-     "iopub.status.busy": "2021-02-16T06:36:14.048142Z",
-     "iopub.status.idle": "2021-02-16T06:36:14.059081Z",
-     "shell.execute_reply": "2021-02-16T06:36:14.055421Z"
+     "iopub.execute_input": "2021-02-16T15:20:23.150639Z",
+     "iopub.status.busy": "2021-02-16T15:20:23.149578Z",
+     "iopub.status.idle": "2021-02-16T15:20:23.157689Z",
+     "shell.execute_reply": "2021-02-16T15:20:23.158414Z"
     }
    },
    "outputs": [
@@ -815,7 +823,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "split-commander",
+   "id": "narrative-appearance",
    "metadata": {},
    "source": [
     "First, we will \"flatten\" the data into an array of shape `(n_samples, 28*28)` (i.e. a 2D array). This will allow us to use sklearn ecosystem utilities, for example, `sklearn.preprocessing.MinMaxScaler`."
@@ -824,13 +832,13 @@
   {
    "cell_type": "code",
    "execution_count": 22,
-   "id": "medieval-portuguese",
+   "id": "earlier-chance",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:14.065853Z",
-     "iopub.status.busy": "2021-02-16T06:36:14.065289Z",
-     "iopub.status.idle": "2021-02-16T06:36:14.768173Z",
-     "shell.execute_reply": "2021-02-16T06:36:14.768957Z"
+     "iopub.execute_input": "2021-02-16T15:20:23.161811Z",
+     "iopub.status.busy": "2021-02-16T15:20:23.160816Z",
+     "iopub.status.idle": "2021-02-16T15:20:23.821788Z",
+     "shell.execute_reply": "2021-02-16T15:20:23.822598Z"
     }
    },
    "outputs": [],
@@ -853,13 +861,13 @@
   {
    "cell_type": "code",
    "execution_count": 23,
-   "id": "pretty-footwear",
+   "id": "upset-school",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:14.773620Z",
-     "iopub.status.busy": "2021-02-16T06:36:14.772538Z",
-     "iopub.status.idle": "2021-02-16T06:36:14.777604Z",
-     "shell.execute_reply": "2021-02-16T06:36:14.778406Z"
+     "iopub.execute_input": "2021-02-16T15:20:23.825995Z",
+     "iopub.status.busy": "2021-02-16T15:20:23.824952Z",
+     "iopub.status.idle": "2021-02-16T15:20:23.830574Z",
+     "shell.execute_reply": "2021-02-16T15:20:23.831287Z"
     }
    },
    "outputs": [
@@ -878,13 +886,13 @@
   {
    "cell_type": "code",
    "execution_count": 24,
-   "id": "specified-indiana",
+   "id": "apparent-pathology",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:14.782611Z",
-     "iopub.status.busy": "2021-02-16T06:36:14.782080Z",
-     "iopub.status.idle": "2021-02-16T06:36:14.788096Z",
-     "shell.execute_reply": "2021-02-16T06:36:14.788760Z"
+     "iopub.execute_input": "2021-02-16T15:20:23.834652Z",
+     "iopub.status.busy": "2021-02-16T15:20:23.833622Z",
+     "iopub.status.idle": "2021-02-16T15:20:23.840690Z",
+     "shell.execute_reply": "2021-02-16T15:20:23.841412Z"
     }
    },
    "outputs": [
@@ -902,7 +910,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "defined-barcelona",
+   "id": "colonial-hardwood",
    "metadata": {},
    "source": [
     "Of course, in this case, we could have just as easily used numpy functions to scale our data, but we use `MinMaxScaler` to demonstrate use of the sklearn ecosystem.\n",
@@ -915,13 +923,13 @@
   {
    "cell_type": "code",
    "execution_count": 25,
-   "id": "bulgarian-baking",
+   "id": "angry-quality",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:14.796615Z",
-     "iopub.status.busy": "2021-02-16T06:36:14.796011Z",
-     "iopub.status.idle": "2021-02-16T06:36:14.800084Z",
-     "shell.execute_reply": "2021-02-16T06:36:14.799397Z"
+     "iopub.execute_input": "2021-02-16T15:20:23.844839Z",
+     "iopub.status.busy": "2021-02-16T15:20:23.843758Z",
+     "iopub.status.idle": "2021-02-16T15:20:23.851051Z",
+     "shell.execute_reply": "2021-02-16T15:20:23.851786Z"
     }
    },
    "outputs": [],
@@ -951,7 +959,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ordered-quilt",
+   "id": "australian-realtor",
    "metadata": {},
    "source": [
     "Now let's define a transformer that we will use to reshape our input from the sklearn shape (`(n_samples, 784)`) to the Keras shape (which we will be `(n_samples, 28, 28, 1)`)."
@@ -960,13 +968,13 @@
   {
    "cell_type": "code",
    "execution_count": 26,
-   "id": "accomplished-jacob",
+   "id": "subjective-fisher",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:14.805205Z",
-     "iopub.status.busy": "2021-02-16T06:36:14.804672Z",
-     "iopub.status.idle": "2021-02-16T06:36:14.808443Z",
-     "shell.execute_reply": "2021-02-16T06:36:14.807966Z"
+     "iopub.execute_input": "2021-02-16T15:20:23.855028Z",
+     "iopub.status.busy": "2021-02-16T15:20:23.854068Z",
+     "iopub.status.idle": "2021-02-16T15:20:23.858748Z",
+     "shell.execute_reply": "2021-02-16T15:20:23.859437Z"
     }
    },
    "outputs": [],
@@ -983,13 +991,13 @@
   {
    "cell_type": "code",
    "execution_count": 27,
-   "id": "tamil-looking",
+   "id": "supreme-happening",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:14.813164Z",
-     "iopub.status.busy": "2021-02-16T06:36:14.812634Z",
-     "iopub.status.idle": "2021-02-16T06:36:14.816359Z",
-     "shell.execute_reply": "2021-02-16T06:36:14.815811Z"
+     "iopub.execute_input": "2021-02-16T15:20:23.862543Z",
+     "iopub.status.busy": "2021-02-16T15:20:23.861506Z",
+     "iopub.status.idle": "2021-02-16T15:20:23.866149Z",
+     "shell.execute_reply": "2021-02-16T15:20:23.866864Z"
     }
    },
    "outputs": [],
@@ -1005,7 +1013,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "greatest-mustang",
+   "id": "romantic-credit",
    "metadata": {},
    "source": [
     "### 4.2 Test\n",
@@ -1016,13 +1024,13 @@
   {
    "cell_type": "code",
    "execution_count": 28,
-   "id": "interracial-importance",
+   "id": "gentle-organic",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:14.820505Z",
-     "iopub.status.busy": "2021-02-16T06:36:14.819935Z",
-     "iopub.status.idle": "2021-02-16T06:36:24.460011Z",
-     "shell.execute_reply": "2021-02-16T06:36:24.460824Z"
+     "iopub.execute_input": "2021-02-16T15:20:23.870134Z",
+     "iopub.status.busy": "2021-02-16T15:20:23.869140Z",
+     "iopub.status.idle": "2021-02-16T15:20:32.592552Z",
+     "shell.execute_reply": "2021-02-16T15:20:32.593882Z"
     }
    },
    "outputs": [
@@ -1038,7 +1046,7 @@
      "output_type": "stream",
      "text": [
       "\r",
-      "1/8 [==>...........................] - ETA: 7s - loss: 2.3388"
+      "1/8 [==>...........................] - ETA: 6s - loss: 2.3388"
      ]
     },
     {
@@ -1094,7 +1102,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "8/8 [==============================] - 2s 198ms/step - loss: 2.2129 - val_loss: 1.9378\n"
+      "8/8 [==============================] - 2s 182ms/step - loss: 2.2129 - val_loss: 1.9378\n"
      ]
     },
     {
@@ -1159,7 +1167,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "8/8 [==============================] - 1s 102ms/step - loss: 1.7355 - val_loss: 1.4332\n"
+      "8/8 [==============================] - 1s 90ms/step - loss: 1.7355 - val_loss: 1.4332\n"
      ]
     },
     {
@@ -1230,7 +1238,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "8/8 [==============================] - 1s 98ms/step - loss: 1.2980 - val_loss: 1.1264\n"
+      "8/8 [==============================] - 1s 91ms/step - loss: 1.2980 - val_loss: 1.1264\n"
      ]
     },
     {
@@ -1301,7 +1309,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "8/8 [==============================] - 1s 97ms/step - loss: 0.9632 - val_loss: 0.8725\n"
+      "8/8 [==============================] - 1s 87ms/step - loss: 0.9632 - val_loss: 0.8725\n"
      ]
     },
     {
@@ -1372,7 +1380,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "8/8 [==============================] - 1s 91ms/step - loss: 0.7774 - val_loss: 0.7834\n"
+      "8/8 [==============================] - 1s 83ms/step - loss: 0.7774 - val_loss: 0.7834\n"
      ]
     },
     {
@@ -1443,7 +1451,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "8/8 [==============================] - 1s 94ms/step - loss: 0.6900 - val_loss: 0.8330\n"
+      "8/8 [==============================] - 1s 87ms/step - loss: 0.6900 - val_loss: 0.8330\n"
      ]
     },
     {
@@ -1514,7 +1522,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "8/8 [==============================] - 1s 97ms/step - loss: 0.6336 - val_loss: 0.6026\n"
+      "8/8 [==============================] - 1s 95ms/step - loss: 0.6336 - val_loss: 0.6026\n"
      ]
     },
     {
@@ -1585,7 +1593,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "8/8 [==============================] - 1s 101ms/step - loss: 0.5648 - val_loss: 0.7786\n"
+      "8/8 [==============================] - 1s 86ms/step - loss: 0.5648 - val_loss: 0.7786\n"
      ]
     },
     {
@@ -1656,7 +1664,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "8/8 [==============================] - 1s 100ms/step - loss: 0.5365 - val_loss: 0.5447\n"
+      "8/8 [==============================] - 1s 89ms/step - loss: 0.5365 - val_loss: 0.5447\n"
      ]
     },
     {
@@ -1727,7 +1735,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "8/8 [==============================] - 1s 102ms/step - loss: 0.4750 - val_loss: 0.6588\n"
+      "8/8 [==============================] - 1s 87ms/step - loss: 0.4750 - val_loss: 0.6588\n"
      ]
     }
    ],
@@ -1738,13 +1746,13 @@
   {
    "cell_type": "code",
    "execution_count": 29,
-   "id": "fewer-rescue",
+   "id": "activated-editor",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:24.464767Z",
-     "iopub.status.busy": "2021-02-16T06:36:24.463675Z",
-     "iopub.status.idle": "2021-02-16T06:36:24.796042Z",
-     "shell.execute_reply": "2021-02-16T06:36:24.795271Z"
+     "iopub.execute_input": "2021-02-16T15:20:32.599007Z",
+     "iopub.status.busy": "2021-02-16T15:20:32.597405Z",
+     "iopub.status.idle": "2021-02-16T15:20:32.905302Z",
+     "shell.execute_reply": "2021-02-16T15:20:32.904789Z"
     }
    },
    "outputs": [
@@ -1761,15 +1769,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "3/8 [==========>...................] - ETA: 0s"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "5/8 [=================>............] - ETA: 0s"
+      "4/8 [==============>...............] - ETA: 0s"
      ]
     },
     {
@@ -1785,7 +1785,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "8/8 [==============================] - 0s 28ms/step\n"
+      "8/8 [==============================] - 0s 22ms/step\n"
      ]
     },
     {
@@ -1803,7 +1803,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "academic-anthony",
+   "id": "welcome-austin",
    "metadata": {},
    "source": [
     "## 5. Ragged datasets with tf.data.Dataset\n",
@@ -1822,13 +1822,13 @@
   {
    "cell_type": "code",
    "execution_count": 30,
-   "id": "objective-hollow",
+   "id": "concrete-honey",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:24.801625Z",
-     "iopub.status.busy": "2021-02-16T06:36:24.798839Z",
-     "iopub.status.idle": "2021-02-16T06:36:24.808845Z",
-     "shell.execute_reply": "2021-02-16T06:36:24.809788Z"
+     "iopub.execute_input": "2021-02-16T15:20:32.910415Z",
+     "iopub.status.busy": "2021-02-16T15:20:32.908013Z",
+     "iopub.status.idle": "2021-02-16T15:20:32.914683Z",
+     "shell.execute_reply": "2021-02-16T15:20:32.915589Z"
     }
    },
    "outputs": [],
@@ -1844,7 +1844,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "tired-marriage",
+   "id": "satellite-malpractice",
    "metadata": {},
    "source": [
     "Next, we define our `dataset_transformer`. We will do this by defining a custom forward transformation outside of the Keras model. Note that we do not define an inverse transformation since that is never used.\n",
@@ -1855,13 +1855,13 @@
   {
    "cell_type": "code",
    "execution_count": 31,
-   "id": "structural-award",
+   "id": "posted-paris",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:24.814687Z",
-     "iopub.status.busy": "2021-02-16T06:36:24.813471Z",
-     "iopub.status.idle": "2021-02-16T06:36:24.834129Z",
-     "shell.execute_reply": "2021-02-16T06:36:24.835277Z"
+     "iopub.execute_input": "2021-02-16T15:20:32.919301Z",
+     "iopub.status.busy": "2021-02-16T15:20:32.918085Z",
+     "iopub.status.idle": "2021-02-16T15:20:32.928498Z",
+     "shell.execute_reply": "2021-02-16T15:20:32.929392Z"
     }
    },
    "outputs": [],
@@ -1890,7 +1890,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "complete-duration",
+   "id": "distinct-boundary",
    "metadata": {},
    "source": [
     "In this case, we chose to keep `y` and `sample_weight` as numpy arrays, which will allow us to re-use ClassWeightDataTransformer,\n",
@@ -1902,13 +1902,13 @@
   {
    "cell_type": "code",
    "execution_count": 32,
-   "id": "welcome-friday",
+   "id": "congressional-hayes",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:24.839558Z",
-     "iopub.status.busy": "2021-02-16T06:36:24.838264Z",
-     "iopub.status.idle": "2021-02-16T06:36:24.869633Z",
-     "shell.execute_reply": "2021-02-16T06:36:24.870655Z"
+     "iopub.execute_input": "2021-02-16T15:20:32.933442Z",
+     "iopub.status.busy": "2021-02-16T15:20:32.932294Z",
+     "iopub.status.idle": "2021-02-16T15:20:32.946851Z",
+     "shell.execute_reply": "2021-02-16T15:20:32.947624Z"
     }
    },
    "outputs": [
@@ -1929,7 +1929,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "fuzzy-integration",
+   "id": "relative-defeat",
    "metadata": {},
    "source": [
     "And the `y=None` case:"
@@ -1938,13 +1938,13 @@
   {
    "cell_type": "code",
    "execution_count": 33,
-   "id": "referenced-mitchell",
+   "id": "ignored-clock",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:24.875541Z",
-     "iopub.status.busy": "2021-02-16T06:36:24.873710Z",
-     "iopub.status.idle": "2021-02-16T06:36:24.892541Z",
-     "shell.execute_reply": "2021-02-16T06:36:24.891962Z"
+     "iopub.execute_input": "2021-02-16T15:20:32.951125Z",
+     "iopub.status.busy": "2021-02-16T15:20:32.950062Z",
+     "iopub.status.idle": "2021-02-16T15:20:32.959311Z",
+     "shell.execute_reply": "2021-02-16T15:20:32.960094Z"
     }
    },
    "outputs": [
@@ -1965,7 +1965,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "center-priority",
+   "id": "cooked-calcium",
    "metadata": {},
    "source": [
     "Everything looks good!\n",
@@ -1978,13 +1978,13 @@
   {
    "cell_type": "code",
    "execution_count": 34,
-   "id": "national-richardson",
+   "id": "agricultural-daniel",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:24.897463Z",
-     "iopub.status.busy": "2021-02-16T06:36:24.896911Z",
-     "iopub.status.idle": "2021-02-16T06:36:24.904607Z",
-     "shell.execute_reply": "2021-02-16T06:36:24.905320Z"
+     "iopub.execute_input": "2021-02-16T15:20:32.963921Z",
+     "iopub.status.busy": "2021-02-16T15:20:32.962714Z",
+     "iopub.status.idle": "2021-02-16T15:20:32.969441Z",
+     "shell.execute_reply": "2021-02-16T15:20:32.970241Z"
     }
    },
    "outputs": [],
@@ -2004,13 +2004,13 @@
   {
    "cell_type": "code",
    "execution_count": 35,
-   "id": "affiliated-class",
+   "id": "operational-shopper",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:24.909017Z",
-     "iopub.status.busy": "2021-02-16T06:36:24.907752Z",
-     "iopub.status.idle": "2021-02-16T06:36:24.914638Z",
-     "shell.execute_reply": "2021-02-16T06:36:24.915626Z"
+     "iopub.execute_input": "2021-02-16T15:20:32.974197Z",
+     "iopub.status.busy": "2021-02-16T15:20:32.973068Z",
+     "iopub.status.idle": "2021-02-16T15:20:32.981678Z",
+     "shell.execute_reply": "2021-02-16T15:20:32.982595Z"
     }
    },
    "outputs": [],
@@ -2032,7 +2032,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "raised-tamil",
+   "id": "residential-particular",
    "metadata": {},
    "source": [
     "Now we can define a Model. We need some way to handle/flatten our ragged arrays within our model. For this example, we use a custom mean layer, but you could use an Embedding layer, LSTM, etc."
@@ -2041,13 +2041,13 @@
   {
    "cell_type": "code",
    "execution_count": 36,
-   "id": "loaded-strength",
+   "id": "moved-accessory",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:24.929988Z",
-     "iopub.status.busy": "2021-02-16T06:36:24.929409Z",
-     "iopub.status.idle": "2021-02-16T06:36:24.931189Z",
-     "shell.execute_reply": "2021-02-16T06:36:24.931797Z"
+     "iopub.execute_input": "2021-02-16T15:20:32.987064Z",
+     "iopub.status.busy": "2021-02-16T15:20:32.985531Z",
+     "iopub.status.idle": "2021-02-16T15:20:32.998933Z",
+     "shell.execute_reply": "2021-02-16T15:20:32.999820Z"
     }
    },
    "outputs": [],
@@ -2080,7 +2080,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "configured-colony",
+   "id": "criminal-basket",
    "metadata": {},
    "source": [
     "And attach our model to our classifier wrapper:"
@@ -2089,13 +2089,13 @@
   {
    "cell_type": "code",
    "execution_count": 37,
-   "id": "animal-tongue",
+   "id": "portable-uncertainty",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:24.935485Z",
-     "iopub.status.busy": "2021-02-16T06:36:24.934844Z",
-     "iopub.status.idle": "2021-02-16T06:36:24.939786Z",
-     "shell.execute_reply": "2021-02-16T06:36:24.940358Z"
+     "iopub.execute_input": "2021-02-16T15:20:33.004276Z",
+     "iopub.status.busy": "2021-02-16T15:20:33.002684Z",
+     "iopub.status.idle": "2021-02-16T15:20:33.009716Z",
+     "shell.execute_reply": "2021-02-16T15:20:33.010797Z"
     }
    },
    "outputs": [],
@@ -2105,7 +2105,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "convenient-revision",
+   "id": "fiscal-river",
    "metadata": {},
    "source": [
     "Finally, let's train and predict:"
@@ -2114,13 +2114,13 @@
   {
    "cell_type": "code",
    "execution_count": 38,
-   "id": "composite-pressure",
+   "id": "naughty-suspect",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:24.946533Z",
-     "iopub.status.busy": "2021-02-16T06:36:24.946005Z",
-     "iopub.status.idle": "2021-02-16T06:36:25.352705Z",
-     "shell.execute_reply": "2021-02-16T06:36:25.352221Z"
+     "iopub.execute_input": "2021-02-16T15:20:33.015149Z",
+     "iopub.status.busy": "2021-02-16T15:20:33.013700Z",
+     "iopub.status.idle": "2021-02-16T15:20:33.590558Z",
+     "shell.execute_reply": "2021-02-16T15:20:33.589989Z"
     }
    },
    "outputs": [
@@ -2129,7 +2129,7 @@
      "output_type": "stream",
      "text": [
       "\r",
-      "1/5 [=====>........................] - ETA: 1s - loss: 1.6723"
+      "1/5 [=====>........................] - ETA: 1s - loss: 0.3916"
      ]
     },
     {
@@ -2137,7 +2137,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "5/5 [==============================] - 0s 1ms/step - loss: 1.0891\n"
+      "5/5 [==============================] - 0s 2ms/step - loss: 0.6735\n"
      ]
     },
     {
@@ -2153,13 +2153,13 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "5/5 [==============================] - 0s 995us/step\n"
+      "5/5 [==============================] - 0s 946us/step\n"
      ]
     },
     {
      "data": {
       "text/plain": [
-       "array(['class2', 'class2', 'class2', 'class2', 'class2'], dtype='<U6')"
+       "array(['class1', 'class1', 'class1', 'class1', 'class1'], dtype='<U6')"
       ]
      },
      "execution_count": 1,
@@ -2175,7 +2175,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "medieval-summer",
+   "id": "bulgarian-crest",
    "metadata": {},
    "source": [
     "If we define our custom layers, transformers and wrappers in their own module, we can easily create a self-contained classifier that is able to handle ragged datasets and has a clean Scikit-Learn compatible API:"
@@ -2184,13 +2184,13 @@
   {
    "cell_type": "code",
    "execution_count": 39,
-   "id": "amazing-stake",
+   "id": "third-green",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:25.360025Z",
-     "iopub.status.busy": "2021-02-16T06:36:25.359477Z",
-     "iopub.status.idle": "2021-02-16T06:36:25.363286Z",
-     "shell.execute_reply": "2021-02-16T06:36:25.364400Z"
+     "iopub.execute_input": "2021-02-16T15:20:33.593470Z",
+     "iopub.status.busy": "2021-02-16T15:20:33.592932Z",
+     "iopub.status.idle": "2021-02-16T15:20:33.599245Z",
+     "shell.execute_reply": "2021-02-16T15:20:33.599806Z"
     }
    },
    "outputs": [],
@@ -2218,13 +2218,13 @@
   {
    "cell_type": "code",
    "execution_count": 40,
-   "id": "romance-bahrain",
+   "id": "distinct-classroom",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:25.369510Z",
-     "iopub.status.busy": "2021-02-16T06:36:25.367538Z",
-     "iopub.status.idle": "2021-02-16T06:36:26.028095Z",
-     "shell.execute_reply": "2021-02-16T06:36:26.028957Z"
+     "iopub.execute_input": "2021-02-16T15:20:33.602969Z",
+     "iopub.status.busy": "2021-02-16T15:20:33.602428Z",
+     "iopub.status.idle": "2021-02-16T15:20:34.089276Z",
+     "shell.execute_reply": "2021-02-16T15:20:34.088728Z"
     }
    },
    "outputs": [
@@ -2233,7 +2233,7 @@
      "output_type": "stream",
      "text": [
       "\r",
-      "1/5 [=====>........................] - ETA: 1s - loss: 1.7464"
+      "1/5 [=====>........................] - ETA: 1s - loss: 1.6227"
      ]
     },
     {
@@ -2241,7 +2241,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "5/5 [==============================] - 0s 3ms/step - loss: 1.1574\n"
+      "5/5 [==============================] - 0s 3ms/step - loss: 1.1640\n"
      ]
     },
     {
@@ -2257,7 +2257,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      "5/5 [==============================] - 0s 2ms/step\n"
+      "5/5 [==============================] - 0s 870us/step\n"
      ]
     },
     {
@@ -2280,7 +2280,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "offshore-walker",
+   "id": "dangerous-evolution",
    "metadata": {},
    "source": [
     "## 6. Multi-output class_weight\n",
@@ -2292,13 +2292,13 @@
   {
    "cell_type": "code",
    "execution_count": 41,
-   "id": "miniature-catalyst",
+   "id": "clean-thursday",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:26.032991Z",
-     "iopub.status.busy": "2021-02-16T06:36:26.031752Z",
-     "iopub.status.idle": "2021-02-16T06:36:26.062255Z",
-     "shell.execute_reply": "2021-02-16T06:36:26.064628Z"
+     "iopub.execute_input": "2021-02-16T15:20:34.092132Z",
+     "iopub.status.busy": "2021-02-16T15:20:34.091561Z",
+     "iopub.status.idle": "2021-02-16T15:20:34.112894Z",
+     "shell.execute_reply": "2021-02-16T15:20:34.113629Z"
     }
    },
    "outputs": [],
@@ -2369,7 +2369,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "anonymous-middle",
+   "id": "professional-berlin",
    "metadata": {},
    "source": [
     "Next, we define the data. We'll use `sklearn.datasets.make_blobs` to generate a relatively noisy dataset:"
@@ -2378,13 +2378,13 @@
   {
    "cell_type": "code",
    "execution_count": 42,
-   "id": "italic-found",
+   "id": "stupid-present",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:26.069611Z",
-     "iopub.status.busy": "2021-02-16T06:36:26.067333Z",
-     "iopub.status.idle": "2021-02-16T06:36:26.106608Z",
-     "shell.execute_reply": "2021-02-16T06:36:26.107180Z"
+     "iopub.execute_input": "2021-02-16T15:20:34.116836Z",
+     "iopub.status.busy": "2021-02-16T15:20:34.116303Z",
+     "iopub.status.idle": "2021-02-16T15:20:34.158549Z",
+     "shell.execute_reply": "2021-02-16T15:20:34.159648Z"
     }
    },
    "outputs": [],
@@ -2400,7 +2400,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "defensive-leonard",
+   "id": "assured-instruction",
    "metadata": {},
    "source": [
     "Test the model without specifying class weighting:"
@@ -2409,13 +2409,13 @@
   {
    "cell_type": "code",
    "execution_count": 43,
-   "id": "individual-costa",
+   "id": "municipal-order",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:26.135595Z",
-     "iopub.status.busy": "2021-02-16T06:36:26.128733Z",
-     "iopub.status.idle": "2021-02-16T06:36:28.020564Z",
-     "shell.execute_reply": "2021-02-16T06:36:28.021039Z"
+     "iopub.execute_input": "2021-02-16T15:20:34.177659Z",
+     "iopub.status.busy": "2021-02-16T15:20:34.168312Z",
+     "iopub.status.idle": "2021-02-16T15:20:35.632961Z",
+     "shell.execute_reply": "2021-02-16T15:20:35.633966Z"
     }
    },
    "outputs": [
@@ -2440,7 +2440,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "visible-removal",
+   "id": "worthy-finance",
    "metadata": {},
    "source": [
     "As you can see, without `class_weight=\"balanced\"`, our classifier only predicts mainly a single class for the first output. Now with `class_weight=\"balanced\"`:"
@@ -2449,13 +2449,13 @@
   {
    "cell_type": "code",
    "execution_count": 44,
-   "id": "confused-portugal",
+   "id": "norman-carter",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:28.031515Z",
-     "iopub.status.busy": "2021-02-16T06:36:28.030942Z",
-     "iopub.status.idle": "2021-02-16T06:36:30.006577Z",
-     "shell.execute_reply": "2021-02-16T06:36:30.007029Z"
+     "iopub.execute_input": "2021-02-16T15:20:35.636811Z",
+     "iopub.status.busy": "2021-02-16T15:20:35.636264Z",
+     "iopub.status.idle": "2021-02-16T15:20:37.280259Z",
+     "shell.execute_reply": "2021-02-16T15:20:37.281507Z"
     }
    },
    "outputs": [
@@ -2480,7 +2480,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "frequent-circumstances",
+   "id": "stone-discharge",
    "metadata": {},
    "source": [
     "Now, we get (mostly) balanced classes. But what if we want to specify our classes manually? You will notice that in when we defined `DatasetTransformer`, we gave it the ability to handle\n",
@@ -2490,13 +2490,13 @@
   {
    "cell_type": "code",
    "execution_count": 45,
-   "id": "adult-programmer",
+   "id": "understood-killing",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:30.010299Z",
-     "iopub.status.busy": "2021-02-16T06:36:30.009749Z",
-     "iopub.status.idle": "2021-02-16T06:36:31.875115Z",
-     "shell.execute_reply": "2021-02-16T06:36:31.877190Z"
+     "iopub.execute_input": "2021-02-16T15:20:37.292062Z",
+     "iopub.status.busy": "2021-02-16T15:20:37.287973Z",
+     "iopub.status.idle": "2021-02-16T15:20:38.901511Z",
+     "shell.execute_reply": "2021-02-16T15:20:38.902311Z"
     }
    },
    "outputs": [
@@ -2521,7 +2521,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "weekly-impact",
+   "id": "equipped-priority",
    "metadata": {},
    "source": [
     "Or mixing the two methods, because our first output is unbalanced but our second is (presumably) balanced:"
@@ -2530,13 +2530,13 @@
   {
    "cell_type": "code",
    "execution_count": 46,
-   "id": "excited-blind",
+   "id": "copyrighted-blues",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:31.883638Z",
-     "iopub.status.busy": "2021-02-16T06:36:31.881663Z",
-     "iopub.status.idle": "2021-02-16T06:36:33.600184Z",
-     "shell.execute_reply": "2021-02-16T06:36:33.600650Z"
+     "iopub.execute_input": "2021-02-16T15:20:38.908353Z",
+     "iopub.status.busy": "2021-02-16T15:20:38.907799Z",
+     "iopub.status.idle": "2021-02-16T15:20:40.351999Z",
+     "shell.execute_reply": "2021-02-16T15:20:40.351056Z"
     }
    },
    "outputs": [
@@ -2561,10 +2561,10 @@
   },
   {
    "cell_type": "markdown",
-   "id": "filled-seminar",
+   "id": "sacred-hopkins",
    "metadata": {},
    "source": [
-    "## 6. Custom validation dataset\n",
+    "## 7. Custom validation dataset\n",
     "\n",
     "Although `dataset_transformer` is primarily designed for data transformations, because it returns valid `**kwargs` to fit it can be used for other advanced use cases.\n",
     "In this example, we use `dataset_transformer` to implement a custom test/train split for Keras' internal validation. We'll use sklearn's\n",
@@ -2574,13 +2574,13 @@
   {
    "cell_type": "code",
    "execution_count": 47,
-   "id": "democratic-uncle",
+   "id": "completed-interstate",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:33.614492Z",
-     "iopub.status.busy": "2021-02-16T06:36:33.608550Z",
-     "iopub.status.idle": "2021-02-16T06:36:33.628354Z",
-     "shell.execute_reply": "2021-02-16T06:36:33.626840Z"
+     "iopub.execute_input": "2021-02-16T15:20:40.365976Z",
+     "iopub.status.busy": "2021-02-16T15:20:40.364491Z",
+     "iopub.status.idle": "2021-02-16T15:20:40.371579Z",
+     "shell.execute_reply": "2021-02-16T15:20:40.371969Z"
     }
    },
    "outputs": [],
@@ -2630,7 +2630,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "intermediate-swift",
+   "id": "saved-transcription",
    "metadata": {},
    "source": [
     "And now lets test with a toy dataset. We specifically choose to make the target strings to show\n",
@@ -2641,13 +2641,13 @@
   {
    "cell_type": "code",
    "execution_count": 48,
-   "id": "informed-guidance",
+   "id": "dirty-hamilton",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:33.634593Z",
-     "iopub.status.busy": "2021-02-16T06:36:33.633874Z",
-     "iopub.status.idle": "2021-02-16T06:36:33.637397Z",
-     "shell.execute_reply": "2021-02-16T06:36:33.638120Z"
+     "iopub.execute_input": "2021-02-16T15:20:40.377852Z",
+     "iopub.status.busy": "2021-02-16T15:20:40.377345Z",
+     "iopub.status.idle": "2021-02-16T15:20:40.380766Z",
+     "shell.execute_reply": "2021-02-16T15:20:40.381204Z"
     }
    },
    "outputs": [],
@@ -2658,7 +2658,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "overall-redhead",
+   "id": "optical-terror",
    "metadata": {},
    "source": [
     "To get a base measurment to compare against, we'll run first with KerasClassifier as a benchmark."
@@ -2667,13 +2667,13 @@
   {
    "cell_type": "code",
    "execution_count": 49,
-   "id": "responsible-carroll",
+   "id": "irish-nashville",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:33.644343Z",
-     "iopub.status.busy": "2021-02-16T06:36:33.643767Z",
-     "iopub.status.idle": "2021-02-16T06:36:35.267366Z",
-     "shell.execute_reply": "2021-02-16T06:36:35.268049Z"
+     "iopub.execute_input": "2021-02-16T15:20:40.388446Z",
+     "iopub.status.busy": "2021-02-16T15:20:40.387958Z",
+     "iopub.status.idle": "2021-02-16T15:20:41.790367Z",
+     "shell.execute_reply": "2021-02-16T15:20:41.791048Z"
     }
    },
    "outputs": [
@@ -2705,7 +2705,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "apparent-progressive",
+   "id": "valued-capital",
    "metadata": {},
    "source": [
     "We see that we get near zero validation accuracy. Because one of our classes was only found in the tail end of our dataset and we specified `validation_split=0.1`, we validated with a class we had never seen before.\n",
@@ -2718,13 +2718,13 @@
   {
    "cell_type": "code",
    "execution_count": 50,
-   "id": "integral-record",
+   "id": "dramatic-aside",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:35.279889Z",
-     "iopub.status.busy": "2021-02-16T06:36:35.275929Z",
-     "iopub.status.idle": "2021-02-16T06:36:36.472772Z",
-     "shell.execute_reply": "2021-02-16T06:36:36.472245Z"
+     "iopub.execute_input": "2021-02-16T15:20:41.799990Z",
+     "iopub.status.busy": "2021-02-16T15:20:41.799441Z",
+     "iopub.status.idle": "2021-02-16T15:20:42.876793Z",
+     "shell.execute_reply": "2021-02-16T15:20:42.877665Z"
     }
    },
    "outputs": [
@@ -2756,7 +2756,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "auburn-venice",
+   "id": "greatest-celebrity",
    "metadata": {},
    "source": [
     "Much better!"
@@ -2764,15 +2764,15 @@
   },
   {
    "cell_type": "markdown",
-   "id": "suspected-working",
+   "id": "stretch-heater",
    "metadata": {},
    "source": [
-    "## 7. Dynamically setting batch_size"
+    "## 8. Dynamically setting batch_size"
    ]
   },
   {
    "cell_type": "markdown",
-   "id": "smaller-thesaurus",
+   "id": "exempt-macro",
    "metadata": {},
    "source": [
     "In this tutorial, we use the `data_transformer` interface to implement a dynamic batch_size, similar to sklearn's [MLPClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html). We will implement `batch_size` as `batch_size=min(200, n_samples)`."
@@ -2781,13 +2781,13 @@
   {
    "cell_type": "code",
    "execution_count": 51,
-   "id": "artistic-recruitment",
+   "id": "optical-birth",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:36.484567Z",
-     "iopub.status.busy": "2021-02-16T06:36:36.483742Z",
-     "iopub.status.idle": "2021-02-16T06:36:36.486932Z",
-     "shell.execute_reply": "2021-02-16T06:36:36.487375Z"
+     "iopub.execute_input": "2021-02-16T15:20:42.892236Z",
+     "iopub.status.busy": "2021-02-16T15:20:42.891668Z",
+     "iopub.status.idle": "2021-02-16T15:20:42.895709Z",
+     "shell.execute_reply": "2021-02-16T15:20:42.895218Z"
     }
    },
    "outputs": [],
@@ -2832,7 +2832,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "alone-efficiency",
+   "id": "amateur-trinidad",
    "metadata": {},
    "source": [
     "Since this is happening inside SciKeras, this will work even if we are doing cross validation (which adjusts the split according to `cv`)."
@@ -2841,13 +2841,13 @@
   {
    "cell_type": "code",
    "execution_count": 52,
-   "id": "first-defeat",
+   "id": "manual-courage",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:36.492726Z",
-     "iopub.status.busy": "2021-02-16T06:36:36.491936Z",
-     "iopub.status.idle": "2021-02-16T06:36:39.580185Z",
-     "shell.execute_reply": "2021-02-16T06:36:39.579673Z"
+     "iopub.execute_input": "2021-02-16T15:20:42.903714Z",
+     "iopub.status.busy": "2021-02-16T15:20:42.903136Z",
+     "iopub.status.idle": "2021-02-16T15:20:45.827391Z",
+     "shell.execute_reply": "2021-02-16T15:20:45.826890Z"
     }
    },
    "outputs": [
@@ -2909,7 +2909,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "infrared-qatar",
+   "id": "fatty-veteran",
    "metadata": {},
    "source": [
     "But if we train with larger inputs, we can hit the cap of 200 we set:"
@@ -2918,13 +2918,13 @@
   {
    "cell_type": "code",
    "execution_count": 53,
-   "id": "insured-collector",
+   "id": "figured-champagne",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-02-16T06:36:39.583828Z",
-     "iopub.status.busy": "2021-02-16T06:36:39.582749Z",
-     "iopub.status.idle": "2021-02-16T06:36:42.119223Z",
-     "shell.execute_reply": "2021-02-16T06:36:42.119732Z"
+     "iopub.execute_input": "2021-02-16T15:20:45.832077Z",
+     "iopub.status.busy": "2021-02-16T15:20:45.831325Z",
+     "iopub.status.idle": "2021-02-16T15:20:48.269901Z",
+     "shell.execute_reply": "2021-02-16T15:20:48.270320Z"
     }
    },
    "outputs": [
@@ -2946,7 +2946,13 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "batch_size=200\n",
+      "batch_size=200\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
       "batch_size=200\n"
      ]
     },

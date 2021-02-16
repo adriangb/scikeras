@@ -317,7 +317,8 @@ SciKeras.fit(features, labels)                    dataset_transformer → keras.
 <p><code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> is the last step before passing the data to Keras, and it allows for the greatest
 degree of customization because SciKeras does not make any assumptions about the output data
 and passes it directly to <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.fit()</span></code>.</p>
-<p>Its signature is:</p>
+<p>It accepts a dict of valid Keras <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> and is expected to return a dict
+of valid Keras <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
 
 <span class="k">class</span> <span class="nc">DatasetTransformer</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
@@ -341,6 +342,9 @@ and passes it directly to <code class="xref py py-func docutils literal notransl
 </div>
 <p>You can modify <code class="docutils literal notranslate"><span class="pre">data</span></code> in-place within <code class="docutils literal notranslate"><span class="pre">transoform</span></code> but <strong>must</strong> still return
 it.</p>
+<p>When called from <code class="docutils literal notranslate"><span class="pre">fit</span></code> or <code class="docutils literal notranslate"><span class="pre">initialize</span></code>, you will get and return keys that are valid
+<code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> to <code class="docutils literal notranslate"><span class="pre">tf.keras.Model.fit</span></code>. When being called from <code class="docutils literal notranslate"><span class="pre">predict</span></code> or <code class="docutils literal notranslate"><span class="pre">score</span></code>
+you will get and return keys that are valid <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> to <code class="docutils literal notranslate"><span class="pre">tf.keras.Model.predict</span></code>.</p>
 <p>Although you could implement <em>all</em> data transformations in a single <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code>,
 having several distinct dependency injections points allows for more modularity,
 for example to keep the default processing of string-encoded labels but convert
