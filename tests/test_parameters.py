@@ -19,11 +19,7 @@ class TestRandomState:
     @pytest.mark.parametrize(
         "estimator",
         [
-            KerasRegressor(
-                model=dynamic_regressor,
-                loss=KerasRegressor.r_squared,
-                model__hidden_layer_sizes=(100,),
-            ),
+            KerasRegressor(model=dynamic_regressor, model__hidden_layer_sizes=(100,),),
             KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
         ],
     )
@@ -55,11 +51,7 @@ class TestRandomState:
     @pytest.mark.parametrize(
         "estimator",
         [
-            KerasRegressor(
-                model=dynamic_regressor,
-                loss=KerasRegressor.r_squared,
-                model__hidden_layer_sizes=(100,),
-            ),
+            KerasRegressor(model=dynamic_regressor, model__hidden_layer_sizes=(100,),),
             KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
         ],
     )

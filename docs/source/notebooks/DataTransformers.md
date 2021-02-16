@@ -641,7 +641,6 @@ class DatasetTransformer(BaseEstimator, TransformerMixin):
             # It is trivial to change the expected format to match Keras' ({output_name: weights, ...})
             # see https://github.com/keras-team/keras/issues/4735#issuecomment-267473722
         return X, y, sample_weights
-
 ```
 
 ```python

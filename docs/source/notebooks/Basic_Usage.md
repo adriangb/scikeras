@@ -182,7 +182,7 @@ def get_reg(meta, hidden_layer_sizes, dropout):
 
 ### 3.3 Defining and training the neural net regressor
 
-Training a regressor is almost the same as training a classifier. Mainly, we use `KerasRegressor` instead of `KerasClassifier` (this is the same terminology as in `sklearn`). We also change the loss function to `KerasRegressor.r_squared`. SciKeras provides this loss function because most of the `sklearn` ecosystem expects `R^2` as the loss function, but Keras does not have a default implementation.
+Training a regressor has nearly the same data flow as training a classifier. The differences include using `KerasRegressor` instead of `KerasClassifier` and adding `KerasRegressor.r_squared` as a metric. Most of the Scikit-learn regressors use the coefficient of determination or R^2 as a metric function, which measures correlation between the true labels and predicted labels.
 
 ```python
 from scikeras.wrappers import KerasRegressor
@@ -190,7 +190,8 @@ from scikeras.wrappers import KerasRegressor
 
 reg = KerasRegressor(
     model=get_reg,
-    loss=KerasRegressor.r_squared,
+    loss="mse",
+    metrics=[KerasRegressor.r_squared],
     hidden_layer_sizes=(100,),
     dropout=0.5,
 )
@@ -356,7 +357,7 @@ This feature is useful in several ways. For one, it allows to set those paramete
 
 To differentiate paramters like `callbacks` which are accepted by both `tf.keras.Model.fit` and `tf.keras.Model.predict` you can add a `fit__` or `predict__` routing suffix respectively. Similar, the `model__` prefix may be used to specify that a paramter is destined only for `get_clf`/`get_reg` (or whatever callable you pass as your `model` argument).
 
-For more information on parameter routing with special prefixes, see the [Advanced Usage Docs](https://scikeras.org.readthedocs.build/en/latest/advanced.html#routed-parameters)
+For more information on parameter routing with special prefixes, see the [Advanced Usage Docs](https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#routed-parameters)
 
 ### 7.2 Performing a grid search
 
