@@ -300,37 +300,47 @@ SciKeras.fit(features, labels)                    dataset_transformer → keras.
         <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_keras_model</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer</span><span class="o">.</span><span class="n">fit</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">))</span>
-        <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span><span class="o">.</span><span class="n">transform</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">))</span>
+        <span class="n">fit_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">fit_kwargs</span><span class="p">)</span>
+        <span class="n">fit_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">fit_kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">)</span>  <span class="c1"># tf.keras.Model.fit</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">X</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
-        <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">predict_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">predict_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_transformer_</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">predict_kwargs</span><span class="p">)</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">**</span><span class="n">predict_kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> is the last step before passing the data to Keras, and it allows for the greatest
 degree of customization because SciKeras does not make any assumptions about the output data
-and passes it directly to <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.fit()</span></code>.
-Its signature is:</p>
+and passes it directly to <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.fit()</span></code>.</p>
+<p>Its signature is:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
 
 <span class="k">class</span> <span class="nc">DatasetTransformer</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DatasetTransformer&quot;</span><span class="p">:</span>
-        <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">data</span>  <span class="c1"># sample_weight might be None</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;DatasetTransformer&quot;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_weight&quot;</span><span class="p">}</span>  <span class="c1"># fixed keys</span>
         <span class="o">...</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>  <span class="c1"># return a valid input for keras.Model.fit</span>
-        <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">data</span>  <span class="c1"># y and/or sample_weight might be None</span>
+        <span class="c1"># data includes x, y, sample_weight</span>
+        <span class="k">assert</span> <span class="s2">&quot;x&quot;</span> <span class="ow">in</span> <span class="n">data</span>  <span class="c1"># &quot;x&quot; is always a keys</span>
+        <span class="k">if</span> <span class="s2">&quot;y&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="c1"># called from fit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># called from predict</span>
+        <span class="c1"># as well as other Model.fit or Model.predict arguments</span>
+        <span class="k">assert</span> <span class="s2">&quot;batch_size&quot;</span> <span class="ow">in</span> <span class="n">data</span>
         <span class="o">...</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">)</span>  <span class="c1"># option 1</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">tensorflow_dataset</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># option 2</span>
+        <span class="k">return</span> <span class="n">data</span>
 </pre></div>
 </div>
+<p>You can modify <code class="docutils literal notranslate"><span class="pre">data</span></code> in-place within <code class="docutils literal notranslate"><span class="pre">transoform</span></code> but <strong>must</strong> still return
+it.</p>
 <p>Although you could implement <em>all</em> data transformations in a single <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code>,
 having several distinct dependency injections points allows for more modularity,
 for example to keep the default processing of string-encoded labels but convert
