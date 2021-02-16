@@ -1,7 +1,6 @@
 """Wrapper for using the Scikit-Learn API with Keras models.
 """
 import inspect
-import os
 import warnings
 
 from collections import defaultdict
@@ -697,7 +696,6 @@ class BaseWrapper(BaseEstimator):
             If not provided, then each sample is given unit weight.
         **kwargs : Dict[str, Any]
             Extra arguments to route to ``Model.fit``.
-            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
             These parameters can also be specified by prefixing `fit__` to a parameter at initialization;
             e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
         Returns
@@ -706,12 +704,6 @@ class BaseWrapper(BaseEstimator):
             A reference to the instance that can be chain called
             (ex: instance.fit(X,y).transform(X) )
         """
-        for k, v in kwargs.items():
-            warnings.warn(
-                "``**kwargs`` has been deprecated in SciKeras 0.2.1 and support will be removed be 1.0.0."
-                f" Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
-            )
-
         # epochs via kwargs > fit__epochs > epochs
         kwargs["epochs"] = kwargs.get(
             "epochs", getattr(self, "fit__epochs", self.epochs)
@@ -886,12 +878,6 @@ class BaseWrapper(BaseEstimator):
         For classification, this corresponds to predict_proba.
         For regression, this corresponds to predict.
         """
-        for k, v in kwargs.items():
-            warnings.warn(
-                "``**kwargs`` has been deprecated in SciKeras 0.2.1 and support will be removed be 1.0.0."
-                f" Instead, set predict arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
-            )
-
         # check if fitted
         if not self.initialized_:
             raise NotFittedError(
@@ -925,7 +911,6 @@ class BaseWrapper(BaseEstimator):
             and n_features is the number of features.
         **kwargs : Dict[str, Any]
             Extra arguments to route to ``Model.predict``.
-            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
             These parameters can also be specified by prefixing `predict__` to a parameter at initialization;
             e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
 
@@ -1351,7 +1336,6 @@ class KerasClassifier(BaseWrapper):
             If not provided, then each sample is given unit weight.
         **kwargs : Dict[str, Any]
             Extra arguments to route to ``Model.fit``.
-            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
             These parameters can also be specified by prefixing `fit__` to a parameter at initialization;
             e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
 
@@ -1415,7 +1399,6 @@ class KerasClassifier(BaseWrapper):
             and n_features is the number of features.
         **kwargs : Dict[str, Any]
             Extra arguments to route to ``Model.predict``.
-            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
             These parameters can also be specified by prefixing `predict__` to a parameter at initialization;
             e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
 
