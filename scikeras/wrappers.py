@@ -35,6 +35,9 @@ from scikeras.utils import loss_name, metric_name
 from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
 
 
+_kwarg_warn = "Passing `**kwargs` to `{0}` is not fully supported by the sklearn API. Instead, set arguments at initialization (`BaseWrapper({0}__{1}={2})`) or use `set_params`"
+
+
 class BaseWrapper(BaseEstimator):
     """Implementation of the scikit-learn classifier API for Keras.
 
@@ -704,10 +707,7 @@ class BaseWrapper(BaseEstimator):
             (ex: instance.fit(X,y).transform(X) )
         """
         for k, v in kwargs.items():
-            warnings.warn(
-                "Use of `**kwargs` for `fit` is not fully supported by the sklearn API."
-                f" Instead, set fit arguments at initialization (i.e., `BaseWrapper({k}={v})`)"
-            )
+            warnings.warn(_kwarg_warn.format("fit", k, v))
             break  # only warn about the first kwarg
 
         # epochs via kwargs > fit__epochs > epochs
@@ -885,10 +885,7 @@ class BaseWrapper(BaseEstimator):
         For regression, this corresponds to predict.
         """
         for k, v in kwargs.items():
-            warnings.warn(
-                "Use of `**kwargs` for `predict` is not fully supported by the sklearn API."
-                f" Instead, set fit arguments at initialization (i.e., BaseWrapper({k}={v})`)"
-            )
+            warnings.warn(_kwarg_warn.format("predict", k, v))
             break  # only warn about the first kwarg
 
         # check if fitted
