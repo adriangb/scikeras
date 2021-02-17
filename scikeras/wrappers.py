@@ -36,7 +36,7 @@ from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetE
 
 
 _kwarg_warn = """Passing `**kwargs` to `{0}` is not fully supported by the Scikit-Learn API.
-See our docs for more details: https://www.adriangb.com/scikeras/refs/heads/master/migration.html#variable-keyword-arguments-in-fit-and-predict
+See our docs for more details: https://www.adriangb.com/scikeras/migration.html#variable-keyword-arguments-in-fit-and-predict
 The following `**kwargs` were used:
 {2}
 """
