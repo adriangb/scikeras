@@ -279,9 +279,9 @@ def test_kwargs(wrapper, builder):
     X, y = np.random.random((100, 10)), np.random.randint(low=0, high=3, size=(100,))
     est.initialize(X, y)
     # check fit
-    match = r"`\*\*kwargs` for `\w+` is not fully supported"
+    match = r"Passing `\*\*kwargs` to `{}` is not fully supported"
     with mock.patch.object(est.model_, "fit", side_effect=est.model_.fit) as mock_fit:
-        with pytest.warns(UserWarning, match=match):
+        with pytest.warns(UserWarning, match=match.format("fit")):
             est.fit(
                 X, y, batch_size=kwarg_batch_size, epochs=kwarg_epochs, **extra_kwargs
             )
@@ -296,7 +296,7 @@ def test_kwargs(wrapper, builder):
     with mock.patch.object(
         est.model_, "predict", side_effect=est.model_.predict
     ) as mock_predict:
-        with pytest.warns(UserWarning, match=match):
+        with pytest.warns(UserWarning, match=match.format("predict")):
             est.predict(X, batch_size=kwarg_batch_size, **extra_kwargs)
         call_args = mock_predict.call_args_list
         assert len(call_args) == 1
@@ -304,7 +304,7 @@ def test_kwargs(wrapper, builder):
         assert "batch_size" in call_kwargs
         assert call_kwargs["batch_size"] == kwarg_batch_size
         if isinstance(est, KerasClassifier):
-            with pytest.warns(UserWarning, match=match):
+            with pytest.warns(UserWarning, match=match.format("predict")):
                 est.predict_proba(X, batch_size=kwarg_batch_size, **extra_kwargs)
             call_args = mock_predict.call_args_list
             assert len(call_args) == 2
