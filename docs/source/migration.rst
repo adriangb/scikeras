@@ -77,8 +77,8 @@ If you want to change the parameters on a live instance, you can do:
    clf.set_params(fit__batch_size=32, predict__batch_size=10000)
    clf.fit(...)
 
-This effectively gives you the same result as passing ``**kwargs``, just with
-one more function call.
+Functionally, this is the same as passing ``**kwargs`` to ``fit``, just with one more function call.
+This is what Scikti-Learn does in the background for hyperparameter tuning.
 
 Renaming of ``build_fn`` to ``model``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
