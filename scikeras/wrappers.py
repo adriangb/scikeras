@@ -35,7 +35,11 @@ from scikeras.utils import loss_name, metric_name
 from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
 
 
-_kwarg_warn = "Passing `**kwargs` to `{0}` is not fully supported by the sklearn API. Instead, set arguments at initialization (`BaseWrapper({0}__{1}={2})`) or use `set_params`"
+_kwarg_warn = """Passing `**kwargs` to `{0}` is not fully supported by the sklearn API.
+See our docs for more details: https://www.adriangb.com/scikeras/refs/heads/master/migration.html#variable-keyword-arguments-in-fit-and-predict
+The following `**kwargs` were used:
+{2}
+"""
 
 
 class BaseWrapper(BaseEstimator):
@@ -706,9 +710,10 @@ class BaseWrapper(BaseEstimator):
             A reference to the instance that can be chain called
             (ex: instance.fit(X,y).transform(X) )
         """
-        for k, v in kwargs.items():
-            warnings.warn(_kwarg_warn.format("fit", k, v))
-            break  # only warn about the first kwarg
+        if kwargs:
+            example_kwarg = next(iter(kwargs.keys()))
+            kwarg_list = "`\n * `".join(kwargs.keys()) + "`"
+            warnings.warn(_kwarg_warn.format("fit", example_kwarg, kwarg_list))
 
         # epochs via kwargs > fit__epochs > epochs
         kwargs["epochs"] = kwargs.get(
@@ -884,9 +889,12 @@ class BaseWrapper(BaseEstimator):
         For classification, this corresponds to predict_proba.
         For regression, this corresponds to predict.
         """
-        for k, v in kwargs.items():
-            warnings.warn(_kwarg_warn.format("predict", k, v))
-            break  # only warn about the first kwarg
+        if kwargs:
+            example_kwarg = next(iter(kwargs.keys()))
+            kwarg_list = "\n *".join(kwargs.keys())
+            warnings.warn(
+                _kwarg_warn.format("predict", example_kwarg, kwarg_list), stacklevel=2
+            )
 
         # check if fitted
         if not self.initialized_:

@@ -49,15 +49,12 @@ pass your loss function to the constructor:
 Variable keyword arguments in fit and predict
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Keras supports a large number of variable keyword arguments keyword arguments (commonly referred to as
-``**kwargs``) for ``fit`` and ``predict``. SciKeras supports these as well,
-but passing arguments in this way means that they will not be hyperparameter-tunable, can't be
-pickled, etc.
+Keras supports a variable keyword arguments (commonly referred to as ``**kwargs``) for ``fit`` and ``predict``.
+Scikit-Learn on the other hand does not support these arguments, and using them is largely incompatible with the Scikit-Learn ecosystem.
+As a compromise, SciKeras supports these arguments, but we recommended that you set parameters using the constructor
+or ``set_params`` for first-class SciKeras support.
 
-In general, it is better to declare these parameters in the constructor of your model.
-While this is not possibel with all parameters, it is not a problem for the vast majority of them.
-
-As an example, we declare ``batch_size`` in the constructor:
+For example, to declare ``batch_size`` in the constructor:
 
 .. code:: diff
 
@@ -70,7 +67,18 @@ Or to declare separate values for ``fit`` and ``predict``:
 
 .. code:: python
 
-   clf = KerasClassifier(fit__batch_size=32, predict__batch_size=10000)
+   clf = KerasClassifier(..., fit__batch_size=32, predict__batch_size=10000)
+
+If you want to change the parameters on a live instance, you can do:
+
+.. code:: python
+
+   clf = KerasClassifier(...)
+   clf.set_params(fit__batch_size=32, predict__batch_size=10000)
+   clf.fit(...)
+
+This effectively gives you the same result as passing ``**kwargs``, just with
+one more function call.
 
 Renaming of ``build_fn`` to ``model``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
