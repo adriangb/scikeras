@@ -39,3 +39,17 @@ if os.path.exists(os.path.join(base, "tags")):
 
 with open("versions.json", "w") as f:
     f.write(dumps(versions))
+
+if stable:
+    redirect = stable
+else:
+    try:
+        b = next(k for k, v in branch_names.items() if v)
+        redirect = "/".join((base, "heads", b))
+    except StopIteration:
+        redirect = None
+if redirect:
+    with open("index.html", "w") as f:
+        f.write(
+            f"""<meta http-equiv="refresh" content="0; URL='{redirect}/index.html'" />"""
+        )

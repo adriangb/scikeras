@@ -23,4 +23,11 @@ function maybeRedirect() {
     }
 }
 
-window.addEventListener('load', function () { setTimeout(maybeRedirect, 25); }, false);
+window.addEventListener('load', function () {
+    // Multiple timeouts, fails if it runs too soon
+    setTimeout(maybeRedirect, 25);
+    setTimeout(maybeRedirect, 50);
+    setTimeout(maybeRedirect, 100);
+    setTimeout(maybeRedirect, 200);
+    setTimeout(maybeRedirect, 500);
+}, false);
