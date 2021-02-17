@@ -1,6 +1,6 @@
 var base_url = "https://www.adriangb.com/scikeras/";
 
-var current = "https://www.adriangb.com/scikeras/test.html";
+var current = window.location.href;
 var rest = current.replace(base_url, "");
 
 var target_version = null;
