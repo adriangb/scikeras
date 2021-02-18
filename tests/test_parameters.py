@@ -279,7 +279,7 @@ def test_kwargs(wrapper, builder):
     X, y = np.random.random((100, 10)), np.random.randint(low=0, high=3, size=(100,))
     est.initialize(X, y)
     # check fit
-    match = r"Passing `\*\*kwargs` to `{}` is not fully supported"
+    match = "estimator parameters as keyword arguments"
     with mock.patch.object(est.model_, "fit", side_effect=est.model_.fit) as mock_fit:
         with pytest.warns(UserWarning, match=match.format("fit")):
             est.fit(
