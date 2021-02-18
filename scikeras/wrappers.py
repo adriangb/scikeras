@@ -708,7 +708,7 @@ class BaseWrapper(BaseEstimator):
         Warnings
         --------
             Passing estimator parameters as keyword arguments (aka as ``**kwargs``) to ``fit`` is not supported by the Scikit-Learn API,
-            and may be deprecated in SciKeras.
+            and will be deprecated in SciKeras.
             These parameters can also be specified by prefixing ``fit__`` to a parameter at initialization
             (``BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)``)
             or by using ``set_params`` (``est.set_params(fit__batch_size=32, predict__batch_size=1000)``).
