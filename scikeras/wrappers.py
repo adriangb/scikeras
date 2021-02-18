@@ -36,9 +36,10 @@ from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetE
 
 
 _kwarg_warn = """Passing `**kwargs` to `{0}` is not fully supported by the Scikit-Learn API.
+Instead, either set these parameters in the constructor (`BaseWrapper(..., foo=bar)`) or via `set_params` (`est.set_params(foo=bar)`).
 See our docs for more details: https://www.adriangb.com/scikeras/migration.html#variable-keyword-arguments-in-fit-and-predict
 The following `**kwargs` were used:
-{2}
+{1}
 """
 
 
@@ -711,9 +712,8 @@ class BaseWrapper(BaseEstimator):
             (ex: instance.fit(X,y).transform(X) )
         """
         if kwargs:
-            example_kwarg = next(iter(kwargs.keys()))
-            kwarg_list = "`\n * `".join(kwargs.keys()) + "`"
-            warnings.warn(_kwarg_warn.format("fit", example_kwarg, kwarg_list))
+            kwarg_list = "\n * ".join([f"`{k}={v}`" for k, v in kwargs.items()])
+            warnings.warn(_kwarg_warn.format("fit", kwarg_list))
 
         # epochs via kwargs > fit__epochs > epochs
         kwargs["epochs"] = kwargs.get(
@@ -890,11 +890,8 @@ class BaseWrapper(BaseEstimator):
         For regression, this corresponds to predict.
         """
         if kwargs:
-            example_kwarg = next(iter(kwargs.keys()))
-            kwarg_list = "\n *".join(kwargs.keys())
-            warnings.warn(
-                _kwarg_warn.format("predict", example_kwarg, kwarg_list), stacklevel=2
-            )
+            kwarg_list = "\n * ".join([f"`{k}={v}`" for k, v in kwargs.items()])
+            warnings.warn(_kwarg_warn.format("predict", kwarg_list), stacklevel=2)
 
         # check if fitted
         if not self.initialized_:
