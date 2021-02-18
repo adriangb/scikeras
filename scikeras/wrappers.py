@@ -35,10 +35,10 @@ from scikeras.utils import loss_name, metric_name
 from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
 
 
-_kwarg_warn = """Passing `**kwargs` to `{0}` is not fully supported by the Scikit-Learn API.
+_kwarg_warn = """Passing estimator parameters to `{0}` as `**kwargs` is not supported by the Scikit-Learn API.
 Instead, either set these parameters in the constructor (`BaseWrapper(..., foo=bar)`) or via `set_params` (`est.set_params(foo=bar)`).
 See our docs for more details: https://www.adriangb.com/scikeras/migration.html#variable-keyword-arguments-in-fit-and-predict
-The following `**kwargs` were used:
+The following parameters were passed to `{0}`:
 {1}
 """
 
