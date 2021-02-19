@@ -1435,7 +1435,7 @@ class KerasClassifier(BaseWrapper):
         Warnings
         --------
             Passing estimator parameters as keyword arguments (aka as ``**kwargs``) to ``predict_proba`` is not supported by the Scikit-Learn API,
-            and may be deprecated in SciKeras.
+            and will be removed in a future version of SciKeras.
             These parameters can also be specified by prefixing ``predict__`` to a parameter at initialization
             (``KerasClassifier(..., fit__batch_size=32, predict__batch_size=1000)``)
             or by using ``set_params`` (``est.set_params(fit__batch_size=32, predict__batch_size=1000)``).
