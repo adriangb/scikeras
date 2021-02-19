@@ -8,8 +8,8 @@ on:
       - published
 
 jobs:
-  notebooks:
-    name: "Build the notebooks for the docs"
+  build:
+    name: Build Docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -41,7 +41,10 @@ jobs:
       - name: Build the docs
         run: |
           poetry run sphinx-build -b html -j 2 docs/source docs/_build/${{ github.ref }}
-          echo "${{ github.ref }}" >> docs/_build/ref.txt
+          find ./docs/_build -type d -name '.[^.]*' -prune -exec rm -rf {} +
+
+      - name: Save ref
+        run: echo "${{ github.ref }}" >> docs/_build/ref.txt
 
       - name: Save docs artifact
         uses: actions/upload-artifact@v2
