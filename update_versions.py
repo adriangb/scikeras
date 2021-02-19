@@ -14,6 +14,7 @@ exist, the the main branch's version.
 
 from json import dumps
 import os
+from packaging.version import parse
 
 base = "refs"
 branch_names = {"master": "latest"}  # rename branches here
@@ -31,8 +32,9 @@ if os.path.exists(os.path.join(base, "heads")):
 if os.path.exists(os.path.join(base, "tags")):
     tags = []
     for tag in os.listdir(os.path.join(base, "tags")):
-        tags.append(tag)
-    tags.sort(key=lambda s: tuple(map(int, s.strip("v").split("."))))
+        if os.path.isdir(os.path.join(base, "tags", tag)):
+            tags.append(tag)
+    tags.sort(key=lambda v: parse(v))
     for tag in tags[:-1]:
         versions[tag] = "/".join((base, "tags", tag))
     stable = "/".join((base, "tags", tags[-1]))
