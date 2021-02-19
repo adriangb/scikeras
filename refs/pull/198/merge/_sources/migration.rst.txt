@@ -54,6 +54,11 @@ Scikit-Learn on the other hand does not support these arguments, and using them 
 As a compromise, SciKeras supports these arguments, but we recommended that you set parameters using the constructor
 or ``set_params`` for first-class SciKeras support.
 
+.. warning::
+
+   Passing keyword arguments to ``fit`` and ``predict`` is deprecated and will be removed in a future version of SciKeras.
+
+
 For example, to declare ``batch_size`` in the constructor:
 
 .. code:: diff
