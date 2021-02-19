@@ -19,7 +19,9 @@ jupyter:
 
 # Autoencoders in SciKeras
 
-Autencoders are an approach to use nearual networks to distill data into it's most important features, thereby compressing the data. We will be following the [Keras tutorial](https://blog.keras.io/building-autoencoders-in-keras.html) on the topic, which goes much more in depth and breadth than we will here. You are highly encouraged to check out that tutorial if you want to learn about autoencoders in the general sense.
+Autencoders are an approach to use nearual networks to distill data into it's most important features, thereby compressing the data.
+We will be following the [Keras tutorial](https://blog.keras.io/building-autoencoders-in-keras.html) on the topic, which goes much more in depth and breadth than we will here.
+You are highly encouraged to check out that tutorial if you want to learn about autoencoders in the general sense.
 
 ## Table of contents
 
@@ -138,7 +140,8 @@ class AutoEncoder(BaseWrapper, TransformerMixin):
         return self.feature_encoder_.inverse_transform(X)
 ```
 
-Next, we wrap the Keras Model with Scikeras. Note that for our encoder/decoder estimators, we do not need to provide a loss function since no training will be done. We do however need to have the `fit_model` and `encoding_dim` so that these will be settable by `BaseWrapper.set_params`.
+Next, we wrap the Keras Model with Scikeras. Note that for our encoder/decoder estimators, we do not need to provide a loss function since no training will be done.
+We do however need to have the `fit_model` and `encoding_dim` so that these will be settable by `BaseWrapper.set_params`.
 
 ```python
 autoencoder = AutoEncoder(
@@ -154,7 +157,9 @@ autoencoder = AutoEncoder(
 
 ## 4. Training
 
-To train the model, we pass the input images as both the features and the target. This will train the layers to compress the data as accurately as possible between the encoder and decoder. Note that we only pass the `X` parameter, since we defined the mapping `y=X` in `KerasTransformer.fit` above.
+To train the model, we pass the input images as both the features and the target.
+This will train the layers to compress the data as accurately as possible between the encoder and decoder.
+Note that we only pass the `X` parameter, since we defined the mapping `y=X` in `KerasTransformer.fit` above.
 
 ```python
 _ = autoencoder.fit(X=x_train)
