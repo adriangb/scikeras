@@ -16,7 +16,8 @@ from json import dumps
 import os
 
 base = "refs"
-branch_names = {"master": "latest"}
+branch_names = {"master": "latest"}  # rename branches here
+permalink = ["latest", "stable"]  # create permalinks at root level
 stable = None
 
 versions = dict()
@@ -37,19 +38,29 @@ if os.path.exists(os.path.join(base, "tags")):
     stable = "/".join((base, "tags", tags[-1]))
     versions["stable"] = stable
 
+# Create a versions.json that can be used to display versions
 with open("versions.json", "w") as f:
     f.write(dumps(versions))
 
+# Create symlinks to latest and stable versions to enable
+# permalinks
+for f in os.listdir("."):
+    if os.path.islink(f):
+        os.remove(f)
+for target in permalink:
+    source = versions[target]
+    os.symlink(source, target)
+
+# Create an index.html to redirect to the stable version
+# or latest if stable does not exist
 if stable:
-    redirect = stable
+    redirect = "stable/"
+elif "latest" in branch_names.values():
+    redirect = "latest/"
 else:
-    try:
-        b = next(k for k, v in branch_names.items() if v)
-        redirect = "/".join((base, "heads", b))
-    except StopIteration:
-        redirect = None
-if redirect:
-    with open("index.html", "w") as f:
-        f.write(
-            f"""<meta http-equiv="refresh" content="0; URL='{redirect}/index.html'" />"""
-        )
+    raise ValueError(
+        "You must specify a `latest` branch or have at least one tagged version (`stable`)."
+    )
+with open("index.html", "w") as f:
+    data = """<meta http-equiv="refresh" content="0; URL='""" + redirect + """'" />"""
+    f.write(data)
