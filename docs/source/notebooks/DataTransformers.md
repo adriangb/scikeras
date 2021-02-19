@@ -74,7 +74,7 @@ SciKeras enables advanced Keras use cases by providing an interface to convert s
 
 This interface is implemented in the form of two sklearn transformers, one for the features (`X`) and one for the target (`y`).  SciKeras loads these transformers via the `target_encoder` and `feature_encoder` methods.
 
-By default, SciKeras implements `target_encoder` for both KerasClassifier and KerasRegressor to facilitate common types of tasks in sklearn. The default implementations are `scikeras.utils.transformers.ClassifierLabelEncoder` and `scikeras.utils.transformers.RegressorTargetEncoder` for KerasClassifier and KerasRegressor respectively. Information on the types of tasks that these default transformers are able to perform can be found in the [SciKeras docs](https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers).
+By default, SciKeras implements `target_encoder` for both KerasClassifier and KerasRegressor to facilitate common types of tasks in sklearn. The default implementations are `scikeras.utils.transformers.ClassifierLabelEncoder` and `scikeras.utils.transformers.RegressorTargetEncoder` for KerasClassifier and KerasRegressor respectively. Information on the types of tasks that these default transformers are able to perform can be found in the [SciKeras docs](https://www.adriangb.com/scikeras/stable/advanced.html#data-transformers).
 
 Below is an outline of the inner workings of the data transfomer interfaces to help understand when they are called:
 
