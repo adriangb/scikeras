@@ -260,8 +260,7 @@ class BaseWrapper(BaseEstimator):
     def _validate_sample_weight(
         X: np.ndarray, sample_weight: Union[np.ndarray, Iterable],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Validate that the passed sample_weight and ensure it is a Numpy array.
-        """
+        """Validate that the passed sample_weight and ensure it is a Numpy array."""
         sample_weight = _check_sample_weight(
             sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
         )
@@ -404,13 +403,12 @@ class BaseWrapper(BaseEstimator):
         else:
             model = final_build_fn(**build_params)
 
-        # compile model if user gave us an un-compiled model
-        if not (hasattr(model, "loss") and hasattr(model, "optimizer")):
-            if compile_kwargs is None:
-                compile_kwargs = self._get_compile_kwargs()
-            model.compile(**compile_kwargs)
-
         return model
+
+    def _ensure_compiled_model(self) -> None:
+        # compile model if user gave us an un-compiled model
+        if not (hasattr(self.model_, "loss") and hasattr(self.model_, "optimizer")):
+            self.model_.compile(**self._get_compile_kwargs())
 
     def _fit_keras_model(
         self,
@@ -448,6 +446,7 @@ class BaseWrapper(BaseEstimator):
             A reference to the instance that can be chain called
             (ex: instance.fit(X,y).transform(X) )
         """
+
         # Make sure model has a loss function
         loss = self.model_.loss
         no_loss = False
@@ -829,6 +828,7 @@ class BaseWrapper(BaseEstimator):
             X, y = self._initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
+        self._ensure_compiled_model()
 
         if sample_weight is not None:
             X, sample_weight = self._validate_sample_weight(X, sample_weight)
@@ -1023,7 +1023,7 @@ class BaseWrapper(BaseEstimator):
 
     def set_params(self, **params) -> "BaseWrapper":
         """Set the parameters of this estimator.
-    
+
         The method works on simple estimators as well as on nested objects
         (such as pipelines). The latter have parameters of the form
         ``<component>__<parameter>`` so that it's possible to update each
@@ -1462,7 +1462,7 @@ class KerasRegressor(BaseWrapper):
     loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
-        an instance of tf.keras.losses.Loss 
+        an instance of tf.keras.losses.Loss
         or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
 

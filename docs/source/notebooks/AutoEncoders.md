@@ -5,8 +5,8 @@ jupyter:
     text_representation:
       extension: .md
       format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.9.1
+      format_version: '1.3'
+      jupytext_version: 1.10.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -73,94 +73,83 @@ print(x_test.shape)
 
 ## 3. Define Keras Model
 
-We will be defining a very simple autencoder. We define _three_ model building methods:
+We will be defining a very simple autencoder. We define _three_ models:
 
-1. One to build a full end-to-end autoencoder.
-2. One to create a model that includes only the encoder portion.
-3. One that creates a model that includes only the decoder portion.
+1. An encoder
+2. A decoder
+3. An autoencoder (which is just a chain of the encoder and decoder)
 
 The only variable we give our model is the encoding dimensions, which will be a hyperparemter of our final transformer.
 
-```python
-from tensorflow import keras
+We will build these models within `_keras-build_fn` so that we can store our encoders and decoders as seperate models and call them from `transform` and `inverse_transform` respectively.
 
-
-def get_fit_model(encoding_dim: int) -> keras.Model:
-    """Get an autoencoder.
-
-    This autoencoder compresses a 28x28 image (784 pixels) down to a feature of length
-    `encoding_dim`, and tries to reconstruct the input image from that vector.
-    """
-    input_img = keras.Input(shape=(784,), name="input")
-    encoded = keras.layers.Dense(encoding_dim, activation='relu', name="encoded")(input_img)
-    decoded = keras.layers.Dense(784, activation='sigmoid', name="output")(encoded)
-    autoencoder_model = keras.Model(input_img, decoded)
-    return autoencoder_model
-
-def get_tf_model(fit_model: keras.Model) -> keras.Model:
-    """Get an encoder model.
-
-    We do this by extracting the encoding layer from the fitted autoencoder model.
-    """
-    return keras.Model(fit_model.get_layer("input").input, fit_model.get_layer("encoded").output)
-
-def get_inverse_tf_model(fit_model: keras.Model, encoding_dim: int) -> keras.Model:
-    """Get an deencoder model.
-
-    We do this by extracting the deencoding layer from the fitted autoencoder model
-    and adding a new Keras input layer.
-    """
-    encoded_input = keras.Input(shape=(encoding_dim,))
-    output = fit_model.get_layer("output")(encoded_input)
-    return keras.Model(encoded_input, output)
-```
-
-Next we create a class that that will enable the `transform` and `fit_transform` methods, as well as integrating all three of our models into a single estimator.
+For a background on chaining Functional Models like this, see [All models are callable](https://keras.io/guides/functional_api/#all-models-are-callable-just-like-layers) in the Keras docs.
 
 ```python
-from sklearn.base import TransformerMixin, clone
+from typing import Dict, Any
+
+from sklearn.base import TransformerMixin
 from scikeras.wrappers import BaseWrapper
+from tensorflow.keras.metrics import binary_accuracy
 
 
-class KerasTransformer(BaseWrapper, TransformerMixin):
+class AutoEncoder(BaseWrapper, TransformerMixin):
     """A class that enables transform and fit_transform.
     """
+    
+    def _keras_build_fn(self, encoding_dim: int, meta: Dict[str, Any]):
+        n_features_in = meta["n_features_in_"]
 
-    def __init__(self, *args, tf_est: BaseWrapper = None, inv_tf_est: BaseWrapper = None, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.tf_est = tf_est
-        self.inv_tf_est = inv_tf_est
+        encoder_input = keras.Input(shape=(n_features_in,))
+        encoder_output = keras.layers.Dense(encoding_dim, activation='relu')(encoder_input)
+        encoder_model = keras.Model(encoder_input, encoder_output)
 
+        decoder_input = keras.Input(shape=(encoding_dim,))
+        decoder_output = keras.layers.Dense(n_features_in, activation='sigmoid', name="decoder")(decoder_input)
+        decoder_model = keras.Model(decoder_input, decoder_output)
+        
+        autoencoder_input = keras.Input(shape=(n_features_in,))
+        encoded_img = encoder_model(autoencoder_input)
+        reconstructed_img = decoder_model(encoded_img)
+
+        autoencoder_model = keras.Model(autoencoder_input, reconstructed_img)
+
+        self.encoder_model_ = BaseWrapper(encoder_model, predict__verbose=self.predict__verbose)
+        self.decoder_model_ = BaseWrapper(decoder_model, predict__verbose=self.predict__verbose)
+
+        return autoencoder_model
 
     def fit(self, X, sample_weight=None):
         super().fit(X=X, y=X, sample_weight=sample_weight)
-        self.tf_est_ = clone(self.tf_est)
-        self.inv_tf_est_ = clone(self.inv_tf_est)
-        self.tf_est_.set_params(fit_model=self.model_)
-        self.inv_tf_est_.set_params(fit_model=self.model_, encoding_dim=self.encoding_dim)
-        X = self.feature_encoder_.transform(X)
-        self.tf_est_.initialize(X=X)
-        X_tf = self.tf_est_.predict(X=X)
-        self.inv_tf_est_.initialize(X_tf)
+        X_tf = self.encoder_model_.initialize(X).predict(X)
+        self.decoder_model_.initialize(X_tf)
         return self
+    
+    def score(self, X) -> float:
+        reconstructed = self.predict(X)
+        return binary_accuracy(X, reconstructed).numpy().mean()
 
     def transform(self, X):
         X = self.feature_encoder_.transform(X)
-        X_tf = self.tf_est_.predict(X)
-        return X_tf
-    
+        return self.encoder_model_.predict(X)
+
     def inverse_transform(self, X_tf):
-        X = self.inv_tf_est_.predict(X_tf)
-        X = self.feature_encoder_.inverse_transform(X)
-        return X
+        X = self.decoder_model_.predict(X_tf)
+        return self.feature_encoder_.inverse_transform(X)
 ```
 
 Next, we wrap the Keras Model with Scikeras. Note that for our encoder/decoder estimators, we do not need to provide a loss function since no training will be done. We do however need to have the `fit_model` and `encoding_dim` so that these will be settable by `BaseWrapper.set_params`.
 
 ```python
-tf_est = BaseWrapper(model=get_tf_model, fit_model=None, verbose=0)
-inv_tf_est = BaseWrapper(model=get_inverse_tf_model, fit_model=None, encoding_dim=None, verbose=0)
-autoencoder = KerasTransformer(model=get_fit_model, tf_est=tf_est, inv_tf_est=inv_tf_est, loss="binary_crossentropy", encoding_dim=32, epochs=5)
+autoencoder = AutoEncoder(
+    loss="binary_crossentropy",
+    encoding_dim=32,
+    random_state=0,
+    epochs=5,
+    batch_size=256,
+    fit__verbose=1,
+    predict__verbose=0
+)
 ```
 
 ## 4. Training
@@ -208,8 +197,74 @@ What about the compression? Let's check the sizes of the arrays.
 
 ```python
 encoded_imgs = autoencoder.transform(x_test)
-print(f"x_test.shape[1]: {x_test.shape[1]}")
-print(f"encoded_imgs.shape[1]: {encoded_imgs.shape[1]}")
+print(f"x_test size (in MB): {x_test.nbytes/1024**2:.2f}")
+print(f"encoded_imgs size (in MB): {encoded_imgs.nbytes/1024**2:.2f}")
 cr = round((encoded_imgs.nbytes/x_test.nbytes), 2)
 print(f"Compression ratio: 1/{1/cr:.0f}")
 ```
+
+## 6. Deep AutoEncoder
+
+
+We can easily expand our model to be a deep autoencoder by adding some hidden layers. All we have to do is add a parameter `hidden_layer_sizes` and use it in `_keras_build_fn` to build hidden layers. For simplicity, we use a single `hidden_layer_sizes` parameter and mirror it across the encoding layers and decoding layers, but there is nothing forcing us to build symetrical models.
+
+```python
+from typing import List
+
+
+class DeepAutoEncoder(AutoEncoder):
+    """A class that enables transform and fit_transform.
+    """
+    
+    def _keras_build_fn(self, encoding_dim: int, hidden_layer_sizes: List[str], meta: Dict[str, Any]):
+        n_features_in = meta["n_features_in_"]
+
+        encoder_input = keras.Input(shape=(n_features_in,))
+        x = encoder_input
+        for layer_size in hidden_layer_sizes:
+            x = keras.layers.Dense(layer_size, activation='relu')(x)
+        encoder_output = keras.layers.Dense(encoding_dim, activation='relu')(x)
+        encoder_model = keras.Model(encoder_input, encoder_output)
+
+        decoder_input = keras.Input(shape=(encoding_dim,))
+        x = decoder_input
+        for layer_size in reversed(hidden_layer_sizes):
+            x = keras.layers.Dense(layer_size, activation='relu')(x)
+        decoder_output = keras.layers.Dense(n_features_in, activation='sigmoid', name="decoder")(x)
+        decoder_model = keras.Model(decoder_input, decoder_output)
+
+        autoencoder_input = keras.Input(shape=(n_features_in,))
+        encoded_img = encoder_model(autoencoder_input)
+        reconstructed_img = decoder_model(encoded_img)
+
+        autoencoder_model = keras.Model(autoencoder_input, reconstructed_img)
+
+        self.encoder_model_ = BaseWrapper(encoder_model, verbose=self.verbose)
+        self.decoder_model_ = BaseWrapper(decoder_model, verbose=self.verbose)
+
+        return autoencoder_model
+```
+
+```python
+deep = DeepAutoEncoder(
+    loss="binary_crossentropy",
+    encoding_dim=32,
+    hidden_layer_sizes=[128, 64],
+    random_state=0,
+    epochs=5,
+    batch_size=256,
+    fit__verbose=1,
+    predict__verbose=0
+)
+_ = deep.fit(X=x_train)
+```
+
+```python
+score = autoencoder.score(X=x_test)
+print(f"AutoEncoder score on test data: {score:.3f}")
+
+score = deep.score(X=x_test)
+print(f"Deep AutoEncoder score on test data: {score:.3f}")
+```
+
+Although small, we do see a slight improvement by adding some more layers.
