@@ -73,7 +73,110 @@ from scikeras.wrappers import KerasClassifier, KerasRegressor
 from tensorflow import keras
 ```
 
+<<<<<<< HEAD
 ## 2. Multiple outputs
+=======
+## 2. Data transformer interface
+
+SciKeras enables advanced Keras use cases by providing an interface to convert sklearn compliant data to whatever format your Keras model requires within SciKeras, right before passing said data to the Keras model.
+
+This interface is implemented in the form of two sklearn transformers, one for the features (`X`) and one for the target (`y`).  SciKeras loads these transformers via the `target_encoder` and `feature_encoder` methods.
+
+By default, SciKeras implements `target_encoder` for both KerasClassifier and KerasRegressor to facilitate common types of tasks in sklearn. The default implementations are `scikeras.utils.transformers.ClassifierLabelEncoder` and `scikeras.utils.transformers.RegressorTargetEncoder` for KerasClassifier and KerasRegressor respectively. Information on the types of tasks that these default transformers are able to perform can be found in the [SciKeras docs](https://www.adriangb.com/scikeras/stable/advanced.html#data-transformers).
+
+Below is an outline of the inner workings of the data transfomer interfaces to help understand when they are called:
+
+```python
+if False:  # avoid executing pseudocode
+    from scikeras.utils.transformers import (
+        ClassifierLabelEncoder,
+        RegressorTargetEncoder,
+    )
+
+
+    class BaseWrapper:
+        def fit(self, X, y):
+            self.target_encoder_ = self.target_encoder
+            self.feature_encoder_ = self.feature_encoder
+            y = self.target_encoder_.fit_transform(y)
+            X = self.feature_encoder_.fit_transform(X)
+            self.model_.fit(X, y)
+            return self
+        
+        def predict(self, X):
+            X = self.feature_encoder_.transform(X)
+            y_pred = self.model_.predict(X)
+            return self.target_encoder_.inverse_transform(y_pred)
+
+    class KerasClassifier(BaseWrapper):
+
+        @property
+        def target_encoder(self):
+            return ClassifierLabelEncoder(loss=self.loss)
+        
+        def predict_proba(self, X):
+            X = self.feature_encoder_.transform(X)
+            y_pred = self.model_.predict(X)
+            return self.target_encoder_.inverse_transform(y_pred, return_proba=True)
+
+
+    class KerasRegressor(BaseWrapper):
+
+        @property
+        def target_encoder(self):
+            return RegressorTargetEncoder()
+```
+
+To substitute your own data transformation routine, you must subclass the wrappers and override one of the encoder defining functions. You will have access to all attributes of the wrappers, and you can pass these to your transformer, like we do above with `loss`.
+
+```python
+from sklearn.base import BaseEstimator, TransformerMixin
+```
+
+```python
+if False:  # avoid executing pseudocode
+
+    class MultiOutputTransformer(BaseEstimator, TransformerMixin):
+        ...
+
+
+    class MultiOutputClassifier(KerasClassifier):
+
+        @property
+        def target_encoder(self):
+            return MultiOutputTransformer(...)
+```
+
+### 2.1 get_metadata method
+
+SciKeras recognized an optional `get_metadata` on the transformers. `get_metadata` is expected to return a dicionary of with key strings and arbitrary values. SciKeras will set add these items to the wrappers namespace and make them available to your model building function via the `meta` keyword argument:
+
+```python
+if False:  # avoid executing pseudocode
+
+    class MultiOutputTransformer(BaseEstimator, TransformerMixin):
+        def get_metadata(self):
+            return {"my_param_": "foobarbaz"}
+
+
+    class MultiOutputClassifier(KerasClassifier):
+
+        @property
+        def target_encoder(self):
+            return MultiOutputTransformer(...)
+
+
+    def get_model(meta):
+        print(f"Got: {meta['my_param_']}")
+
+
+    clf = MultiOutputClassifier(model=get_model)
+    clf.fit(X, y)  # Got: foobarbaz
+    print(clf.my_param_)  # foobarbaz
+```
+
+## 3. Multiple outputs
+>>>>>>> master
 
 Keras makes it straight forward to define models with multiple outputs, that is a Model with multiple sets of fully-connected heads at the end of the network. This functionality is only available in the Functional Model and subclassed Model definition modes, and is not available when using Sequential.
 
