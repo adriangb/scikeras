@@ -91,8 +91,8 @@ For a background on chaining Functional Models like this, see [All models are ca
 from typing import Dict, Any
 
 from sklearn.base import TransformerMixin
+from sklearn.metrics import mean_squared_error
 from scikeras.wrappers import BaseWrapper
-from tensorflow.keras.metrics import binary_accuracy
 
 
 class AutoEncoder(BaseWrapper, TransformerMixin):
@@ -116,8 +116,8 @@ class AutoEncoder(BaseWrapper, TransformerMixin):
 
         autoencoder_model = keras.Model(autoencoder_input, reconstructed_img)
 
-        self.encoder_model_ = BaseWrapper(encoder_model, predict__verbose=self.predict__verbose)
-        self.decoder_model_ = BaseWrapper(decoder_model, predict__verbose=self.predict__verbose)
+        self.encoder_model_ = BaseWrapper(encoder_model, verbose=self.verbose)
+        self.decoder_model_ = BaseWrapper(decoder_model, verbose=self.verbose)
 
         return autoencoder_model
     
@@ -141,8 +141,10 @@ class AutoEncoder(BaseWrapper, TransformerMixin):
         return self
 
     def score(self, X) -> float:
-        reconstructed = self.predict(X)
-        return binary_accuracy(X, reconstructed).numpy().mean()
+        # Note: we use 1-MSE as the score
+        # With MSE, "larger is better", but Scikit-Learn
+        # always maximizes the score (e.g. in GridSearch)
+        return 1 - mean_squared_error(self.predict(X), X)
 
     def transform(self, X):
         X = self.feature_encoder_.transform(X)
@@ -161,10 +163,9 @@ autoencoder = AutoEncoder(
     loss="binary_crossentropy",
     encoding_dim=32,
     random_state=0,
-    epochs=5,
-    batch_size=256,
-    fit__verbose=1,
-    predict__verbose=0
+    epochs=15,
+    verbose=False,
+    optimizer="adam",
 )
 ```
 
@@ -268,22 +269,24 @@ class DeepAutoEncoder(AutoEncoder):
 deep = DeepAutoEncoder(
     loss="binary_crossentropy",
     encoding_dim=32,
-    hidden_layer_sizes=[128, 64],
+    hidden_layer_sizes=[128],
     random_state=0,
-    epochs=5,
-    batch_size=256,
-    fit__verbose=1,
-    predict__verbose=0
+    epochs=15,
+    verbose=False,
+    optimizer="adam",
 )
 _ = deep.fit(X=x_train)
 ```
 
 ```python
+print("1-MSE for training set (higher is better)\n")
 score = autoencoder.score(X=x_test)
-print(f"AutoEncoder score on test data: {score:.3f}")
+print(f"AutoEncoder: {score:.4f}")
 
 score = deep.score(X=x_test)
-print(f"Deep AutoEncoder score on test data: {score:.3f}")
+print(f"Deep AutoEncoder: {score:.4f}")
 ```
 
-Although small, we do see a slight improvement by adding some more layers.
+Suprisingly, our score got worse. It's possible that that because of the extra trainable variables, our deep model trains slower than our simple model.
+
+Check out the [Keras tutorial](https://blog.keras.io/building-autoencoders-in-keras.html) to see the difference after 100 epochs of training, as well as more architectures and applications for AutoEncoders!
