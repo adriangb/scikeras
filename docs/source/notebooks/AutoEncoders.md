@@ -30,6 +30,7 @@ You are highly encouraged to check out that tutorial if you want to learn about 
 * [3. Define Keras Model](#3.-Define-Keras-Model)
 * [4. Training](#4.-Training)
 * [5. Explore Results](#5.-Explore-Results)
+* [6. Deep AutoEncoder](#6.-Deep-AutoEncoder)
 
 ## 1. Setup
 
@@ -83,7 +84,7 @@ We will be defining a very simple autencoder. We define _three_ models:
 
 The only variable we give our model is the encoding dimensions, which will be a hyperparemter of our final transformer.
 
-We will build these models within `_keras_build_fn` so that we can store our encoders and decoders as seperate models and call them from `transform` and `inverse_transform` respectively.
+We will build these models within `_keras-build_fn` so that we can store our encoders and decoders as seperate models and call them from `transform` and `inverse_transform` respectively.
 
 For a background on chaining Functional Models like this, see [All models are callable](https://keras.io/guides/functional_api/#all-models-are-callable-just-like-layers) in the Keras docs.
 
