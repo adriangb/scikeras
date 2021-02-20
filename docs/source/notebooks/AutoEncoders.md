@@ -120,13 +120,26 @@ class AutoEncoder(BaseWrapper, TransformerMixin):
         self.decoder_model_ = BaseWrapper(decoder_model, predict__verbose=self.predict__verbose)
 
         return autoencoder_model
-
-    def fit(self, X, sample_weight=None):
-        super().fit(X=X, y=X, sample_weight=sample_weight)
+    
+    def _initialize(self, X, y=None):
+        X, _ = super()._initialize(X=X, y=y)
+        # since encoder_model_ and decoder_model_ share layers (and their weights)
+        # X_tf here come from random weights, but we only use it to initialize our models
         X_tf = self.encoder_model_.initialize(X).predict(X)
         self.decoder_model_.initialize(X_tf)
+        return X, X
+
+    def initialize(self, X):
+        self._initialize(X=X, y=X)
         return self
-    
+
+    def fit(self, X, *, sample_weight=None):
+        super().fit(X=X, y=X, sample_weight=sample_weight)
+        # at this point, encoder_model_ and decoder_model_
+        # are both "fitted" because they share layers w/ model_
+        # which is fit in the above call
+        return self
+
     def score(self, X) -> float:
         reconstructed = self.predict(X)
         return binary_accuracy(X, reconstructed).numpy().mean()
