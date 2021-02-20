@@ -436,9 +436,126 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD ## 2. Multiple outputs ======= ## 2. Data transformer interface</p>
+<p>SciKeras enables advanced Keras use cases by providing an interface to convert sklearn compliant data to whatever format your Keras model requires within SciKeras, right before passing said data to the Keras model.</p>
+<p>This interface is implemented in the form of two sklearn transformers, one for the features (<code class="docutils literal notranslate"><span class="pre">X</span></code>) and one for the target (<code class="docutils literal notranslate"><span class="pre">y</span></code>). SciKeras loads these transformers via the <code class="docutils literal notranslate"><span class="pre">target_encoder</span></code> and <code class="docutils literal notranslate"><span class="pre">feature_encoder</span></code> methods.</p>
+<p>By default, SciKeras implements <code class="docutils literal notranslate"><span class="pre">target_encoder</span></code> for both KerasClassifier and KerasRegressor to facilitate common types of tasks in sklearn. The default implementations are <code class="docutils literal notranslate"><span class="pre">scikeras.utils.transformers.ClassifierLabelEncoder</span></code> and <code class="docutils literal notranslate"><span class="pre">scikeras.utils.transformers.RegressorTargetEncoder</span></code> for KerasClassifier and KerasRegressor respectively. Information on the types of tasks that these default transformers are able to perform can be found in the <a class="reference external" href="https://www.adriangb.com/scikeras/stable/advanced.html#data-transformers">SciKeras
+docs</a>.</p>
+<p>Below is an outline of the inner workings of the data transfomer interfaces to help understand when they are called:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
 </div>
-<div class="section" id="2.-Multiple-outputs">
-<h2>2. Multiple outputs<a class="headerlink" href="#2.-Multiple-outputs" title="Permalink to this headline">¶</a></h2>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">if</span> <span class="kc">False</span><span class="p">:</span>  <span class="c1"># avoid executing pseudocode</span>
+    <span class="kn">from</span> <span class="nn">scikeras.utils.transformers</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">ClassifierLabelEncoder</span><span class="p">,</span>
+        <span class="n">RegressorTargetEncoder</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+    <span class="k">class</span> <span class="nc">BaseWrapper</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">KerasClassifier</span><span class="p">(</span><span class="n">BaseWrapper</span><span class="p">):</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">target_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ClassifierLabelEncoder</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_encoder_</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">return_proba</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+    <span class="k">class</span> <span class="nc">KerasRegressor</span><span class="p">(</span><span class="n">BaseWrapper</span><span class="p">):</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">target_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">RegressorTargetEncoder</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>To substitute your own data transformation routine, you must subclass the wrappers and override one of the encoder defining functions. You will have access to all attributes of the wrappers, and you can pass these to your transformer, like we do above with <code class="docutils literal notranslate"><span class="pre">loss</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">if</span> <span class="kc">False</span><span class="p">:</span>  <span class="c1"># avoid executing pseudocode</span>
+
+    <span class="k">class</span> <span class="nc">MultiOutputTransformer</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+        <span class="o">...</span>
+
+
+    <span class="k">class</span> <span class="nc">MultiOutputClassifier</span><span class="p">(</span><span class="n">KerasClassifier</span><span class="p">):</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">target_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">MultiOutputTransformer</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="2.1-get_metadata-method">
+<h3>2.1 get_metadata method<a class="headerlink" href="#2.1-get_metadata-method" title="Permalink to this headline">¶</a></h3>
+<p>SciKeras recognized an optional <code class="docutils literal notranslate"><span class="pre">get_metadata</span></code> on the transformers. <code class="docutils literal notranslate"><span class="pre">get_metadata</span></code> is expected to return a dicionary of with key strings and arbitrary values. SciKeras will set add these items to the wrappers namespace and make them available to your model building function via the <code class="docutils literal notranslate"><span class="pre">meta</span></code> keyword argument:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">if</span> <span class="kc">False</span><span class="p">:</span>  <span class="c1"># avoid executing pseudocode</span>
+
+    <span class="k">class</span> <span class="nc">MultiOutputTransformer</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;my_param_&quot;</span><span class="p">:</span> <span class="s2">&quot;foobarbaz&quot;</span><span class="p">}</span>
+
+
+    <span class="k">class</span> <span class="nc">MultiOutputClassifier</span><span class="p">(</span><span class="n">KerasClassifier</span><span class="p">):</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">target_encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">MultiOutputTransformer</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">get_model</span><span class="p">(</span><span class="n">meta</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got: </span><span class="si">{</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;my_param_&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+    <span class="n">clf</span> <span class="o">=</span> <span class="n">MultiOutputClassifier</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">get_model</span><span class="p">)</span>
+    <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>  <span class="c1"># Got: foobarbaz</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">clf</span><span class="o">.</span><span class="n">my_param_</span><span class="p">)</span>  <span class="c1"># foobarbaz</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="3.-Multiple-outputs">
+<h2>3. Multiple outputs<a class="headerlink" href="#3.-Multiple-outputs" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>master</p>
+</div></blockquote>
 <p>Keras makes it straight forward to define models with multiple outputs, that is a Model with multiple sets of fully-connected heads at the end of the network. This functionality is only available in the Functional Model and subclassed Model definition modes, and is not available when using Sequential.</p>
 <p>In practice, the main thing about Keras models with multiple outputs that you need to know as a SciKeras user is that Keras expects <code class="docutils literal notranslate"><span class="pre">X</span></code> or <code class="docutils literal notranslate"><span class="pre">y</span></code> to be a list of arrays/tensors, with one array/tensor for each input/output.</p>
 <p>Note that “multiple outputs” in Keras has a slightly different meaning than “multiple outputs” in sklearn. Many tasks that would be considered “multiple output” tasks in sklearn can be mapped to a single “output” in Keras with multiple units. This notebook specifically focuses on the cases that require multiple distinct Keras outputs.</p>
@@ -446,7 +563,7 @@ div.rendered_html tbody tr:hover {
 <h3>2.1 Define Keras Model<a class="headerlink" href="#2.1-Define-Keras-Model" title="Permalink to this headline">¶</a></h3>
 <p>Here we define a simple perceptron that has two outputs, corresponding to one binary classification taks and one multiclass classification task. For example, one output might be “image has car” (binary) and the other might be “color of car in image” (multiclass).</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -465,7 +582,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <p>Let’s test that this model works with the kind of inputs and outputs we expect.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -488,7 +605,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -501,12 +618,12 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.528752 ]
- [0.4508034]]
+[[0.5036109 ]
+ [0.49061587]]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -519,8 +636,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.19477066 0.19521824 0.19454871 0.21896201 0.1965004 ]
- [0.18739039 0.23975773 0.17772672 0.19491684 0.20020828]]
+[[0.16864142 0.21402779 0.22270538 0.2222759  0.17234947]
+ [0.18863055 0.21719907 0.16864772 0.2111154  0.21440724]]
 </pre></div></div>
 </div>
 <p>As you can see, our <code class="docutils literal notranslate"><span class="pre">predict</span></code> output is also a list of arrays, except it contains probabilities instead of the class predictions.</p>
@@ -531,7 +648,7 @@ div.rendered_html tbody tr:hover {
 <h3>2.2 Define output data transformer<a class="headerlink" href="#2.2-Define-output-data-transformer" title="Permalink to this headline">¶</a></h3>
 <p>Let’s go ahead and protoype this data transformer:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -592,7 +709,7 @@ div.rendered_html tbody tr:hover {
 <p>Note that in addition to the usual <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code> methods, we implement the <code class="docutils literal notranslate"><span class="pre">get_metadata</span></code> method to return the <code class="docutils literal notranslate"><span class="pre">n_classes_</span></code> attribute.</p>
 <p>Lets test our transformer with the same dataset we previously used to test our model:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -612,11 +729,11 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 `y`, as will be passed to Keras:
-[array([0, 1, 0, 1]), array([3, 4, 0, 0])]
+[array([1, 0, 1, 0]), array([4, 2, 2, 1])]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -635,20 +752,20 @@ div.rendered_html tbody tr:hover {
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[1, 3],
+array([[1, 2],
        [0, 1],
-       [0, 1],
-       [0, 2],
-       [0, 3]])
+       [0, 3],
+       [1, 1],
+       [0, 2]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -666,7 +783,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <p>Since this looks good, we move on to integrating our transformer into our classifier.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -692,7 +809,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <div class="section" id="2.3-Test-classifier">
 <h3>2.3 Test classifier<a class="headerlink" href="#2.3-Test-classifier" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -705,7 +822,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -716,12 +833,12 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.265
+0.365
 </pre></div></div>
 </div>
 </div>
@@ -735,7 +852,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <h3>3.1 Define Keras Model<a class="headerlink" href="#3.1-Define-Keras-Model" title="Permalink to this headline">¶</a></h3>
 <p>Let’s define a Keras <strong>regression</strong> Model with 2 inputs:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -760,7 +877,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <p>And test it with a small mock dataset:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -776,7 +893,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -787,12 +904,12 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--5.684491210903752
+-5.3344010320539
 </pre></div></div>
 </div>
 <p>Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.</p>
@@ -801,7 +918,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <h3>3.2 Define data transformer<a class="headerlink" href="#3.2-Define-data-transformer" title="Permalink to this headline">¶</a></h3>
 <p>Just like for overriding <code class="docutils literal notranslate"><span class="pre">target_encoder</span></code>, we just need to define a sklearn transformer and drop it into our SciKeras wrapper. Since we hardcoded the input shapes into our model and do not rely on any transformer-generated metadata, we can simply use <code class="docutils literal notranslate"><span class="pre">sklearn.preprocessing.FunctionTransformer</span></code>:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -823,7 +940,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <div class="section" id="3.3-Test-regressor">
 <h3>3.3 Test regressor<a class="headerlink" href="#3.3-Test-regressor" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -836,12 +953,12 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--5.17514187674499
+-3.2624139786426314
 </pre></div></div>
 </div>
 </div>
@@ -851,7 +968,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <p>In this example, we look at how we can use SciKeras to process the MNIST dataset. The dataset is composed of 60,000 images of digits, each of which is a 2D 28x28 image.</p>
 <p>The dataset and Keras Model architecture used come from a <a class="reference external" href="https://keras.io/examples/vision/mnist_convnet/">Keras example</a>. It may be beneficial to understand the Keras model by reviewing that example first.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -861,7 +978,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -871,7 +988,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <p>The outputs (labels) are numbers 0-9:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -891,7 +1008,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <p>First, we will “flatten” the data into an array of shape <code class="docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">28*28)</span></code> (i.e. a 2D array). This will allow us to use sklearn ecosystem utilities, for example, <code class="docutils literal notranslate"><span class="pre">sklearn.preprocessing.MinMaxScaler</span></code>.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -912,7 +1029,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -929,7 +1046,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -950,7 +1067,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <h3>4.1 Define Keras Model<a class="headerlink" href="#4.1-Define-Keras-Model" title="Permalink to this headline">¶</a></h3>
 <p>Next we will define our Keras model (adapted from <a class="reference external" href="https://keras.io/examples/vision/mnist_convnet/">keras.io</a>):</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -980,7 +1097,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <p>Now let’s define a transformer that we will use to reshape our input from the sklearn shape (<code class="docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">784)</span></code>) to the Keras shape (which we will be <code class="docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">28,</span> <span class="pre">28,</span> <span class="pre">1)</span></code>).</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -995,7 +1112,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1014,7 +1131,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <h3>4.2 Test<a class="headerlink" href="#4.2-Test" title="Permalink to this headline">¶</a></h3>
 <p>Train and score the model (this takes some time)</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1028,29 +1145,29 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/10
-8/8 [==============================] - 2s 181ms/step - loss: 2.2129 - val_loss: 1.9378
+8/8 [==============================] - 2s 205ms/step - loss: 2.2129 - val_loss: 1.9378
 Epoch 2/10
-8/8 [==============================] - 1s 100ms/step - loss: 1.7355 - val_loss: 1.4332
+8/8 [==============================] - 1s 99ms/step - loss: 1.7355 - val_loss: 1.4332
 Epoch 3/10
-8/8 [==============================] - 1s 96ms/step - loss: 1.2980 - val_loss: 1.1264
+8/8 [==============================] - 1s 101ms/step - loss: 1.2980 - val_loss: 1.1264
 Epoch 4/10
-8/8 [==============================] - 1s 97ms/step - loss: 0.9632 - val_loss: 0.8725
+8/8 [==============================] - 1s 100ms/step - loss: 0.9632 - val_loss: 0.8725
 Epoch 5/10
-8/8 [==============================] - 1s 98ms/step - loss: 0.7774 - val_loss: 0.7834
+8/8 [==============================] - 1s 96ms/step - loss: 0.7774 - val_loss: 0.7834
 Epoch 6/10
-8/8 [==============================] - 1s 94ms/step - loss: 0.6900 - val_loss: 0.8330
+8/8 [==============================] - 1s 100ms/step - loss: 0.6900 - val_loss: 0.8330
 Epoch 7/10
-8/8 [==============================] - 1s 92ms/step - loss: 0.6336 - val_loss: 0.6026
+8/8 [==============================] - 1s 89ms/step - loss: 0.6336 - val_loss: 0.6026
 Epoch 8/10
-8/8 [==============================] - 1s 92ms/step - loss: 0.5648 - val_loss: 0.7786
+8/8 [==============================] - 1s 87ms/step - loss: 0.5648 - val_loss: 0.7786
 Epoch 9/10
-8/8 [==============================] - 1s 96ms/step - loss: 0.5365 - val_loss: 0.5447
+8/8 [==============================] - 1s 101ms/step - loss: 0.5365 - val_loss: 0.5447
 Epoch 10/10
-8/8 [==============================] - 1s 91ms/step - loss: 0.4750 - val_loss: 0.6588
+8/8 [==============================] - 1s 98ms/step - loss: 0.4750 - val_loss: 0.6588
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1076,7 +1193,7 @@ Test score (accuracy): 0.76
 <p>Note that <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> should accept a single single dictionary as its argument to <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">fit</span></code>, and return a single dictionary as well. More details on this are in the <a class="reference external" href="https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#data-transformers">docs</a>.</p>
 <p>Let’s start by defining our data. We’ll have an extra “feature” that marks the observation index, but we’ll remove it when we deconstruct our data in the transformer.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1093,7 +1210,7 @@ Test score (accuracy): 0.76
 <p>Next, we define our <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code>. We will do this by defining a custom forward transformation outside of the Keras model. Note that we do not define an inverse transformation since that is never used. Also note that <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> will <em>always</em> be called with <code class="docutils literal notranslate"><span class="pre">X</span></code> (i.e. the first element of the tuple will always be populated), but will be called with <code class="docutils literal notranslate"><span class="pre">y=None</span></code> when used for <code class="docutils literal notranslate"><span class="pre">predict</span></code>. Thus, you should check if <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">sample_weigh</span></code> are None before doing any
 operations on them.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1123,7 +1240,7 @@ operations on them.</p>
 <p>In this case, we chose to keep <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">sample_weight</span></code> as numpy arrays, which will allow us to re-use ClassWeightDataTransformer, the default <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> for <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code>.</p>
 <p>Lets quickly test our transformer:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1144,7 +1261,7 @@ operations on them.</p>
 </div>
 <p>And the <code class="docutils literal notranslate"><span class="pre">y=None</span></code> case:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1167,7 +1284,7 @@ operations on them.</p>
 <p>Because Keras will not accept a RaggedTensor directly, we will need to wrap our entire dataset into a tensorflow <code class="docutils literal notranslate"><span class="pre">Dataset</span></code>. We can do this by adding one more transformation step:</p>
 <p>Next, we can add our transormers to our model. We use an sklearn <code class="docutils literal notranslate"><span class="pre">Pipeline</span></code> (generated via <code class="docutils literal notranslate"><span class="pre">make_pipeline</span></code>) to keep ClassWeightDataTransformer operational while implementing our custom transformation.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1185,7 +1302,7 @@ operations on them.</p>
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1207,7 +1324,7 @@ operations on them.</p>
 </div>
 <p>Now we can define a Model. We need some way to handle/flatten our ragged arrays within our model. For this example, we use a custom mean layer, but you could use an Embedding layer, LSTM, etc.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1240,7 +1357,7 @@ operations on them.</p>
 </div>
 <p>And attach our model to our classifier wrapper:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1250,7 +1367,7 @@ operations on them.</p>
 </div>
 <p>Finally, let’s train and predict:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1265,22 +1382,22 @@ operations on them.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-5/5 [==============================] - 0s 2ms/step - loss: 0.8558
-5/5 [==============================] - 0s 1ms/step
+5/5 [==============================] - 0s 3ms/step - loss: 0.6816
+5/5 [==============================] - 0s 2ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;], dtype=&#39;&lt;U6&#39;)
+array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;], dtype=&#39;&lt;U6&#39;)
 </pre></div></div>
 </div>
 <p>If we define our custom layers, transformers and wrappers in their own module, we can easily create a self-contained classifier that is able to handle ragged datasets and has a clean Scikit-Learn compatible API:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1306,7 +1423,7 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1322,17 +1439,17 @@ array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-5/5 [==============================] - 0s 2ms/step - loss: 0.6372
-5/5 [==============================] - 0s 3ms/step
+5/5 [==============================] - 0s 1ms/step - loss: 0.7404
+5/5 [==============================] - 0s 2ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;], dtype=&#39;&lt;U6&#39;)
+array([&#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;, &#39;class2&#39;], dtype=&#39;&lt;U6&#39;)
 </pre></div></div>
 </div>
 </div>
@@ -1340,7 +1457,7 @@ array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &
 <h2>6. Multi-output class_weight<a class="headerlink" href="#6.-Multi-output-class_weight" title="Permalink to this headline">¶</a></h2>
 <p>In this example, we will use <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> to support multi-output class weights. We will re-use our <code class="docutils literal notranslate"><span class="pre">MultiOutputTransformer</span></code> from our previous example to split the output, then we will create <code class="docutils literal notranslate"><span class="pre">sample_weight</span></code> from <code class="docutils literal notranslate"><span class="pre">class_weight</span></code>.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1411,7 +1528,7 @@ array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &
 </div>
 <p>Next, we define the data. We’ll use <code class="docutils literal notranslate"><span class="pre">sklearn.datasets.make_blobs</span></code> to generate a relatively noisy dataset:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1427,7 +1544,7 @@ array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &
 </div>
 <p>Test the model without specifying class weighting:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1452,7 +1569,7 @@ array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &
 </div>
 <p>As you can see, without <code class="docutils literal notranslate"><span class="pre">class_weight=&quot;balanced&quot;</span></code>, our classifier only predicts mainly a single class for the first output. Now with <code class="docutils literal notranslate"><span class="pre">class_weight=&quot;balanced&quot;</span></code>:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[48]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1477,7 +1594,7 @@ array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &
 </div>
 <p>Now, we get (mostly) balanced classes. But what if we want to specify our classes manually? You will notice that in when we defined <code class="docutils literal notranslate"><span class="pre">DatasetTransformer</span></code>, we gave it the ability to handle a list of class weights. For demonstration purposes, we will highly bias towards the second class in each output:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[49]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1502,7 +1619,7 @@ array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &
 </div>
 <p>Or mixing the two methods, because our first output is unbalanced but our second is (presumably) balanced:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[50]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1530,7 +1647,7 @@ array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &
 <h2>7. Custom validation dataset<a class="headerlink" href="#7.-Custom-validation-dataset" title="Permalink to this headline">¶</a></h2>
 <p>Although <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> is primarily designed for data transformations, because it returns valid <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> to fit it can be used for other advanced use cases. In this example, we use <code class="docutils literal notranslate"><span class="pre">dataset_transformer</span></code> to implement a custom test/train split for Keras’ internal validation. We’ll use sklearn’s <code class="docutils literal notranslate"><span class="pre">train_test_split</span></code>, but this could be implemented via an arbitrary user function, eg. to ensure balanced class distribution.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[51]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1580,7 +1697,7 @@ array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &
 </div>
 <p>And now lets test with a toy dataset. We specifically choose to make the target strings to show that with this approach, we can preserve all of the nice data pre-processing that SciKeras does for us, while still being able to split the final data before passing it to Keras.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[48]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[52]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1591,7 +1708,7 @@ array([&#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &#39;class1&#39;, &
 </div>
 <p>To get a base measurment to compare against, we’ll run first with KerasClassifier as a benchmark.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[49]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1625,7 +1742,7 @@ val_binary_accuracy = 0.0
 <p>We could specify <code class="docutils literal notranslate"><span class="pre">shuffle=True</span></code> (this is actually the default), but for highly imbalanced classes, this may not be as good as stratified splitting.</p>
 <p>So lets test our new <code class="docutils literal notranslate"><span class="pre">CustomClassifier</span></code>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[50]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[54]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1661,7 +1778,7 @@ val_binary_accuracy = 1.0
 <h2>8. Dynamically setting batch_size<a class="headerlink" href="#8.-Dynamically-setting-batch_size" title="Permalink to this headline">¶</a></h2>
 <p>In this tutorial, we use the <code class="docutils literal notranslate"><span class="pre">data_transformer</span></code> interface to implement a dynamic batch_size, similar to sklearn’s <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html">MLPClassifier</a>. We will implement <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> as <code class="docutils literal notranslate"><span class="pre">batch_size=min(200,</span> <span class="pre">n_samples)</span></code>.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[51]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1706,7 +1823,7 @@ val_binary_accuracy = 1.0
 </div>
 <p>Since this is happening inside SciKeras, this will work even if we are doing cross validation (which adjusts the split according to <code class="docutils literal notranslate"><span class="pre">cv</span></code>).</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[52]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[56]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1738,7 +1855,7 @@ batch_size=166
 </div>
 <p>But if we train with larger inputs, we can hit the cap of 200 we set:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[57]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
