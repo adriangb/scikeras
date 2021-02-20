@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import tensorflow as tf
@@ -7,6 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.multiclass import type_of_target
 from tensorflow.keras.losses import Loss
 from tensorflow.python.keras.losses import is_categorical_crossentropy
@@ -26,6 +27,11 @@ class TargetReshaper(BaseEstimator, TransformerMixin):
 
     def fit(self, y: np.ndarray) -> "TargetReshaper":
         """Fit the transformer to a target y.
+
+        Parameters
+        ----------
+        y : np.ndarray
+            The target data to be transformed.
 
         Returns
         -------
@@ -316,6 +322,11 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
         For RegressorTargetEncoder, this just records the dimensions
         of y as the expected number of outputs and saves the dtype.
 
+        Parameters
+        ----------
+        y : np.ndarray
+            The target data to be transformed.
+
         Returns
         -------
         RegressorTargetEncoder
@@ -383,3 +394,29 @@ class RegressorTargetEncoder(BaseEstimator, TransformerMixin):
             "n_outputs_": self.n_outputs_,
             "n_outputs_expected_": self.n_outputs_expected_,
         }
+
+
+class ClassWeightDataTransformer(BaseEstimator, TransformerMixin):
+    """Default dataset_transformer for KerasClassifier.
+
+    This transformer implements handling of the `class_weight` parameter
+    for single output classifiers.
+    """
+
+    def __init__(self, class_weight: Optional[Union[str, Dict[int, float]]] = None):
+        self.class_weight = class_weight
+
+    def fit(
+        self, data: Dict[str, Any], dummy: None = None
+    ) -> "ClassWeightDataTransformer":
+        return self
+
+    def transform(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        y, sample_weight = data.get("y", None), data.get("sample_weight", None)
+        if self.class_weight is None or y is None:
+            return data
+        sample_weight = 1 if sample_weight is None else sample_weight
+        sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
+        data["sample_weight"] = sample_weight
+        data["class_weight"] = None
+        return data

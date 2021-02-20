@@ -178,11 +178,98 @@ This is basically the same as calling :py:func:`~scikeras.wrappers.BaseWrapper.g
 Data Transformers
 ^^^^^^^^^^^^^^^^^
 
-In some cases, the input actually consists of multiple inputs. E.g.,
+Keras supports a much wider range of inputs/outputs than Scikit-Learn does. E.g.,
 in a text classification task, you might have an array that contains
 the integers representing the tokens for each sample, and another
-array containing the number of tokens of each sample. SciKeras has you
-covered here as well.
+array containing the number of tokens of each sample.
+
+In order to reconcile Keras' expanded input/output support and Scikit-Learn's more
+limited options, SciKeras introduces "data transformers". These are really just
+dependency injection points where you can declare custom data transformations,
+for example to split an array into a list of arrays, join ``X`` & ``y`` into a ``Dataset``, etc.
+In order to keep these transformations in a familiar format, they are implemented as
+sklearn-style transformers. You can think of this setup as an sklearn Pipeline:
+
+.. code-block::
+
+                                   ↗ feature_encoder ↘
+    SciKeras.fit(features, labels)                    dataset_transformer → keras.Model.fit(data)
+                                   ↘ target_encoder  ↗ 
+
+
+Within SciKeras, this is roughly implemented as follows:
+
+.. code:: python
+
+    class PseudoBaseWrapper:
+
+        def fit(self, X, y, sample_weight):
+            self.target_encoder_ = self.target_encoder.fit(X)
+            X = self.feature_encoder_.transform(X)
+            self.feature_encoder_ = self.feature_encoder.fit(y)
+            y = self.target_encoder_.transform(y)
+            self.model_ = self._build_keras_model()
+            fit_kwargs = dict(x=X, y=y, sample_weight=sample_weight)
+            self.dataset_transformer_ = self.dataset_transformer.fit(fit_kwargs)
+            fit_kwargs = self.dataset_transformer_.transform(fit_kwargs)
+            self.model_.fit(x=X, y=y, sample_weight=sample_weight)  # tf.keras.Model.fit
+            return self
+
+        def predict(self, X):
+            X = self.feature_encoder_.transform(X)
+            predict_kwargs = dict(x=X)
+            predict_kwargs = self.dataset_transformer_.fit_transform(predict_kwargs)
+            y_pred = self.model_.predict(**predict_kwargs)
+            return self.target_encoder_.inverse_transform(y_pred)
+
+
+``dataset_transformer`` is the last step before passing the data to Keras, and it allows for the greatest
+degree of customization because SciKeras does not make any assumptions about the output data
+and passes it directly to :py:func:`tensorflow.keras.Model.fit`.
+
+It accepts a dict of valid Keras ``**kwargs`` and is expected to return a dict
+of valid Keras ``**kwargs``:
+
+.. code:: python
+
+    from sklearn.base import BaseEstimator, TransformerMixin
+
+    class DatasetTransformer(BaseEstimator, TransformerMixin):
+        def fit(self, data: Dict[str, Any]) -> "DatasetTransformer":
+            assert data.keys() == {"x", "y", "sample_weight"}  # fixed keys
+            ...
+            return self
+
+        def transform(self, data):  # return a valid input for keras.Model.fit
+            # data includes x, y, sample_weight
+            assert "x" in data  # "x" is always a keys
+            if "y" in data:
+                # called from fit
+            else:
+                # called from predict
+            # as well as other Model.fit or Model.predict arguments
+            assert "batch_size" in data
+            ...
+            return data
+
+
+You can modify ``data`` in-place within ``transoform`` but **must** still return
+it.
+
+When called from ``fit`` or ``initialize``, you will get and return keys that are valid
+``**kwargs`` to ``tf.keras.Model.fit``. When being called from ``predict`` or ``score``
+you will get and return keys that are valid ``**kwargs`` to ``tf.keras.Model.predict``.
+
+Although you could implement *all* data transformations in a single ``dataset_transformer``,
+having several distinct dependency injections points allows for more modularity,
+for example to keep the default processing of string-encoded labels but convert
+the data to a :py:func:`tensorflow.data.Dataset` before passing to Keras.
+
+For a complete examples implementing custom data processing, see the examples in the
+:ref:`tutorials` section.
+
+Multi-input and output models via feature_encoder and target_encoder
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Scikit-Learn natively supports multiple outputs, although it technically
 requires them to be arrays of equal length
@@ -190,14 +277,15 @@ requires them to be arrays of equal length
 Scikit-Learn has no support for multiple inputs.
 To work around this issue, SciKeras implements a data conversion
 abstraction in the form of Scikit-Learn style transformers,
-one for ``X`` (features) and one for ``y`` (target).
-By implementing a custom transformer, you can split a single input ``X`` into multiple inputs
-for :py:class:`tensorflow.keras.Model` or perform any other manipulation you need.
+one for ``X`` (features) and one for ``y`` (target). These are implemented
+via :py:func:`scikeras.wrappers.BaseWrappers.feature_encoder` and
+:py:func:`scikeras.wrappers.BaseWrappers.feature_encoder` respectively.
+
 To override the default transformers, simply override
 :py:func:`scikeras.wrappers.BaseWrappers.target_encoder` or
 :py:func:`scikeras.wrappers.BaseWrappers.feature_encoder` for ``y`` and ``X`` respectively.
 
-SciKeras uses :py:func:`sklearn.utils.multiclass.type_of_target` to categorize the target
+By default, SciKeras uses :py:func:`sklearn.utils.multiclass.type_of_target` to categorize the target
 type, and implements basic handling of the following cases out of the box:
 
 +--------------------------+--------------+----------------+----------------+---------------+
@@ -208,11 +296,11 @@ type, and implements basic handling of the following cases out of the box:
 +--------------------------+--------------+----------------+----------------+---------------+
 | "binary"                 | [1, 0, 1]    | 1              | 1 or 2         | Yes           |
 +--------------------------+--------------+----------------+----------------+---------------+
-| "mulilabel-indicator"    | [[1, 1],     | 1 or >1        | 2 per target   | Single output |
+| "multilabel-indicator"   | [[1, 1],     | 1 or >1        | 2 per target   | Single output |
 |                          |              |                |                |               |
-|                          | [0, 2],      |                |                | only          |
+|                          | [0, 1],      |                |                | only          |
 |                          |              |                |                |               |
-|                          | [1, 1]]      |                |                |               |
+|                          | [1, 0]]      |                |                |               |
 +--------------------------+--------------+----------------+----------------+---------------+
 | "multiclass-multioutput" | [[1, 1],     | >1             | >=2 per target | No            |
 |                          |              |                |                |               |
@@ -229,11 +317,47 @@ type, and implements basic handling of the following cases out of the box:
 |                          | [.2, .9]]    |                |                |               |
 +--------------------------+--------------+----------------+----------------+---------------+
 
-If you find that your target is classified as ``"multiclass-multioutput"`` or ``"unknown"``, you will have to
-implement your own data processing routine.
+The supported cases are handled by the default implementation of ``target_encoder``.
+The default implementations are available for use as :py:class:`scikeras.utils.transformers.ClassifierLabelEncoder`
+and :py:class:`scikeras.utils.transformers.RegressorTargetEncoder` for
+:py:class:`scikeras.wrappers.KerasClassifier` and :py:class:`scikeras.wrappers.KerasRegressor` respectively.
 
-For a complete examples implementing custom data processing, see the examples in the
-:ref:`tutorials` section.
+As per the table above, if you find that your target is classified as
+``"multiclass-multioutput"`` or ``"unknown"``, you will have to implement your own data processing routine.
+
+get_metadata method
++++++++++++++++++++
+
+In addition to converting data, ``feature_encoder`` and ``target_encoder``, allows you to inject data
+into your model construction method. This is useful if for example you use ``target_encoder`` to dynamically
+determine how many outputs your model should have based on the data and then use this information to
+assign the right number of outputs in your Model. To return data from ``feature_encoder`` or ``target_encoder``,
+you will need to provide a transformer with a ``get_metadata`` method, which is expected to return a dictionary
+which will be injected into your model building function via the ``meta`` parameter.
+
+For example, if you wanted to create a calculated parameter called ``my_param_``:
+
+.. code-block::python
+
+    class MultiOutputTransformer(BaseEstimator, TransformerMixin):
+        def get_metadata(self):
+            return {"my_param_": "foobarbaz"}
+
+    class MultiOutputClassifier(KerasClassifier):
+
+        @property
+        def target_encoder(self):
+            return MultiOutputTransformer(...)
+
+    def get_model(meta):
+        print(f"Got: {meta['my_param_']}")
+
+    clf = MultiOutputClassifier(model=get_model)
+    clf.fit(X, y)  # prints 'Got: foobarbaz'
+    print(clf.my_param_)  # prints 'foobarbaz'
+
+Note that it is best practice to end your parameter names with a single underscore,
+which allows sklearn to know which parameters are stateful and which are stateless.
 
 Routed parameters
 -----------------
@@ -282,6 +406,8 @@ Custom Scorers
 SciKeras uses :func:`sklearn.metrics.accuracy_score` and :func:`sklearn.metrics.accuracy_score`
 as the scoring functions for :class:`scikeras.wrappers.KerasClassifier`
 and :class:`scikeras.wrappers.KerasRegressor` respectively. To override these scoring functions,
+override :func:`scikeras.wrappers.KerasClassifier.scorer`
+or :func:`scikeras.wrappers.KerasRegressor.scorer`.
 
 
 .. _Keras Callbacks docs: https://www.tensorflow.org/api_docs/python/tf/keras/callbacks
