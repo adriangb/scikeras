@@ -83,7 +83,7 @@ We will be defining a very simple autencoder. We define _three_ models:
 
 The only variable we give our model is the encoding dimensions, which will be a hyperparemter of our final transformer.
 
-We will build these models within `_keras-build_fn` so that we can store our encoders and decoders as seperate models and call them from `transform` and `inverse_transform` respectively.
+We will build these models within `_keras_build_fn` so that we can store our encoders and decoders as seperate models and call them from `transform` and `inverse_transform` respectively.
 
 For a background on chaining Functional Models like this, see [All models are callable](https://keras.io/guides/functional_api/#all-models-are-callable-just-like-layers) in the Keras docs.
 
