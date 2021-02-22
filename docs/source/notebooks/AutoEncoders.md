@@ -76,11 +76,11 @@ print(x_test.shape)
 
 ## 3. Define Keras Model
 
-We will be defining a very simple autencoder. We define _three_ models:
+We will be defining a very simple autencoder. We define _three_ model architectures:
 
-1. An encoder
-2. A decoder
-3. An autoencoder (which is just a chain of the encoder and decoder)
+1. An encoder: a series of densly connected layers culminating in an "output" layer who's size determines our compression ratio.
+2. A decoder: takes the output of the encoder as it's input and reconstructs the original data.
+3. An autoencoder: a chain of the encoder and decoder that directly connects them for training purposes.
 
 The only variable we give our model is the encoding dimensions, which will be a hyperparemter of our final transformer.
 
