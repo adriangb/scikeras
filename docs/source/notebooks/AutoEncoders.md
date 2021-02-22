@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.10.1
+      jupytext_version: 1.10.2
   kernelspec:
     display_name: Python 3
     language: python
@@ -164,7 +164,7 @@ autoencoder = AutoEncoder(
     loss="binary_crossentropy",
     encoding_dim=32,
     random_state=0,
-    epochs=15,
+    epochs=5,
     verbose=False,
     optimizer="adam",
 )
@@ -272,7 +272,7 @@ deep = DeepAutoEncoder(
     encoding_dim=32,
     hidden_layer_sizes=[128],
     random_state=0,
-    epochs=15,
+    epochs=5,
     verbose=False,
     optimizer="adam",
 )
