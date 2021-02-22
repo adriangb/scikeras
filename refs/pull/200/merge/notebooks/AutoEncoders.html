@@ -459,7 +459,7 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 <h2>3. Define Keras Model<a class="headerlink" href="#3.-Define-Keras-Model" title="Permalink to this headline">¶</a></h2>
 <p>We will be defining a very simple autencoder. We define <em>three</em> model architectures:</p>
 <ol class="arabic simple">
-<li><p>An encoder: a series of densly connected layers culminating in an “output” layer who’s size determines our compression ratio.</p></li>
+<li><p>An encoder: a series of densly connected layers culminating in an “output” layer that determines the encoding dimensions.</p></li>
 <li><p>A decoder: takes the output of the encoder as it’s input and reconstructs the original data.</p></li>
 <li><p>An autoencoder: a chain of the encoder and decoder that directly connects them for training purposes.</p></li>
 </ol>
@@ -481,6 +481,9 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 <span class="k">class</span> <span class="nc">AutoEncoder</span><span class="p">(</span><span class="n">BaseWrapper</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class that enables transform and fit_transform.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">encoder_model_</span><span class="p">:</span> <span class="n">BaseWrapper</span>
+    <span class="n">decoder_model_</span><span class="p">:</span> <span class="n">BaseWrapper</span>
 
     <span class="k">def</span> <span class="nf">_keras_build_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="n">n_features_in</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;n_features_in_&quot;</span><span class="p">]</span>
@@ -728,7 +731,7 @@ Compression ratio: 1/25
 1-MSE for training set (higher is better)
 
 AutoEncoder: 0.9899
-Deep AutoEncoder: 0.9901
+Deep AutoEncoder: 0.9904
 </pre></div></div>
 </div>
 <p>Suprisingly, our score got worse. It’s possible that that because of the extra trainable variables, our deep model trains slower than our simple model.</p>
