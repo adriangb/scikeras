@@ -516,7 +516,7 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;AutoEncoder&quot;</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">)</span>
         <span class="c1"># at this point, encoder_model_ and decoder_model_</span>
         <span class="c1"># are both &quot;fitted&quot; because they share layers w/ model_</span>
@@ -529,12 +529,12 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
         <span class="c1"># always maximizes the score (e.g. in GridSearch)</span>
         <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">X</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder_model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_tf</span><span class="p">):</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_tf</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_tf</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_tf</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -549,7 +549,7 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
     <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;binary_crossentropy&quot;</span><span class="p">,</span>
     <span class="n">encoding_dim</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
     <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="n">epochs</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;adam&quot;</span><span class="p">,</span>
 <span class="p">)</span>
@@ -698,7 +698,7 @@ Compression ratio: 1/25
     <span class="n">encoding_dim</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
     <span class="n">hidden_layer_sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">128</span><span class="p">],</span>
     <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="n">epochs</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;adam&quot;</span><span class="p">,</span>
 <span class="p">)</span>
@@ -727,8 +727,8 @@ Compression ratio: 1/25
 <div class="highlight"><pre>
 1-MSE for training set (higher is better)
 
-AutoEncoder: 0.9901
-Deep AutoEncoder: 0.9919
+AutoEncoder: 0.9899
+Deep AutoEncoder: 0.9901
 </pre></div></div>
 </div>
 <p>Suprisingly, our score got worse. It’s possible that that because of the extra trainable variables, our deep model trains slower than our simple model.</p>
