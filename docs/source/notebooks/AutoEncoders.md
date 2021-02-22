@@ -78,7 +78,7 @@ print(x_test.shape)
 
 We will be defining a very simple autencoder. We define _three_ model architectures:
 
-1. An encoder: a series of densly connected layers culminating in an "output" layer who's size determines our compression ratio.
+1. An encoder: a series of densly connected layers culminating in an "output" layer that determines the encoding dimensions.
 2. A decoder: takes the output of the encoder as it's input and reconstructs the original data.
 3. An autoencoder: a chain of the encoder and decoder that directly connects them for training purposes.
 
@@ -99,6 +99,9 @@ from scikeras.wrappers import BaseWrapper
 class AutoEncoder(BaseWrapper, TransformerMixin):
     """A class that enables transform and fit_transform.
     """
+
+    encoder_model_: BaseWrapper
+    decoder_model_: BaseWrapper
     
     def _keras_build_fn(self, encoding_dim: int, meta: Dict[str, Any]):
         n_features_in = meta["n_features_in_"]
