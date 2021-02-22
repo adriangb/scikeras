@@ -457,11 +457,11 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 </div>
 <div class="section" id="3.-Define-Keras-Model">
 <h2>3. Define Keras Model<a class="headerlink" href="#3.-Define-Keras-Model" title="Permalink to this headline">¶</a></h2>
-<p>We will be defining a very simple autencoder. We define <em>three</em> models:</p>
+<p>We will be defining a very simple autencoder. We define <em>three</em> model architectures:</p>
 <ol class="arabic simple">
-<li><p>An encoder</p></li>
-<li><p>A decoder</p></li>
-<li><p>An autoencoder (which is just a chain of the encoder and decoder)</p></li>
+<li><p>An encoder: a series of densly connected layers culminating in an “output” layer who’s size determines our compression ratio.</p></li>
+<li><p>A decoder: takes the output of the encoder as it’s input and reconstructs the original data.</p></li>
+<li><p>An autoencoder: a chain of the encoder and decoder that directly connects them for training purposes.</p></li>
 </ol>
 <p>The only variable we give our model is the encoding dimensions, which will be a hyperparemter of our final transformer.</p>
 <p>We will build these models within <code class="docutils literal notranslate"><span class="pre">_keras-build_fn</span></code> so that we can store our encoders and decoders as seperate models and call them from <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code> respectively.</p>
