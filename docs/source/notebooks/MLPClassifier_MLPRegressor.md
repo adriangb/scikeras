@@ -5,8 +5,8 @@ jupyter:
     text_representation:
       extension: .md
       format_name: markdown
-      format_version: '1.2'
-      jupytext_version: 1.9.1
+      format_version: '1.3'
+      jupytext_version: 1.10.2
   kernelspec:
     display_name: Python 3
     language: python
@@ -191,7 +191,7 @@ def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any], compi
 Our last step in defining our model is to wrap it with SciKeras. A couple of things to note are:
 - Every user-defined parameter in `model`/`get_clf_model` (in our case just `hidden_layer_sizes`) must be defined as a keyword argument to `KerasClassifier` with a default value.
 - Keras defaults to `"rmsprop"` for `optimizer`. We set it to `"adam"` to mimic MLPClassifier.
-- We set the learning rate for the optimizer to `0.001`, again to mimic MLPClassifier. We set this parameter using [parameter routing](https://www.adriangb.com/scikeras/refs/heads/master/advanced.html#routed-parameters).
+- We set the learning rate for the optimizer to `0.001`, again to mimic MLPClassifier. We set this parameter using [parameter routing](https://www.adriangb.com/scikeras/stable/advanced.html#routed-parameters).
 - Other parameters, such as `activation`, can be added similar to `hidden_layer_sizes`, but we omit them here for simplicity.
 
 ```python

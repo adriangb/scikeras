@@ -12,7 +12,7 @@ SciKeras is derived from and API compatible with `tf.keras.wrappers.scikit_learn
 and [will be removed](https://github.com/tensorflow/tensorflow/pull/36137#issuecomment-726271760) in a future release.
 
 An overview of the advantages and differences as compared to the TF wrappers can be found in our
-[migration](https://www.adriangb.com/scikeras/refs/heads/master/migration.html) guide.
+[migration](https://www.adriangb.com/scikeras/stable/migration.html) guide.
 
 ## Installation
 
@@ -26,7 +26,7 @@ The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.4.0`.
 
 ### Migrating from `tf.keras.wrappers.scikit_learn`
 
-Please see the [migration](https://www.adriangb.com/scikeras/refs/heads/master/migration.html) section of our documentation.
+Please see the [migration](https://www.adriangb.com/scikeras/stable/migration.html) section of our documentation.
 
 ## Documentation
 

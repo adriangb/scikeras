@@ -46,7 +46,9 @@ jobs:
           name: docs
 
       - name: Update versions
-        run: python update_versions.py
+        run: |
+          pip install packaging
+          python update_versions.py
 
       - name: Get SHA & ref
         run: |
