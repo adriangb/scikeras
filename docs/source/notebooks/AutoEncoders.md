@@ -134,7 +134,7 @@ class AutoEncoder(BaseWrapper, TransformerMixin):
         self._initialize(X=X, y=X)
         return self
 
-    def fit(self, X, *, sample_weight=None):
+    def fit(self, X, *, sample_weight=None) -> "AutoEncoder":
         super().fit(X=X, y=X, sample_weight=sample_weight)
         # at this point, encoder_model_ and decoder_model_
         # are both "fitted" because they share layers w/ model_
@@ -147,12 +147,12 @@ class AutoEncoder(BaseWrapper, TransformerMixin):
         # always maximizes the score (e.g. in GridSearch)
         return 1 - mean_squared_error(self.predict(X), X)
 
-    def transform(self, X):
-        X = self.feature_encoder_.transform(X)
+    def transform(self, X) -> np.ndarray:
+        X: np.ndarray = self.feature_encoder_.transform(X)
         return self.encoder_model_.predict(X)
 
-    def inverse_transform(self, X_tf):
-        X = self.decoder_model_.predict(X_tf)
+    def inverse_transform(self, X_tf: np.ndarray):
+        X: np.ndarray = self.decoder_model_.predict(X_tf)
         return self.feature_encoder_.inverse_transform(X)
 ```
 
