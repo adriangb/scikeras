@@ -411,13 +411,12 @@ class BaseWrapper(BaseEstimator):
         else:
             model = final_build_fn(**build_params)
 
-        # compile model if user gave us an un-compiled model
-        if not (hasattr(model, "loss") and hasattr(model, "optimizer")):
-            if compile_kwargs is None:
-                compile_kwargs = self._get_compile_kwargs()
-            model.compile(**compile_kwargs)
-
         return model
+
+    def _ensure_compiled_model(self) -> None:
+        # compile model if user gave us an un-compiled model
+        if not (hasattr(self.model_, "loss") and hasattr(self.model_, "optimizer")):
+            self.model_.compile(**self._get_compile_kwargs())
 
     def _fit_keras_model(
         self,
@@ -455,6 +454,7 @@ class BaseWrapper(BaseEstimator):
             A reference to the instance that can be chain called
             (ex: instance.fit(X,y).transform(X) )
         """
+
         # Make sure model has a loss function
         loss = self.model_.loss
         no_loss = False
@@ -839,6 +839,7 @@ class BaseWrapper(BaseEstimator):
             X, y = self._initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
+        self._ensure_compiled_model()
 
         if sample_weight is not None:
             X, sample_weight = self._validate_sample_weight(X, sample_weight)
