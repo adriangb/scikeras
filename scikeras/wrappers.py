@@ -37,7 +37,7 @@ from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetE
 
 _kwarg_warn = """Passing estimator parameters as keyword arguments (aka as `**kwargs`) to `{0}` is not supported by the Scikit-Learn API, and will be removed in a future version of SciKeras.
 
-To resolve this issue, either set these parameters in the constructor (`BaseWrapper(..., foo=bar)`) or via `set_params` (`est.set_params(foo=bar)`). The following parameters were passed to `{0}`:
+To resolve this issue, either set these parameters in the constructor (e.g., `est = BaseWrapper(..., foo=bar)`) or via `set_params` (e.g., `est.set_params(foo=bar)`). The following parameters were passed to `{0}`:
 
 {1}
 
