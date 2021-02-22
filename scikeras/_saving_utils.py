@@ -24,7 +24,14 @@ def _get_temp_folder() -> str:
         with tempfile.TemporaryDirectory() as dirname:
             yield dirname
     else:
-        yield f"ram://{uuid4()}"
+        dir = f"ram://{uuid4()}"
+        try:
+            yield dir
+        finally:
+            if tf_io.gfile.exists(dir):
+                tf_io.gfile.remove(
+                    dir
+                )  # note: should use rmtree but it is broken; see https://github.com/tensorflow/tensorflow/issues/47316
 
 
 def _temp_create_all_weights(
