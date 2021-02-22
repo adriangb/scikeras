@@ -464,7 +464,7 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 <li><p>An autoencoder: a chain of the encoder and decoder that directly connects them for training purposes.</p></li>
 </ol>
 <p>The only variable we give our model is the encoding dimensions, which will be a hyperparemter of our final transformer.</p>
-<p>We will build these models within <code class="docutils literal notranslate"><span class="pre">_keras-build_fn</span></code> so that we can store our encoders and decoders as seperate models and call them from <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code> respectively.</p>
+<p>The encoder and decoder are views to the first/last layers of the autoencoder model. They’ll be directly used in predict/inverse_transform/etc, so let’s create some SciKeras models with those layers in {encoder, decoder}<em>model</em>. We will build these models within <code class="docutils literal notranslate"><span class="pre">_keras-build_fn</span></code> so that we can store our encoders and decoders as seperate models and call them from <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code> respectively.</p>
 <p>For a background on chaining Functional Models like this, see <a class="reference external" href="https://keras.io/guides/functional_api/#all-models-are-callable-just-like-layers">All models are callable</a> in the Keras docs.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
