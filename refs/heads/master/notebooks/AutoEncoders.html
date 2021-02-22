@@ -379,6 +379,7 @@ div.rendered_html tbody tr:hover {
 <li><p><a class="reference external" href="#3.-Define-Keras-Model">3. Define Keras Model</a></p></li>
 <li><p><a class="reference external" href="#4.-Training">4. Training</a></p></li>
 <li><p><a class="reference external" href="#5.-Explore-Results">5. Explore Results</a></p></li>
+<li><p><a class="reference external" href="#6.-Deep-AutoEncoder">6. Deep AutoEncoder</a></p></li>
 </ul>
 </div>
 <div class="section" id="1.-Setup">
@@ -456,105 +457,105 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 </div>
 <div class="section" id="3.-Define-Keras-Model">
 <h2>3. Define Keras Model<a class="headerlink" href="#3.-Define-Keras-Model" title="Permalink to this headline">¶</a></h2>
-<p>We will be defining a very simple autencoder. We define <em>three</em> model building methods:</p>
+<p>We will be defining a very simple autencoder. We define <em>three</em> model architectures:</p>
 <ol class="arabic simple">
-<li><p>One to build a full end-to-end autoencoder.</p></li>
-<li><p>One to create a model that includes only the encoder portion.</p></li>
-<li><p>One that creates a model that includes only the decoder portion.</p></li>
+<li><p>An encoder: a series of densly connected layers culminating in an “output” layer that determines the encoding dimensions.</p></li>
+<li><p>A decoder: takes the output of the encoder as it’s input and reconstructs the original data.</p></li>
+<li><p>An autoencoder: a chain of the encoder and decoder that directly connects them for training purposes.</p></li>
 </ol>
 <p>The only variable we give our model is the encoding dimensions, which will be a hyperparemter of our final transformer.</p>
+<p>The encoder and decoder are views to the first/last layers of the autoencoder model. They’ll be directly used in <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">inverse_transform</span></code>, so we’ll create some SciKeras models with those layers and save them as in <code class="docutils literal notranslate"><span class="pre">encoder_model_</span></code> and <code class="docutils literal notranslate"><span class="pre">decoder_model_</span></code>. All three models are created within <code class="docutils literal notranslate"><span class="pre">_keras_build_fn</span></code>.</p>
+<p>For a background on chaining Functional Models like this, see <a class="reference external" href="https://keras.io/guides/functional_api/#all-models-are-callable-just-like-layers">All models are callable</a> in the Keras docs.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">tensorflow</span> <span class="kn">import</span> <span class="n">keras</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
 
-
-<span class="k">def</span> <span class="nf">get_fit_model</span><span class="p">(</span><span class="n">encoding_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Get an autoencoder.</span>
-
-<span class="sd">    This autoencoder compresses a 28x28 image (784 pixels) down to a feature of length</span>
-<span class="sd">    `encoding_dim`, and tries to reconstruct the input image from that vector.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">input_img</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">784</span><span class="p">,),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
-    <span class="n">encoded</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">encoding_dim</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;encoded&quot;</span><span class="p">)(</span><span class="n">input_img</span><span class="p">)</span>
-    <span class="n">decoded</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">784</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">)(</span><span class="n">encoded</span><span class="p">)</span>
-    <span class="n">autoencoder_model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">input_img</span><span class="p">,</span> <span class="n">decoded</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">autoencoder_model</span>
-
-<span class="k">def</span> <span class="nf">get_tf_model</span><span class="p">(</span><span class="n">fit_model</span><span class="p">:</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Get an encoder model.</span>
-
-<span class="sd">    We do this by extracting the encoding layer from the fitted autoencoder model.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">fit_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">fit_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s2">&quot;encoded&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">get_inverse_tf_model</span><span class="p">(</span><span class="n">fit_model</span><span class="p">:</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">encoding_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Get an deencoder model.</span>
-
-<span class="sd">    We do this by extracting the deencoding layer from the fitted autoencoder model</span>
-<span class="sd">    and adding a new Keras input layer.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">encoded_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">encoding_dim</span><span class="p">,))</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="n">fit_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">)(</span><span class="n">encoded_input</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">encoded_input</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<p>Next we create a class that that will enable the <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">fit_transform</span></code> methods, as well as integrating all three of our models into a single estimator.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">TransformerMixin</span><span class="p">,</span> <span class="n">clone</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">TransformerMixin</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_squared_error</span>
 <span class="kn">from</span> <span class="nn">scikeras.wrappers</span> <span class="kn">import</span> <span class="n">BaseWrapper</span>
 
 
-<span class="k">class</span> <span class="nc">KerasTransformer</span><span class="p">(</span><span class="n">BaseWrapper</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">AutoEncoder</span><span class="p">(</span><span class="n">BaseWrapper</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class that enables transform and fit_transform.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">tf_est</span><span class="p">:</span> <span class="n">BaseWrapper</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">inv_tf_est</span><span class="p">:</span> <span class="n">BaseWrapper</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tf_est</span> <span class="o">=</span> <span class="n">tf_est</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inv_tf_est</span> <span class="o">=</span> <span class="n">inv_tf_est</span>
+    <span class="n">encoder_model_</span><span class="p">:</span> <span class="n">BaseWrapper</span>
+    <span class="n">decoder_model_</span><span class="p">:</span> <span class="n">BaseWrapper</span>
 
+    <span class="k">def</span> <span class="nf">_keras_build_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="n">n_features_in</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;n_features_in_&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tf_est_</span> <span class="o">=</span> <span class="n">clone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tf_est</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inv_tf_est_</span> <span class="o">=</span> <span class="n">clone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inv_tf_est</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tf_est_</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">fit_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inv_tf_est_</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">fit_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_</span><span class="p">,</span> <span class="n">encoding_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding_dim</span><span class="p">)</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tf_est_</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">X_tf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_est_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inv_tf_est_</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">X_tf</span><span class="p">)</span>
+        <span class="n">encoder_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_features_in</span><span class="p">,))</span>
+        <span class="n">encoder_output</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">encoding_dim</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">)(</span><span class="n">encoder_input</span><span class="p">)</span>
+        <span class="n">encoder_model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">encoder_input</span><span class="p">,</span> <span class="n">encoder_output</span><span class="p">)</span>
+
+        <span class="n">decoder_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">encoding_dim</span><span class="p">,))</span>
+        <span class="n">decoder_output</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">n_features_in</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;decoder&quot;</span><span class="p">)(</span><span class="n">decoder_input</span><span class="p">)</span>
+        <span class="n">decoder_model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">decoder_input</span><span class="p">,</span> <span class="n">decoder_output</span><span class="p">)</span>
+
+        <span class="n">autoencoder_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_features_in</span><span class="p">,))</span>
+        <span class="n">encoded_img</span> <span class="o">=</span> <span class="n">encoder_model</span><span class="p">(</span><span class="n">autoencoder_input</span><span class="p">)</span>
+        <span class="n">reconstructed_img</span> <span class="o">=</span> <span class="n">decoder_model</span><span class="p">(</span><span class="n">encoded_img</span><span class="p">)</span>
+
+        <span class="n">autoencoder_model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">autoencoder_input</span><span class="p">,</span> <span class="n">reconstructed_img</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder_model_</span> <span class="o">=</span> <span class="n">BaseWrapper</span><span class="p">(</span><span class="n">encoder_model</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decoder_model_</span> <span class="o">=</span> <span class="n">BaseWrapper</span><span class="p">(</span><span class="n">decoder_model</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">autoencoder_model</span>
+
+    <span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_initialize</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+        <span class="c1"># since encoder_model_ and decoder_model_ share layers (and their weights)</span>
+        <span class="c1"># X_tf here come from random weights, but we only use it to initialize our models</span>
+        <span class="n">X_tf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder_model_</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decoder_model_</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">X_tf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">X</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">X_tf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_est_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">X_tf</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;AutoEncoder&quot;</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">X</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">)</span>
+        <span class="c1"># at this point, encoder_model_ and decoder_model_</span>
+        <span class="c1"># are both &quot;fitted&quot; because they share layers w/ model_</span>
+        <span class="c1"># which is fit in the above call</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="k">def</span> <span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_tf</span><span class="p">):</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv_tf_est_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_tf</span><span class="p">)</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">X</span>
+    <span class="k">def</span> <span class="nf">score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="c1"># Note: we use 1-MSE as the score</span>
+        <span class="c1"># With MSE, &quot;larger is better&quot;, but Scikit-Learn</span>
+        <span class="c1"># always maximizes the score (e.g. in GridSearch)</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">X</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder_model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_tf</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_tf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_encoder_</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <p>Next, we wrap the Keras Model with Scikeras. Note that for our encoder/decoder estimators, we do not need to provide a loss function since no training will be done. We do however need to have the <code class="docutils literal notranslate"><span class="pre">fit_model</span></code> and <code class="docutils literal notranslate"><span class="pre">encoding_dim</span></code> so that these will be settable by <code class="docutils literal notranslate"><span class="pre">BaseWrapper.set_params</span></code>.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">tf_est</span> <span class="o">=</span> <span class="n">BaseWrapper</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">get_tf_model</span><span class="p">,</span> <span class="n">fit_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">inv_tf_est</span> <span class="o">=</span> <span class="n">BaseWrapper</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">get_inverse_tf_model</span><span class="p">,</span> <span class="n">fit_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">encoding_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">autoencoder</span> <span class="o">=</span> <span class="n">KerasTransformer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">get_fit_model</span><span class="p">,</span> <span class="n">tf_est</span><span class="o">=</span><span class="n">tf_est</span><span class="p">,</span> <span class="n">inv_tf_est</span><span class="o">=</span><span class="n">inv_tf_est</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;binary_crossentropy&quot;</span><span class="p">,</span> <span class="n">encoding_dim</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span></span><span class="n">autoencoder</span> <span class="o">=</span> <span class="n">AutoEncoder</span><span class="p">(</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;binary_crossentropy&quot;</span><span class="p">,</span>
+    <span class="n">encoding_dim</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;adam&quot;</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -562,8 +563,8 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 <div class="section" id="4.-Training">
 <h2>4. Training<a class="headerlink" href="#4.-Training" title="Permalink to this headline">¶</a></h2>
 <p>To train the model, we pass the input images as both the features and the target. This will train the layers to compress the data as accurately as possible between the encoder and decoder. Note that we only pass the <code class="docutils literal notranslate"><span class="pre">X</span></code> parameter, since we defined the mapping <code class="docutils literal notranslate"><span class="pre">y=X</span></code> in <code class="docutils literal notranslate"><span class="pre">KerasTransformer.fit</span></code> above.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -571,26 +572,9 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Epoch 1/5
-1875/1875 [==============================] - 4s 2ms/step - loss: 0.2027
-Epoch 2/5
-1875/1875 [==============================] - 4s 2ms/step - loss: 0.1062
-Epoch 3/5
-1875/1875 [==============================] - 4s 2ms/step - loss: 0.0979
-Epoch 4/5
-1875/1875 [==============================] - 4s 2ms/step - loss: 0.0964
-Epoch 5/5
-1875/1875 [==============================] - 4s 2ms/step - loss: 0.0953
-</pre></div></div>
-</div>
 <p>Next, we round trip the test dataset and explore the performance of the autoencoder.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -603,7 +587,7 @@ Epoch 5/5
 <h2>5. Explore Results<a class="headerlink" href="#5.-Explore-Results" title="Permalink to this headline">¶</a></h2>
 <p>Let’s compare our inputs to lossy decoded outputs:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -634,18 +618,18 @@ Epoch 5/5
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_AutoEncoders_19_0.png" src="../_images/notebooks_AutoEncoders_19_0.png" />
+<img alt="../_images/notebooks_AutoEncoders_17_0.png" src="../_images/notebooks_AutoEncoders_17_0.png" />
 </div>
 </div>
 <p>What about the compression? Let’s check the sizes of the arrays.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">encoded_imgs</span> <span class="o">=</span> <span class="n">autoencoder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x_test.shape[1]: </span><span class="si">{</span><span class="n">x_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;encoded_imgs.shape[1]: </span><span class="si">{</span><span class="n">encoded_imgs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x_test size (in MB): </span><span class="si">{</span><span class="n">x_test</span><span class="o">.</span><span class="n">nbytes</span><span class="o">/</span><span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;encoded_imgs size (in MB): </span><span class="si">{</span><span class="n">encoded_imgs</span><span class="o">.</span><span class="n">nbytes</span><span class="o">/</span><span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="n">cr</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">encoded_imgs</span><span class="o">.</span><span class="n">nbytes</span><span class="o">/</span><span class="n">x_test</span><span class="o">.</span><span class="n">nbytes</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Compression ratio: 1/</span><span class="si">{</span><span class="mi">1</span><span class="o">/</span><span class="n">cr</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
@@ -656,11 +640,102 @@ Epoch 5/5
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-x_test.shape[1]: 784
-encoded_imgs.shape[1]: 32
+x_test size (in MB): 29.91
+encoded_imgs size (in MB): 1.22
 Compression ratio: 1/25
 </pre></div></div>
 </div>
+</div>
+<div class="section" id="6.-Deep-AutoEncoder">
+<h2>6. Deep AutoEncoder<a class="headerlink" href="#6.-Deep-AutoEncoder" title="Permalink to this headline">¶</a></h2>
+<p>We can easily expand our model to be a deep autoencoder by adding some hidden layers. All we have to do is add a parameter <code class="docutils literal notranslate"><span class="pre">hidden_layer_sizes</span></code> and use it in <code class="docutils literal notranslate"><span class="pre">_keras_build_fn</span></code> to build hidden layers. For simplicity, we use a single <code class="docutils literal notranslate"><span class="pre">hidden_layer_sizes</span></code> parameter and mirror it across the encoding layers and decoding layers, but there is nothing forcing us to build symetrical models.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+
+<span class="k">class</span> <span class="nc">DeepAutoEncoder</span><span class="p">(</span><span class="n">AutoEncoder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class that enables transform and fit_transform.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_keras_build_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hidden_layer_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">meta</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="n">n_features_in</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;n_features_in_&quot;</span><span class="p">]</span>
+
+        <span class="n">encoder_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_features_in</span><span class="p">,))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">encoder_input</span>
+        <span class="k">for</span> <span class="n">layer_size</span> <span class="ow">in</span> <span class="n">hidden_layer_sizes</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">layer_size</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">encoder_output</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">encoding_dim</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">encoder_model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">encoder_input</span><span class="p">,</span> <span class="n">encoder_output</span><span class="p">)</span>
+
+        <span class="n">decoder_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">encoding_dim</span><span class="p">,))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">decoder_input</span>
+        <span class="k">for</span> <span class="n">layer_size</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">hidden_layer_sizes</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">layer_size</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">decoder_output</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">n_features_in</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;decoder&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">decoder_model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">decoder_input</span><span class="p">,</span> <span class="n">decoder_output</span><span class="p">)</span>
+
+        <span class="n">autoencoder_input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_features_in</span><span class="p">,))</span>
+        <span class="n">encoded_img</span> <span class="o">=</span> <span class="n">encoder_model</span><span class="p">(</span><span class="n">autoencoder_input</span><span class="p">)</span>
+        <span class="n">reconstructed_img</span> <span class="o">=</span> <span class="n">decoder_model</span><span class="p">(</span><span class="n">encoded_img</span><span class="p">)</span>
+
+        <span class="n">autoencoder_model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">autoencoder_input</span><span class="p">,</span> <span class="n">reconstructed_img</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder_model_</span> <span class="o">=</span> <span class="n">BaseWrapper</span><span class="p">(</span><span class="n">encoder_model</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decoder_model_</span> <span class="o">=</span> <span class="n">BaseWrapper</span><span class="p">(</span><span class="n">decoder_model</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">autoencoder_model</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">deep</span> <span class="o">=</span> <span class="n">DeepAutoEncoder</span><span class="p">(</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;binary_crossentropy&quot;</span><span class="p">,</span>
+    <span class="n">encoding_dim</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">hidden_layer_sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">128</span><span class="p">],</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;adam&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">deep</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">x_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;1-MSE for training set (higher is better)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">score</span> <span class="o">=</span> <span class="n">autoencoder</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">x_test</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;AutoEncoder: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">score</span> <span class="o">=</span> <span class="n">deep</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">x_test</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Deep AutoEncoder: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+1-MSE for training set (higher is better)
+
+AutoEncoder: 0.9899
+Deep AutoEncoder: 0.9904
+</pre></div></div>
+</div>
+<p>Suprisingly, our score got worse. It’s possible that that because of the extra trainable variables, our deep model trains slower than our simple model.</p>
+<p>Check out the <a class="reference external" href="https://blog.keras.io/building-autoencoders-in-keras.html">Keras tutorial</a> to see the difference after 100 epochs of training, as well as more architectures and applications for AutoEncoders!</p>
 </div>
 </div>
 
