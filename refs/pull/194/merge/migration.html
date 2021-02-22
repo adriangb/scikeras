@@ -168,9 +168,15 @@ pass your loss function to the constructor:</p>
 </div>
 <div class="section" id="variable-keyword-arguments-in-fit-and-predict">
 <h3><a class="toc-backref" href="#id4">Variable keyword arguments in fit and predict</a><a class="headerlink" href="#variable-keyword-arguments-in-fit-and-predict" title="Permalink to this headline">¶</a></h3>
-<p>In a future release of SciKeras, variable keyword arguments (commonly referred to as
-<code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>) will be removed from fit and predict. To future
-proof your code, you should instead declare these parameters in your constructor:</p>
+<p>Keras supports a variable keyword arguments (commonly referred to as <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>) for <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">predict</span></code>.
+Scikit-Learn on the other hand does not support these arguments, and using them is largely incompatible with the Scikit-Learn ecosystem.
+As a compromise, SciKeras supports these arguments, but we recommended that you set parameters using the constructor
+or <code class="docutils literal notranslate"><span class="pre">set_params</span></code> for first-class SciKeras support.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Passing keyword arguments to <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">predict</span></code> is deprecated and will be removed in a future version of SciKeras.</p>
+</div>
+<p>For example, to declare <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> in the constructor:</p>
 <div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- clf = KerasClassifier(...)</span>
 <span class="gd">- clf.fit(..., batch_size=32)</span>
 <span class="gi">+ clf = KerasClassifier(..., batch_size=32)</span>
@@ -178,9 +184,18 @@ proof your code, you should instead declare these parameters in your constructor
 </pre></div>
 </div>
 <p>Or to declare separate values for <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">predict</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span><span class="n">fit__batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">predict__batch_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">fit__batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">predict__batch_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>If you want to change the parameters on a live instance, you can do:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">fit__batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">predict__batch_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Functionally, this is the same as passing these parameters to <code class="docutils literal notranslate"><span class="pre">fit</span></code>, just with one more function call.
+This is much more compatible with the Scikit-Learn API.
+In fact, this is what Scikti-Learn does in the background for hyperparameter tuning.</p>
 </div>
 <div class="section" id="renaming-of-build-fn-to-model">
 <h3><a class="toc-backref" href="#id5">Renaming of <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> to <code class="docutils literal notranslate"><span class="pre">model</span></code></a><a class="headerlink" href="#renaming-of-build-fn-to-model" title="Permalink to this headline">¶</a></h3>
