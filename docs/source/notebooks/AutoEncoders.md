@@ -84,7 +84,8 @@ We will be defining a very simple autencoder. We define _three_ model architectu
 
 The only variable we give our model is the encoding dimensions, which will be a hyperparemter of our final transformer.
 
-We will build these models within `_keras-build_fn` so that we can store our encoders and decoders as seperate models and call them from `transform` and `inverse_transform` respectively.
+The encoder and decoder are views to the first/last layers of the autoencoder model. They'll be directly used in predict/inverse_transform/etc, so let's create some SciKeras models with those layers in {encoder, decoder}_model_.
+We will build these models within `_keras-build_fn` so that we can store our encoders and decoders as seperate models and call them from `transform` and `inverse_transform` respectively. 
 
 For a background on chaining Functional Models like this, see [All models are callable](https://keras.io/guides/functional_api/#all-models-are-callable-just-like-layers) in the Keras docs.
 
