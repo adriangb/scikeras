@@ -1,7 +1,6 @@
 """Wrapper for using the Scikit-Learn API with Keras models.
 """
 import inspect
-import os
 import warnings
 
 from collections import defaultdict
@@ -36,12 +35,21 @@ from scikeras.utils import loss_name, metric_name
 from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
 
 
+_kwarg_warn = """Passing estimator parameters as keyword arguments (aka as `**kwargs`) to `{0}` is not supported by the Scikit-Learn API, and will be removed in a future version of SciKeras.
+
+To resolve this issue, either set these parameters in the constructor (e.g., `est = BaseWrapper(..., foo=bar)`) or via `set_params` (e.g., `est.set_params(foo=bar)`). The following parameters were passed to `{0}`:
+
+{1}
+
+More detail is available at https://www.adriangb.com/scikeras/migration.html#variable-keyword-arguments-in-fit-and-predict
+"""
+
+
 class BaseWrapper(BaseEstimator):
     """Implementation of the scikit-learn classifier API for Keras.
 
     Below are a list of SciKeras specific parameters. For details on other parameters,
-    please see the see the
-    [tf.keras.Model documentation](https://www.tensorflow.org/api_docs/python/tf/keras/Model).
+    please see the see the `tf.keras.Model documentation <https://www.tensorflow.org/api_docs/python/tf/keras/Model>`_.
 
     Parameters
     ----------
@@ -712,20 +720,23 @@ class BaseWrapper(BaseEstimator):
             If not provided, then each sample is given unit weight.
         **kwargs : Dict[str, Any]
             Extra arguments to route to ``Model.fit``.
-            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
-            These parameters can also be specified by prefixing `fit__` to a parameter at initialization;
-            e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
+
+        Warnings
+        --------
+            Passing estimator parameters as keyword arguments (aka as ``**kwargs``) to ``fit`` is not supported by the Scikit-Learn API,
+            and will be removed in a future version of SciKeras.
+            These parameters can also be specified by prefixing ``fit__`` to a parameter at initialization
+            (``BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)``)
+            or by using ``set_params`` (``est.set_params(fit__batch_size=32, predict__batch_size=1000)``).
+
         Returns
         -------
         BaseWrapper
-            A reference to the instance that can be chain called
-            (ex: instance.fit(X,y).transform(X) )
+            A reference to the instance that can be chain called (``est.fit(X,y).transform(X)``).
         """
-        for k, v in kwargs.items():
-            warnings.warn(
-                "``**kwargs`` has been deprecated in SciKeras 0.2.1 and support will be removed be 1.0.0."
-                f" Instead, set fit arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
-            )
+        if kwargs:
+            kwarg_list = "\n * ".join([f"`{k}={v}`" for k, v in kwargs.items()])
+            warnings.warn(_kwarg_warn.format("fit", kwarg_list))
 
         # epochs via kwargs > fit__epochs > epochs
         kwargs["epochs"] = kwargs.get(
@@ -902,11 +913,9 @@ class BaseWrapper(BaseEstimator):
         For classification, this corresponds to predict_proba.
         For regression, this corresponds to predict.
         """
-        for k, v in kwargs.items():
-            warnings.warn(
-                "``**kwargs`` has been deprecated in SciKeras 0.2.1 and support will be removed be 1.0.0."
-                f" Instead, set predict arguments at initialization (i.e., ``BaseWrapper({k}={v})``)"
-            )
+        if kwargs:
+            kwarg_list = "\n * ".join([f"`{k}={v}`" for k, v in kwargs.items()])
+            warnings.warn(_kwarg_warn.format("predict", kwarg_list), stacklevel=2)
 
         # check if fitted
         if not self.initialized_:
@@ -949,9 +958,14 @@ class BaseWrapper(BaseEstimator):
             and n_features is the number of features.
         **kwargs : Dict[str, Any]
             Extra arguments to route to ``Model.predict``.
-            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
-            These parameters can also be specified by prefixing `predict__` to a parameter at initialization;
-            e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
+
+        Warnings
+        --------
+            Passing estimator parameters as keyword arguments (aka as ``**kwargs``) to ``predict`` is not supported by the Scikit-Learn API,
+            and will be removed in a future version of SciKeras.
+            These parameters can also be specified by prefixing ``predict__`` to a parameter at initialization
+            (``BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)``)
+            or by using ``set_params`` (``est.set_params(fit__batch_size=32, predict__batch_size=1000)``).
 
         Returns
         -------
@@ -1114,8 +1128,7 @@ class KerasClassifier(BaseWrapper):
     """Implementation of the scikit-learn classifier API for Keras.
 
     Below are a list of SciKeras specific parameters. For details on other parameters,
-    please see the see the
-    [tf.keras.Model documentation](https://www.tensorflow.org/api_docs/python/tf/keras/Model).
+    please see the see the `tf.keras.Model documentation <https://www.tensorflow.org/api_docs/python/tf/keras/Model>`_.
 
     Parameters
     ----------
@@ -1382,15 +1395,19 @@ class KerasClassifier(BaseWrapper):
             If not provided, then each sample is given unit weight.
         **kwargs : Dict[str, Any]
             Extra arguments to route to ``Model.fit``.
-            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
-            These parameters can also be specified by prefixing `fit__` to a parameter at initialization;
-            e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
+
+        Warnings
+        --------
+            Passing estimator parameters as keyword arguments (aka as ``**kwargs``) to ``fit`` is not supported by the Scikit-Learn API,
+            and will be removed in a future version of SciKeras.
+            These parameters can also be specified by prefixing ``fit__`` to a parameter at initialization
+            (``KerasClassifier(..., fit__batch_size=32, predict__batch_size=1000)``)
+            or by using ``set_params`` (``est.set_params(fit__batch_size=32, predict__batch_size=1000)``).
 
         Returns
         -------
         KerasClassifier
-            A reference to the instance that can be chain called
-            (ex: instance.fit(X,y).transform(X) )
+            A reference to the instance that can be chain called (``est.fit(X,y).transform(X)``).
         """
         self.classes_ = None
         if self.class_weight is not None:
@@ -1446,9 +1463,14 @@ class KerasClassifier(BaseWrapper):
             and n_features is the number of features.
         **kwargs : Dict[str, Any]
             Extra arguments to route to ``Model.predict``.
-            This functionality has been deprecated, and will be removed in SciKeras 1.0.0.
-            These parameters can also be specified by prefixing `predict__` to a parameter at initialization;
-            e.g, `BaseWrapper(..., fit__batch_size=32, predict__batch_size=1000)`.
+
+        Warnings
+        --------
+            Passing estimator parameters as keyword arguments (aka as ``**kwargs``) to ``predict_proba`` is not supported by the Scikit-Learn API,
+            and will be removed in a future version of SciKeras.
+            These parameters can also be specified by prefixing ``predict__`` to a parameter at initialization
+            (``KerasClassifier(..., fit__batch_size=32, predict__batch_size=1000)``)
+            or by using ``set_params`` (``est.set_params(fit__batch_size=32, predict__batch_size=1000)``).
 
         Returns
         -------
@@ -1472,8 +1494,7 @@ class KerasRegressor(BaseWrapper):
     """Implementation of the scikit-learn classifier API for Keras.
 
     Below are a list of SciKeras specific parameters. For details on other parameters,
-    please see the see the
-    [tf.keras.Model documentation](https://www.tensorflow.org/api_docs/python/tf/keras/Model).
+    please see the see the `tf.keras.Model documentation <https://www.tensorflow.org/api_docs/python/tf/keras/Model>`_.
 
     Parameters
     ----------
