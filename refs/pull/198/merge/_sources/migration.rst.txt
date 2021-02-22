@@ -83,7 +83,8 @@ If you want to change the parameters on a live instance, you can do:
    clf.fit(...)
 
 Functionally, this is the same as passing these parameters to ``fit``, just with one more function call.
-This is what Scikti-Learn does in the background for hyperparameter tuning.
+This is much more compatible with the Scikit-Learn API.
+In fact, this is what Scikti-Learn does in the background for hyperparameter tuning.
 
 Renaming of ``build_fn`` to ``model``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
