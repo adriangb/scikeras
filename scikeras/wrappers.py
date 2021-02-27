@@ -1327,12 +1327,12 @@ class KerasClassifier(BaseWrapper):
             ):
                 raise ValueError(
                     "The model is configured to have one output, but the "
-                    f"loss='{self.loss}' can not handle multiple outputs. "
-                    "This loss is often used with one-hot encoded targets."
+                    f"loss='{self.loss}' is expecting multiple outputs "
+                    "(which is often used with one-hot encoded targets). "
                     "More detail on Keras losses: https://keras.io/api/losses/"
                 ) from e
             else:
-                raise ValueError("{self.loss}, {self.model_.outputs}")
+                raise e
 
 
     @staticmethod
