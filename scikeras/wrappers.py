@@ -1142,12 +1142,18 @@ class KerasClassifier(BaseWrapper):
         an instance of tf.keras.optimizers.Optimizer
         or a class inheriting from tf.keras.optimizers.Optimizer.
         Only strings and classes support parameter routing.
-    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default "categorical_crossentropy"
         The loss function to use for training.
         This can be a string for Keras' built in losses,
         an instance of tf.keras.losses.Loss
         or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
+
+        For convience, the loss defaults to
+        `"categorical_crossentropy"`. This assumes that the model has
+        ``N`` outputs if the dataset has ``N`` classes. It assumes that
+        the input
+
     random_state : Union[int, np.random.RandomState, None], default None
         Set the Tensorflow random number generators to a
         reproducible deterministic state using this seed.
@@ -1257,7 +1263,7 @@ class KerasClassifier(BaseWrapper):
         ] = "rmsprop",
         loss: Union[
             Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
-        ] = None,
+        ] = "categorical_crossentropy",
         metrics: Union[
             List[
                 Union[
@@ -1309,6 +1315,25 @@ class KerasClassifier(BaseWrapper):
             # check that this is not a multiclass problem missing categories
             target_type = type_of_target(self.classes_)
         return target_type
+
+    def _fit_keras_model(self, *args, **kwargs):
+        try:
+            super()._fit_keras_model(*args, **kwargs)
+        except ValueError as e:
+            if (
+                self.loss == "categorical_crossentropy"
+                and hasattr(self, "model_")
+                and 1 in {o.shape[1] for o in getattr(self.model_, "outputs", [])}
+            ):
+                raise ValueError(
+                    "The model is configured to have one output, but the "
+                    f"loss='{self.loss}' can not handle multiple outputs. "
+                    "This loss is often used with one-hot encoded targets."
+                    "More detail on Keras losses: https://keras.io/api/losses/"
+                ) from e
+            else:
+                raise ValueError("{self.loss}, {self.model_.outputs}")
+
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
