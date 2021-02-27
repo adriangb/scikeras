@@ -1,9 +1,11 @@
 import numpy as np
 import pytest
 import tensorflow as tf
+
 from sklearn.datasets import make_classification
 
 from scikeras.wrappers import KerasClassifier
+
 
 N_CLASSES = 4
 FEATURES = 8
