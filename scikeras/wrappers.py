@@ -1334,7 +1334,6 @@ class KerasClassifier(BaseWrapper):
             else:
                 raise e
 
-
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
         """Scoring function for KerasClassifier.
