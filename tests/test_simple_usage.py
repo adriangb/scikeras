@@ -5,7 +5,7 @@ import tensorflow as tf
 from sklearn.datasets import make_classification
 from sklearn.preprocessing import OneHotEncoder
 
-from scikeras.wrappers import KerasClassifier
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 
 N_CLASSES = 4
@@ -73,3 +73,11 @@ def test_classifier_raises_for_single_output_with_multiple_classes():
     with pytest.raises(ValueError, match=msg):
         est.partial_fit(X, y)
     assert est.current_epoch == 0
+
+
+def test_regressor_default_loss():
+    y = np.random.uniform(size=len(X))
+    est = KerasRegressor(model=clf, model__single_output=True)
+    assert est.loss == "mse"
+    est.partial_fit(X, y)
+    assert est.model_.loss.__name__ == "mean_squared_error"

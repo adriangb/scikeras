@@ -1635,6 +1635,10 @@ class KerasRegressor(BaseWrapper):
         **BaseWrapper._tags,
     }
 
+    def __init__(self, loss="mse", **kwargs):
+        super().__init__(loss=loss, **kwargs)
+
+
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
         """Scoring function for KerasRegressor.
