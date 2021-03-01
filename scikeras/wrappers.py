@@ -1607,8 +1607,45 @@ class KerasRegressor(BaseWrapper):
         **BaseWrapper._tags,
     }
 
-    def __init__(self, loss="mse", **kwargs):
-        super().__init__(loss=loss, **kwargs)
+    def __init__(
+        self,
+        model: Model,
+        *,
+        build_fn: Optional[Model] = None,  # for backwards compatibility
+        warm_start: bool = False,
+        random_state: Optional[RandomState] = None,
+        optimizer: Optimizer = "rmsprop",
+        loss: Optional[Loss] = "mse",
+        metrics: Optional[Metrics] = None,
+        batch_size: Optional[int] = None,
+        validation_batch_size: Optional[int] = None,
+        verbose: int = 1,
+        callbacks: Optional[Callbacks] = None,
+        validation_split: float = 0.0,
+        shuffle: bool = True,
+        run_eagerly: bool = False,
+        epochs: int = 1,
+        class_weight: Optional[Union[Dict[Any, float], str]] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            model=model,
+            build_fn=build_fn,
+            warm_start=warm_start,
+            random_state=random_state,
+            optimizer=optimizer,
+            loss=loss,
+            metrics=metrics,
+            batch_size=batch_size,
+            validation_batch_size=validation_batch_size,
+            verbose=verbose,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            shuffle=shuffle,
+            run_eagerly=run_eagerly,
+            epochs=epochs,
+            **kwargs,
+        )
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
