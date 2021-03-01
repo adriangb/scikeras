@@ -4,7 +4,7 @@ import inspect
 import warnings
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, Union, Optional
 
 import numpy as np
 import tensorflow as tf
@@ -33,6 +33,8 @@ from scikeras._utils import (
 )
 from scikeras.utils import loss_name, metric_name
 from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
+
+from ._types import Model, RandomState, Optimizer, Loss, Metrics, Callbacks
 
 
 _kwarg_warn = """Passing estimator parameters as keyword arguments (aka as `**kwargs`) to `{0}` is not supported by the Scikit-Learn API, and will be removed in a future version of SciKeras.
@@ -192,37 +194,18 @@ class BaseWrapper(BaseEstimator):
 
     def __init__(
         self,
-        model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
+        model: Model,
         *,
-        build_fn: Union[
-            None, Callable[..., tf.keras.Model], tf.keras.Model
-        ] = None,  # for backwards compatibility
+        build_fn: Optional[Model] = None,  # for backwards compatibility
         warm_start: bool = False,
-        random_state: Union[int, np.random.RandomState, None] = None,
-        optimizer: Union[
-            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
-        ] = "rmsprop",
-        loss: Union[
-            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
-        ] = None,
-        metrics: Union[
-            List[
-                Union[
-                    str,
-                    tf.keras.metrics.Metric,
-                    Type[tf.keras.metrics.Metric],
-                    Callable,
-                ]
-            ],
-            None,
-        ] = None,
-        batch_size: Union[int, None] = None,
-        validation_batch_size: Union[int, None] = None,
+        random_state: Optional[RandomState] = None,
+        optimizer: Optimizer = "rmsprop",
+        loss: Optional[Loss] = None,
+        metrics: Optional[Metrics] = None,
+        batch_size: Optional[int] = None,
+        validation_batch_size: Optional[int] = None,
         verbose: int = 1,
-        callbacks: Union[
-            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
-            None,
-        ] = None,
+        callbacks: Optional[Callbacks] = None,
         validation_split: float = 0.0,
         shuffle: bool = True,
         run_eagerly: bool = False,
@@ -1251,42 +1234,23 @@ class KerasClassifier(BaseWrapper):
 
     def __init__(
         self,
-        model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
+        model: Model,
         *,
-        build_fn: Union[
-            None, Callable[..., tf.keras.Model], tf.keras.Model
-        ] = None,  # for backwards compatibility
+        build_fn: Optional[Model] = None,  # for backwards compatibility
         warm_start: bool = False,
-        random_state: Union[int, np.random.RandomState, None] = None,
-        optimizer: Union[
-            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
-        ] = "rmsprop",
-        loss: Union[
-            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
-        ] = "categorical_crossentropy",
-        metrics: Union[
-            List[
-                Union[
-                    str,
-                    tf.keras.metrics.Metric,
-                    Type[tf.keras.metrics.Metric],
-                    Callable,
-                ]
-            ],
-            None,
-        ] = None,
-        batch_size: Union[int, None] = None,
-        validation_batch_size: Union[int, None] = None,
+        random_state: Optional[RandomState] = None,
+        optimizer: Optimizer = "rmsprop",
+        loss: Optional[Loss] = None,
+        metrics: Optional[Metrics] = None,
+        batch_size: Optional[int] = None,
+        validation_batch_size: Optional[int] = None,
         verbose: int = 1,
-        callbacks: Union[
-            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
-            None,
-        ] = None,
+        callbacks: Optional[Callbacks] = None,
         validation_split: float = 0.0,
         shuffle: bool = True,
         run_eagerly: bool = False,
         epochs: int = 1,
-        class_weight: Union[Dict[Any, float], str, None] = None,
+        class_weight: Optional[Union[Dict[Any, float], str]] = None,
         **kwargs,
     ):
         super().__init__(
