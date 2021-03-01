@@ -79,12 +79,21 @@ def test_classifier_raises_for_single_output_with_multiple_classes():
         est.partial_fit(X, y)
     assert est.current_epoch == 0
 
+
 def test_classifier_raises_loss_binary_multi_misspecified():
-    est = KerasClassifier(model=clf, model__single_output=True, model__in_dim=1, loss="bce", epochs=100, random_state=42)
+    est = KerasClassifier(
+        model=clf,
+        model__single_output=True,
+        model__in_dim=1,
+        loss="bce",
+        epochs=100,
+        random_state=42,
+    )
     X = np.random.choice(2, size=(20000, 1))
     y = X.copy()
     est.partial_fit(X, y)
     assert est.score(X, y) >= 0.9
+
 
 def test_regressor_default_loss():
     y = np.random.uniform(size=len(X))
