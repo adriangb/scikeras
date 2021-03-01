@@ -14,10 +14,10 @@ n_eg = 100
 X = np.random.uniform(size=(n_eg, FEATURES)).astype("float32")
 
 
-def clf(single_output=False):
+def clf(single_output=False, in_dim=FEATURES):
     model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Input(shape=(FEATURES,)))
-    model.add(tf.keras.layers.Dense(FEATURES))
+    model.add(tf.keras.layers.Input(shape=(in_dim,)))
+    model.add(tf.keras.layers.Dense(in_dim, activation="sigmoid"))
 
     if single_output:
         model.add(tf.keras.layers.Dense(1))
@@ -55,6 +55,11 @@ def test_classifier_only_model_specified(use_case):
         raise ValueError("use_case={use_case} not recognized")
 
     est = KerasClassifier(model=clf, model__single_output=model__single_output)
+    if "binary" in use_case:
+        with pytest.raises(ValueError, match="Set loss='binary_crossentropy'"):
+            est.partial_fit(X, y)
+        est.set_params(loss="binary_crossentropy")
+
     est.partial_fit(X, y=y)
     assert est.current_epoch == 1
 
@@ -74,6 +79,12 @@ def test_classifier_raises_for_single_output_with_multiple_classes():
         est.partial_fit(X, y)
     assert est.current_epoch == 0
 
+def test_classifier_raises_loss_binary_multi_misspecified():
+    est = KerasClassifier(model=clf, model__single_output=True, model__in_dim=1, loss="bce", epochs=100, random_state=42)
+    X = np.random.choice(2, size=(20000, 1))
+    y = X.copy()
+    est.partial_fit(X, y)
+    assert est.score(X, y) >= 0.9
 
 def test_regressor_default_loss():
     y = np.random.uniform(size=len(X))
