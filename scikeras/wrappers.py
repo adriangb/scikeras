@@ -4,7 +4,7 @@ import inspect
 import warnings
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, Union, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import numpy as np
 import tensorflow as tf
@@ -34,7 +34,7 @@ from scikeras._utils import (
 from scikeras.utils import loss_name, metric_name
 from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
 
-from ._types import Model, RandomState, Optimizer, Loss, Metrics, Callbacks
+from ._types import Callbacks, Loss, Metrics, Model, Optimizer, RandomState
 
 
 _kwarg_warn = """Passing estimator parameters as keyword arguments (aka as `**kwargs`) to `{0}` is not supported by the Scikit-Learn API, and will be removed in a future version of SciKeras.

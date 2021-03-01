@@ -1,12 +1,12 @@
-from typing import Union, List, Type, Callable
+from typing import Callable, List, Type, Union
 
-import tensorflow.keras as keras
+import numpy as np
 import tensorflow as tf
-import tensorflow.keras.optimizers.Optimizer as TF_Optimizer
+import tensorflow.keras as keras
+import tensorflow.keras.callbacks.Callback as TF_Callback
 import tensorflow.keras.losses.Loss as TF_Loss
 import tensorflow.keras.metrics.Metric as TF_Metric
-import tensorflow.keras.callbacks.Callback as TF_Callback
-import numpy as np
+import tensorflow.keras.optimizers.Optimizer as TF_Optimizer
 
 
 Model = Union[Callable[..., keras.Model], keras.Model]
