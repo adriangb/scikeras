@@ -23,6 +23,7 @@ from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.keras.utils import register_keras_serializable
 
+from scikeras import _types as T
 from scikeras._utils import (
     TFRandomState,
     _class_from_strings,
@@ -33,8 +34,6 @@ from scikeras._utils import (
 )
 from scikeras.utils import loss_name, metric_name
 from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
-
-from ._types import Callbacks, Loss, Metrics, Model, Optimizer, RandomState
 
 
 _kwarg_warn = """Passing estimator parameters as keyword arguments (aka as `**kwargs`) to `{0}` is not supported by the Scikit-Learn API, and will be removed in a future version of SciKeras.
@@ -194,18 +193,18 @@ class BaseWrapper(BaseEstimator):
 
     def __init__(
         self,
-        model: Model,
+        model: T.Model,
         *,
-        build_fn: Optional[Model] = None,  # for backwards compatibility
+        build_fn: Optional[T.Model] = None,  # for backwards compatibility
         warm_start: bool = False,
-        random_state: Optional[RandomState] = None,
-        optimizer: Optimizer = "rmsprop",
-        loss: Optional[Loss] = None,
-        metrics: Optional[Metrics] = None,
+        random_state: Optional[T.RandomState] = None,
+        optimizer: T.Optimizer = "rmsprop",
+        loss: Optional[T.Loss] = None,
+        metrics: Optional[T.Metrics] = None,
         batch_size: Optional[int] = None,
         validation_batch_size: Optional[int] = None,
         verbose: int = 1,
-        callbacks: Optional[Callbacks] = None,
+        callbacks: Optional[T.Callbacks] = None,
         validation_split: float = 0.0,
         shuffle: bool = True,
         run_eagerly: bool = False,
@@ -1234,18 +1233,18 @@ class KerasClassifier(BaseWrapper):
 
     def __init__(
         self,
-        model: Model,
+        model: T.Model,
         *,
-        build_fn: Optional[Model] = None,  # for backwards compatibility
+        build_fn: Optional[T.Model] = None,  # for backwards compatibility
         warm_start: bool = False,
-        random_state: Optional[RandomState] = None,
-        optimizer: Optimizer = "rmsprop",
-        loss: Optional[Loss] = None,
-        metrics: Optional[Metrics] = None,
+        random_state: Optional[T.RandomState] = None,
+        optimizer: T.Optimizer = "rmsprop",
+        loss: Optional[T.Loss] = None,
+        metrics: Optional[T.Metrics] = None,
         batch_size: Optional[int] = None,
         validation_batch_size: Optional[int] = None,
         verbose: int = 1,
-        callbacks: Optional[Callbacks] = None,
+        callbacks: Optional[T.Callbacks] = None,
         validation_split: float = 0.0,
         shuffle: bool = True,
         run_eagerly: bool = False,
@@ -1609,18 +1608,18 @@ class KerasRegressor(BaseWrapper):
 
     def __init__(
         self,
-        model: Model,
+        model: T.Model,
         *,
-        build_fn: Optional[Model] = None,  # for backwards compatibility
+        build_fn: Optional[T.Model] = None,  # for backwards compatibility
         warm_start: bool = False,
-        random_state: Optional[RandomState] = None,
-        optimizer: Optimizer = "rmsprop",
-        loss: Optional[Loss] = "mse",
-        metrics: Optional[Metrics] = None,
+        random_state: Optional[T.RandomState] = None,
+        optimizer: T.Optimizer = "rmsprop",
+        loss: Optional[T.Loss] = "mse",
+        metrics: Optional[T.Metrics] = None,
         batch_size: Optional[int] = None,
         validation_batch_size: Optional[int] = None,
         verbose: int = 1,
-        callbacks: Optional[Callbacks] = None,
+        callbacks: Optional[T.Callbacks] = None,
         validation_split: float = 0.0,
         shuffle: bool = True,
         run_eagerly: bool = False,

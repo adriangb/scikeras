@@ -14,7 +14,7 @@ n_eg = 100
 X = np.random.uniform(size=(n_eg, FEATURES)).astype("float32")
 
 
-def clf(single_output=False, in_dim=FEATURES):
+def shallow_net(single_output=False, in_dim=FEATURES):
     model = tf.keras.Sequential()
     model.add(tf.keras.layers.Input(shape=(in_dim,)))
     model.add(tf.keras.layers.Dense(in_dim, activation="sigmoid"))
@@ -54,7 +54,7 @@ def test_classifier_only_model_specified(use_case):
     else:
         raise ValueError("use_case={use_case} not recognized")
 
-    est = KerasClassifier(model=clf, model__single_output=model__single_output)
+    est = KerasClassifier(model=shallow_net, model__single_output=model__single_output)
     if "binary" in use_case:
         with pytest.raises(ValueError, match="Set loss='binary_crossentropy'"):
             est.partial_fit(X, y)
@@ -69,7 +69,7 @@ def test_classifier_raises_for_single_output_with_multiple_classes():
     KerasClassifier does not work with one output and multiple classes
     in the target (duh).
     """
-    est = KerasClassifier(model=clf, model__single_output=True)
+    est = KerasClassifier(model=shallow_net, model__single_output=True)
     y = np.random.choice(N_CLASSES, size=len(X))
     msg = (
         "The model is configured to have one output, but the "
@@ -82,7 +82,7 @@ def test_classifier_raises_for_single_output_with_multiple_classes():
 
 def test_classifier_raises_loss_binary_multi_misspecified():
     est = KerasClassifier(
-        model=clf,
+        model=shallow_net,
         model__single_output=True,
         model__in_dim=1,
         loss="bce",
@@ -97,7 +97,7 @@ def test_classifier_raises_loss_binary_multi_misspecified():
 
 def test_regressor_default_loss():
     y = np.random.uniform(size=len(X))
-    est = KerasRegressor(model=clf, model__single_output=True)
+    est = KerasRegressor(model=shallow_net, model__single_output=True)
     assert est.loss == "mse"
     est.partial_fit(X, y)
     assert est.model_.loss.__name__ == "mean_squared_error"
