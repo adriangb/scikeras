@@ -1290,9 +1290,10 @@ class KerasClassifier(BaseWrapper):
             warnings.warn(
                 "A binary target with two targets is specified; "
                 "however loss='categorical_crossentropy' is specified. "
-                "Keras will not learn in this use case. "
+                "With a single output neurons, Keras will not learn. "
                 "Any one of the following will clear this warning:\n\n"
                 "    * Set loss='binary_crossentropy' or loss='bce'\n"
+                "    * Set the model too have two output neurons"
             )
         return target_type
 
