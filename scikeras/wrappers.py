@@ -1133,7 +1133,7 @@ class KerasClassifier(BaseWrapper):
 
         For convience, the loss defaults to
         `"categorical_crossentropy"`. This assumes that the model has
-        ``N`` outputs if the dataset has ``N`` classes. It works with
+        1 output with ``N`` output units if the dataset has ``N`` classes. It works with
         both an array of class labels (``[1, 0, 2]``) or one-hot
         encoded labels (``[[0, 1, 0], [1, 0, 0], [0, 0, 1]]``).
 
