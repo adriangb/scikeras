@@ -1301,14 +1301,17 @@ class KerasClassifier(BaseWrapper):
             super()._fit_keras_model(*args, **kwargs)
         except ValueError as e:
             if (
-                self.loss == "categorical_crossentropy"
-                and hasattr(self, "model_")
-                and 1 in {o.shape[1] for o in getattr(self.model_, "outputs", [])}
+                hasattr(self, "model_")
+                and self.model_.loss.__name__ == "categorical_crossentropy"
+                and hasattr(self.model_, "outputs")
+                and len(self.model_.outputs) == 1
+                and self.model_.outputs[0].shape[1] == 1
             ):
                 raise ValueError(
-                    "The model is configured to have one output neuron, but the "
-                    f"loss='{self.loss}' is expecting multiple outputs "
-                    "(which is often used with one-hot encoded targets). "
+                    "The model is configured to have a single output with a "
+                    f"single output neuron, but the loss='{self.loss}' is "
+                    "expecting n_classes output neurons (where n_classes > 1)\n\n"
+                    f"loss='{self.loss}' is often used with one-hot encoded targets. "
                     "More detail on Keras losses: https://keras.io/api/losses/"
                 ) from e
             else:
