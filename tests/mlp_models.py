@@ -27,10 +27,10 @@ def dynamic_classifier(
         hidden = Dense(layer_size, activation="relu")(hidden)
 
     if target_type_ == "binary":
-        compile_kwargs["loss"] = compile_kwargs["loss"] or "binary_crossentropy"
+        compile_kwargs["loss"] = "binary_crossentropy"
         out = [Dense(1, activation="sigmoid")(hidden)]
     elif target_type_ == "multilabel-indicator":
-        compile_kwargs["loss"] = compile_kwargs["loss"] or "binary_crossentropy"
+        compile_kwargs["loss"] = "categorical_crossentropy"
         if isinstance(n_classes_, list):
             out = [
                 Dense(1, activation="sigmoid")(hidden)
@@ -39,13 +39,11 @@ def dynamic_classifier(
         else:
             out = Dense(n_classes_, activation="softmax")(hidden)
     elif target_type_ == "multiclass-multioutput":
-        compile_kwargs["loss"] = compile_kwargs["loss"] or "binary_crossentropy"
+        compile_kwargs["loss"] = "categorical_crossentropy"
         out = [Dense(n, activation="softmax")(hidden) for n in n_classes_]
     else:
         # multiclass
-        compile_kwargs["loss"] = (
-            compile_kwargs["loss"] or "sparse_categorical_crossentropy"
-        )
+        compile_kwargs["loss"] = "sparse_categorical_crossentropy"
         out = [Dense(n_classes_, activation="softmax")(hidden)]
 
     model = Model(inp, out)
@@ -66,7 +64,7 @@ def dynamic_regressor(
     n_features_in_ = meta["n_features_in_"]
     n_outputs_ = meta["n_outputs_"]
 
-    compile_kwargs["loss"] = compile_kwargs["loss"] or "mse"
+    compile_kwargs["loss"] = "mse"
 
     inp = Input(shape=(n_features_in_,))
 
