@@ -54,7 +54,7 @@ class BaseWrapper(BaseEstimator):
 
     Parameters
     ----------
-    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+    model : Optional[Callable[..., tf.keras.Model], tf.keras.Model], default None
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
@@ -64,7 +64,7 @@ class BaseWrapper(BaseEstimator):
         an instance of tf.keras.optimizers.Optimizer
         or a class inheriting from tf.keras.optimizers.Optimizer.
         Only strings and classes support parameter routing.
-    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+    loss : Optional[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable]], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
         an instance of tf.keras.losses.Loss
@@ -81,7 +81,7 @@ class BaseWrapper(BaseEstimator):
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.
-    batch_size : Union[int, None], default None
+    batch_size : Optional[int], default None
         Number of samples per gradient update.
         This will be applied to both `fit` and `predict`. To specify different numbers,
         pass `fit__batch_size=32` and `predict__batch_size=1000` (for example).
@@ -425,7 +425,7 @@ class BaseWrapper(BaseEstimator):
             Training samples, as accepted by tf.keras.Model
         y : Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]]
             Target data, as accepted by tf.keras.Model
-        sample_weight : Union[np.ndarray, None]
+        sample_weight : Optional[np.ndarray]
             Sample weights. Ignored by Keras if None.
         warm_start : bool
             If True, don't don't overwrite
@@ -564,7 +564,7 @@ class BaseWrapper(BaseEstimator):
 
         Returns
         -------
-        Tuple[np.ndarray, Union[np.ndarray, None]]
+        Tuple[np.ndarray, Optional[np.ndarray]]
             The validated input.
         """
 
@@ -1114,7 +1114,7 @@ class KerasClassifier(BaseWrapper):
 
     Parameters
     ----------
-    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+    model : Optional[Callable[..., tf.keras.Model], tf.keras.Model], default None
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
@@ -1124,7 +1124,7 @@ class KerasClassifier(BaseWrapper):
         an instance of tf.keras.optimizers.Optimizer
         or a class inheriting from tf.keras.optimizers.Optimizer.
         Only strings and classes support parameter routing.
-    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default "categorical_crossentropy"
+    loss : Optional[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable]], default "categorical_crossentropy"
         The loss function to use for training.
         This can be a string for Keras' built in losses,
         an instance of tf.keras.losses.Loss
@@ -1147,12 +1147,12 @@ class KerasClassifier(BaseWrapper):
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.
-    batch_size : Union[int, None], default None
+    batch_size : Optional[int], default None
         Number of samples per gradient update.
         This will be applied to both `fit` and `predict`. To specify different numbers,
         pass `fit__batch_size=32` and `predict__batch_size=1000` (for example).
         To auto-adjust the batch size to use all samples, pass `batch_size=-1`.
-    class_weight : Union[Dict[Any, float], str, None], default None
+    class_weight : Optional[Dict[Any, float], str], default None
         Weights associated with classes in the form ``{class_label: weight}``.
         If not given, all classes are supposed to have weight one.
         The "balanced" mode uses the values of y to automatically adjust
@@ -1495,7 +1495,7 @@ class KerasRegressor(BaseWrapper):
     Parameters
     ----------
 
-    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+    model : Optional[Callable[..., tf.keras.Model], tf.keras.Model], default None
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
@@ -1505,7 +1505,7 @@ class KerasRegressor(BaseWrapper):
         an instance of tf.keras.optimizers.Optimizer
         or a class inheriting from tf.keras.optimizers.Optimizer.
         Only strings and classes support parameter routing.
-    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+    loss : Optional[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable]], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
         an instance of tf.keras.losses.Loss
@@ -1522,7 +1522,7 @@ class KerasRegressor(BaseWrapper):
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.
-    batch_size : Union[int, None], default None
+    batch_size : Optional[int], default None
         Number of samples per gradient update.
         This will be applied to both `fit` and `predict`. To specify different numbers,
         pass `fit__batch_size=32` and `predict__batch_size=1000` (for example).
@@ -1671,7 +1671,7 @@ class KerasRegressor(BaseWrapper):
 
     def _validate_data(
         self, X=None, y=None, reset: bool = False, y_numeric: bool = False
-    ) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
+    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
         # For regressors, y should ALWAYS be numeric
         # To enforce this without additional dtype checks, we set `y_numeric=True`
         # when calling `_validate_data` which will force casting to numeric for
