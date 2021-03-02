@@ -616,7 +616,6 @@ class TestPartialFit:
 def force_compile_shorthand(hidden_layer_sizes, meta, compile_kwargs, params):
     model = dynamic_regressor(
         hidden_layer_sizes=hidden_layer_sizes, meta=meta, compile_kwargs=compile_kwargs,
-        loss=None,
     )
     model.compile(
         optimizer=compile_kwargs["optimizer"],
@@ -651,6 +650,7 @@ class TestHistory:
             model=force_compile_shorthand,
             model__hidden_layer_sizes=(100,),
             metrics=["mae"],  # shorthand
+            loss=None,
         )
         X, y = load_boston(return_X_y=True)
         X = X[:100]
@@ -792,7 +792,7 @@ class TestInitialize:
         m2.set_weights(weights)
         m2.compile()  # No loss, inference models shouldn't need a loss!
         # Wrap with SciKeras
-        est = wrapper(model=m2)
+        est = wrapper(model=m2, loss=None)
         # Without calling initialize, a NotFittedError is raised
         with pytest.raises(NotFittedError):
             est.predict(X)

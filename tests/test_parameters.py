@@ -334,7 +334,7 @@ def test_batch_size_all_fit(length, prefix, base):
 
     y = np.random.random((length,))
     X = y.reshape((-1, 1))
-    est = KerasRegressor(dynamic_regressor, hidden_layer_sizes=[], kw=-1, loss=None)
+    est = KerasRegressor(dynamic_regressor, hidden_layer_sizes=[], **{kw:-1}, loss=None)
 
     est.initialize(X, y)
 
@@ -357,7 +357,7 @@ def test_batch_size_all_predict(length, prefix, base):
 
     y = np.random.random((length,))
     X = y.reshape((-1, 1))
-    est = KerasRegressor(dynamic_regressor, hidden_layer_sizes=[], kw=-1, loss=None)
+    est = KerasRegressor(dynamic_regressor, hidden_layer_sizes=[], **{kw:-1}, loss=None)
 
     est.fit(X, y)
 
@@ -380,7 +380,7 @@ def test_batch_size_all_fit(length, prefix, base):
 
     y = np.random.random((length,))
     X = y.reshape((-1, 1))
-    est = KerasRegressor(dynamic_regressor, hidden_layer_sizes=[], kw=-1, loss=None)
+    est = KerasRegressor(dynamic_regressor, hidden_layer_sizes=[], **{kw:-1}, loss=None)
 
     est.initialize(X, y)
 
@@ -407,7 +407,7 @@ def test_batch_size_all_fit_non_array(prefix, base):
 
     y = np.random.random((100,))
     X = y.reshape((-1, 1))
-    est = CustomReg(dynamic_regressor, hidden_layer_sizes=[], kw= -1, loss=None)
+    est = CustomReg(dynamic_regressor, hidden_layer_sizes=[], **{kw: -1}, loss=None)
 
     with pytest.raises(ValueError, match="requires that `X` implement `shape`"):
         est.fit(X, y)

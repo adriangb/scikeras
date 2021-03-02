@@ -29,6 +29,9 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
     """Tests Functional API Classifier with 2 inputs.
     """
 
+    def __init__(self, *args, loss=None, **kwargs):
+        super().__init__(*args, loss=loss, **kwargs)
+
     def _keras_build_fn(
         self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
