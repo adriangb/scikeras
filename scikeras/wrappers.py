@@ -564,7 +564,7 @@ class BaseWrapper(BaseEstimator):
 
         Returns
         -------
-        Tuple[np.ndarray, Optional[np.ndarray]]
+        Tuple[np.ndarray, Union[np.ndarray, None]]
             The validated input.
         """
 
@@ -1679,7 +1679,7 @@ class KerasRegressor(BaseWrapper):
 
     def _validate_data(
         self, X=None, y=None, reset: bool = False, y_numeric: bool = False
-    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    ) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
         # For regressors, y should ALWAYS be numeric
         # To enforce this without additional dtype checks, we set `y_numeric=True`
         # when calling `_validate_data` which will force casting to numeric for
