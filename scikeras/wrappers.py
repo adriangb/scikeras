@@ -1137,6 +1137,13 @@ class KerasClassifier(BaseWrapper):
         both an array of class labels (``[1, 0, 2]``) or one-hot
         encoded labels (``[[0, 1, 0], [1, 0, 0], [0, 0, 1]]``).
 
+        .. warning::
+
+           This default does not work for binary classification with
+           one output node/neuron (though it works with two output
+           neurons). In the case with output node/neuron,
+           set ``loss="bce"`` or ``loss="binary_crossentropy"``.
+
     random_state : Union[int, np.random.RandomState, None], default None
         Set the Tensorflow random number generators to a
         reproducible deterministic state using this seed.
