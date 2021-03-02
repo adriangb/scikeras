@@ -193,7 +193,7 @@ class BaseWrapper(BaseEstimator):
 
     def __init__(
         self,
-        model: T.Model,
+        model: Optional[T.Model] = None,
         *,
         build_fn: Optional[T.Model] = None,  # for backwards compatibility
         warm_start: bool = False,
@@ -1233,7 +1233,7 @@ class KerasClassifier(BaseWrapper):
 
     def __init__(
         self,
-        model: T.Model,
+        model: Optional[T.Model] = None,
         *,
         build_fn: Optional[T.Model] = None,  # for backwards compatibility
         warm_start: bool = False,
@@ -1608,7 +1608,7 @@ class KerasRegressor(BaseWrapper):
 
     def __init__(
         self,
-        model: T.Model,
+        model: Optional[T.Model] = None,
         *,
         build_fn: Optional[T.Model] = None,  # for backwards compatibility
         warm_start: bool = False,
@@ -1624,7 +1624,6 @@ class KerasRegressor(BaseWrapper):
         shuffle: bool = True,
         run_eagerly: bool = False,
         epochs: int = 1,
-        class_weight: Optional[Union[Dict[Any, float], str]] = None,
         **kwargs,
     ):
         super().__init__(
