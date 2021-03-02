@@ -101,3 +101,10 @@ def test_regressor_default_loss():
     assert est.loss == "mse"
     est.partial_fit(X, y)
     assert est.model_.loss.__name__ == "mean_squared_error"
+
+def test_classifier_default_loss():
+    y = np.random.choice(N_CLASSES, size=len(X))
+    est = KerasClassifier(model=shallow_net, model__single_output=False)
+    assert est.loss == "categorical_crossentropy"
+    est.partial_fit(X, y)
+    assert est.model_.loss.__name__ == "categorical_crossentropy"
