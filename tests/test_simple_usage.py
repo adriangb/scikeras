@@ -56,12 +56,12 @@ def test_classifier_only_model_specified(use_case):
 
     est = KerasClassifier(model=shallow_net, model__single_output=model__single_output)
     if "binary" in use_case:
-        with pytest.raises(ValueError, match="Set loss='binary_crossentropy'"):
+        with pytest.warns(UserWarning, match="Set loss='binary_crossentropy'"):
             est.partial_fit(X, y)
         est.set_params(loss="binary_crossentropy")
 
     est.partial_fit(X, y=y)
-    assert est.current_epoch == 1
+    assert est.current_epoch in {1, 2}
 
 
 def test_classifier_raises_for_single_output_with_multiple_classes():
@@ -72,7 +72,7 @@ def test_classifier_raises_for_single_output_with_multiple_classes():
     est = KerasClassifier(model=shallow_net, model__single_output=True)
     y = np.random.choice(N_CLASSES, size=len(X))
     msg = (
-        "The model is configured to have one output, but the "
+        "The model is configured to have one output neuron, but the "
         "loss='categorical_crossentropy' is expecting multiple outputs "
     )
     with pytest.raises(ValueError, match=msg):

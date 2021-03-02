@@ -1278,7 +1278,8 @@ class KerasClassifier(BaseWrapper):
             # check that this is not a multiclass problem missing categories
             target_type = type_of_target(self.classes_)
         if target_type == "binary" and self.loss == "categorical_crossentropy":
-            raise ValueError(
+            # Warn in case the user decides to compile their own model
+            warnings.warn(
                 "A binary target with two targets is specified; "
                 "however loss='categorical_crossentropy' is specified. "
                 "Keras will not learn in this use case. "
@@ -1297,7 +1298,7 @@ class KerasClassifier(BaseWrapper):
                 and 1 in {o.shape[1] for o in getattr(self.model_, "outputs", [])}
             ):
                 raise ValueError(
-                    "The model is configured to have one output, but the "
+                    "The model is configured to have one output neuron, but the "
                     f"loss='{self.loss}' is expecting multiple outputs "
                     "(which is often used with one-hot encoded targets). "
                     "More detail on Keras losses: https://keras.io/api/losses/"
