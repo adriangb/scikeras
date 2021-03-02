@@ -535,7 +535,7 @@ class BaseWrapper(BaseEstimator):
                 given = loss_name(self.loss)
                 got = loss_name(self.model_.loss)
                 if given != default_val and got != given:
-                    raise ValueError(
+                    warnings.warn(
                         f"loss={self.loss} but model compiled with {self.model_.loss}."
                         " Data may not match loss function!"
                     )

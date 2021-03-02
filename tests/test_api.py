@@ -709,7 +709,7 @@ def test_compile_model_from_params():
         # compile_with_loss != None overrides loss
         my_loss=loss_obj,
     )
-    with pytest.raises(ValueError, match=" but model compiled with "):
+    with pytest.warns(UserWarning, match=" but model compiled with "):
         estimator.fit(X, y)
 
     # The ValueError should appear even if the default is != None
@@ -726,7 +726,7 @@ def test_compile_model_from_params():
     estimator = DefaultLossNotNone(
         model=build_fn, loss=losses_module.CategoricalHinge(), my_loss=loss_obj,
     )
-    with pytest.raises(ValueError, match=" but model compiled with "):
+    with pytest.warns(UserWarning, match=" but model compiled with "):
         estimator.fit(X, y)
 
 
