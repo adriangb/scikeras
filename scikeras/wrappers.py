@@ -1239,7 +1239,7 @@ class KerasClassifier(BaseWrapper):
         warm_start: bool = False,
         random_state: Optional[T.RandomState] = None,
         optimizer: T.Optimizer = "rmsprop",
-        loss: Optional[T.Loss] = None,
+        loss: Optional[T.Loss] = "categorical_crossentropy",
         metrics: Optional[T.Metrics] = None,
         batch_size: Optional[int] = None,
         validation_batch_size: Optional[int] = None,
