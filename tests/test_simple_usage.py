@@ -60,7 +60,9 @@ def test_classifier_only_model_specified(use_case):
             est.partial_fit(X, y)
         est.set_params(loss="binary_crossentropy")
 
-    est.partial_fit(X, y=y)
+    with pytest.warns(None) as record:
+        est.partial_fit(X, y=y)
+        assert not any("Set loss='binary_crossentropy'") in str(r.message) for r in record)
     assert est.current_epoch in {1, 2}
 
 
@@ -73,7 +75,7 @@ def test_classifier_raises_for_single_output_with_multiple_classes():
     y = np.random.choice(N_CLASSES, size=len(X))
     msg = (
         "The model is configured to have one output neuron, but the "
-        "loss='categorical_crossentropy' is expecting multiple outputs "
+       f"loss='categorical_crossentropy' with {N_CLASSES} classes requires {N_CLASSES} output neurons "
     )
     with pytest.raises(ValueError, match=msg):
         est.partial_fit(X, y)
