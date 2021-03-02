@@ -316,7 +316,6 @@ from sklearn.metrics import accuracy_score
 
 
 class MultiOutputClassifier(KerasClassifier):
-
     @property
     def target_encoder(self):
         return MultiOutputTransformer()
@@ -340,7 +339,8 @@ X = StandardScaler().fit_transform(X)
 ```
 
 ```python
-clf = MultiOutputClassifier(model=get_clf_model, verbose=0, random_state=0)
+clf = MultiOutputClassifier(model=get_clf_model, verbose=0, random_state=0,
+loss=None)
 
 clf.fit(X, y_sklearn).score(X, y_sklearn)
 ```
@@ -432,7 +432,8 @@ Note that we did **not** implement `inverse_transform` (that is, we did not pass
 ### 4.3 Test regressor
 
 ```python
-reg = MultiInputRegressor(model=get_reg_model, verbose=0, random_state=0)
+reg = MultiInputRegressor(model=get_reg_model, verbose=0, random_state=0,
+loss=None)
 
 X_sklearn = np.column_stack(X)
 
@@ -528,6 +529,7 @@ clf = MultiDimensionalClassifier(
     batch_size=128,
     validation_split=0.1,
     random_state=0,
+    loss=None,
 )
 ```
 
