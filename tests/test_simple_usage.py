@@ -60,7 +60,9 @@ def test_classifier_only_model_specified(use_case):
             est.partial_fit(X, y)
         est.set_params(loss="binary_crossentropy")
 
-    est.partial_fit(X, y=y)
+    with pytest.warns(None) as record:
+        est.partial_fit(X, y=y)
+        assert not any("Set loss='binary_crossentropy'") in str(r.message) for r in record)
     assert est.current_epoch in {1, 2}
 
 
