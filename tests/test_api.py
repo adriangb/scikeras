@@ -32,6 +32,7 @@ from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .testing_utils import basic_checks
 
+
 def build_fn_clf(
     hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
 ) -> Model:
@@ -252,7 +253,11 @@ class TestAdvancedAPIFuncs:
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         loader, model, build_fn, _ = CONFIG[config]
         estimator = model(
-            build_fn, epochs=1, validation_split=0.1, model__hidden_layer_sizes=[], loss=None,
+            build_fn,
+            epochs=1,
+            validation_split=0.1,
+            model__hidden_layer_sizes=[],
+            loss=None,
         )
         basic_checks(
             GridSearchCV(estimator, {"model__hidden_layer_sizes": [[], [5]]}), loader,
@@ -285,7 +290,9 @@ class TestAdvancedAPIFuncs:
     def test_ensemble(self, config):
         """Tests compatibility with Scikit-learn's ensembles."""
         loader, model, build_fn, ensembles = CONFIG[config]
-        base_estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[], loss=None)
+        base_estimator = model(
+            build_fn, epochs=1, model__hidden_layer_sizes=[], loss=None
+        )
         for ensemble in ensembles:
             estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
@@ -388,8 +395,7 @@ def test_warm_start():
     X, y = data.data[:100], data.target[:100]
     # Initial fit
     estimator = KerasRegressor(
-        model=dynamic_regressor, model__hidden_layer_sizes=(100,),
-        loss=None,
+        model=dynamic_regressor, model__hidden_layer_sizes=(100,), loss=None,
     )
     estimator.fit(X, y)
     model = estimator.model_
@@ -419,8 +425,7 @@ class TestPartialFit:
         data = load_boston()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
-            model=dynamic_regressor, model__hidden_layer_sizes=[100,],
-            loss=None,
+            model=dynamic_regressor, model__hidden_layer_sizes=[100,], loss=None,
         )
 
         estimator.partial_fit(X, y)
@@ -487,7 +492,9 @@ class TestPartialFit:
         partial_fit_iter = 4
 
         estimator = KerasRegressor(
-            model=dynamic_regressor, model__hidden_layer_sizes=[100,], epochs=epochs,
+            model=dynamic_regressor,
+            model__hidden_layer_sizes=[100,],
+            epochs=epochs,
             loss=None,
         )
 
