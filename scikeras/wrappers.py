@@ -1277,14 +1277,14 @@ class KerasClassifier(BaseWrapper):
         if target_type == "binary" and self.classes_ is not None:
             # check that this is not a multiclass problem missing categories
             target_type = type_of_target(self.classes_)
-        #  if target_type == "binary" and self.loss == "categorical_crossentropy":
-        #  raise ValueError(
-        #  "A binary target with two targets is specified; "
-        #  "however loss='categorical_crossentropy' is specified. "
-        #  "Keras will not learn in this use case. "
-        #  "Any one of the following will resolve this error:\n\n"
-        #  "    * Set loss='binary_crossentropy' or loss='bce'\n"
-        #  )
+        if target_type == "binary" and self.loss == "categorical_crossentropy":
+            raise ValueError(
+                "A binary target with two targets is specified; "
+                "however loss='categorical_crossentropy' is specified. "
+                "Keras will not learn in this use case. "
+                "Any one of the following will clear this warning:\n\n"
+                "    * Set loss='binary_crossentropy' or loss='bce'\n"
+            )
         return target_type
 
     def _fit_keras_model(self, *args, **kwargs):

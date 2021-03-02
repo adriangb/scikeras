@@ -56,8 +56,8 @@ def test_classifier_only_model_specified(use_case):
 
     est = KerasClassifier(model=shallow_net, model__single_output=model__single_output)
     if "binary" in use_case:
-        #  with pytest.raises(ValueError, match="Set loss='binary_crossentropy'"):
-        #  est.partial_fit(X, y)
+        with pytest.raises(ValueError, match="Set loss='binary_crossentropy'"):
+            est.partial_fit(X, y)
         est.set_params(loss="binary_crossentropy")
 
     est.partial_fit(X, y=y)
