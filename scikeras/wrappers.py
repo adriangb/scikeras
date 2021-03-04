@@ -1692,30 +1692,24 @@ class KerasRegressor(BaseWrapper):
         epochs: int = 1,
         **kwargs,
     ):
-
-        # Parse hardcoded params
-        self.model = model
-        self.build_fn = build_fn
-        self.warm_start = warm_start
-        self.random_state = random_state
-        self.optimizer = optimizer
-        self.loss = loss
-        self.metrics = metrics
-        self.batch_size = batch_size
-        self.validation_batch_size = validation_batch_size
-        self.verbose = verbose
-        self.callbacks = callbacks
-        self.validation_split = validation_split
-        self.shuffle = shuffle
-        self.run_eagerly = run_eagerly
-        self.epochs = epochs
-
-        # Unpack kwargs
-        vars(self).update(**kwargs)
-
-        # Save names of kwargs into set
-        if kwargs:
-            self._user_params = set(kwargs)
+        super().__init__(
+            model=model,
+            build_fn=build_fn,
+            warm_start=warm_start,
+            random_state=random_state,
+            optimizer=optimizer,
+            loss=loss,
+            metrics=metrics,
+            batch_size=batch_size,
+            validation_batch_size=validation_batch_size,
+            verbose=verbose,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            shuffle=shuffle,
+            run_eagerly=run_eagerly,
+            epochs=epochs,
+            **kwargs,
+        )
 
     def _compile_model(self, compile_kwargs: Dict[str, Any]) -> None:
         if compile_kwargs["loss"] == "auto":
