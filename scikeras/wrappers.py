@@ -1299,17 +1299,16 @@ class KerasClassifier(BaseWrapper):
 
     def _fit_keras_model(self, X, y=None, **kwargs):
         bad_loss = "sparse_categorical_crossentropy"
-        if loss_name(self.model_.loss) == bad_loss and self.loss != bad_loss:
+        if (
+            loss_name(self.model_.loss) == bad_loss
+            and self.loss
+            and self.loss != bad_loss
+        ):
             raise ValueError(
                 f"loss='{bad_loss}' must be specified at initialization. "
                 "To clear this error, use one of the following code snippets:\n\n"
-                f"    >>> # option 1"
-                f"    >>> est = {self.__name__}(... loss='{bad_loss}'\n"
-                f"    >>> est.fit(X, y)\n"
-                f"    >>>\n"
-                f"    >>> # option 2\n"
-                f"    >>> est.set_params(loss='{bad_loss}').initialize(X, y)'\n"
-                f"    >>> est.fit(X, y)\n"
+                f"    >>> est = {self.__name__}(... loss='{bad_loss}')  # option 1\n"
+                f"    >>> est.set_params(loss='{bad_loss}').initialize(X, y)'  # option 2\n"
             )
         try:
             super()._fit_keras_model(X, y=y, **kwargs)

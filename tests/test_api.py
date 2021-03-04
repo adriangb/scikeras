@@ -50,7 +50,7 @@ def build_fn_clf(
     model.add(keras.layers.Dense(n_classes_))
     model.add(keras.layers.Activation("softmax"))
     model.compile(
-        optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"]
+        optimizer="sgd", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
     )
     return model
 
@@ -74,6 +74,8 @@ def build_fn_reg(
 
 
 class InheritClassBuildFnClf(KerasClassifier):
+    def __init__(self, *args, loss="sparse_categorical_crossentropy", **kwargs):
+        super().__init__(*args, loss=loss, **kwargs)
     def _keras_build_fn(
         self, hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
@@ -96,7 +98,9 @@ class TestBasicAPI:
 
     def test_classify_build_fn(self):
         """Tests a classification task for errors."""
-        clf = KerasClassifier(model=build_fn_clf, hidden_dim=5)
+        clf = KerasClassifier(
+            model=build_fn_clf, hidden_dim=5, loss="sparse_categorical_crossentropy"
+        )
         basic_checks(clf, load_iris)
 
     def test_classify_inherit_class_build_fn(self):

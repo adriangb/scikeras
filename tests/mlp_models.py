@@ -51,7 +51,6 @@ def dynamic_classifier(
     model = Model(inp, out)
 
     model.compile(**compile_kwargs)
-
     return model
 
 
