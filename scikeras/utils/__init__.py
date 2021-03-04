@@ -51,7 +51,7 @@ def loss_name(loss: Union[str, Loss, Callable]) -> Union[None, str]:
     """
     if isclass(loss):
         loss = loss()
-    if loss is None:
+    if loss is None or isinstance(loss, (list, dict, tuple)):
         return None
     if not (isinstance(loss, (str, Loss)) or callable(loss)):
         raise TypeError(
@@ -102,7 +102,7 @@ def metric_name(metric: Union[str, Metric, Callable]) -> Union[None, str]:
     """
     if isclass(metric):
         metric = metric()  # get_metric accepts instances, not classes
-    if metric is None:
+    if metric is None or isinstance(metric, (list, dict, tuple)):
         return None
     if not (isinstance(metric, (str, Metric)) or callable(metric)):
         raise TypeError(
