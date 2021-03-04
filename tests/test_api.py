@@ -327,7 +327,7 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
+                compile_kwargs={"optimizer": "adam", "loss": "auto", "metrics": None,},
             )
         else:
             meta = {
@@ -337,7 +337,7 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
+                compile_kwargs={"optimizer": "adam", "loss": "auto", "metrics": None,},
             )
 
         estimator = model(model=keras_model)
@@ -363,7 +363,7 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
+                compile_kwargs={"optimizer": "adam", "loss": "auto", "metrics": None,},
             )
         else:
             meta = {
@@ -373,7 +373,7 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
+                compile_kwargs={"optimizer": "adam", "loss": "auto", "metrics": None,},
             )
 
         base_estimator = model(model=keras_model)
@@ -622,8 +622,7 @@ def force_compile_shorthand(hidden_layer_sizes, meta, compile_kwargs, params):
 
 class TestHistory:
     def test_history(self):
-        """Test that history_'s keys are strings and values are lists.
-        """
+        """Test that history_'s keys are strings and values are lists."""
         data = load_boston()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
@@ -756,8 +755,7 @@ def test_subclassed_model_no_params():
 
 
 class TestInitialize:
-    """Test the ``initialize`` method.
-    """
+    """Test the ``initialize`` method."""
 
     @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
     def test_prebuilt_model(self, wrapper):

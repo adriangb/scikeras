@@ -432,10 +432,7 @@ class BaseWrapper(BaseEstimator):
 
     def _ensure_compiled_model(self) -> None:
         # compile model if user gave us an un-compiled model
-        if not (
-            getattr(self.model_, "loss", None)
-            and getattr(self.model_, "optimizer", None)
-        ):
+        if not (hasattr(self.model_, "loss") and hasattr(self.model_, "optimizer")):
             self._compile_model(self._get_compile_kwargs())
 
     def _compile_model(self, compile_kwargs: Dict[str, Any]) -> None:
@@ -530,13 +527,12 @@ class BaseWrapper(BaseEstimator):
             self.history_ = defaultdict(list)
 
         for key, val in hist.history.items():
-            try:
-                key = metric_name(key)
-            except ValueError as e:
+            key_name = metric_name(key)
+            if key_name is not None:
                 # Keras puts keys like "val_accuracy" and "loss" and
-                # "val_loss" in hist.history
-                if "Unknown metric function" not in str(e):
-                    raise e
+                # "val_loss" in hist.history these will return
+                # None since they are not a real metric
+                key = key_name
             self.history_[key] += val
 
     def _check_model_compatibility(self, y: np.ndarray) -> None:
@@ -565,14 +561,8 @@ class BaseWrapper(BaseEstimator):
                 for x in [self.loss, self.model_.loss]
             ):  # filter out loss list/dicts/etc.
                 if default_val is not None:
-                    try:
-                        default_val = loss_name(default_val)
-                    except ValueError:
-                        pass
-                try:
-                    given = loss_name(self.loss)
-                except ValueError:
-                    return  # idk placeholder
+                    default_val = loss_name(default_val)
+                given = loss_name(self.loss)
                 got = loss_name(self.model_.loss)
                 if given != default_val and got != given:
                     raise ValueError(
