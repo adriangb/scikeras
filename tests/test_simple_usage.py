@@ -14,7 +14,7 @@ n_eg = 100
 X = np.random.uniform(size=(n_eg, FEATURES)).astype("float32")
 
 
-def shallow_net(single_output=False, in_dim=FEATURES):
+def shallow_net(single_output=False, loss=None, in_dim=FEATURES, compile=False):
     model = tf.keras.Sequential()
     model.add(tf.keras.layers.Input(shape=(in_dim,)))
     model.add(tf.keras.layers.Dense(in_dim, activation="sigmoid"))
@@ -24,7 +24,43 @@ def shallow_net(single_output=False, in_dim=FEATURES):
     else:
         model.add(tf.keras.layers.Dense(N_CLASSES))
 
+    if compile:
+        model.compile(loss=loss)
+
     return model
+
+
+@pytest.mark.parametrize(
+    "loss",
+    [
+        "binary_crossentropy",
+        "categorical_crossentropy",
+        "sparse_categorical_crossentropy",
+        "poisson",
+        "kl_divergence",
+        "hinge",
+        "categorical_hinge",
+        "squared_hinge",
+    ],
+)
+def test_user_compiled(loss):
+    """Test to make sure that user compiled classification models work with all
+    classification losses.
+
+    SciKeras provides raises an error with a helpful suggestion when the user
+    compiles their own model with loss='sparse_categorical_crossentropy'
+    but doesn't change the default loss.
+    """
+    y = np.random.choice(N_CLASSES, size=len(X))
+    est = KerasClassifier(shallow_net, model__compile=True, model__loss=loss)
+    if loss == "sparse_categorical_crossentropy":
+        msg = ">>> est.set_params\(loss='sparse_categorical_crossentropy'\).initialize\(X, y\)"
+        with pytest.raises(ValueError, match=msg):
+            est.partial_fit(X, y)
+        est.set_params(loss="sparse_categorical_crossentropy").initialize(X, y)
+    est.partial_fit(X, y)
+    assert est.model_.loss == loss  # not est.model_.loss.__name__ b/c user compiled
+    assert est.current_epoch == 1
 
 
 @pytest.mark.parametrize(

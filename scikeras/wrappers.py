@@ -1298,6 +1298,20 @@ class KerasClassifier(BaseWrapper):
         return target_type
 
     def _fit_keras_model(self, *args, **kwargs):
+        bad_loss = "sparse_categorical_crossentropy"
+        if loss_name(self.model_.loss) == bad_loss and self.loss != bad_loss:
+            raise ValueError(
+                f"loss='{bad_loss}' must be specified. "
+                "To clear this error, set the `loss` parameter. Both of these "
+                "code snippets will accomplish that (and clear this error):"
+                "     >>> # option 1\n"
+                f"    >>> est = {self.__name__}(..., loss='{bad_loss}')\n"
+                "     >>> est.fit(X, y)  # works\n"
+                "     >>>\n"
+                "     >>> # option 2\n"
+                f"    >>> est.set_params(loss='{bad_loss}').initialize(X, y)\n"
+                "     >>> est.fit(X, y)  # works"
+            )
         try:
             super()._fit_keras_model(*args, **kwargs)
         except ValueError as e:
@@ -1364,7 +1378,7 @@ class KerasClassifier(BaseWrapper):
         categories = "auto" if self.classes_ is None else [self.classes_]
         return ClassifierLabelEncoder(loss=self.loss, categories=categories)
 
-    def initialize(self, X, y) -> "KerasClassifier":
+    def initialize(self, *args, **kwargs) -> "KerasClassifier":
         """Initialize the model without any fitting.
         You only need to call this model if you explicitly do not want to do any fitting
         (for example with a pretrained model). You should _not_ call this
@@ -1385,7 +1399,8 @@ class KerasClassifier(BaseWrapper):
             A reference to the KerasClassifier instance for chained calling.
         """
         self.classes_ = None
-        super().initialize(X=X, y=y)
+        super().initialize(*args, **kwargs)
+
         return self
 
     def fit(self, X, y, sample_weight=None, **kwargs) -> "KerasClassifier":
