@@ -14,7 +14,7 @@ def _camel2snake(s: str) -> str:
     return "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")
 
 
-def loss_name(loss: Union[str, Loss, Callable]) -> str:
+def loss_name(loss: Union[str, Loss, Callable]) -> Union[None, str]:
     """Retrieves a loss's full name (eg: "mean_squared_error").
 
     Parameters
@@ -51,6 +51,8 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     """
     if isclass(loss):
         loss = loss()
+    if loss is None:
+        return None
     if not (isinstance(loss, (str, Loss)) or callable(loss)):
         raise TypeError(
             "``loss`` must be a string, a function, an instance of ``tf.keras.losses.Loss``"
@@ -62,7 +64,7 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     return fn_or_cls.__name__
 
 
-def metric_name(metric: Union[str, Metric, Callable]) -> str:
+def metric_name(metric: Union[str, Metric, Callable]) -> Union[None, str]:
     """Retrieves a metric's full name (eg: "mean_squared_error").
 
     Parameters
@@ -100,6 +102,8 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
     """
     if isclass(metric):
         metric = metric()  # get_metric accepts instances, not classes
+    if metric is None:
+        return None
     if not (isinstance(metric, (str, Metric)) or callable(metric)):
         raise TypeError(
             "``metric`` must be a string, a function, an instance of"
