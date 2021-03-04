@@ -154,7 +154,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             "multiclass-multioutput": FunctionTransformer(),
             "multilabel-indicator": FunctionTransformer(),
         }
-        if is_categorical_crossentropy(self.loss):
+        if target_type == "multiclass" and is_categorical_crossentropy(self.loss):
             encoders["multiclass"] = make_pipeline(
                 TargetReshaper(),
                 OneHotEncoder(
