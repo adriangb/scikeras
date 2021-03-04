@@ -1301,14 +1301,18 @@ class KerasClassifier(BaseWrapper):
         super()._ensure_compiled_model()
 
         bad_loss = "sparse_categorical_crossentropy"
-        if loss_name(self.model_.loss) == bad_loss and self.loss != bad_loss:
+        if (
+            self.model_.loss
+            and loss_name(self.model_.loss) == bad_loss
+            and self.loss != bad_loss
+        ):
             warnings.warn(
                 f"Setting parameter loss='{bad_loss}' "
                 f"and re-initializing. To clear this warning in the future, set "
                 f"loss='{bad_loss}' at initialzation:\n\n"
                 f"    {self.__name__}(..., loss='sparse_categorical_crossentropy')"
             )
-            self.set_params(loss='sparse_categorical_crossentropy')
+            self.set_params(loss="sparse_categorical_crossentropy")
             self.initialize(X, y=y)
 
     def _fit_keras_model(self, X, y=None, **kwargs):
