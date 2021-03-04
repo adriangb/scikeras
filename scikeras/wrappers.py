@@ -1340,12 +1340,16 @@ class KerasClassifier(BaseWrapper):
                 )
             if self.target_type_ == "binary":
                 compile_kwargs["loss"] = "binary_crossentropy"
-            else:
+            elif self.target_type_ == "multiclass":
                 if self.model_.outputs[0].shape[1] == 1:
                     raise ValueError(
                         "Multi-class targets require the model to have >1 output unit"
                     )
-                compile_kwargs["loss"] = "categorical_crossentropy"
+                compile_kwargs["loss"] = "sparse_categorical_crossentropy"
+            else:
+                raise ValueError(
+                    f'`loss="auto"` is not supported for tasks of type {self.target_type_}'
+                )
         self.model_.compile(**compile_kwargs)
 
     @staticmethod
