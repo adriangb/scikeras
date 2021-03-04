@@ -26,10 +26,7 @@ def dynamic_classifier(
     for layer_size in hidden_layer_sizes:
         hidden = Dense(layer_size, activation="relu")(hidden)
 
-    if compile_kwargs["loss"] == "auto":
-        loss = None
-    else:
-        loss = compile_kwargs["loss"]
+    loss = None if compile_kwargs["loss"] == "auto" else compile_kwargs["loss"]
 
     if target_type_ == "binary":
         compile_kwargs["loss"] = loss or "binary_crossentropy"
