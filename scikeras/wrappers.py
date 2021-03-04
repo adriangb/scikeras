@@ -1309,6 +1309,7 @@ class KerasClassifier(BaseWrapper):
                 "To clear this error, use one of the following code snippets:\n\n"
                 f"    >>> est = {self.__name__}(... loss='{bad_loss}')  # option 1\n"
                 f"    >>> est.set_params(loss='{bad_loss}').initialize(X, y)'  # option 2\n"
+                "Another method of clearning: set loss=None"
             )
         try:
             super()._fit_keras_model(X, y=y, **kwargs)

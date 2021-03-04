@@ -76,6 +76,7 @@ def build_fn_reg(
 class InheritClassBuildFnClf(KerasClassifier):
     def __init__(self, *args, loss="sparse_categorical_crossentropy", **kwargs):
         super().__init__(*args, loss=loss, **kwargs)
+
     def _keras_build_fn(
         self, hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
@@ -388,7 +389,7 @@ class TestPrebuiltModel:
 
         base_estimator = model(model=keras_model)
         for ensemble in ensembles:
-            estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
+            estimator = ensemble(base_estimator=base_estimator, n_estimators=2, loss=None)
             basic_checks(estimator, loader)
 
 
