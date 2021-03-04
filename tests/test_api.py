@@ -50,7 +50,7 @@ def build_fn_clf(
     model.add(keras.layers.Dense(n_classes_))
     model.add(keras.layers.Activation("softmax"))
     model.compile(
-        optimizer="sgd", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+        optimizer="sgd", loss="categorical_crossentropy", metrics=["accuracy"]
     )
     return model
 

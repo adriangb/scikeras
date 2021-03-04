@@ -1307,7 +1307,7 @@ class KerasClassifier(BaseWrapper):
                 f"    >>> est = {self.__name__}(... loss='{bad_loss}'\n"
                 f"    >>> est.fit(X, y)\n"
                 f"    >>>\n"
-                f"    >>> # option 2"
+                f"    >>> # option 2\n"
                 f"    >>> est.set_params(loss='{bad_loss}').initialize(X, y)'\n"
                 f"    >>> est.fit(X, y)\n"
             )
