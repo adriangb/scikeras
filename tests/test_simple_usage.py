@@ -55,7 +55,10 @@ def test_user_compiled(loss):
     est = KerasClassifier(shallow_net, model__compile=True, model__loss=loss)
 
     if loss == "sparse_categorical_crossentropy":
-        with pytest.warns(UserWarning, match="Setting parameter loss='sparse_categorical_crossentropy'"):
+        with pytest.warns(
+            UserWarning,
+            match="Setting parameter loss='sparse_categorical_crossentropy'",
+        ):
             est.partial_fit(X, y)
     else:
         est.partial_fit(X, y)
