@@ -402,7 +402,7 @@ class BaseWrapper(BaseEstimator):
 
         return model
 
-    def _ensure_compiled_model(self) -> None:
+    def _ensure_compiled_model(self, X=None, y=None) -> None:
         # compile model if user gave us an un-compiled model
         if not (hasattr(self.model_, "loss") and hasattr(self.model_, "optimizer")):
             self.model_.compile(**self._get_compile_kwargs())
@@ -837,7 +837,7 @@ class BaseWrapper(BaseEstimator):
             X, y = self._initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
-        self._ensure_compiled_model()
+        self._ensure_compiled_model(X=X, y=y)
 
         if sample_weight is not None:
             X, sample_weight = self._validate_sample_weight(X, sample_weight)
@@ -1297,27 +1297,27 @@ class KerasClassifier(BaseWrapper):
             )
         return target_type
 
-    def _fit_keras_model(self, *args, **kwargs):
+    def _ensure_compiled_model(self, X=None, y=None) -> None:
+        super()._ensure_compiled_model()
+
         bad_loss = "sparse_categorical_crossentropy"
         if loss_name(self.model_.loss) == bad_loss and self.loss != bad_loss:
-            raise ValueError(
-                f"loss='{bad_loss}' must be specified. "
-                "To clear this error, set the `loss` parameter. Both of these "
-                "code snippets will accomplish that (and clear this error):"
-                "     >>> # option 1\n"
-                f"    >>> est = {self.__name__}(..., loss='{bad_loss}')\n"
-                "     >>> est.fit(X, y)  # works\n"
-                "     >>>\n"
-                "     >>> # option 2\n"
-                f"    >>> est.set_params(loss='{bad_loss}').initialize(X, y)\n"
-                "     >>> est.fit(X, y)  # works"
+            warnings.warn(
+                f"Setting parameter loss='{bad_loss}' "
+                f"and re-initializing. To clear this warning in the future, set "
+                f"loss='{bad_loss}' at initialzation:\n\n"
+                f"    {self.__name__}(..., loss='sparse_categorical_crossentropy')"
             )
+            self.set_params(loss='sparse_categorical_crossentropy')
+            self.initialize(X, y=y)
+
+    def _fit_keras_model(self, X, y=None, **kwargs):
         try:
-            super()._fit_keras_model(*args, **kwargs)
+            super()._fit_keras_model(X, y=y, **kwargs)
         except ValueError as e:
             if (
                 hasattr(self, "model_")
-                and self.model_.loss.__name__ == "categorical_crossentropy"
+                and loss_name(self.model_.loss) == "categorical_crossentropy"
                 and hasattr(self.model_, "outputs")
                 and len(self.model_.outputs) == 1
                 and self.model_.outputs[0].shape[1] == 1
