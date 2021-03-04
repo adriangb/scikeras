@@ -26,7 +26,8 @@ def loss_name(loss: Union[str, Loss, Callable]) -> Union[None, str]:
     Returns
     -------
     str
-        String name of the loss.
+        String name of the loss (e.g., "mse") or None if the
+        input is not a string, Metric or callable.
 
     Notes
     -----
@@ -43,21 +44,13 @@ def loss_name(loss: Union[str, Loss, Callable]) -> Union[None, str]:
     'binary_crossentropy'
     >>> loss_name(losses.binary_crossentropy)
     'binary_crossentropy'
-
-    Raises
-    ------
-    TypeError
-        If loss is not a string, tf.keras.losses.Loss instance or a callable.
+    >>> loss_name({"out1": "mse", "out2": "mae"})
+    None
     """
     if isclass(loss):
         loss = loss()
-    if loss is None or isinstance(loss, (list, dict, tuple)):
-        return None
     if not (isinstance(loss, (str, Loss)) or callable(loss)):
-        raise TypeError(
-            f"loss={loss} must be a string, a function, an instance of tf.keras.losses.Loss"
-            " or a type inheriting from tf.keras.losses.Loss"
-        )
+        return None
     fn_or_cls = keras_loss_get(loss)
     if isinstance(fn_or_cls, Loss):
         return _camel2snake(fn_or_cls.__class__.__name__)
@@ -76,7 +69,8 @@ def metric_name(metric: Union[str, Metric, Callable]) -> Union[None, str]:
     Returns
     -------
     str
-        Full name for Keras metric. Ex: "mean_squared_error".
+        Full name for Keras metric (e.g., "mean_squared_error") or None if the
+        input is not a string, Metric or callable.
 
     Notes
     -----
@@ -93,23 +87,13 @@ def metric_name(metric: Union[str, Metric, Callable]) -> Union[None, str]:
     'BinaryCrossentropy'
     >>> metric_name(metrics.binary_crossentropy)
     'binary_crossentropy'
-
-    Raises
-    ------
-    TypeError
-        If metric is not a string, a tf.keras.metrics.Metric instance a class
-        inheriting from tf.keras.metrics.Metric.
+    >>> metric_name({"out1": "bce", "out2": "hinge"})
+    None
     """
     if isclass(metric):
         metric = metric()  # get_metric accepts instances, not classes
-    if metric is None or isinstance(metric, (list, dict, tuple)):
-        return None
     if not (isinstance(metric, (str, Metric)) or callable(metric)):
-        raise TypeError(
-            f"metric={metric} must be a string, a function, an instance of"
-            " tf.keras.metrics.Metric or a type inheriting from"
-            " tf.keras.metrics.Metric"
-        )
+        return None
     fn_or_cls = keras_metric_get(metric)
     if isinstance(fn_or_cls, Metric):
         return _camel2snake(fn_or_cls.__class__.__name__)
