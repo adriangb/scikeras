@@ -387,9 +387,9 @@ class TestPrebuiltModel:
                 compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
             )
 
-        base_estimator = model(model=keras_model)
+        base_estimator = model(model=keras_model, loss=None)
         for ensemble in ensembles:
-            estimator = ensemble(base_estimator=base_estimator, n_estimators=2, loss=None)
+            estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
 
 
