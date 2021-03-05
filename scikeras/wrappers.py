@@ -1337,8 +1337,10 @@ class KerasClassifier(BaseWrapper):
                     )
                 compile_kwargs["loss"] = "sparse_categorical_crossentropy"
             else:
-                raise ValueError(
-                    f'`loss="auto"` is not supported for tasks of type {self.target_type_}'
+                raise NotImplementedError(
+                    f'`loss="auto"` is not supported for tasks of type {self.target_type_}.'
+                    " Instead, you must explicitly pass a loss function, for example:"
+                    "\n   clf = KerasClassifier(..., loss=\"categorical_crossentropy\")"
                 )
         self.model_.compile(**compile_kwargs)
 
