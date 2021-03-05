@@ -6,18 +6,9 @@ The documentation is mostly written in rst, but executable notebooks are written
 This ensures that diffs are readable (GitHub is pretty good about highlighting markdown, and the outputs of execution are excluded) and that the execution is consistent and does not generate any errors.
 This is all done via the [docs workflow](../.github/workflows/docs.yaml).
 
-## Install doc dependencies
-
-To work on the SciKeras docs, you will need several dependencies. These are collected under the `dev_docs` extras:
-
-```bash
-poetry install --extras dev_docs
-```
-
 ## Working with .md notebooks
 
 To make edits to the markdown notebooks, you will need install jupytext with jupyter, which will then allow you to open and execute markdown notebooks as described [here](https://jupytext.readthedocs.io/en/latest/paired-notebooks.html).
-If you installed via `dev_docs`, this should be working. However, if you also had installed jupyter globally, you may need to run via:
 
 ```bash
 poetry run jupyter notebook
