@@ -1333,7 +1333,7 @@ class KerasClassifier(BaseWrapper):
             elif self.target_type_ == "multiclass":
                 if self.model_.outputs[0].shape[1] == 1:
                     raise ValueError(
-                        "Multi-class targets require the model to have >1 output unit"
+                        f"Multi-class targets require the model to have >1 output unit instead of {self.model_.outputs[0].shape} units"
                     )
                 compile_kwargs["loss"] = "sparse_categorical_crossentropy"
             else:
