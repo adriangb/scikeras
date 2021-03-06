@@ -384,7 +384,7 @@ class BaseWrapper(BaseEstimator):
         )
         return compile_kwargs
 
-    def _build_keras_model(self):
+    def _build_keras_model(self) -> None:
         """Build the Keras model.
 
         This method will process all arguments and call the model building
@@ -427,8 +427,9 @@ class BaseWrapper(BaseEstimator):
                 model = final_build_fn(**build_params)
         else:
             model = final_build_fn(**build_params)
-
-        return model
+        self.model_ = model
+        self._ensure_compiled_model()
+        return
 
     def _ensure_compiled_model(self) -> None:
         # compile model if user gave us an un-compiled model
@@ -802,7 +803,7 @@ class BaseWrapper(BaseEstimator):
         feature_meta = getattr(self.feature_encoder, "get_metadata", dict)()
         vars(self).update(**feature_meta)
 
-        self.model_ = self._build_keras_model()
+        self._build_keras_model()
 
         return X, y
 
@@ -867,7 +868,6 @@ class BaseWrapper(BaseEstimator):
             X, y = self._initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
-        self._ensure_compiled_model()
 
         if sample_weight is not None:
             X, sample_weight = self._validate_sample_weight(X, sample_weight)
@@ -1340,7 +1340,7 @@ class KerasClassifier(BaseWrapper):
                 raise NotImplementedError(
                     f'`loss="auto"` is not supported for tasks of type {self.target_type_}.'
                     " Instead, you must explicitly pass a loss function, for example:"
-                    "\n   clf = KerasClassifier(..., loss=\"categorical_crossentropy\")"
+                    '\n   clf = KerasClassifier(..., loss="categorical_crossentropy")'
                 )
         self.model_.compile(**compile_kwargs)
 
@@ -1705,6 +1705,10 @@ class KerasRegressor(BaseWrapper):
 
     def _compile_model(self, compile_kwargs: Dict[str, Any]) -> None:
         if compile_kwargs["loss"] == "auto":
+            if len(self.model_.outputs) > 1:
+                raise ValueError(
+                    'Only single-output models are supported with `loss="auto"`'
+                )
             compile_kwargs["loss"] = "mean_squared_error"
         self.model_.compile(**compile_kwargs)
 
