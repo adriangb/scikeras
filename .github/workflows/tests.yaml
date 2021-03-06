@@ -22,7 +22,6 @@ jobs:
       - uses: pre-commit/action@v2.0.0
 
   TestStable:
-    needs: Linting
     name: Ubuntu / Python ${{ matrix.python-version }} / TensorFlow Stable / Scikit-Learn Stable
     runs-on: ubuntu-latest
     strategy:
@@ -55,7 +54,6 @@ jobs:
       - uses: codecov/codecov-action@v1
 
   TestDev:
-    needs: Linting
     name: Ubuntu / Python ${{ matrix.python-version }} / TensorFlow Nightly / Scikit-Learn Nightly
     runs-on: ubuntu-latest
     strategy:
@@ -98,7 +96,6 @@ jobs:
       - uses: codecov/codecov-action@v1
 
   TestOldest:
-    needs: Linting
     name: Ubuntu / Python ${{ matrix.python-version }} / TF ${{ matrix.tf-version }} / Scikit-Learn ${{ matrix.sklearn-version }}
     runs-on: ubuntu-latest
     strategy:
@@ -135,7 +132,6 @@ jobs:
       - uses: codecov/codecov-action@v1
 
   TestOSs:
-    needs: Linting
     name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / TF Stable / Scikit-Learn Stable
     runs-on: ${{ matrix.os }}-latest
     strategy:
