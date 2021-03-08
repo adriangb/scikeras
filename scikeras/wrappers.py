@@ -1346,7 +1346,7 @@ class KerasClassifier(BaseWrapper):
                     raise ValueError(
                         "loss='categorical_crossentropy' is expecting the model "
                         f"to have {self.n_classes_} output neurons, one for each "
-                        "class. However, only {n_out} output neurons were found"
+                        f"class. However, only {n_out} output neurons were found"
                     )
                 compile_kwargs["loss"] = "categorical_crossentropy"
             else:
