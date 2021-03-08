@@ -1340,7 +1340,7 @@ class KerasClassifier(BaseWrapper):
                         "Multi-class targets require the model to have >1 output units."
                     )
                 compile_kwargs["loss"] = "sparse_categorical_crossentropy"
-            elif hasattr(self, "n_classes_"):
+            elif self.target_type_ == "multilabel-indicator" and hasattr(self, "n_classes_"):
                 n_out = self.model_.outputs[0].shape[1]
                 if n_out != self.n_classes_:
                     raise ValueError(
