@@ -69,7 +69,7 @@ def test_user_compiled(loss):
 
 class NoEncoderClf(KerasClassifier):
     """A classifier overriding default target encoding.
-    This simulates a user implementing custom encoding logic in 
+    This simulates a user implementing custom encoding logic in
     target_encoder to support multiclass-multioutput or
     multilabel-indicator, which by default would raise an error.
     """
@@ -142,7 +142,9 @@ def test_regressor_default_loss_only_model_specified(use_case):
     y = np.random.uniform(size=len(X))
     if use_case == "multi_output":
         y = np.column_stack([y, y])
-    est = KerasRegressor(model=shallow_net, model__outputs=1 if "single" in use_case else 2)
+    est = KerasRegressor(
+        model=shallow_net, model__outputs=1 if "single" in use_case else 2
+    )
     est.fit(X, y)
     assert est.loss == "auto"
     assert loss_name(est.model_.loss) == "mean_squared_error"
@@ -192,6 +194,7 @@ def test_multi_output_support(user_compiled, est_cls):
         ):
             est.fit(X, y)
 
+
 def test_catch_bad_model_with_auto_loss_categorical_crossentropy():
     exp_loss = "categorical_crossentropy"
     y = np.random.choice(N_CLASSES, size=len(X)).astype(int)
@@ -201,6 +204,7 @@ def test_catch_bad_model_with_auto_loss_categorical_crossentropy():
     msg = "loss='categorical_crossentropy' is expecting the model to have {N_CLASSES} output neurons"
     with pytest.raises(ValueError, match=msg):
         est.initialize(X, y=y)
+
 
 def test_multiclass_single_output_unit():
     """Test that multiclass targets requires > 1 output units.
