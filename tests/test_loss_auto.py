@@ -14,13 +14,13 @@ n_eg = 100
 X = np.random.uniform(size=(n_eg, FEATURES)).astype("float32")
 
 
-def shallow_net(single_output=False, loss=None, compile=False):
+def shallow_net(outputs=None, loss=None, compile=False):
     model = tf.keras.Sequential()
     model.add(tf.keras.layers.Input(shape=(FEATURES,)))
-    if single_output:
-        model.add(tf.keras.layers.Dense(1))
-    else:
+    if outputs is None:
         model.add(tf.keras.layers.Dense(N_CLASSES))
+    else:
+        model.add(tf.keras.layers.Dense(outputs))
 
     if compile:
         model.compile(loss=loss)
@@ -45,7 +45,7 @@ def test_user_compiled(loss):
     """Test to make sure that user compiled classification models work with all
     classification losses.
     """
-    model__single_output = True if "binary" in loss else False
+    model__outputs = 1 if "binary" in loss else None
     if loss == "binary_crosentropy":
         y = np.random.randint(0, 2, size=(n_eg,))
     elif loss == "categorical_crossentropy":
@@ -59,7 +59,7 @@ def test_user_compiled(loss):
         shallow_net,
         model__compile=True,
         model__loss=loss,
-        model__single_output=model__single_output,
+        model__outputs=model__outputs,
     )
     est.partial_fit(X, y)
 
@@ -112,7 +112,7 @@ def test_classifier_default_loss_only_model_specified(use_case):
     when only the model is specified.
     """
 
-    model__single_output = True if "binary" in use_case else False
+    model__outputs = 1 if "binary" in use_case else None
     if use_case == "binary_classification":
         exp_loss = "binary_crossentropy"
         y = np.random.choice(2, size=len(X)).astype(int)
@@ -127,7 +127,7 @@ def test_classifier_default_loss_only_model_specified(use_case):
         y = np.random.choice(N_CLASSES, size=len(X)).astype(int)
         y = OneHotEncoder(sparse=False).fit_transform(y.reshape(-1, 1))
 
-    est = KerasClassifier(model=shallow_net, model__single_output=model__single_output)
+    est = KerasClassifier(model=shallow_net, model__outputs=model__outputs)
 
     est.fit(X, y=y)
     assert loss_name(est.model_.loss) == exp_loss
@@ -142,7 +142,7 @@ def test_regressor_default_loss_only_model_specified(use_case):
     y = np.random.uniform(size=len(X))
     if use_case == "multi_output":
         y = np.column_stack([y, y])
-    est = KerasRegressor(model=shallow_net, model__single_output=True)
+    est = KerasRegressor(model=shallow_net, model__outputs=1 if "single" in use_case else 2)
     est.fit(X, y)
     assert est.loss == "auto"
     assert loss_name(est.model_.loss) == "mean_squared_error"
@@ -191,3 +191,13 @@ def test_multi_output_support(user_compiled, est_cls):
             match='Only single-output models are supported with `loss="auto"`',
         ):
             est.fit(X, y)
+
+def test_catch_bad_model_with_auto_loss_categorical_crossentropy():
+    exp_loss = "categorical_crossentropy"
+    y = np.random.choice(N_CLASSES, size=len(X)).astype(int)
+    y = OneHotEncoder(sparse=False).fit_transform(y.reshape(-1, 1))
+
+    est = KerasClassifier(model=shallow_net, model__outputs=N_CLASSES - 1)
+    msg = "loss='categorical_crossentropy' is expecting the model to have {N_CLASSES} output neurons"
+    with pytest.raises(ValueError, match=msg):
+        est.initialize(X, y=y)
