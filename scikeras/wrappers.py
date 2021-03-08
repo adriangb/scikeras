@@ -1329,11 +1329,15 @@ class KerasClassifier(BaseWrapper):
                     'Only single-output models are supported with `loss="auto"`'
                 )
             if self.target_type_ == "binary":
+                if self.model_.outputs[0].shape[1] != 1:
+                    raise ValueError(
+                        "Binary classification expects a model with exactly 1 output unit."
+                    )
                 compile_kwargs["loss"] = "binary_crossentropy"
             elif self.target_type_ == "multiclass":
                 if self.model_.outputs[0].shape[1] == 1:
                     raise ValueError(
-                        f"Multi-class targets require the model to have >1 output unit instead of {self.model_.outputs[0].shape} units"
+                        "Multi-class targets require the model to have >1 output units."
                     )
                 compile_kwargs["loss"] = "sparse_categorical_crossentropy"
             else:

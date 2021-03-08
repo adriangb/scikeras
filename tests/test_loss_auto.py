@@ -197,3 +197,27 @@ def test_multi_output_support(user_compiled, est_cls):
             match='Only single-output models are supported with `loss="auto"`',
         ):
             est.fit(X, y)
+
+
+def test_multiclass_single_output_unit():
+    """Test that multiclass targets requires > 1 output units.
+    """
+    est = KerasClassifier(model=shallow_net, model__single_output=True)
+    y = np.random.choice(N_CLASSES, size=(len(X), 1)).astype(int)
+    with pytest.raises(
+        ValueError,
+        match="Multi-class targets require the model to have >1 output units",
+    ):
+        est.fit(X, y)
+
+
+def test_binary_multiple_output_units():
+    """Test that binary targets requires exactly 1 output unit.
+    """
+    est = KerasClassifier(model=shallow_net, model__single_output=False)
+    y = np.random.choice(2, size=len(X)).astype(int)
+    with pytest.raises(
+        ValueError,
+        match="Binary classification expects a model with exactly 1 output unit",
+    ):
+        est.fit(X, y)
