@@ -99,15 +99,15 @@ def test_classifier_unsupported_multi_output_tasks(use_case):
 
 
 @pytest.mark.parametrize(
-    "use_case,supported",
+    "use_case",
     [
-        ("binary_classification", True),
-        ("binary_classification_w_one_class", True),
-        ("classification_w_1d_targets", True),
-        ("classification_w_onehot_targets", False),
+        "binary_classification",
+        "binary_classification_w_one_class",
+        "classification_w_1d_targets",
+        "classification_w_onehot_targets",
     ],
 )
-def test_classifier_default_loss_only_model_specified(use_case, supported):
+def test_classifier_default_loss_only_model_specified(use_case):
     """Test that KerasClassifier will auto-determine a loss function
     when only the model is specified.
     """
@@ -123,20 +123,14 @@ def test_classifier_default_loss_only_model_specified(use_case, supported):
         exp_loss = "sparse_categorical_crossentropy"
         y = np.random.choice(N_CLASSES, size=(len(X), 1)).astype(int)
     elif use_case == "classification_w_onehot_targets":
+        exp_loss = "categorical_crossentropy"
         y = np.random.choice(N_CLASSES, size=len(X)).astype(int)
         y = OneHotEncoder(sparse=False).fit_transform(y.reshape(-1, 1))
 
     est = KerasClassifier(model=shallow_net, model__single_output=model__single_output)
 
-    if supported:
-        est.fit(X, y=y)
-        assert loss_name(est.model_.loss) == exp_loss
-    else:
-        with pytest.raises(
-            NotImplementedError,
-            match='`loss="auto"` is not supported for tasks of type',
-        ):
-            est.fit(X, y=y)
+    est.fit(X, y=y)
+    assert loss_name(est.model_.loss) == exp_loss
     assert est.loss == "auto"
 
 
