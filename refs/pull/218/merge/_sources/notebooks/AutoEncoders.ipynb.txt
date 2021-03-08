@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "mature-valve",
+   "id": "crazy-skiing",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "literary-jacket",
+   "id": "blessed-shelter",
    "metadata": {},
    "source": [
     "# Autoencoders in SciKeras\n",
@@ -34,13 +34,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "loaded-yacht",
+   "id": "written-floating",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:02.230938Z",
-     "iopub.status.busy": "2021-03-08T03:20:02.230258Z",
-     "iopub.status.idle": "2021-03-08T03:20:03.824262Z",
-     "shell.execute_reply": "2021-03-08T03:20:03.824914Z"
+     "iopub.execute_input": "2021-03-08T03:21:09.820782Z",
+     "iopub.status.busy": "2021-03-08T03:21:09.815178Z",
+     "iopub.status.idle": "2021-03-08T03:21:12.272889Z",
+     "shell.execute_reply": "2021-03-08T03:21:12.273668Z"
     }
    },
    "outputs": [],
@@ -53,7 +53,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "confirmed-optics",
+   "id": "cleared-universe",
    "metadata": {},
    "source": [
     "Silence TensorFlow logging to keep output succinct."
@@ -62,13 +62,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "handy-vintage",
+   "id": "baking-chemistry",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:03.832158Z",
-     "iopub.status.busy": "2021-03-08T03:20:03.830677Z",
-     "iopub.status.idle": "2021-03-08T03:20:03.832849Z",
-     "shell.execute_reply": "2021-03-08T03:20:03.833352Z"
+     "iopub.execute_input": "2021-03-08T03:21:12.279101Z",
+     "iopub.status.busy": "2021-03-08T03:21:12.277086Z",
+     "iopub.status.idle": "2021-03-08T03:21:12.283419Z",
+     "shell.execute_reply": "2021-03-08T03:21:12.284255Z"
     }
    },
    "outputs": [],
@@ -82,13 +82,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "anonymous-filter",
+   "id": "biblical-minister",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:03.837711Z",
-     "iopub.status.busy": "2021-03-08T03:20:03.837086Z",
-     "iopub.status.idle": "2021-03-08T03:20:04.142995Z",
-     "shell.execute_reply": "2021-03-08T03:20:04.142172Z"
+     "iopub.execute_input": "2021-03-08T03:21:12.287628Z",
+     "iopub.status.busy": "2021-03-08T03:21:12.286494Z",
+     "iopub.status.idle": "2021-03-08T03:21:12.656440Z",
+     "shell.execute_reply": "2021-03-08T03:21:12.656967Z"
     }
    },
    "outputs": [],
@@ -100,7 +100,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "trained-hamburg",
+   "id": "limiting-creature",
    "metadata": {},
    "source": [
     "## 2. Data\n",
@@ -111,13 +111,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "relevant-acquisition",
+   "id": "outdoor-column",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:04.151450Z",
-     "iopub.status.busy": "2021-03-08T03:20:04.148804Z",
-     "iopub.status.idle": "2021-03-08T03:20:04.771109Z",
-     "shell.execute_reply": "2021-03-08T03:20:04.771914Z"
+     "iopub.execute_input": "2021-03-08T03:21:12.660475Z",
+     "iopub.status.busy": "2021-03-08T03:21:12.659392Z",
+     "iopub.status.idle": "2021-03-08T03:21:13.230237Z",
+     "shell.execute_reply": "2021-03-08T03:21:13.230758Z"
     }
    },
    "outputs": [
@@ -135,15 +135,7 @@
      "output_type": "stream",
      "text": [
       "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 2514944/11490434 [=====>........................] - ETA: 0s"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
-      " 7954432/11490434 [===================>..........] - ETA: 0s"
+      " 3670016/11490434 [========>.....................] - ETA: 0s"
      ]
     },
     {
@@ -179,7 +171,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "finished-vulnerability",
+   "id": "heard-anatomy",
    "metadata": {},
    "source": [
     "## 3. Define Keras Model\n",
@@ -202,13 +194,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "hispanic-logistics",
+   "id": "going-marijuana",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:04.775958Z",
-     "iopub.status.busy": "2021-03-08T03:20:04.774738Z",
-     "iopub.status.idle": "2021-03-08T03:20:04.791454Z",
-     "shell.execute_reply": "2021-03-08T03:20:04.792276Z"
+     "iopub.execute_input": "2021-03-08T03:21:13.246571Z",
+     "iopub.status.busy": "2021-03-08T03:21:13.239151Z",
+     "iopub.status.idle": "2021-03-08T03:21:13.249429Z",
+     "shell.execute_reply": "2021-03-08T03:21:13.250255Z"
     }
    },
    "outputs": [],
@@ -285,7 +277,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "solar-terminology",
+   "id": "turned-doctrine",
    "metadata": {},
    "source": [
     "Next, we wrap the Keras Model with Scikeras. Note that for our encoder/decoder estimators, we do not need to provide a loss function since no training will be done.\n",
@@ -295,13 +287,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "celtic-minister",
+   "id": "indian-narrow",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:04.796095Z",
-     "iopub.status.busy": "2021-03-08T03:20:04.794801Z",
-     "iopub.status.idle": "2021-03-08T03:20:04.799877Z",
-     "shell.execute_reply": "2021-03-08T03:20:04.800685Z"
+     "iopub.execute_input": "2021-03-08T03:21:13.254857Z",
+     "iopub.status.busy": "2021-03-08T03:21:13.254089Z",
+     "iopub.status.idle": "2021-03-08T03:21:13.257681Z",
+     "shell.execute_reply": "2021-03-08T03:21:13.258373Z"
     }
    },
    "outputs": [],
@@ -318,7 +310,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "alleged-labor",
+   "id": "pleased-console",
    "metadata": {},
    "source": [
     "## 4. Training\n",
@@ -331,13 +323,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "assured-german",
+   "id": "proved-driving",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:04.804189Z",
-     "iopub.status.busy": "2021-03-08T03:20:04.803042Z",
-     "iopub.status.idle": "2021-03-08T03:20:26.127574Z",
-     "shell.execute_reply": "2021-03-08T03:20:26.128093Z"
+     "iopub.execute_input": "2021-03-08T03:21:13.263418Z",
+     "iopub.status.busy": "2021-03-08T03:21:13.262723Z",
+     "iopub.status.idle": "2021-03-08T03:21:36.681106Z",
+     "shell.execute_reply": "2021-03-08T03:21:36.680500Z"
     }
    },
    "outputs": [],
@@ -347,7 +339,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "noble-gathering",
+   "id": "floating-fireplace",
    "metadata": {},
    "source": [
     "Next, we round trip the test dataset and explore the performance of the autoencoder."
@@ -356,13 +348,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "south-median",
+   "id": "another-indonesia",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:26.133912Z",
-     "iopub.status.busy": "2021-03-08T03:20:26.133267Z",
-     "iopub.status.idle": "2021-03-08T03:20:26.911504Z",
-     "shell.execute_reply": "2021-03-08T03:20:26.911995Z"
+     "iopub.execute_input": "2021-03-08T03:21:36.686353Z",
+     "iopub.status.busy": "2021-03-08T03:21:36.685785Z",
+     "iopub.status.idle": "2021-03-08T03:21:37.483190Z",
+     "shell.execute_reply": "2021-03-08T03:21:37.483742Z"
     }
    },
    "outputs": [],
@@ -372,7 +364,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "pressing-samuel",
+   "id": "sexual-cleaners",
    "metadata": {},
    "source": [
     "## 5. Explore Results\n",
@@ -383,13 +375,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "fiscal-observation",
+   "id": "perceived-approval",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:26.919811Z",
-     "iopub.status.busy": "2021-03-08T03:20:26.918981Z",
-     "iopub.status.idle": "2021-03-08T03:20:29.140679Z",
-     "shell.execute_reply": "2021-03-08T03:20:29.141508Z"
+     "iopub.execute_input": "2021-03-08T03:21:37.491688Z",
+     "iopub.status.busy": "2021-03-08T03:21:37.491087Z",
+     "iopub.status.idle": "2021-03-08T03:21:40.757177Z",
+     "shell.execute_reply": "2021-03-08T03:21:40.757660Z"
     }
    },
    "outputs": [
@@ -431,7 +423,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "governing-romance",
+   "id": "funny-dodge",
    "metadata": {},
    "source": [
     "What about the compression? Let's check the sizes of the arrays."
@@ -440,13 +432,13 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "tropical-superintendent",
+   "id": "uniform-memory",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:29.145361Z",
-     "iopub.status.busy": "2021-03-08T03:20:29.144230Z",
-     "iopub.status.idle": "2021-03-08T03:20:29.617142Z",
-     "shell.execute_reply": "2021-03-08T03:20:29.617769Z"
+     "iopub.execute_input": "2021-03-08T03:21:40.761384Z",
+     "iopub.status.busy": "2021-03-08T03:21:40.760490Z",
+     "iopub.status.idle": "2021-03-08T03:21:41.252389Z",
+     "shell.execute_reply": "2021-03-08T03:21:41.252927Z"
     }
    },
    "outputs": [
@@ -470,7 +462,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "grateful-diploma",
+   "id": "medieval-irish",
    "metadata": {},
    "source": [
     "## 6. Deep AutoEncoder"
@@ -478,7 +470,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "outstanding-mirror",
+   "id": "egyptian-biotechnology",
    "metadata": {},
    "source": [
     "We can easily expand our model to be a deep autoencoder by adding some hidden layers. All we have to do is add a parameter `hidden_layer_sizes` and use it in `_keras_build_fn` to build hidden layers.\n",
@@ -488,13 +480,13 @@
   {
    "cell_type": "code",
    "execution_count": 11,
-   "id": "canadian-sterling",
+   "id": "settled-legislation",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:29.627448Z",
-     "iopub.status.busy": "2021-03-08T03:20:29.625438Z",
-     "iopub.status.idle": "2021-03-08T03:20:29.630146Z",
-     "shell.execute_reply": "2021-03-08T03:20:29.630867Z"
+     "iopub.execute_input": "2021-03-08T03:21:41.267377Z",
+     "iopub.status.busy": "2021-03-08T03:21:41.266719Z",
+     "iopub.status.idle": "2021-03-08T03:21:41.270506Z",
+     "shell.execute_reply": "2021-03-08T03:21:41.269980Z"
     }
    },
    "outputs": [],
@@ -538,13 +530,13 @@
   {
    "cell_type": "code",
    "execution_count": 12,
-   "id": "hollow-chosen",
+   "id": "rolled-knife",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:20:29.636946Z",
-     "iopub.status.busy": "2021-03-08T03:20:29.636316Z",
-     "iopub.status.idle": "2021-03-08T03:21:06.172542Z",
-     "shell.execute_reply": "2021-03-08T03:21:06.171952Z"
+     "iopub.execute_input": "2021-03-08T03:21:41.275090Z",
+     "iopub.status.busy": "2021-03-08T03:21:41.274433Z",
+     "iopub.status.idle": "2021-03-08T03:22:22.490103Z",
+     "shell.execute_reply": "2021-03-08T03:22:22.490647Z"
     }
    },
    "outputs": [],
@@ -564,13 +556,13 @@
   {
    "cell_type": "code",
    "execution_count": 13,
-   "id": "comparative-operations",
+   "id": "honest-module",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2021-03-08T03:21:06.178004Z",
-     "iopub.status.busy": "2021-03-08T03:21:06.177382Z",
-     "iopub.status.idle": "2021-03-08T03:21:07.353954Z",
-     "shell.execute_reply": "2021-03-08T03:21:07.352981Z"
+     "iopub.execute_input": "2021-03-08T03:22:22.496527Z",
+     "iopub.status.busy": "2021-03-08T03:22:22.495429Z",
+     "iopub.status.idle": "2021-03-08T03:22:23.688666Z",
+     "shell.execute_reply": "2021-03-08T03:22:23.687840Z"
     }
    },
    "outputs": [
@@ -608,7 +600,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "raising-symposium",
+   "id": "electoral-associate",
    "metadata": {},
    "source": [
     "Suprisingly, our score got worse. It's possible that that because of the extra trainable variables, our deep model trains slower than our simple model.\n",
