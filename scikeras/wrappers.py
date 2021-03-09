@@ -1355,7 +1355,7 @@ class KerasClassifier(BaseWrapper):
                     '\n   clf = KerasClassifier(..., loss="categorical_crossentropy")'
                 )
                 if hint:
-                    msg += f"\n{hint}"
+                    msg += f"\n\n{hint}"
                 raise NotImplementedError(msg)
             compile_kwargs["loss"] = loss
         self.model_.compile(**compile_kwargs)
