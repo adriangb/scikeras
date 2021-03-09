@@ -99,6 +99,7 @@ def test_classifier_unsupported_multi_output_tasks(use_case, wrapper_cls):
     elif use_case == "multilabel-indicator":
         y1 = np.random.randint(0, 1, size=len(X))
         y = np.column_stack([y1, y1])
+        y[0, :] = 1
         extra = 'loss="binary_crossentropy" might be appropriate'
     elif use_case == "classification_w_onehot_targets":
         y = np.random.choice(N_CLASSES, size=len(X)).astype(int)
