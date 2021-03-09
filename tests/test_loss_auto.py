@@ -92,6 +92,7 @@ def test_classifier_unsupported_multi_output_tasks(use_case, wrapper_cls):
     by `loss="auto"`.
     """
     extra = ""
+    fix_loss = None
     if use_case == "multiclass-multioutput":
         y1 = np.random.randint(0, 1, size=len(X))
         y2 = np.random.randint(0, 2, size=len(X))
@@ -100,17 +101,20 @@ def test_classifier_unsupported_multi_output_tasks(use_case, wrapper_cls):
         y1 = np.random.randint(0, 1, size=len(X))
         y = np.column_stack([y1, y1])
         y[0, :] = 1
-        extra = 'loss="binary_crossentropy" might be appropriate'
+        fix_loss = "binary_crossentropy"
+        extra = f'loss="{fix_loss}" might be appropriate'
     elif use_case == "classification_w_onehot_targets":
         y = np.random.choice(N_CLASSES, size=len(X)).astype(int)
         y = OneHotEncoder(sparse=False).fit_transform(y.reshape(-1, 1))
-        extra = 'loss="categorical_crossentropy" might be appropriate'
-    est = wrapper_cls(shallow_net, model__compile=False)
+        fix_loss = "categorical_crossentropy"
+        extra = f'loss="{fix_loss}" might be appropriate'
     match = '`loss="auto"` is not supported for tasks of type'
     if extra:
         match += f"(.|\n)+{extra}"
     with pytest.raises(NotImplementedError, match=match):
-        est.initialize(X, y)
+        wrapper_cls(shallow_net, model__compile=False).initialize(X, y)
+    if fix_loss:
+        wrapper_cls(shallow_net, model__compile=False, loss=fix_loss).initialize(X, y)
 
 
 @pytest.mark.parametrize(

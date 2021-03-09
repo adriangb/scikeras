@@ -1351,7 +1351,7 @@ class KerasClassifier(BaseWrapper):
             if loss is None:
                 msg = (
                     f'`loss="auto"` is not supported for tasks of type {self.target_type_}.'
-                    "\nInstead, you must explicitly pass a loss function, for example:"
+                    "\nInstead, you must compile the model yourself or explicitly pass a loss function, for example:"
                     '\n   clf = KerasClassifier(..., loss="categorical_crossentropy")'
                 )
                 if hint:
