@@ -1,6 +1,7 @@
+import copy
 import pickle
 
-from typing import Any, Dict, Tuple
+from typing import Any, Callable, Dict
 
 import numpy as np
 import pytest
@@ -8,6 +9,7 @@ import tensorflow as tf
 
 from sklearn.base import clone
 from sklearn.datasets import load_boston, make_regression
+from sklearn.utils import Bunch
 from tensorflow import keras
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
@@ -17,7 +19,7 @@ from scikeras.wrappers import KerasRegressor
 from .mlp_models import dynamic_regressor
 
 
-def check_pickle(estimator, loader):
+def check_serialization(estimator: Model, loader: Callable[[], Bunch]):
     """Run basic checks (fit, score, pickle) on estimator."""
     data = loader()
     # limit to 100 data points to speed up testing
@@ -27,6 +29,14 @@ def check_pickle(estimator, loader):
     score = estimator.score(X, y)
     serialized_estimator = pickle.dumps(estimator)
     deserialized_estimator = pickle.loads(serialized_estimator)
+    deserialized_estimator.predict(X)
+    score_new = deserialized_estimator.score(X, y)
+    np.testing.assert_almost_equal(score, score_new, decimal=2)
+    deserialized_estimator = copy.deepcopy(estimator)
+    deserialized_estimator.predict(X)
+    score_new = deserialized_estimator.score(X, y)
+    np.testing.assert_almost_equal(score, score_new, decimal=2)
+    deserialized_estimator = copy.copy(estimator)
     deserialized_estimator.predict(X)
     score_new = deserialized_estimator.score(X, y)
     np.testing.assert_almost_equal(score, score_new, decimal=2)
@@ -48,7 +58,7 @@ def test_custom_loss_function():
     estimator = KerasRegressor(
         model=dynamic_regressor, loss=CustomLoss(), model__hidden_layer_sizes=(100,),
     )
-    check_pickle(estimator, load_boston)
+    check_serialization(estimator, load_boston)
 
 
 # ---------------------- Subclassed Model Tests ------------------
@@ -80,7 +90,7 @@ def test_custom_model_registered():
     """Test that a registered subclassed Model can be serialized.
     """
     estimator = KerasRegressor(model=build_fn_custom_model_registered)
-    check_pickle(estimator, load_boston)
+    check_serialization(estimator, load_boston)
 
 
 def build_fn_custom_model_unregistered(
@@ -108,7 +118,7 @@ def test_custom_model_unregistered():
     """Test that pickling an unregistered subclassed model works.
     """
     estimator = KerasRegressor(model=build_fn_custom_model_unregistered)
-    check_pickle(estimator, load_boston)
+    check_serialization(estimator, load_boston)
 
 
 # ---------------- Model Compiled with `run_eagerly` --------------------
@@ -120,7 +130,7 @@ def test_run_eagerly():
     estimator = KerasRegressor(
         model=dynamic_regressor, run_eagerly=True, model__hidden_layer_sizes=(100,),
     )
-    check_pickle(estimator, load_boston)
+    check_serialization(estimator, load_boston)
 
 
 def _weights_close(model1, model2):
@@ -141,7 +151,7 @@ def _reload(model, epoch=None):
 
 
 @pytest.mark.parametrize(
-    "optim", ["adam", "sgd", keras.optimizers.Adam(), keras.optimizers.SGD(),],
+    "optim", ["adam", "sgd", keras.optimizers.Adam(), keras.optimizers.SGD()],
 )
 def test_partial_fit_pickle(optim):
     """
@@ -208,7 +218,7 @@ def test_pickle_loss(loss):
         keras.metrics.MeanAbsoluteError(),
     ],
 )
-def test_pickle_loss(metric):
+def test_pickle_metric(metric):
     y1 = np.random.randint(0, 2, size=(100,)).astype(np.float32)
     y2 = np.random.randint(0, 2, size=(100,)).astype(np.float32)
     v1 = metric(y1, y2)
@@ -241,3 +251,43 @@ def test_pickle_optimizer(opt_cls):
     val_pickle = var1.numpy()
     # Check that the final values are the same
     np.testing.assert_equal(val_no_pickle, val_pickle)
+
+
+# ---------------- Test that pure Keras serializaiton is unaffected --------------------
+
+
+def test_model_connect_build_compile_fit():
+    """Test sequentially connecting, building, compiling and fitting
+    a model, ensuring that it can be serialized every step of the way.
+    """
+    X, y = make_regression(n_features=10, n_samples=100)
+    # Start with an unbuilt model with no inputs/outputs
+    # this shold be copyable, but not necessarily serializable
+    # (SaveModel needs a conencted graph)
+    model = keras.Model()
+    model = copy.deepcopy(model)
+    model = copy.copy(model)
+    inp = keras.layers.Input(X.shape[1])
+    output = keras.layers.Dense(1)(inp)
+    # Adding inputs and outputs
+    # the model should still be copyable, but not necessarily serializable
+    model = keras.Model(inp, output)
+    model = copy.deepcopy(model)
+    model = copy.copy(model)
+    # Now we build the model
+    # at this point, it should be copyable and serializable
+    model.build(X.shape)
+    model = pickle.loads(pickle.dumps(model))
+    model = copy.deepcopy(model)
+    model = copy.copy(model)
+    # Next compile the model and check that compiling after building
+    # does not break the serialization
+    model.compile(loss="mse")
+    model = pickle.loads(pickle.dumps(model))
+    model = copy.deepcopy(model)
+    model = copy.copy(model)
+    model.fit(X, y)
+    model = pickle.loads(pickle.dumps(model))
+    model = copy.deepcopy(model)
+    model = copy.copy(model)
+    model.predict(X)

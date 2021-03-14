@@ -1,4 +1,5 @@
 import os
+import pickle
 import tarfile
 import tempfile
 
@@ -51,10 +52,11 @@ def _restore_optimizer_weights(
     optimizer._create_all_weights = MethodType(_temp_create_all_weights, optimizer)
 
 
-def unpack_keras_model(
+def unpack_keras_model_built(
     packed_keras_model: np.ndarray, optimizer_weights: List[np.ndarray]
 ):
-    """Reconstruct a model from the result of __reduce__"""
+    """Reconstruct a Keras `Model` object from the result of `pack_keras_model_built`
+    """
     temp_dir = _get_temp_folder()
     b = BytesIO(packed_keras_model)
     with tarfile.open(fileobj=b, mode="r") as archive:
@@ -78,13 +80,13 @@ def unpack_keras_model(
     return model
 
 
-def pack_keras_model(
+def pack_keras_model_built(
     model: keras.Model,
 ) -> Tuple[
     Callable[[np.ndarray, List[np.ndarray]], keras.Model],
     Tuple[np.ndarray, List[np.ndarray]],
 ]:
-    """Support for Pythons's Pickle protocol."""
+    "Serialize a Keras `Model` using TensorFlow's `SaveModel`."
     temp_dir = _get_temp_folder()
     model.save(temp_dir)
     b = BytesIO()
@@ -108,9 +110,20 @@ def pack_keras_model(
         optimizer_weights = model.optimizer.get_weights()
     model_bytes = np.asarray(memoryview(b.read()))
     return (
-        unpack_keras_model,
+        unpack_keras_model_built,
         (model_bytes, optimizer_weights),
     )
+
+
+def pack_keras_model(model: keras.Model):
+    """Support for Pythons's Pickle protocol."""
+    if model.built:
+        return pack_keras_model_built(model)
+    # unbuilt models can't be serialized by SaveModel because their
+    # dependency graph is not connected
+    # instead, they can be serialized as regular Python objects
+    res = super(keras.Model, model).__reduce__()
+    return res
 
 
 def unpack_keras_optimizer(
