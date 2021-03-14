@@ -52,7 +52,7 @@ def _restore_optimizer_weights(
     optimizer._create_all_weights = MethodType(_temp_create_all_weights, optimizer)
 
 
-def unpack_keras_model_built(
+def unpack_keras_model(
     packed_keras_model: np.ndarray, optimizer_weights: List[np.ndarray]
 ):
     """Reconstruct a Keras `Model` object from the result of `pack_keras_model_built`
@@ -80,7 +80,7 @@ def unpack_keras_model_built(
     return model
 
 
-def pack_keras_model_built(
+def pack_keras_model(
     model: keras.Model,
 ) -> Tuple[
     Callable[[np.ndarray, List[np.ndarray]], keras.Model],
@@ -110,20 +110,27 @@ def pack_keras_model_built(
         optimizer_weights = model.optimizer.get_weights()
     model_bytes = np.asarray(memoryview(b.read()))
     return (
-        unpack_keras_model_built,
+        unpack_keras_model,
         (model_bytes, optimizer_weights),
     )
 
 
-def pack_keras_model(model: keras.Model):
-    """Support for Pythons's Pickle protocol."""
+def deepcopy_keras_model(model: keras.Model, memo: Dict):
     if model.built:
-        return pack_keras_model_built(model)
-    # unbuilt models can't be serialized by SaveModel because their
-    # dependency graph is not connected
-    # instead, they can be serialized as regular Python objects
-    res = super(keras.Model, model).__reduce__()
-    return res
+        deserializer, serialized = pack_keras_model(model)
+        new = deserializer(*serialized)
+    else:
+        # unbuilt models can't be copied via SaveModel
+        # instead, they can be copied as regular Python objects via the Pickle protocol
+        deserializer, serialized, state = super(keras.Model, model).__reduce__()
+        new = deserializer(*serialized)
+        new.__setstate__(state)
+    memo[id(model)] = new
+    return new
+
+
+def copy_keras_model(model: keras.Model):
+    return deepcopy_keras_model(model, dict())
 
 
 def unpack_keras_optimizer(

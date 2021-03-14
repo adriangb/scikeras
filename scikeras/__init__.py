@@ -14,6 +14,8 @@ from tensorflow import keras as _keras
 from scikeras import _saving_utils
 
 
+_keras.Model.__copy__ = _saving_utils.copy_keras_model
+_keras.Model.__deepcopy__ = _saving_utils.deepcopy_keras_model
 _keras.Model.__reduce__ = _saving_utils.pack_keras_model
 _keras.losses.Loss.__reduce__ = _saving_utils.pack_keras_loss
 _keras.metrics.Metric.__reduce__ = _saving_utils.pack_keras_metric

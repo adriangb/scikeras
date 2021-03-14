@@ -263,21 +263,15 @@ def test_model_connect_build_compile_fit():
     X, y = make_regression(n_features=10, n_samples=100)
     # Start with an unbuilt model with no inputs/outputs
     # this shold be copyable, but not necessarily serializable
-    # (SaveModel needs a conencted graph)
     model = keras.Model()
     model = copy.deepcopy(model)
     model = copy.copy(model)
+    # Adding inputs and outputs
+    # the model should be copyable and serializable
     inp = keras.layers.Input(X.shape[1])
     output = keras.layers.Dense(1)(inp)
-    # Adding inputs and outputs
-    # the model should still be copyable, but not necessarily serializable
     model = keras.Model(inp, output)
-    model = copy.deepcopy(model)
-    model = copy.copy(model)
-    # Now we build the model
-    # at this point, it should be copyable and serializable
-    model.build(X.shape)
-    model = pickle.loads(pickle.dumps(model))
+    pickle.loads(pickle.dumps(model))
     model = copy.deepcopy(model)
     model = copy.copy(model)
     # Next compile the model and check that compiling after building
