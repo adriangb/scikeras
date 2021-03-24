@@ -381,19 +381,31 @@ div.rendered_html tbody tr:hover {
 <h2>Table of contents<a class="headerlink" href="#Table-of-contents" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="#1.-Setup">1. Setup</a></p></li>
-<li><p><a class="reference external" href="#2.-Data-transformer-interface">2. Data transformer interface</a></p></li>
+<li><p><a class="reference external" href="#2.-Data-transformer-interface">2. Data transformer interface</a></p>
+<ul>
 <li><p><a class="reference external" href="#2.1-get_metadata-method">2.1 get_metadata method</a></p></li>
-<li><p><a class="reference external" href="#3.-Multiple-outputs">3. Multiple outputs</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference external" href="#3.-Multiple-outputs">3. Multiple outputs</a></p>
+<ul>
 <li><p><a class="reference external" href="#3.1-Define-Keras-Model">3.1 Define Keras Model</a></p></li>
 <li><p><a class="reference external" href="#3.2-Define-output-data-transformer">3.2 Define output data transformer</a></p></li>
 <li><p><a class="reference external" href="#3.3-Test-classifier">3.3 Test classifier</a></p></li>
-<li><p><a class="reference external" href="#4-multiple-inputs">4. Multiple inputs</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference external" href="#4-multiple-inputs">4. Multiple inputs</a></p>
+<ul>
 <li><p><a class="reference external" href="#4.1-Define-Keras-Model">4.1 Define Keras Model</a></p></li>
 <li><p><a class="reference external" href="#4.2-Define-data-transformer">4.2 Define data transformer</a></p></li>
 <li><p><a class="reference external" href="#4.3-Test-regressor">4.3 Test regressor</a></p></li>
-<li><p><a class="reference external" href="#5.-Multidimensional-inputs-with-MNIST-dataset">5. Multidimensional inputs with MNIST dataset</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference external" href="#5.-Multidimensional-inputs-with-MNIST-dataset">5. Multidimensional inputs with MNIST dataset</a></p>
+<ul>
 <li><p><a class="reference external" href="#5.1-Define-Keras-Model">5.1 Define Keras Model</a></p></li>
 <li><p><a class="reference external" href="#5.2-Test">5.2 Test</a></p></li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="section" id="1.-Setup">
@@ -615,8 +627,8 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.520329  ]
- [0.51117927]]
+[[0.47350004]
+ [0.5753683 ]]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -633,8 +645,8 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.17145665 0.24209487 0.2555101  0.11946626 0.21147214]
- [0.1745542  0.20554197 0.24150255 0.13414174 0.24425954]]
+[[0.143011   0.19824235 0.2495899  0.26217455 0.1469822 ]
+ [0.15649334 0.2541702  0.20252775 0.1872245  0.19958416]]
 </pre></div></div>
 </div>
 <p>As you can see, our <code class="docutils literal notranslate"><span class="pre">predict</span></code> output is also a list of arrays, except it contains probabilities instead of the class predictions.</p>
@@ -726,7 +738,7 @@ docs</a>.</p>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 `y`, as will be passed to Keras:
-[array([1, 0, 1, 0]), array([1, 0, 2, 3])]
+[array([1, 1, 1, 0]), array([3, 1, 2, 3])]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -754,11 +766,11 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[1, 2],
-       [1, 4],
-       [0, 2],
+array([[0, 3],
+       [1, 1],
        [1, 2],
-       [1, 2]])
+       [1, 2],
+       [0, 1]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -835,7 +847,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.385
+0.365
 </pre></div></div>
 </div>
 </div>
@@ -925,7 +937,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--3.3466971356712447
+-3.929259133616635
 </pre></div></div>
 </div>
 <p>Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.</p>
@@ -974,7 +986,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--3.2796325095828385
+-3.229796747218292
 </pre></div></div>
 </div>
 </div>
@@ -1022,7 +1034,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 [0 1 2 3 4 5 6 7 8 9]
 </pre></div></div>
 </div>
-<p>First, we will “flatten” the data into an array of shape <code class="docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">28*28)</span></code> (i.e. a 2D array). This will allow us to use sklearn ecosystem utilities, for example, <code class="docutils literal notranslate"><span class="pre">sklearn.preprocessing.MinMaxScaler</span></code>.</p>
+<p>First, we will “flatten” the data into an array of shape <code class="docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">28*28)</span></code> (i.e. a 2D array). This will allow us to use sklearn ecosystem utilities, for example, <code class="docutils literal notranslate"><span class="pre">sklearn.preprocessing.MinMaxScaler</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
@@ -1157,25 +1169,25 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/10
-422/422 [==============================] - 56s 132ms/step - loss: 0.6527 - val_loss: 0.0817
+422/422 [==============================] - 44s 103ms/step - loss: 0.6527 - val_loss: 0.0817
 Epoch 2/10
-422/422 [==============================] - 49s 116ms/step - loss: 0.1155 - val_loss: 0.0613
+422/422 [==============================] - 47s 111ms/step - loss: 0.1155 - val_loss: 0.0613
 Epoch 3/10
-422/422 [==============================] - 46s 110ms/step - loss: 0.0832 - val_loss: 0.0457
+422/422 [==============================] - 45s 106ms/step - loss: 0.0832 - val_loss: 0.0457
 Epoch 4/10
-422/422 [==============================] - 51s 120ms/step - loss: 0.0699 - val_loss: 0.0431
+422/422 [==============================] - 37s 88ms/step - loss: 0.0699 - val_loss: 0.0431
 Epoch 5/10
-422/422 [==============================] - 40s 95ms/step - loss: 0.0620 - val_loss: 0.0402
+422/422 [==============================] - 35s 83ms/step - loss: 0.0620 - val_loss: 0.0402
 Epoch 6/10
-422/422 [==============================] - 28s 65ms/step - loss: 0.0549 - val_loss: 0.0360
+422/422 [==============================] - 24s 58ms/step - loss: 0.0549 - val_loss: 0.0360
 Epoch 7/10
-422/422 [==============================] - 27s 64ms/step - loss: 0.0514 - val_loss: 0.0404
+422/422 [==============================] - 24s 58ms/step - loss: 0.0514 - val_loss: 0.0404
 Epoch 8/10
-422/422 [==============================] - 27s 64ms/step - loss: 0.0487 - val_loss: 0.0367
+422/422 [==============================] - 23s 56ms/step - loss: 0.0487 - val_loss: 0.0367
 Epoch 9/10
-422/422 [==============================] - 26s 62ms/step - loss: 0.0440 - val_loss: 0.0340
+422/422 [==============================] - 23s 55ms/step - loss: 0.0440 - val_loss: 0.0340
 Epoch 10/10
-422/422 [==============================] - 27s 63ms/step - loss: 0.0424 - val_loss: 0.0331
+422/422 [==============================] - 24s 56ms/step - loss: 0.0424 - val_loss: 0.0331
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1185,7 +1197,7 @@ Epoch 10/10
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 MultiDimensionalClassifier(
-        model=&lt;function get_model at 0x7f5f6801e310&gt;
+        model=&lt;function get_model at 0x7fa3dc6f98b0&gt;
         build_fn=None
         warm_start=False
         random_state=0
@@ -1219,7 +1231,7 @@ MultiDimensionalClassifier(
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-79/79 [==============================] - 1s 15ms/step
+79/79 [==============================] - 1s 14ms/step
 Test score (accuracy): 0.99
 </pre></div></div>
 </div>
@@ -1293,7 +1305,7 @@ Test score (accuracy): 0.99
       </div>
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.2.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.3.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/notebooks/DataTransformers.ipynb.txt" rel="nofollow">Show Source</a>.
     </footer>
