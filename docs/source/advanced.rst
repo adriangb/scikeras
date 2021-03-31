@@ -134,15 +134,8 @@ Loss selection
 If you do not explicitly define a loss, SciKeras attempts to find a loss
 that matches the type of target (see :py:func:`sklearn.utils.multiclass.type_of_target`).
 
-To override the default loss, simply specify a loss function:
-
-.. code-block:: diff
-
-    -KerasClassifier(model=model_build_fn)
-    +KerasClassifier(model=model_build_fn, loss="categorical_crossentropy")
-
 For guidance selecting losses in Keras, please see Jason Brownlee's
-excelent article `How to Choose Loss Functions When Training Deep Learning Neural Networks`_
+excellent article `How to Choose Loss Functions When Training Deep Learning Neural Networks`_
 as well as `Keras Losses docs`_.
 
 Default losses are selected as follows:

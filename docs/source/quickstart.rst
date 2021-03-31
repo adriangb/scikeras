@@ -38,17 +38,19 @@ it on a toy classification dataset using SciKeras
         model.add(keras.layers.Activation("softmax"))
         return model
 
-    clf = KerasClassifier(
-        get_model,
-        hidden_layer_dim=100,
-    )
+    clf = KerasClassifier(get_model, hidden_layer_dim=100)
 
     clf.fit(X, y)
     y_proba = clf.predict_proba(X)
 
 
-Note that SciKeras even chooses a loss function and compiles your model
-(see the :ref:`Advanced Usage` section for more details)!
+Note that SciKeras even chooses a loss function and compiles your model.
+To override the default loss, simply specify a loss function:
+
+.. code-block:: diff
+
+    -KerasClassifier(get_model, hidden_layer_dim=100)
+    +KerasClassifier(get_model, loss="categorical_crossentropy")
 
 In an sklearn Pipeline
 ----------------------
