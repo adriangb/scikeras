@@ -156,7 +156,6 @@ Regression
 Regression always defaults to mean squared error.
 For multi-output models, Keras will use the sum of each output's loss.
 
-
 Arguments to ``model_build_fn``
 -------------------------------
 
