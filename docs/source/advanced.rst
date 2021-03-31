@@ -157,6 +157,9 @@ Classification
 | > 1       |    --     |    --    | unsupported                     |
 +-----------+-----------+----------+---------------------------------+
 
+Note that SciKeras will not automatically infer the loss for one-hot encoded targets,
+you would need to explicitly specify `loss="categorical_crossentropy"`.
+
 Regression
 ..........
 
