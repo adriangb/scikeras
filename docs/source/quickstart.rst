@@ -40,12 +40,15 @@ it on a toy classification dataset using SciKeras
 
     clf = KerasClassifier(
         get_model,
-        loss="sparse_categorical_crossentropy",
         hidden_layer_dim=100,
     )
 
     clf.fit(X, y)
     y_proba = clf.predict_proba(X)
+
+
+Note that SciKeras even chooses a loss function and compiles your model
+(see the :ref:`Advanced Usage` section for more details)!
 
 
 In an sklearn Pipeline
