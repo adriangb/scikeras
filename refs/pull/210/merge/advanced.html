@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Advanced Usage of SciKeras Wrappers &#8212; SciKeras 0.2.1 documentation</title>
+    <title>Advanced Usage &#8212; SciKeras 0.2.1 documentation</title>
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/insipid.css" type="text/css" />
@@ -57,7 +57,7 @@
           </div>
           <div class="title">
             <a class="parent" href="index.html" accesskey="U">SciKeras 0.2.1 documentation</a>
-            <a class="top" href="#">Advanced Usage of SciKeras Wrappers</a>
+            <a class="top" href="#">Advanced Usage</a>
           </div>
           <div class="buttons">
             <button id="fullscreen-button" type="button" aria-hidden="true">
@@ -120,8 +120,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-<div class="section" id="advanced-usage-of-scikeras-wrappers">
-<h1>Advanced Usage of SciKeras Wrappers<a class="headerlink" href="#advanced-usage-of-scikeras-wrappers" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="advanced-usage">
+<h1>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="wrapper-classes">
 <h2>Wrapper Classes<a class="headerlink" href="#wrapper-classes" title="Permalink to this headline">¶</a></h2>
 <p>SciKeras has three wrapper classes avialable to
@@ -230,6 +230,62 @@ offer an easy way to compile and tune compilation parameters. Examples:</p>
 </div>
 <p>In all cases, returning an un-compiled model is equivalent to
 calling <code class="docutils literal notranslate"><span class="pre">model.compile(**compile_kwargs)</span></code> within <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code>.</p>
+<div class="section" id="loss-selection">
+<span id="id1"></span><h4>Loss selection<a class="headerlink" href="#loss-selection" title="Permalink to this headline">¶</a></h4>
+<p>If you do not explicitly define a loss, SciKeras attempts to find a loss
+that matches the type of target (see <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html#sklearn.utils.multiclass.type_of_target" title="(in scikit-learn v0.24)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.utils.multiclass.type_of_target()</span></code></a>).</p>
+<p>For guidance selecting losses in Keras, please see Jason Brownlee’s
+excellent article <a class="reference external" href="https://machinelearningmastery.com/how-to-choose-loss-functions-when-training-deep-learning-neural-networks/">How to Choose Loss Functions When Training Deep Learning Neural Networks</a>
+as well as <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/losses">Keras Losses docs</a>.</p>
+<p>Default losses are selected as follows:</p>
+<div class="section" id="classification">
+<h5>Classification<a class="headerlink" href="#classification" title="Permalink to this headline">¶</a></h5>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 15%" />
+<col style="width: 51%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p># outputs</p></th>
+<th class="head"><p># classes</p></th>
+<th class="head"><p>encoding</p></th>
+<th class="head"><p>loss</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>&lt;= 2</p></td>
+<td><p>any</p></td>
+<td><p>binary crossentropy</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>&gt;=2</p></td>
+<td><p>labels</p></td>
+<td><p>sparse categorical crossentropy</p></td>
+</tr>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>&gt;=2</p></td>
+<td><p>one-hot</p></td>
+<td><p>unsupported</p></td>
+</tr>
+<tr class="row-odd"><td><p>&gt; 1</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>unsupported</p></td>
+</tr>
+</tbody>
+</table>
+<p>Note that SciKeras will not automatically infer the loss for one-hot encoded targets,
+you would need to explicitly specify <cite>loss=”categorical_crossentropy”</cite>.</p>
+</div>
+<div class="section" id="regression">
+<h5>Regression<a class="headerlink" href="#regression" title="Permalink to this headline">¶</a></h5>
+<p>Regression always defaults to mean squared error.
+For multi-output models, Keras will use the sum of each output’s loss.</p>
+</div>
+</div>
 </div>
 </div>
 <div class="section" id="arguments-to-model-build-fn">
@@ -454,7 +510,7 @@ and <a class="reference internal" href="generated/scikeras.wrappers.KerasRegress
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration.html">Migrating from <code class="docutils literal notranslate"><span class="pre">tf.keras.wrappers.scikit_learn</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Usage of SciKeras Wrappers</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#wrapper-classes">Wrapper Classes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#arguments-to-model-build-fn">Arguments to <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#routed-parameters">Routed parameters</a></li>
@@ -474,7 +530,7 @@ and <a class="reference internal" href="generated/scikeras.wrappers.KerasRegress
       </div>
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.2.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.3.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="_sources/advanced.rst.txt" rel="nofollow">Show Source</a>.
     </footer>
