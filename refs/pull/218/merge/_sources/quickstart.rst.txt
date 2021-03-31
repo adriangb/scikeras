@@ -50,7 +50,6 @@ it on a toy classification dataset using SciKeras
 Note that SciKeras even chooses a loss function and compiles your model
 (see the :ref:`Advanced Usage` section for more details)!
 
-
 In an sklearn Pipeline
 ----------------------
 
