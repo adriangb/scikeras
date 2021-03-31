@@ -128,6 +128,8 @@ offer an easy way to compile and tune compilation parameters. Examples:
 In all cases, returning an un-compiled model is equivalent to
 calling ``model.compile(**compile_kwargs)`` within ``model_build_fn``.
 
+.. _loss-selection:
+
 Loss selection
 ++++++++++++++
 
