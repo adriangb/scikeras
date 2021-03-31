@@ -52,6 +52,11 @@ To override the default loss, simply specify a loss function:
     -KerasClassifier(get_model, hidden_layer_dim=100)
     +KerasClassifier(get_model, loss="categorical_crossentropy")
 
+In this case, you would need to specify the loss since SciKeras
+will not default to categorical crossentropy, even for one-hot
+encoded targets.
+See :ref:`loss-selection` for more details.
+
 In an sklearn Pipeline
 ----------------------
 
