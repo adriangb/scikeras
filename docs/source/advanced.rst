@@ -1,6 +1,6 @@
-===================================
-Advanced Usage of SciKeras Wrappers
-===================================
+==============
+Advanced Usage
+==============
 
 Wrapper Classes
 ---------------
@@ -128,6 +128,43 @@ offer an easy way to compile and tune compilation parameters. Examples:
 In all cases, returning an un-compiled model is equivalent to
 calling ``model.compile(**compile_kwargs)`` within ``model_build_fn``.
 
+.. _loss-selection:
+
+Loss selection
+++++++++++++++
+
+If you do not explicitly define a loss, SciKeras attempts to find a loss
+that matches the type of target (see :py:func:`sklearn.utils.multiclass.type_of_target`).
+
+For guidance selecting losses in Keras, please see Jason Brownlee's
+excellent article `How to Choose Loss Functions When Training Deep Learning Neural Networks`_
+as well as `Keras Losses docs`_.
+
+Default losses are selected as follows:
+
+Classification
+..............
+
++-----------+-----------+----------+---------------------------------+
+| # outputs | # classes | encoding | loss                            |
++===========+===========+==========+=================================+
+| 1         | <= 2      | any      | binary crossentropy             |
++-----------+-----------+----------+---------------------------------+
+| 1         | >=2       | labels   | sparse categorical crossentropy |
++-----------+-----------+----------+---------------------------------+
+| 1         | >=2       | one-hot  | unsupported                     |
++-----------+-----------+----------+---------------------------------+
+| > 1       |    --     |    --    | unsupported                     |
++-----------+-----------+----------+---------------------------------+
+
+Note that SciKeras will not automatically infer the loss for one-hot encoded targets,
+you would need to explicitly specify `loss="categorical_crossentropy"`.
+
+Regression
+..........
+
+Regression always defaults to mean squared error.
+For multi-output models, Keras will use the sum of each output's loss.
 
 Arguments to ``model_build_fn``
 -------------------------------
@@ -287,3 +324,7 @@ and :class:`scikeras.wrappers.KerasRegressor` respectively. To override these sc
 .. _Keras Callbacks docs: https://www.tensorflow.org/api_docs/python/tf/keras/callbacks
 
 .. _Keras Metrics docs: https://www.tensorflow.org/api_docs/python/tf/keras/metrics
+
+.. _Keras Losses docs: https://www.tensorflow.org/api_docs/python/tf/keras/losses
+
+.. _How to Choose Loss Functions When Training Deep Learning Neural Networks: https://machinelearningmastery.com/how-to-choose-loss-functions-when-training-deep-learning-neural-networks/

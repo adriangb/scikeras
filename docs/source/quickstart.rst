@@ -38,15 +38,24 @@ it on a toy classification dataset using SciKeras
         model.add(keras.layers.Activation("softmax"))
         return model
 
-    clf = KerasClassifier(
-        get_model,
-        loss="sparse_categorical_crossentropy",
-        hidden_layer_dim=100,
-    )
+    clf = KerasClassifier(get_model, hidden_layer_dim=100)
 
     clf.fit(X, y)
     y_proba = clf.predict_proba(X)
 
+
+Note that SciKeras even chooses a loss function and compiles your model.
+To override the default loss, simply specify a loss function:
+
+.. code-block:: diff
+
+    -KerasClassifier(get_model, hidden_layer_dim=100)
+    +KerasClassifier(get_model, loss="categorical_crossentropy")
+
+In this case, you would need to specify the loss since SciKeras
+will not default to categorical crossentropy, even for one-hot
+encoded targets.
+See :ref:`loss-selection` for more details.
 
 In an sklearn Pipeline
 ----------------------

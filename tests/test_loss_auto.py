@@ -14,13 +14,13 @@ n_eg = 100
 X = np.random.uniform(size=(n_eg, FEATURES)).astype("float32")
 
 
-def shallow_net(single_output=False, loss=None, compile=False):
+def shallow_net(outputs=None, loss=None, compile=False):
     model = tf.keras.Sequential()
     model.add(tf.keras.layers.Input(shape=(FEATURES,)))
-    if single_output:
-        model.add(tf.keras.layers.Dense(1))
-    else:
+    if outputs is None:
         model.add(tf.keras.layers.Dense(N_CLASSES))
+    else:
+        model.add(tf.keras.layers.Dense(outputs))
 
     if compile:
         model.compile(loss=loss)
@@ -45,7 +45,7 @@ def test_user_compiled(loss):
     """Test to make sure that user compiled classification models work with all
     classification losses.
     """
-    model__single_output = True if "binary" in loss else False
+    model__outputs = 1 if "binary" in loss else None
     if loss == "binary_crosentropy":
         y = np.random.randint(0, 2, size=(n_eg,))
     elif loss == "categorical_crossentropy":
@@ -59,7 +59,7 @@ def test_user_compiled(loss):
         shallow_net,
         model__compile=True,
         model__loss=loss,
-        model__single_output=model__single_output,
+        model__outputs=model__outputs,
     )
     est.partial_fit(X, y)
 
@@ -69,7 +69,7 @@ def test_user_compiled(loss):
 
 class NoEncoderClf(KerasClassifier):
     """A classifier overriding default target encoding.
-    This simulates a user implementing custom encoding logic in 
+    This simulates a user implementing custom encoding logic in
     target_encoder to support multiclass-multioutput or
     multilabel-indicator, which by default would raise an error.
     """
@@ -79,11 +79,20 @@ class NoEncoderClf(KerasClassifier):
         return FunctionTransformer()
 
 
-@pytest.mark.parametrize("use_case", ["multilabel-indicator", "multiclass-multioutput"])
-def test_classifier_unsupported_multi_output_tasks(use_case):
+@pytest.mark.parametrize(
+    "use_case,wrapper_cls",
+    [
+        ("multilabel-indicator", NoEncoderClf),
+        ("multiclass-multioutput", NoEncoderClf),
+        ("classification_w_onehot_targets", KerasClassifier),
+    ],
+)
+def test_classifier_unsupported_multi_output_tasks(use_case, wrapper_cls):
     """Test for an appropriate error for tasks that are not supported
     by `loss="auto"`.
     """
+    extra = ""
+    fix_loss = None
     if use_case == "multiclass-multioutput":
         y1 = np.random.randint(0, 1, size=len(X))
         y2 = np.random.randint(0, 2, size=len(X))
@@ -91,28 +100,37 @@ def test_classifier_unsupported_multi_output_tasks(use_case):
     elif use_case == "multilabel-indicator":
         y1 = np.random.randint(0, 1, size=len(X))
         y = np.column_stack([y1, y1])
-    est = NoEncoderClf(shallow_net, model__compile=False)
-    with pytest.raises(
-        NotImplementedError, match='`loss="auto"` is not supported for tasks of type'
-    ):
-        est.initialize(X, y)
+        y[0, :] = 1
+        fix_loss = "binary_crossentropy"
+        extra = f'loss="{fix_loss}" might be appropriate'
+    elif use_case == "classification_w_onehot_targets":
+        y = np.random.choice(N_CLASSES, size=len(X)).astype(int)
+        y = OneHotEncoder(sparse=False).fit_transform(y.reshape(-1, 1))
+        fix_loss = "categorical_crossentropy"
+        extra = f'loss="{fix_loss}" might be appropriate'
+    match = '`loss="auto"` is not supported for tasks of type'
+    if extra:
+        match += f"(.|\n)+{extra}"
+    with pytest.raises(NotImplementedError, match=match):
+        wrapper_cls(shallow_net, model__compile=False).initialize(X, y)
+    if fix_loss:
+        wrapper_cls(shallow_net, model__compile=False, loss=fix_loss).initialize(X, y)
 
 
 @pytest.mark.parametrize(
-    "use_case,supported",
+    "use_case",
     [
-        ("binary_classification", True),
-        ("binary_classification_w_one_class", True),
-        ("classification_w_1d_targets", True),
-        ("classification_w_onehot_targets", False),
+        "binary_classification",
+        "binary_classification_w_one_class",
+        "classification_w_1d_targets",
     ],
 )
-def test_classifier_default_loss_only_model_specified(use_case, supported):
+def test_classifier_default_loss_only_model_specified(use_case):
     """Test that KerasClassifier will auto-determine a loss function
     when only the model is specified.
     """
 
-    model__single_output = True if "binary" in use_case else False
+    model__outputs = 1 if "binary" in use_case else None
     if use_case == "binary_classification":
         exp_loss = "binary_crossentropy"
         y = np.random.choice(2, size=len(X)).astype(int)
@@ -122,21 +140,11 @@ def test_classifier_default_loss_only_model_specified(use_case, supported):
     elif use_case == "classification_w_1d_targets":
         exp_loss = "sparse_categorical_crossentropy"
         y = np.random.choice(N_CLASSES, size=(len(X), 1)).astype(int)
-    elif use_case == "classification_w_onehot_targets":
-        y = np.random.choice(N_CLASSES, size=len(X)).astype(int)
-        y = OneHotEncoder(sparse=False).fit_transform(y.reshape(-1, 1))
 
-    est = KerasClassifier(model=shallow_net, model__single_output=model__single_output)
+    est = KerasClassifier(model=shallow_net, model__outputs=model__outputs)
 
-    if supported:
-        est.fit(X, y=y)
-        assert loss_name(est.model_.loss) == exp_loss
-    else:
-        with pytest.raises(
-            NotImplementedError,
-            match='`loss="auto"` is not supported for tasks of type',
-        ):
-            est.fit(X, y=y)
+    est.fit(X, y=y)
+    assert loss_name(est.model_.loss) == exp_loss
     assert est.loss == "auto"
 
 
@@ -148,7 +156,9 @@ def test_regressor_default_loss_only_model_specified(use_case):
     y = np.random.uniform(size=len(X))
     if use_case == "multi_output":
         y = np.column_stack([y, y])
-    est = KerasRegressor(model=shallow_net, model__single_output=True)
+    est = KerasRegressor(
+        model=shallow_net, model__outputs=1 if "single" in use_case else 2
+    )
     est.fit(X, y)
     assert est.loss == "auto"
     assert loss_name(est.model_.loss) == "mean_squared_error"
@@ -202,7 +212,7 @@ def test_multi_output_support(user_compiled, est_cls):
 def test_multiclass_single_output_unit():
     """Test that multiclass targets requires > 1 output units.
     """
-    est = KerasClassifier(model=shallow_net, model__single_output=True)
+    est = KerasClassifier(model=shallow_net, model__outputs=1)
     y = np.random.choice(N_CLASSES, size=(len(X), 1)).astype(int)
     with pytest.raises(
         ValueError,
@@ -214,7 +224,7 @@ def test_multiclass_single_output_unit():
 def test_binary_multiple_output_units():
     """Test that binary targets requires exactly 1 output unit.
     """
-    est = KerasClassifier(model=shallow_net, model__single_output=False)
+    est = KerasClassifier(model=shallow_net, model__outputs=2)
     y = np.random.choice(2, size=len(X)).astype(int)
     with pytest.raises(
         ValueError,

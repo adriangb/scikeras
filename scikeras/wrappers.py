@@ -22,7 +22,6 @@ from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.keras.utils import register_keras_serializable
-from tensorflow.python.types.core import Value
 
 from scikeras._utils import (
     TFRandomState,
@@ -1328,24 +1327,37 @@ class KerasClassifier(BaseWrapper):
                 raise ValueError(
                     'Only single-output models are supported with `loss="auto"`'
                 )
+            loss = None
+            hint = ""
             if self.target_type_ == "binary":
                 if self.model_.outputs[0].shape[1] != 1:
                     raise ValueError(
                         "Binary classification expects a model with exactly 1 output unit."
                     )
-                compile_kwargs["loss"] = "binary_crossentropy"
+                loss = "binary_crossentropy"
             elif self.target_type_ == "multiclass":
                 if self.model_.outputs[0].shape[1] == 1:
                     raise ValueError(
                         "Multi-class targets require the model to have >1 output units."
                     )
-                compile_kwargs["loss"] = "sparse_categorical_crossentropy"
-            else:
-                raise NotImplementedError(
+                loss = "sparse_categorical_crossentropy"
+            elif self.target_type_ == "multilabel-indicator":
+                # one-hot encoded multiclass problem OR multilabel-indicator problem
+                hint = (
+                    "For this type of problem, the following may help:"
+                    '\n - If there is only one class per example, loss="categorical_crossentropy" might be appropriate.'
+                    '\n - If there are multiple classes per example, loss="binary_crossentropy" might be appropriate.'
+                )
+            if loss is None:
+                msg = (
                     f'`loss="auto"` is not supported for tasks of type {self.target_type_}.'
-                    " Instead, you must explicitly pass a loss function, for example:"
+                    "\nInstead, you must compile the model yourself or explicitly pass a loss function, for example:"
                     '\n   clf = KerasClassifier(..., loss="categorical_crossentropy")'
                 )
+                if hint:
+                    msg += f"\n\n{hint}"
+                raise NotImplementedError(msg)
+            compile_kwargs["loss"] = loss
         self.model_.compile(**compile_kwargs)
 
     @staticmethod
