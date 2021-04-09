@@ -35,13 +35,13 @@ SciKeras is largely backwards compatible with the existing wrappers. For most ca
 
 SciKeras does however have some backward incompatible changes:
 
-Fit returns `self`
+Fit returns ``self``
 ^^^^^^^^^^^^^^^^^^
 
-Previously calling `fit` on wrappers returned a Keras `history` dictionary.
-To make wrappers more compatible with Scikit-Learn tools, `fit` now returns and instance of the estimator itself.
-Instead, the history is saved in the `history_` attribute.
-Calling `fit` resets this attribute, calling `partial_fit` on the other hand extends it.
+Previously calling ``fit`` on wrappers returned a Keras ``history`` dictionary.
+To make wrappers more compatible with Scikit-Learn tools, ``fit`` now returns and instance of the estimator itself.
+Instead, the history is saved in the ``history_`` attribute.
+Calling ``fit`` resets this attribute, calling ``partial_fit`` on the other hand extends it.
 
 .. code:: diff
 
