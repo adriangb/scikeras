@@ -47,8 +47,7 @@ Calling `fit` resets this attribute, calling `partial_fit` on the other hand ext
 
    clf = KerasClassifier(...)
    - hist = clf.fit(...)
-   + clf.fit(...)
-   + hist = clf.history_
+   + hist = clf.fit(...).history_
 
 One-hot encoding of targets for categorical crossentropy losses
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
