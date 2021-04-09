@@ -160,14 +160,26 @@
 <p>SciKeras does however have some backward incompatible changes:</p>
 <div class="section" id="fit-returns-self">
 <h3><a class="toc-backref" href="#id3">Fit returns <code class="docutils literal notranslate"><span class="pre">self</span></code></a><a class="headerlink" href="#fit-returns-self" title="Permalink to this headline">¶</a></h3>
-<p>Previously calling <code class="docutils literal notranslate"><span class="pre">fit</span></code> on wrappers returned a Keras <code class="docutils literal notranslate"><span class="pre">history</span></code> object.
-To make wrappers more compatible with Scikit-Learn tools, <code class="docutils literal notranslate"><span class="pre">fit</span></code> now returns and instance of the estimator itself.
+<p>In TensorFlow calling <code class="docutils literal notranslate"><span class="pre">fit</span></code> on wrappers returned a Keras <code class="docutils literal notranslate"><span class="pre">History</span></code> object, which held an attribute called <code class="docutils literal notranslate"><span class="pre">history</span></code> that is
+a dictionary with loss and metric names as keys and lists of recorded values for each epoch as the dictionary values.
+However, in SciKeras, <code class="docutils literal notranslate"><span class="pre">fit</span></code> now returns and instance of the estimator itself in order to conform to the Scikit-Learn API.
 Instead, the history is saved in the <code class="docutils literal notranslate"><span class="pre">history_</span></code> attribute.
 Calling <code class="docutils literal notranslate"><span class="pre">fit</span></code> resets this attribute, calling <code class="docutils literal notranslate"><span class="pre">partial_fit</span></code> on the other hand extends it.</p>
-<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span>clf = KerasClassifier(...)
-<span class="gd">- hist = clf.fit(...)</span>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span>def get_model():
+   ...
+   model.compile(loss=&quot;mse&quot;, metrics=[&quot;mae&quot;])
+   return model
+
+clf = KerasClassifier(get_model)
+<span class="gd">- hist = clf.fit(...).history</span>
+<span class="gd">- losses = hist[&quot;mae&quot;]</span>
 <span class="gi">+ hist = clf.fit(...).history_</span>
+<span class="gi">+ losses = hist[&quot;mean_absolute_error&quot;]</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Unlike the TensorFlow wrappers, SciKeras normalizes the names of the keys, so that if you use <cite>loss=”mae”</cite> you will get a key named <cite>“mean_absolute_error”</cite>.</p>
 </div>
 </div>
 <div class="section" id="one-hot-encoding-of-targets-for-categorical-crossentropy-losses">

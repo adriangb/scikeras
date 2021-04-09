@@ -38,16 +38,27 @@ SciKeras does however have some backward incompatible changes:
 Fit returns ``self``
 ^^^^^^^^^^^^^^^^^^
 
-Previously calling ``fit`` on wrappers returned a Keras ``history`` object.
-To make wrappers more compatible with Scikit-Learn tools, ``fit`` now returns and instance of the estimator itself.
+In TensorFlow calling ``fit`` on wrappers returned a Keras ``History`` object, which held an attribute called ``history`` that is
+a dictionary with loss and metric names as keys and lists of recorded values for each epoch as the dictionary values.
+However, in SciKeras, ``fit`` now returns and instance of the estimator itself in order to conform to the Scikit-Learn API.
 Instead, the history is saved in the ``history_`` attribute.
 Calling ``fit`` resets this attribute, calling ``partial_fit`` on the other hand extends it.
 
 .. code:: diff
 
-   clf = KerasClassifier(...)
-   - hist = clf.fit(...)
+   def get_model():
+      ...
+      model.compile(loss="mse", metrics=["mae"])
+      return model
+
+   clf = KerasClassifier(get_model)
+   - hist = clf.fit(...).history
+   - losses = hist["mae"]
    + hist = clf.fit(...).history_
+   + losses = hist["mean_absolute_error"]
+
+.. note::
+   Unlike the TensorFlow wrappers, SciKeras normalizes the names of the keys, so that if you use `loss="mae"` you will get a key named `"mean_absolute_error"`.
 
 One-hot encoding of targets for categorical crossentropy losses
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
