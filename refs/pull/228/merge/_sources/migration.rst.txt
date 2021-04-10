@@ -58,7 +58,7 @@ Calling ``fit`` resets this attribute, calling ``partial_fit`` on the other hand
    + losses = hist["mean_absolute_error"]
 
 .. note::
-   Unlike the TensorFlow wrappers, SciKeras normalizes the names of the keys, so that if you use `loss="mae"` you will get a key named `"mean_absolute_error"`.
+   Unlike the TensorFlow wrappers, SciKeras normalizes the names of the keys, so that if you use `metrics=["mae"]` you will get a key named `"mean_absolute_error"`.
 
 One-hot encoding of targets for categorical crossentropy losses
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
