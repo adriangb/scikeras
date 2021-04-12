@@ -41,6 +41,8 @@ class TestClassifierLabelEncoder:
         "y, y_pred",
         [
             ([0, 1, 0], [[1, 0], [0.49, 0.51], [0.55, 0.54]]),
+            ([0, 1, 0], [0, 0.51, 0.50]),
+            ([0, 1, 0], [[0], [0.51], [0.50]]),
             ([0, 1, 2], [[1, 0, 0], [0.25, 0.75, 0.25], [0.33, 0.33, 0.34]]),
             (
                 [[0, 1, 0], [1, 0, 0], [0, 0, 1]],
@@ -51,7 +53,14 @@ class TestClassifierLabelEncoder:
                 [[0.50001, 0.50001, 0.50000], [0, 0.75, 0.51], [1, 0, 1]],
             ),
         ],
-        ids=["binary", "multiclass", "multiclass-one-hot", "multilabel-indicator",],
+        ids=[
+            "binary",
+            "binary-1d",
+            "binary-2d-singleton-dim",
+            "multiclass",
+            "multiclass-one-hot",
+            "multilabel-indicator",
+        ],
     )
     @pytest.mark.parametrize(
         "loss", ("categorical_crossentropy", "sparse_categorical_crossentropy", None)
