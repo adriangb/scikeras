@@ -209,7 +209,7 @@ class TestParams:
 
 
 def single_output_binary_sigmoid():
-    y = np.random.randint(low=0, high=2, size=(500,))
+    y = np.random.randint(low=0, high=2, size=(2000,))
     X = y.reshape(-1, 1)
     sklearn_est = MLPClassifier(**mlp_kwargs)
     scikeras_est = KerasClassifier(
@@ -230,7 +230,7 @@ def single_output_binary_sigmoid():
 
 
 def single_output_binary_softmax():
-    y = np.random.randint(low=0, high=2, size=(500,))
+    y = np.random.randint(low=0, high=2, size=(2000,))
     X = y.reshape(-1, 1)
     y = np.column_stack([y, 1 - y])
     sklearn_est = MLPClassifier(**mlp_kwargs)
@@ -252,7 +252,7 @@ def single_output_binary_softmax():
 
 
 def single_output_multiclass_sparse():
-    y = np.random.randint(low=0, high=3, size=(1000,))
+    y = np.random.randint(low=0, high=3, size=(4000,))
     X = y.reshape(-1, 1)
     sklearn_est = MLPClassifier(**mlp_kwargs)
     scikeras_est = KerasClassifier(
@@ -275,7 +275,7 @@ def single_output_multiclass_sparse():
 
 
 def single_output_multiclass_one_hot():
-    y = np.random.randint(low=0, high=3, size=(1000,))
+    y = np.random.randint(low=0, high=3, size=(2000,))
     X = y.reshape(-1, 1)
     # For compatibility with Keras, accept one-hot-encoded inputs
     # with categorical_crossentropy loss
@@ -299,7 +299,7 @@ def single_output_multiclass_one_hot():
 
 
 def multilabel_indicator_single_sigmoid():
-    X = np.random.randint(low=0, high=4, size=(1000, 1))
+    X = np.random.randint(low=0, high=4, size=(2000, 1))
     y = np.zeros((1000, 2))
     y[X[:, 0] == 1, [0]] = 1
     y[X[:, 0] == 2, [1]] = 1
@@ -324,7 +324,7 @@ def multilabel_indicator_single_sigmoid():
 
 
 def multilabel_indicator_multiple_sigmoid():
-    X = np.random.randint(low=0, high=4, size=(1000, 1))
+    X = np.random.randint(low=0, high=4, size=(2000, 1))
     y = np.zeros((1000, 2))
     y[X[:, 0] == 1, [0]] = 1
     y[X[:, 0] == 2, [1]] = 1
@@ -349,7 +349,7 @@ def multilabel_indicator_multiple_sigmoid():
 
 
 def multiclass_multioutput():
-    y1 = np.random.randint(low=0, high=3, size=(2000,))
+    y1 = np.random.randint(low=0, high=3, size=(4000,))
     X = y1.reshape(-1, 1)
     y2 = y1 == 1
     y = np.column_stack([y1, y2])
