@@ -237,7 +237,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         """
         if self._target_type == "binary":
             # array([0.9, 0.1], [.2, .8]) -> array(['yes', 'no'])
-            if y.ndim == 1 or y.shape[1] == 1:
+            if y.ndim == 1 or (y.shape[1] == 1 and self.n_classes_ == 2):
                 # result from a single sigmoid output
                 # reformat so that we have 2 columns
                 y = np.column_stack([1 - y, y])
