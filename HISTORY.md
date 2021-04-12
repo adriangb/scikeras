@@ -1,5 +1,10 @@
 # History
 
+## 0.3.1 (2021-04-12)
+
+Fixes:
+* Fixes a bug in inverse-transforms of predictions for multiclass labels that are not one-hot encoded (#229). Credit to RKCZ on [StackOverflow #67019157](https://stackoverflow.com/q/67019157/6582418) for reporting the issue.
+
 ## 0.3.0 (2021-04-07)
 
 Thank you to all of the collaborators that found bugs and submitted PRs to SciKeras!
