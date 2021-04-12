@@ -300,7 +300,7 @@ def single_output_multiclass_one_hot():
 
 def multilabel_indicator_single_sigmoid():
     X = np.random.randint(low=0, high=4, size=(2000, 1))
-    y = np.zeros((1000, 2))
+    y = np.zeros((2000, 2))
     y[X[:, 0] == 1, [0]] = 1
     y[X[:, 0] == 2, [1]] = 1
     y[X[:, 0] == 3, [0]] = 1
@@ -325,7 +325,7 @@ def multilabel_indicator_single_sigmoid():
 
 def multilabel_indicator_multiple_sigmoid():
     X = np.random.randint(low=0, high=4, size=(2000, 1))
-    y = np.zeros((1000, 2))
+    y = np.zeros((2000, 2))
     y[X[:, 0] == 1, [0]] = 1
     y[X[:, 0] == 2, [1]] = 1
     y[X[:, 0] == 3, [0]] = 1
