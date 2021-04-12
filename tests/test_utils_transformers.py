@@ -37,6 +37,31 @@ class TestTargetReshaper:
 
 
 class TestClassifierLabelEncoder:
+    @pytest.mark.parametrize(
+        "y, y_pred",
+        [
+            ([0, 1, 0], [[1, 0], [0.49, 0.51], [0.55, 0.54]]),
+            ([0, 1, 2], [[1, 0, 0], [0.25, 0.75, 0.25], [0.33, 0.33, 0.34]]),
+            (
+                [[0, 1, 0], [1, 0, 0], [0, 0, 1]],
+                [[0.1, 0.8, 0.1], [0.34, 0.33, 0.33], [0, 0, 1]],
+            ),
+            (
+                [[1, 1, 0], [0, 1, 1], [1, 0, 1]],
+                [[0.50001, 0.50001, 0.50000], [0, 0.75, 0.51], [1, 0, 1]],
+            ),
+        ],
+        ids=["binary", "multiclass", "multiclass-one-hot", "multilabel-indicator",],
+    )
+    @pytest.mark.parametrize(
+        "loss", ("categorical_crossentropy", "sparse_categorical_crossentropy", None)
+    )
+    def test_supported_tasks(self, y, y_pred, loss):
+        y, y_pred = np.array(y), np.array(y_pred)
+        c = ClassifierLabelEncoder(loss=loss).fit(y)
+        y_inv = c.inverse_transform(y_pred)
+        np.testing.assert_equal(y, y_inv)
+
     def test_multiclass_multioutput(self):
         c = ClassifierLabelEncoder()
         y = np.column_stack(np.array([1, 2, 3]))
