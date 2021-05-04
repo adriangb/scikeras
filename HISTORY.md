@@ -1,5 +1,32 @@
 # History
 
+## 0.3.1 (2021-04-12)
+
+Fixes:
+* Fixes a bug in inverse-transforms of predictions for multiclass labels that are not one-hot encoded (#229). Credit to RKCZ on [StackOverflow #67019157](https://stackoverflow.com/q/67019157/6582418) for reporting the issue.
+
+## 0.3.0 (2021-04-07)
+
+Thank you to all of the collaborators that found bugs and submitted PRs to SciKeras!
+
+v0.3.0 is a minor release that consists mainly of bug fixes, although we have made huge improvements under the hood as well.
+
+Features:
+
+* Implement batch_size=-1 (#194)
+* Lots of documentation improvements (#200, #197, #178, #176, #174)
+
+Fixes:
+* Fix a bug in meta parameter collection (#171)
+* Allow `epochs` to be passed as a keyword argument to fit (#154)
+* Fix the signature of `BaseWrapper.scorer` (#169)
+* Fix inverse transforms for one-hot encoded targets (#189)
+
+Contributors to this release:
+
+* @stsievert
+* @data-hound 
+
 ## 0.2.1 (2020-12-06)
 
 Thank you to @stsievert for your continued support and contributions!

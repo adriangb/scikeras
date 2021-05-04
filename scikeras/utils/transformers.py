@@ -250,7 +250,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
                 class_predictions = idx.reshape(-1, 1)
             else:
                 class_predictions = np.zeros(y.shape, dtype=int)
-                class_predictions[:, idx] = 1
+                class_predictions[np.arange(len(idx)), idx] = 1
             class_predictions = self._final_encoder.inverse_transform(class_predictions)
         elif self._target_type == "multiclass-onehot":
             # array([.8, .1, .1], [.1, .8, .1]) -> array([[1, 0, 0], [0, 1, 0]])
