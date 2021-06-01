@@ -87,10 +87,8 @@ def test_callback_param_routing():
         optimizer=keras.optimizers.SGD(
             learning_rate=0.1
         ),  # to mirror https://keras.io/api/callbacks/learning_rate_scheduler/
-        fit__callbacks=[
-            keras.callbacks.LearningRateScheduler
-        ],  # LRS does not acccept kwargs, only args, hence the 0__0 syntax
-        fit__callbacks__0__0=Schedule,
+        fit__callbacks=[keras.callbacks.LearningRateScheduler],
+        fit__callbacks__0__0=Schedule,  # LRS does not acccept kwargs, only args, hence the 0__0 syntax
         fit__callbacks__0__0__coef=0.2,  # translates to kwarg "coef" to the first arg of the first element of the callbacks kwarg to fit
     )
     clf.fit(X, y, epochs=15)
