@@ -83,6 +83,7 @@ def test_callback_param_routing():
     # using LRS with a nested instantiation of Schedule
     clf = KerasClassifier(
         get_clf,
+        epochs=15,
         loss="sparse_categorical_crossentropy",
         optimizer=keras.optimizers.SGD(
             learning_rate=0.1
@@ -91,7 +92,7 @@ def test_callback_param_routing():
         fit__callbacks__0__0=Schedule,  # LRS does not acccept kwargs, only args, hence the 0__0 syntax
         fit__callbacks__0__0__coef=0.2,  # translates to kwarg "coef" to the first arg of the first element of the callbacks kwarg to fit
     )
-    clf.fit(X, y, epochs=15)
+    clf.fit(X, y)
     np.testing.assert_almost_equal(
         round(clf.optimizer.lr.numpy(), 5), 0.04493
     )  # after applying decay for 4 epochs
