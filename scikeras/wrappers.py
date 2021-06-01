@@ -503,6 +503,15 @@ class BaseWrapper(BaseEstimator):
                         raise ValueError(
                             f"`{bs_kwarg}=-1` requires that `X` implement `shape`"
                         )
+        fit_args["callbacks"] = unflatten_params(
+            items=fit_args["callbacks"],
+            params=route_params(
+                fit_args, destination="callbacks", pass_filter=set(), strict=False,
+            ),
+        )
+        fit_args = {
+            k: v for k, v in fit_args.items() if not k.startswith("callbacks__")
+        }
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):

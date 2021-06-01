@@ -20,7 +20,8 @@ class SentinalCallback(Callback):
     Callback class that sets an internal value once it's been acessed.
     """
 
-    train_counter: int = 0
+    def __init__(self, start_at: int = 0):
+        self.train_counter = start_at
 
     def on_train_begin(self, logs=None):
         self.train_counter += 1
@@ -79,16 +80,20 @@ def test_callback_param_routing():
         model.add(keras.layers.Dense(2, activation="softmax"))
         return model
 
-    # using list-sytnax
+    # using LRS with a nested instantiation of Schedule
     clf = KerasClassifier(
         get_clf,
         loss="sparse_categorical_crossentropy",
         optimizer=keras.optimizers.SGD(
             learning_rate=0.1
         ),  # to mirror https://keras.io/api/callbacks/learning_rate_scheduler/
-        callbacks=[keras.callbacks.LearningRateScheduler],
-        callbacks__0__schedule=Schedule,
-        callbacks__0__schedule__coef=0.2,
+        fit__callbacks=[
+            keras.callbacks.LearningRateScheduler
+        ],  # LRS does not acccept kwargs, only args, hence the 0__0 syntax
+        fit__callbacks__0__0=Schedule,
+        fit__callbacks__0__0__coef=0.2,  # translates to kwarg "coef" to the first arg of the first element of the callbacks kwarg to fit
     )
-    clf.fit(X, y, epochs=11)
-    assert clf.optimizer.lr.numpy() == 0.1 * math.exp(-0.2)
+    clf.fit(X, y, epochs=15)
+    np.testing.assert_almost_equal(
+        round(clf.optimizer.lr.numpy(), 5), 0.04493
+    )  # after applying decay for 4 epochs
