@@ -9,6 +9,7 @@ from sklearn.utils.estimator_checks import (
 from sklearn.utils.estimator_checks import check_estimators_pickle
 from tensorflow import keras
 from tensorflow.keras.callbacks import Callback
+from tensorflow.python.ops.gen_math_ops import exp
 
 from scikeras.wrappers import KerasClassifier
 
@@ -93,6 +94,6 @@ def test_callback_param_routing():
         fit__callbacks__0__0__coef=0.2,  # translates to kwarg "coef" to the first arg of the first element of the callbacks kwarg to fit
     )
     clf.fit(X, y)
-    np.testing.assert_almost_equal(
-        round(clf.optimizer.lr.numpy(), 5), 0.04493
-    )  # after applying decay for 4 epochs
+    final_lr = clf.optimizer.lr.numpy()
+    expected_final_lr = 0.04493  # result of applying decay w/ coef 0.2 for 4 epochs to initial lr of 0.1
+    np.testing.assert_allclose(final_lr, expected_final_lr, atol=1e-5)
