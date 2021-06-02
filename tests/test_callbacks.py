@@ -81,19 +81,45 @@ def test_callback_param_routing():
         model.add(keras.layers.Dense(2, activation="softmax"))
         return model
 
-    # using LRS with a nested instantiation of Schedule
-    clf = KerasClassifier(
-        get_clf,
+    # we test callback initialization using LRS w/ a nested class requiring its own initialization
+    # this test generally mirrors https://keras.io/api/callbacks/learning_rate_scheduler/
+
+    kwargs = dict(
+        model=get_clf,
         epochs=15,
+        optimizer=keras.optimizers.SGD,
+        optimizer__learning_rate=0.1,
         loss="sparse_categorical_crossentropy",
-        optimizer=keras.optimizers.SGD(
-            learning_rate=0.1
-        ),  # to mirror https://keras.io/api/callbacks/learning_rate_scheduler/
+    )
+
+    # using list syntax
+    clf1 = KerasClassifier(
+        **kwargs,
         fit__callbacks=[keras.callbacks.LearningRateScheduler],
         fit__callbacks__0__0=Schedule,  # LRS does not acccept kwargs, only args, hence the 0__0 syntax
         fit__callbacks__0__0__coef=0.2,  # translates to kwarg "coef" to the first arg of the first element of the callbacks kwarg to fit
     )
-    clf.fit(X, y)
-    final_lr = clf.optimizer.lr.numpy()
-    expected_final_lr = 0.04493  # result of applying decay w/ coef 0.2 for 4 epochs to initial lr of 0.1
-    np.testing.assert_allclose(final_lr, expected_final_lr, atol=1e-5)
+
+    # using dict syntax
+    clf2 = KerasClassifier(
+        **kwargs,
+        fit__callbacks={"lr": keras.callbacks.LearningRateScheduler},
+        fit__callbacks__lr__0=Schedule,  # (LRS does not acccept kwargs)
+        fit__callbacks__lr__0__coef=0.2,
+    )
+
+    # using object syntax
+    clf3 = KerasClassifier(
+        **kwargs,
+        fit__callbacks=[keras.callbacks.LearningRateScheduler(Schedule(coef=0.2))],
+    )
+    # object syntax should also support a plain `callbacks` parameter
+    clf4 = KerasClassifier(
+        **kwargs, callbacks=[keras.callbacks.LearningRateScheduler(Schedule(coef=0.2))],
+    )
+
+    for clf in (clf1, clf2, clf3, clf4):
+        clf.fit(X, y)
+        final_lr = clf.model_.optimizer.lr.numpy()
+        expected_final_lr = 0.04493  # result of applying decay w/ coef 0.2 for 4 epochs to initial lr of 0.1
+        np.testing.assert_allclose(final_lr, expected_final_lr, atol=1e-5)
