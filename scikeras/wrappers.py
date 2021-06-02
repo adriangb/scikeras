@@ -396,6 +396,7 @@ class BaseWrapper(BaseEstimator):
             params,
             destination="model",
             pass_filter=getattr(self, "_user_params", set()),
+            strict=True,
         )
         compile_kwargs = None
         if has_param(final_build_fn, "meta") or accepts_kwargs(final_build_fn):
@@ -503,11 +504,14 @@ class BaseWrapper(BaseEstimator):
                         raise ValueError(
                             f"`{bs_kwarg}=-1` requires that `X` implement `shape`"
                         )
+        callback_kwargs = route_params(
+            params, destination="callbacks", pass_filter=set()
+        )
+        callback_kwargs.update(
+            route_params(fit_args, destination="callbacks", pass_filter=set())
+        )
         fit_args["callbacks"] = unflatten_params(
-            items=fit_args["callbacks"],
-            params=route_params(
-                fit_args, destination="callbacks", pass_filter=set(), strict=False,
-            ),
+            items=fit_args["callbacks"], params=callback_kwargs
         )
         fit_args = {
             k: v for k, v in fit_args.items() if not k.startswith("callbacks__")

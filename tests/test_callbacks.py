@@ -1,7 +1,10 @@
 import math
 import pickle
 
+from typing import Any, Dict
+
 import numpy as np
+import pytest
 
 from sklearn.utils.estimator_checks import (
     check_estimators_partial_fit_n_features,  # noqa
@@ -65,10 +68,28 @@ class Schedule:
         return lr
 
 
-def test_callback_param_routing():
+@pytest.mark.parametrize("prefix", ("", "fit__"), ids=["no prefix", "fit__ prefix"])
+@pytest.mark.parametrize(
+    "callback_kwargs",
+    [
+        dict(
+            callbacks=[keras.callbacks.LearningRateScheduler],
+            callbacks__0__0=Schedule,  # LRS does not acccept kwargs, only args, hence the 0__0 syntax
+            callbacks__0__0__coef=0.2,  # translates to kwarg "coef" to the first arg of the first element of the callbacks kwarg to fit
+        ),
+        dict(
+            callbacks={"lrs": keras.callbacks.LearningRateScheduler},
+            callbacks__lrs__0=Schedule,  # here the __0 is again because LRS does not accept kwargs
+            callbacks__lrs__0__coef=0.2,
+        ),
+        dict(callbacks=[keras.callbacks.LearningRateScheduler(Schedule(coef=0.2))]),
+    ],
+    ids=["list syntax", "dict syntax", "object sytnax"],
+)
+def test_callback_param_routing(prefix: str, callback_kwargs: Dict[str, Any]):
     """Test that callbacks can be passed as routed parameters (eg. for grid search).
 
-    See https://github.com/adriangb/scikeras/issues/232
+    This test generally mirrors https://keras.io/api/callbacks/learning_rate_scheduler/
     """
     X, y = (
         np.random.uniform(size=(100, 1)),
@@ -81,9 +102,6 @@ def test_callback_param_routing():
         model.add(keras.layers.Dense(2, activation="softmax"))
         return model
 
-    # we test callback initialization using LRS w/ a nested class requiring its own initialization
-    # this test generally mirrors https://keras.io/api/callbacks/learning_rate_scheduler/
-
     kwargs = dict(
         model=get_clf,
         epochs=15,
@@ -92,34 +110,10 @@ def test_callback_param_routing():
         loss="sparse_categorical_crossentropy",
     )
 
-    # using list syntax
-    clf1 = KerasClassifier(
-        **kwargs,
-        fit__callbacks=[keras.callbacks.LearningRateScheduler],
-        fit__callbacks__0__0=Schedule,  # LRS does not acccept kwargs, only args, hence the 0__0 syntax
-        fit__callbacks__0__0__coef=0.2,  # translates to kwarg "coef" to the first arg of the first element of the callbacks kwarg to fit
-    )
+    callback_kwargs = {prefix + k: v for k, v in callback_kwargs.items()}
 
-    # using dict syntax
-    clf2 = KerasClassifier(
-        **kwargs,
-        fit__callbacks={"lr": keras.callbacks.LearningRateScheduler},
-        fit__callbacks__lr__0=Schedule,  # (LRS does not acccept kwargs)
-        fit__callbacks__lr__0__coef=0.2,
-    )
-
-    # using object syntax
-    clf3 = KerasClassifier(
-        **kwargs,
-        fit__callbacks=[keras.callbacks.LearningRateScheduler(Schedule(coef=0.2))],
-    )
-    # object syntax should also support a plain `callbacks` parameter
-    clf4 = KerasClassifier(
-        **kwargs, callbacks=[keras.callbacks.LearningRateScheduler(Schedule(coef=0.2))],
-    )
-
-    for clf in (clf1, clf2, clf3, clf4):
-        clf.fit(X, y)
-        final_lr = clf.model_.optimizer.lr.numpy()
-        expected_final_lr = 0.04493  # result of applying decay w/ coef 0.2 for 4 epochs to initial lr of 0.1
-        np.testing.assert_allclose(final_lr, expected_final_lr, atol=1e-5)
+    clf = KerasClassifier(**kwargs, **callback_kwargs)
+    clf.fit(X, y)
+    final_lr = clf.model_.optimizer.lr.numpy()
+    expected_final_lr = 0.04493  # result of applying decay w/ coef 0.2 for 4 epochs to initial lr of 0.1
+    np.testing.assert_allclose(final_lr, expected_final_lr, atol=1e-5)
