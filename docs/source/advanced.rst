@@ -318,6 +318,16 @@ Example: callback with routed parameters
     clf.fit(X, y)  # stops after a couple iterations
 
 This allows you to apply hyperparameter tuning to your learning rate scheduler.
+SciKeras also supports passing a list of callbacks or even a dict of callbacks:
+
+.. code:: python
+
+    clf = KerasClassifier(
+        ...
+        callbacks=[tf.keras.callbacks.LearningRateScheduler, tf.keras.callbacks.EarlyStopping]
+        callbacks__0__0=Schedule,
+        callbacks__1__monitor="loss",
+    )
 
 Custom Scorers
 --------------
