@@ -4,7 +4,7 @@ import inspect
 import warnings
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Tuple, Type, Union
 
 import numpy as np
 import tensorflow as tf
@@ -141,11 +141,9 @@ class BaseWrapper(BaseEstimator):
 
     _fit_kwargs = {
         # parameters destined to keras.Model.fit
-        "callbacks",
         "batch_size",
         "epochs",
         "verbose",
-        "callbacks",
         "validation_split",
         "shuffle",
         "class_weight",
@@ -160,7 +158,6 @@ class BaseWrapper(BaseEstimator):
         # parameters destined to keras.Model.predict
         "batch_size",
         "verbose",
-        "callbacks",
         "steps",
     }
 
@@ -504,18 +501,8 @@ class BaseWrapper(BaseEstimator):
                         raise ValueError(
                             f"`{bs_kwarg}=-1` requires that `X` implement `shape`"
                         )
-        callback_kwargs = route_params(
-            params, destination="callbacks", pass_filter=set()
-        )
-        callback_kwargs.update(
-            route_params(fit_args, destination="callbacks", pass_filter=set())
-        )
-        fit_args["callbacks"] = unflatten_params(
-            items=fit_args["callbacks"], params=callback_kwargs
-        )
-        fit_args = {
-            k: v for k, v in fit_args.items() if not k.startswith("callbacks__")
-        }
+        fit_args = {k: v for k, v in fit_args.items() if not k.startswith("callbacks")}
+        fit_args["callbacks"] = self._fit_callbacks + self._callbacks
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
@@ -776,6 +763,33 @@ class BaseWrapper(BaseEstimator):
         """
         return hasattr(self, "model_")
 
+    def _initialize_callbacks(self) -> None:
+        params = self.get_params()
+
+        def initialize(destination: str):
+            if params.get(destination) is not None:
+                callback_kwargs = route_params(
+                    params, destination=destination, pass_filter=set()
+                )
+                callbacks = unflatten_params(
+                    items=params[destination], params=callback_kwargs
+                )
+                if isinstance(callbacks, Mapping):
+                    # Keras does not officially support dicts, convert to a list
+                    callbacks = list(callbacks.values())
+                elif isinstance(callbacks, List):
+                    callbacks = callbacks
+                else:
+                    # a single instance, not officially supported so wrap in a list
+                    callbacks = [callbacks]
+            else:
+                callbacks = []
+            return callbacks
+
+        self._callbacks = initialize("callbacks")
+        self._fit_callbacks = initialize("fit__callbacks")
+        self._predict_callbacks = initialize("predict__callbacks")
+
     def _initialize(
         self, X: np.ndarray, y: Union[np.ndarray, None] = None
     ) -> Tuple[np.ndarray, np.ndarray]:
@@ -804,6 +818,7 @@ class BaseWrapper(BaseEstimator):
         vars(self).update(**feature_meta)
 
         self.model_ = self._build_keras_model()
+        self._initialize_callbacks()
 
         return X, y
 
@@ -946,6 +961,7 @@ class BaseWrapper(BaseEstimator):
         pred_args = route_params(
             params, destination="predict", pass_filter=self._predict_kwargs
         )
+        pred_args["callbacks"] = self._callbacks + self._predict_callbacks
         pred_args.update(kwargs)
         if "batch_size" in pred_args:
             if pred_args["batch_size"] == -1:

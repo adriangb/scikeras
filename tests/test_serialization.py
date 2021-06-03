@@ -1,6 +1,6 @@
 import pickle
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict
 
 import numpy as np
 import pytest
@@ -15,6 +15,13 @@ from tensorflow.keras.models import Model
 from scikeras.wrappers import KerasRegressor
 
 from .mlp_models import dynamic_regressor
+
+
+def get_reg() -> keras.Model:
+    model = keras.models.Sequential()
+    model.add(keras.layers.InputLayer((1,)))
+    model.add(keras.layers.Dense(1))
+    return model
 
 
 def check_pickle(estimator, loader):
@@ -241,3 +248,16 @@ def test_pickle_optimizer(opt_cls):
     val_pickle = var1.numpy()
     # Check that the final values are the same
     np.testing.assert_equal(val_no_pickle, val_pickle)
+
+
+def test_pickle_with_callbacks():
+    """Test that models with callbacks (which hold a refence to the Keras model itself) are picklable.
+    """
+    clf = KerasRegressor(
+        model=get_reg, loss="mse", callbacks=[keras.callbacks.Callback()]
+    )
+    # Fit and roundtrip validating only that there are no errors
+    clf.fit([[1]], [1])
+    clf = pickle.loads(pickle.dumps(clf))
+    clf.predict([[1]])
+    clf.partial_fit([[1]], [1])
