@@ -961,6 +961,9 @@ class BaseWrapper(BaseEstimator):
         pred_args = route_params(
             params, destination="predict", pass_filter=self._predict_kwargs
         )
+        pred_args = {
+            k: v for k, v in pred_args.items() if not k.startswith("callbacks")
+        }
         pred_args["callbacks"] = self._callbacks + self._predict_callbacks
         pred_args.update(kwargs)
         if "batch_size" in pred_args:
