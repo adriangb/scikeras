@@ -62,15 +62,26 @@ def test_callbacks_prefixes():
 @pytest.mark.parametrize(
     "callback_kwargs",
     [
-        dict(callbacks=[keras.callbacks.EarlyStopping], callbacks__0__monitor="loss",),
+        dict(
+            callbacks=[keras.callbacks.EarlyStopping],
+            callbacks__0__monitor="acc",
+            callbacks__0__min_delta=1,
+        ),
         dict(
             callbacks={"es": keras.callbacks.EarlyStopping},
-            callbacks__es__monitor="loss",
+            callbacks__es__monitor="acc",
+            callbacks__es__min_delta=1,
         ),
-        dict(callbacks=keras.callbacks.EarlyStopping, callbacks__monitor="loss",),
-        dict(callbacks=[keras.callbacks.EarlyStopping(monitor="loss")]),
-        dict(callbacks={"es": keras.callbacks.EarlyStopping(monitor="loss")}),
-        dict(callbacks=keras.callbacks.EarlyStopping(monitor="loss")),
+        dict(
+            callbacks=keras.callbacks.EarlyStopping,
+            callbacks__monitor="acc",
+            callbacks__min_delta=1,
+        ),
+        dict(callbacks=[keras.callbacks.EarlyStopping(monitor="acc", min_delta=1)]),
+        dict(
+            callbacks={"es": keras.callbacks.EarlyStopping(monitor="acc", min_delta=1)}
+        ),
+        dict(callbacks=keras.callbacks.EarlyStopping(monitor="acc", min_delta=1)),
     ],
     ids=[
         "class list syntax",
@@ -92,12 +103,15 @@ def test_callback_param_routing_syntax(callback_kwargs: Dict[str, Any]):
         return model
 
     clf = KerasClassifier(
-        model=get_clf, epochs=5, loss="binary_crossentropy", **callback_kwargs
+        model=get_clf,
+        epochs=5,
+        loss="binary_crossentropy",
+        metrics="acc",
+        **callback_kwargs,
     )
-    clf.fit([[1]], [1])
-    assert (
-        clf.current_epoch == 1
-    )  # should early stop before the 5 epochs passed to the constructor
+    clf.fit([[1], [1]], [0, 1])
+    # should early stop after 1-2 epochs (depending on the TF version) since we set the accuracy delta to 1
+    assert clf.current_epoch < 5
 
 
 def test_callback_compiling_args_or_kwargs():
