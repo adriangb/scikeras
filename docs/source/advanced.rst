@@ -329,7 +329,7 @@ SciKeras also supports passing a list of callbacks or even a dict of callbacks:
         callbacks__1__monitor="loss",
     )
     # or
-        clf = KerasClassifier(
+    clf = KerasClassifier(
         ...
         callbacks={"lrs": tf.keras.callbacks.LearningRateScheduler, "es": tf.keras.callbacks.EarlyStopping}
         callbacks__lrs__0=Schedule,
