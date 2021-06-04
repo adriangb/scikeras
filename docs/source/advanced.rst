@@ -320,7 +320,6 @@ Additionally, SciKeras supports routed parameters to each individual loss, or to
         ...
         loss=[BinaryCrossentropy, CategoricalCrossentropy],
         loss__from_logits=True,  # BinaryCrossentropy(from_logits=True) & CategoricalCrossentropy(from_logits=True)
-        loss__label_smoothing=0.1,  # passed to each sub-item, i.e. `loss=[l(label_smoothing=0.1) for l in loss]`
         loss__1__label_smoothing=0.5,  # overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)
     )
     # or
