@@ -287,6 +287,16 @@ Optimizer
         optimizer=keras.optimizers.SGD,
         optimizer__learning_rate=0.05
     )
+    clf = KerasClassifier(  # equivalent model
+        model=model_build_fn, optimizer=keras.optimizers.SGD(learning_rate=0.5)
+    )
+
+.. note::
+
+   Only routed parameters can be tuned; the object syntax can not be tuned.
+   That is, in the example above, ``optimizer__learning_rate`` can be tuned with
+   `sklearn.model_selection.RandomizedSearchCV`; `SGD(learning_rate=0.5)` can
+   not be used with that class.
 
 
 Losses
@@ -320,7 +330,6 @@ Additionally, SciKeras supports routed parameters to each individual loss, or to
         ...
         loss=[BinaryCrossentropy, CategoricalCrossentropy],
         loss__from_logits=True,  # BinaryCrossentropy(from_logits=True) & CategoricalCrossentropy(from_logits=True)
-        loss__label_smoothing=0.1,  # passed to each sub-item, i.e. `loss=[l(label_smoothing=0.1) for l in loss]`
         loss__1__label_smoothing=0.5,  # overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)
     )
     # or
@@ -328,7 +337,6 @@ Additionally, SciKeras supports routed parameters to each individual loss, or to
         ...
         loss={"out1": BinaryCrossentropy, "out2": CategoricalCrossentropy},
         loss__from_logits=True,  # BinaryCrossentropy(from_logits=True) & CategoricalCrossentropy(from_logits=True)
-        loss__label_smoothing=0.1,  # passed to each sub-item, i.e. `loss={o: l(label_smoothing=0.1) for o, l in loss.items()}`
         loss__out2__label_smoothing=0.5,  # overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)
     )
 
