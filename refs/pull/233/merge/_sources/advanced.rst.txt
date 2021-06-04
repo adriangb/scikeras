@@ -433,8 +433,8 @@ Routing as args or kwargs
 +++++++++++++++++++++++++
 
 It is possible that the consturctor of the class you need instantiated does not accept kwargs.
-In this case, instead of ``__name_of_kwarg=value`` you can use ``__0=value``, which tells SciKeras
-to pass that parameter as an positional argument instead of a keyword argument.
+In this case, instead of ``__name_of_kwarg=value`` you can use ``__0=value`` (or any other integer),
+which tells SciKeras to pass that parameter as an positional argument instead of a keyword argument.
 
 .. code:: python
 
