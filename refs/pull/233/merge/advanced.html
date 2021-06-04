@@ -387,77 +387,172 @@ of <code class="xref py py-class docutils literal notranslate"><span class="pre"
 <li><p><code class="docutils literal notranslate"><span class="pre">score__</span></code>: passed to the scoring function, i.e. <a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper.scorer" title="scikeras.wrappers.BaseWrapper.scorer"><code class="xref py py-func docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrapper.scorer()</span></code></a>.</p></li>
 </ul>
 <p>All routed parameters will be available for hyperparameter tuning.</p>
+<p>For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">fit__batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">predict__batch_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Below are some example use cases.</p>
-<section id="example-multiple-losses-with-routed-parameters">
-<h3>Example: multiple losses with routed parameters<a class="headerlink" href="#example-multiple-losses-with-routed-parameters" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.losses</span> <span class="kn">import</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="n">CategoricalCrossentropy</span>
+<section id="compilation-with-routed-parameters">
+<h3>Compilation with routed parameters<a class="headerlink" href="#compilation-with-routed-parameters" title="Permalink to this headline">¶</a></h3>
+<p>SciKeras can compile optimizers, losses and metrics with routed parameters.
+This allows hyperparameter tuning with deeply nested parameters to optimizer, losses and metrics.
+You can use this feature both when you let SciKeras compile your Model and when you compile your own model
+within <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code> (by accepting the <code class="docutils literal notranslate"><span class="pre">compile_kwargs</span></code> parameter).</p>
+<section id="optimizer">
+<h4>Optimizer<a class="headerlink" href="#optimizer" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scikeras.wrappers</span> <span class="kn">import</span> <span class="n">KerasClassifier</span>
+<span class="kn">from</span> <span class="nn">tensorflow</span> <span class="kn">import</span> <span class="n">keras</span>
 
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">model_build_fn</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">SGD</span><span class="p">,</span>
+    <span class="n">optimizer__learning_rate</span><span class="o">=</span><span class="mf">0.05</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="losses">
+<h4>Losses<a class="headerlink" href="#losses" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.losses</span> <span class="kn">import</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="n">CategoricalCrossentropy</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">BinaryCrossentropy</span><span class="p">,</span>
+    <span class="n">loss__label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># results in BinaryCrossentropy(label_smoothing=0.1)</span>
+<span class="p">)</span>
+<span class="c1"># pure Keras object only syntax is still supported, but parameters can&#39;t be tuned</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Keras, and SciKeras by extension, support passing a single loss (which will be applied to all outputs)
+or a loss for each output by passing a list of losses or a dict of losses.</p>
+<p>Additionally, SciKeras supports routed parameters to each individual loss, or to all losses together.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.losses</span> <span class="kn">import</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="n">CategoricalCrossentropy</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span>
     <span class="n">loss</span><span class="o">=</span><span class="p">[</span><span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="n">CategoricalCrossentropy</span><span class="p">],</span>
     <span class="n">loss__from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># BinaryCrossentropy(from_logits=True) &amp; CategoricalCrossentropy(from_logits=True)</span>
     <span class="n">loss__label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># passed to each sub-item, i.e. `loss=[l(label_smoothing=0.1) for l in loss]`</span>
     <span class="n">loss__1__label_smoothing</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)</span>
 <span class="p">)</span>
+<span class="c1"># or</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span>
+    <span class="n">loss</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;out1&quot;</span><span class="p">:</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="s2">&quot;out2&quot;</span><span class="p">:</span> <span class="n">CategoricalCrossentropy</span><span class="p">},</span>
+    <span class="n">loss__from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># BinaryCrossentropy(from_logits=True) &amp; CategoricalCrossentropy(from_logits=True)</span>
+    <span class="n">loss__label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># passed to each sub-item, i.e. `loss={o: l(label_smoothing=0.1) for o, l in loss.items()}`</span>
+    <span class="n">loss__out2__label_smoothing</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>With this parameter rounting in place, you can now use hyperparameter tuning on each loss’ <code class="docutils literal notranslate"><span class="pre">label_smoothing</span></code> parameter individually.</p>
+<p>With this parameter routing in place, you can now use hyperparameter tuning on each loss’ parameters.</p>
 </section>
-<section id="example-callback-with-routed-parameters">
-<h3>Example: callback with routed parameters<a class="headerlink" href="#example-callback-with-routed-parameters" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">make_classification</span>
-<span class="kn">from</span> <span class="nn">scikeras.wrappers</span> <span class="kn">import</span> <span class="n">KerasClassifier</span>
-
-<span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">n_informative</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">get_clf</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">:</span>
-    <span class="n">n_features_in_</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;n_features_in_&quot;</span><span class="p">]</span>
-    <span class="n">n_classes_</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;n_classes_&quot;</span><span class="p">]</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span><span class="p">()</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">InputLayer</span><span class="p">((</span><span class="n">n_features_in_</span><span class="p">,)))</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">n_classes_</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;softmax&quot;</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">model</span>
-
-<span class="k">class</span> <span class="nc">Schedule</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Exponential decay lr scheduler.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait_until_epoch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">coef</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wait_until_epoch</span> <span class="o">=</span> <span class="n">wait_until_epoch</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">coef</span>
-
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">wait_until_epoch</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">lr</span>
-        <span class="k">return</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span>
+<section id="metrics">
+<h4>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h4>
+<p>Metrics have similar semantics to losses, but multiple metrics per output are supported.
+Here are several support use cases:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.metrics</span> <span class="kn">import</span> <span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span>
 
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="n">get_clf</span><span class="p">,</span>
-    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;sparse_categorical_crossentropy&quot;</span><span class="p">,</span>
-    <span class="n">callbacks</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">LearningRateScheduler</span><span class="p">,</span>
-    <span class="n">callbacks__0</span><span class="o">=</span><span class="n">Schedule</span><span class="p">,</span>  <span class="c1"># first arg to the callbacks parameter; LearningRateScheduler does not accept kwargs</span>
-    <span class="n">callbacks__0__coef</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>  <span class="c1"># used to construct Schedule</span>
+    <span class="o">...</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="n">BinaryAccuracy</span><span class="p">,</span>
+    <span class="n">metrics__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>  <span class="c1"># stops after a couple iterations</span>
+<span class="c1"># or to apply multiple metrics to all outputs</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span><span class="p">],</span>  <span class="c1"># both applied to all outputs</span>
+    <span class="n">metrics__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># or for different metrics to each output</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;out1&quot;</span><span class="p">:</span> <span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="s2">&quot;out2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span><span class="p">]},</span>
+    <span class="n">metrics__out1__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__out2__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># assuming you ordered your outputs like [out1, out2], this is equivalent to</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span><span class="p">]],</span>
+    <span class="n">metrics__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__1__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>This allows you to apply hyperparameter tuning to your learning rate scheduler.
-SciKeras also supports passing a list of callbacks or even a dict of callbacks:</p>
+<p>See the <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/metrics">Keras Metrics docs</a> for more details on mapping metrics to outputs.</p>
+</section>
+<section id="callbacks">
+<h4>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this headline">¶</a></h4>
+<p>Just like metrics and losses, callbacks support several syntaxes to compile them depending on your needs:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="o">...</span>
-    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">LearningRateScheduler</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">]</span>
-    <span class="n">callbacks__0__0</span><span class="o">=</span><span class="n">Schedule</span><span class="p">,</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">BaseLogger</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">]</span>
     <span class="n">callbacks__1__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="c1"># or</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="o">...</span>
-    <span class="n">callbacks</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;lrs&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">LearningRateScheduler</span><span class="p">,</span> <span class="s2">&quot;es&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">}</span>
-    <span class="n">callbacks__lrs__0</span><span class="o">=</span><span class="n">Schedule</span><span class="p">,</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;bl&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">BaseLogger</span><span class="p">,</span> <span class="s2">&quot;es&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">}</span>
     <span class="n">callbacks__es__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># or for a single callback</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span>
+    <span class="n">callbacks__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
+<p>Keras callbacks are event based, and are triggered depending on the methods they implement.
+For example:</p>
+<p>See the <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/callbacks">Keras Callbacks docs</a> for more details on method-based event dispatch.</p>
+<p>If for any reason you do need to create seperate callbacks for <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">predict</span></code>,
+simply use the <code class="docutils literal notranslate"><span class="pre">fit__</span></code> or <code class="docutils literal notranslate"><span class="pre">predict__</span></code> routing prefixes on your callback:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>clf = KerasClassifier(</dt><dd><p>…
+callbacks=tf.keras.callbacks.Callback,  # called from both fit and predict
+fit__callbacks=tf.keras.callbacks.Callback,  # called only from fit
+predict__callbacks=tf.keras.callbacks.Callback,  # called only from predict</p>
+</dd>
+</dl>
+<p>)</p>
+</div></blockquote>
+<p>Any routed constructor parameters must also use the corresponding prefix to get routed correctly.</p>
+</section>
+<section id="routing-as-args-or-kwargs">
+<h4>Routing as args or kwargs<a class="headerlink" href="#routing-as-args-or-kwargs" title="Permalink to this headline">¶</a></h4>
+<p>It is possible that the consturctor of the class you need instantiated does not accept kwargs.
+In this case, instead of <code class="docutils literal notranslate"><span class="pre">__name_of_kwarg=value</span></code> you can use <code class="docutils literal notranslate"><span class="pre">__0=value</span></code>, which tells SciKeras
+to pass that parameter as an positional argument instead of a keyword argument.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow</span> <span class="kn">import</span> <span class="n">keras</span>
+
+ <span class="k">class</span> <span class="nc">Schedule</span><span class="p">:</span>
+     <span class="sd">&quot;&quot;&quot;Exponential decay lr scheduler.</span>
+<span class="sd">     &quot;&quot;&quot;</span>
+     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait_until_epoch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">coef</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">wait_until_epoch</span> <span class="o">=</span> <span class="n">wait_until_epoch</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">coef</span>
+
+     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+         <span class="k">if</span> <span class="n">epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">wait_until_epoch</span><span class="p">:</span>
+             <span class="k">return</span> <span class="n">lr</span>
+         <span class="k">return</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span>
+
+ <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+     <span class="o">...</span>
+     <span class="n">callbacks</span><span class="o">=</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">LearningRateScheduler</span><span class="p">,</span>
+     <span class="n">callbacks__0</span><span class="o">=</span><span class="n">Schedule</span><span class="p">,</span>  <span class="c1"># __0 indicates this should be passed as an arg; LearningRateScheduler does not accept kwargs</span>
+     <span class="n">callbacks__0__coef</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+ <span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 </section>
 <section id="custom-scorers">

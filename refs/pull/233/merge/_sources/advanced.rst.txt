@@ -258,43 +258,187 @@ of :py:class:`scikeras.wrappers.BaseWrappers`. Currently, they are:
 
 All routed parameters will be available for hyperparameter tuning.
 
+For example:
+
+.. code:: python
+
+   clf = KerasClassifier(..., fit__batch_size=32, predict__batch_size=10000)
+
 Below are some example use cases.
 
-Example: multiple losses with routed parameters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Compilation with routed parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+SciKeras can compile optimizers, losses and metrics with routed parameters.
+This allows hyperparameter tuning with deeply nested parameters to optimizer, losses and metrics.
+You can use this feature both when you let SciKeras compile your Model and when you compile your own model
+within ``model_build_fn`` (by accepting the ``compile_kwargs`` parameter).
+
+Optimizer
++++++++++
+
+.. code:: python
+
+    from scikeras.wrappers import KerasClassifier
+    from tensorflow import keras
+
+    clf = KerasClassifier(
+        model=model_build_fn,
+        optimizer=keras.optimizers.SGD,
+        optimizer__learning_rate=0.05
+    )
+
+
+Losses
+++++++
 
 .. code:: python
 
     from tensorflow.keras.losses import BinaryCrossentropy, CategoricalCrossentropy
 
     clf = KerasClassifier(
-        model=model_build_fn,
+        ...
+        loss=BinaryCrossentropy,
+        loss__label_smoothing=0.1,  # results in BinaryCrossentropy(label_smoothing=0.1)
+    )
+    # pure Keras object only syntax is still supported, but parameters can't be tuned
+    clf = KerasClassifier(
+        ...
+        loss=BinaryCrossentropy(label_smoothing=0.1),
+    )
+
+Keras, and SciKeras by extension, support passing a single loss (which will be applied to all outputs)
+or a loss for each output by passing a list of losses or a dict of losses.
+
+Additionally, SciKeras supports routed parameters to each individual loss, or to all losses together.
+
+.. code:: python
+
+    from tensorflow.keras.losses import BinaryCrossentropy, CategoricalCrossentropy
+
+    clf = KerasClassifier(
+        ...
         loss=[BinaryCrossentropy, CategoricalCrossentropy],
         loss__from_logits=True,  # BinaryCrossentropy(from_logits=True) & CategoricalCrossentropy(from_logits=True)
         loss__label_smoothing=0.1,  # passed to each sub-item, i.e. `loss=[l(label_smoothing=0.1) for l in loss]`
         loss__1__label_smoothing=0.5,  # overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)
     )
+    # or
+    clf = KerasClassifier(
+        ...
+        loss={"out1": BinaryCrossentropy, "out2": CategoricalCrossentropy},
+        loss__from_logits=True,  # BinaryCrossentropy(from_logits=True) & CategoricalCrossentropy(from_logits=True)
+        loss__label_smoothing=0.1,  # passed to each sub-item, i.e. `loss={o: l(label_smoothing=0.1) for o, l in loss.items()}`
+        loss__out2__label_smoothing=0.5,  # overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)
+    )
 
-With this parameter rounting in place, you can now use hyperparameter tuning on each loss' ``label_smoothing`` parameter individually.
+With this parameter routing in place, you can now use hyperparameter tuning on each loss' parameters.
 
-Example: callback with routed parameters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Metrics
++++++++
+
+Metrics have similar semantics to losses, but multiple metrics per output are supported.
+Here are several support use cases:
 
 .. code:: python
 
-    import tensorflow as tf
-    from sklearn.datasets import make_classification
-    from scikeras.wrappers import KerasClassifier
+    from tensorflow.keras.metrics import BinaryAccuracy, AUC
 
-    X, y = make_classification(1000, 20, n_informative=10, random_state=0)
+    clf = KerasClassifier(
+        ...
+        metrics=BinaryAccuracy,
+        metrics__threashold=0.65,
+    )
+    # or to apply multiple metrics to all outputs
+    clf = KerasClassifier(
+        ...
+        metrics=[BinaryAccuracy, AUC],  # both applied to all outputs
+        metrics__0__threashold=0.65,
+    )
+    # or for different metrics to each output
+    clf = KerasClassifier(
+        ...
+        metrics={"out1": BinaryAccuracy, "out2": [BinaryAccuracy, AUC]},
+        metrics__out1__threashold=0.65,
+        metrics__out2__0__threashold=0.65,
+    )
+    # assuming you ordered your outputs like [out1, out2], this is equivalent to
+    clf = KerasClassifier(
+        ...
+        metrics=[BinaryAccuracy, [BinaryAccuracy, AUC]],
+        metrics__0__threashold=0.65,
+        metrics__1__0__threashold=0.65,
+    )
 
-    def get_clf(meta) -> tf.keras.Model:
-        n_features_in_ = meta["n_features_in_"]
-        n_classes_ = meta["n_classes_"]
-        model = tf.keras.models.Sequential()
-        model.add(tf.keras.layers.InputLayer((n_features_in_,)))
-        model.add(tf.keras.layers.Dense(n_classes_, activation="softmax"))
-        return model
+
+See the `Keras Metrics docs`_ for more details on mapping metrics to outputs.
+
+Callbacks
++++++++++
+
+Just like metrics and losses, callbacks support several syntaxes to compile them depending on your needs:
+
+.. code:: python
+
+    clf = KerasClassifier(
+        ...
+        callbacks=[tf.keras.callbacks.BaseLogger, tf.keras.callbacks.EarlyStopping]
+        callbacks__1__monitor="loss",
+    )
+    # or
+    clf = KerasClassifier(
+        ...
+        callbacks={"bl": tf.keras.callbacks.BaseLogger, "es": tf.keras.callbacks.EarlyStopping}
+        callbacks__es__monitor="loss",
+    )
+    # or for a single callback
+    clf = KerasClassifier(
+        ...
+        callbacks=tf.keras.callbacks.EarlyStopping
+        callbacks__monitor="loss",
+    )
+
+Keras callbacks are event based, and are triggered depending on the methods they implement.
+For example:
+
+.. code:: python
+    from tensorflow import keras
+
+    class MyCallback(keras.callbacks.Callback):
+
+        def on_train_begin(self, epoch, logs=None):
+            print("Started training from a `fit` or `partial_fit` call!")
+
+        def on_test_begin(self, epoch, logs=None):
+            print("Started testing/evaluation from a `fit` call!")
+
+        def on_predict_begin(self, epoch, logs=None):
+            print("Started prediction from a `predict` or `predict_proba` call!")
+
+See the `Keras Callbacks docs`_ for more details on method-based event dispatch.
+
+If for any reason you do need to create seperate callbacks for ``fit`` and ``predict``,
+simply use the ``fit__`` or ``predict__`` routing prefixes on your callback:
+
+    clf = KerasClassifier(
+        ...
+        callbacks=tf.keras.callbacks.Callback,  # called from both fit and predict
+        fit__callbacks=tf.keras.callbacks.Callback,  # called only from fit
+        predict__callbacks=tf.keras.callbacks.Callback,  # called only from predict
+    )
+
+Any routed constructor parameters must also use the corresponding prefix to get routed correctly.
+
+Routing as args or kwargs
++++++++++++++++++++++++++
+
+It is possible that the consturctor of the class you need instantiated does not accept kwargs.
+In this case, instead of ``__name_of_kwarg=value`` you can use ``__0=value``, which tells SciKeras
+to pass that parameter as an positional argument instead of a keyword argument.
+
+.. code:: python
+
+   from tensorflow import keras
 
     class Schedule:
         """Exponential decay lr scheduler.
@@ -309,31 +453,10 @@ Example: callback with routed parameters
             return lr * tf.math.exp(-self.coef)
 
     clf = KerasClassifier(
-        get_clf,
-        loss="sparse_categorical_crossentropy",
-        callbacks=tf.keras.callbacks.LearningRateScheduler,
-        callbacks__0=Schedule,  # first arg to the callbacks parameter; LearningRateScheduler does not accept kwargs
-        callbacks__0__coef=0.2,  # used to construct Schedule
-    )
-    clf.fit(X, y)  # stops after a couple iterations
-
-This allows you to apply hyperparameter tuning to your learning rate scheduler.
-SciKeras also supports passing a list of callbacks or even a dict of callbacks:
-
-.. code:: python
-
-    clf = KerasClassifier(
         ...
-        callbacks=[tf.keras.callbacks.LearningRateScheduler, tf.keras.callbacks.EarlyStopping]
-        callbacks__0__0=Schedule,
-        callbacks__1__monitor="loss",
-    )
-    # or
-    clf = KerasClassifier(
-        ...
-        callbacks={"lrs": tf.keras.callbacks.LearningRateScheduler, "es": tf.keras.callbacks.EarlyStopping}
-        callbacks__lrs__0=Schedule,
-        callbacks__es__monitor="loss",
+        callbacks=keras.callbacks.LearningRateScheduler,
+        callbacks__0=Schedule,  # __0 indicates this should be passed as an arg; LearningRateScheduler does not accept kwargs
+        callbacks__0__coef=0.2,
     )
 
 Custom Scorers
