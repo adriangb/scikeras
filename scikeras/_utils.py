@@ -9,6 +9,8 @@ from typing import Any, Callable, Dict, Iterable, Union
 import numpy as np
 import tensorflow as tf
 
+from numpy.core.fromnumeric import sort
+
 
 DIGITS = frozenset(str(i) for i in range(10))
 
@@ -140,10 +142,9 @@ def unflatten_params(items, params, base_params=None):
                     params=params, destination=f"{p}", pass_filter=set(), strict=False,
                 ),
             )
-        kwargs = {
-            k: v for k, v in args_and_kwargs.items() if k[0] not in DIGITS
-        }  # kwargs can't start with a number, must be arg
-        args = (v for k, v in args_and_kwargs.items() if k not in kwargs)
+        kwargs = {k: v for k, v in args_and_kwargs.items() if k[0] not in DIGITS}
+        args = [(int(k), v) for k, v in args_and_kwargs.items() if k not in kwargs]
+        args = [v for _, v in sorted(args)]  # sorts by key / arg num
         return item(*args, **kwargs)
     if isinstance(items, (list, tuple)):
         iter_type_ = type(items)

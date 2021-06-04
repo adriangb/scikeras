@@ -126,7 +126,7 @@ def test_callback_compiling_args_or_kwargs():
 
     class ArgsOnlyCallback(keras.callbacks.Callback):
         def __init__(self, *args):
-            assert args == ("arg",)
+            assert args == ("arg0", "arg1")
             ArgsOnlyCallback.called = True
             super().__init__()
 
@@ -154,7 +154,8 @@ def test_callback_compiling_args_or_kwargs():
             "kwargs": KwargsOnlyCallback,
             "argskwargs": ArgsAndKwargsCallback,
         },
-        callbacks__args__0="arg",  # passed as an arg
+        callbacks__args__1="arg1",  # passed as an arg
+        callbacks__args__0="arg0",  # unorder the args on purpose, SciKeras should not care about the order of the keys
         callbacks__kwargs__kwargname=None,  # passed as a kwarg
         callbacks__argskwargs__0="arg",  # passed as an arg
         callbacks__argskwargs__kwargname=None,  # passed as a kwarg
