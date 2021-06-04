@@ -384,26 +384,29 @@ See the `Keras Metrics docs`_ for more details on mapping metrics to outputs.
 Callbacks
 +++++++++
 
-Just like metrics and losses, callbacks support several syntaxes to compile them depending on your needs:
-
 .. code:: python
 
     clf = KerasClassifier(
         ...
-        callbacks=[tf.keras.callbacks.BaseLogger, tf.keras.callbacks.EarlyStopping]
-        callbacks__1__monitor="loss",  # EarlyStopping(monitor="loss")
+        callbacks=tf.keras.callbacks.EarlyStopping
+        callbacks__monitor="loss",
     )
-    # or
+
+Just like metrics and losses, callbacks support several syntaxes to compile them depending on your needs:
+
+.. code:: python
+
+    # for multiple callbacks using dict syntax
     clf = KerasClassifier(
         ...
         callbacks={"bl": tf.keras.callbacks.BaseLogger, "es": tf.keras.callbacks.EarlyStopping}
         callbacks__es__monitor="loss",
     )
-    # or for a single callback
+    # or using list sytnax
     clf = KerasClassifier(
         ...
-        callbacks=tf.keras.callbacks.EarlyStopping
-        callbacks__monitor="loss",
+        callbacks=[tf.keras.callbacks.BaseLogger, tf.keras.callbacks.EarlyStopping]
+        callbacks__1__monitor="loss",  # EarlyStopping(monitor="loss")
     )
 
 Keras callbacks are event based, and are triggered depending on the methods they implement.

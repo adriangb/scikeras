@@ -496,23 +496,25 @@ Here are several support use cases:</p>
 </section>
 <section id="callbacks">
 <h4>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this headline">¶</a></h4>
-<p>Just like metrics and losses, callbacks support several syntaxes to compile them depending on your needs:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="o">...</span>
-    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">BaseLogger</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">]</span>
-    <span class="n">callbacks__1__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>  <span class="c1"># EarlyStopping(monitor=&quot;loss&quot;)</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span>
+    <span class="n">callbacks__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="c1"># or</span>
+</pre></div>
+</div>
+<p>Just like metrics and losses, callbacks support several syntaxes to compile them depending on your needs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># for multiple callbacks using dict syntax</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="o">...</span>
     <span class="n">callbacks</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;bl&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">BaseLogger</span><span class="p">,</span> <span class="s2">&quot;es&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">}</span>
     <span class="n">callbacks__es__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="c1"># or for a single callback</span>
+<span class="c1"># or using list sytnax</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="o">...</span>
-    <span class="n">callbacks</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span>
-    <span class="n">callbacks__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">BaseLogger</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">]</span>
+    <span class="n">callbacks__1__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>  <span class="c1"># EarlyStopping(monitor=&quot;loss&quot;)</span>
 <span class="p">)</span>
 </pre></div>
 </div>
