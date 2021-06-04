@@ -408,7 +408,17 @@ within <code class="docutils literal notranslate"><span class="pre">model_build_
     <span class="n">optimizer</span><span class="o">=</span><span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">SGD</span><span class="p">,</span>
     <span class="n">optimizer__learning_rate</span><span class="o">=</span><span class="mf">0.05</span>
 <span class="p">)</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>  <span class="c1"># equivalent model</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model_build_fn</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="p">)</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only routed parameters can be tuned; the object syntax can not be tuned.
+That is, in the example above, <code class="docutils literal notranslate"><span class="pre">optimizer__learning_rate</span></code> can be tuned with
+<cite>sklearn.model_selection.RandomizedSearchCV</cite>; <cite>SGD(learning_rate=0.5)</cite> can
+not be used with that class.</p>
 </div>
 </section>
 <section id="losses">
@@ -443,7 +453,6 @@ or a loss for each output by passing a list of losses or a dict of losses.</p>
     <span class="o">...</span>
     <span class="n">loss</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;out1&quot;</span><span class="p">:</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="s2">&quot;out2&quot;</span><span class="p">:</span> <span class="n">CategoricalCrossentropy</span><span class="p">},</span>
     <span class="n">loss__from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># BinaryCrossentropy(from_logits=True) &amp; CategoricalCrossentropy(from_logits=True)</span>
-    <span class="n">loss__label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># passed to each sub-item, i.e. `loss={o: l(label_smoothing=0.1) for o, l in loss.items()}`</span>
     <span class="n">loss__out2__label_smoothing</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)</span>
 <span class="p">)</span>
 </pre></div>
@@ -491,7 +500,7 @@ Here are several support use cases:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="o">...</span>
     <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">BaseLogger</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">]</span>
-    <span class="n">callbacks__1__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
+    <span class="n">callbacks__1__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>  <span class="c1"># EarlyStopping(monitor=&quot;loss&quot;)</span>
 <span class="p">)</span>
 <span class="c1"># or</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
