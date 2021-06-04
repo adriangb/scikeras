@@ -391,7 +391,7 @@ Just like metrics and losses, callbacks support several syntaxes to compile them
     clf = KerasClassifier(
         ...
         callbacks=[tf.keras.callbacks.BaseLogger, tf.keras.callbacks.EarlyStopping]
-        callbacks__1__monitor="loss",
+        callbacks__1__monitor="loss",  # EarlyStopping(monitor="loss")
     )
     # or
     clf = KerasClassifier(
