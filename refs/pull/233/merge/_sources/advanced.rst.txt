@@ -373,7 +373,7 @@ Here are several support use cases:
     # assuming you ordered your outputs like [out1, out2], this is equivalent to
     clf = KerasClassifier(
         ...
-        metrics=[BinaryAccuracy, [BinaryAccuracy, AUC]],
+        metrics=[BinaryAccuracy, [AUC, BinaryAccuracy]],
         metrics__0__threashold=0.65,
         metrics__1__0__threashold=0.65,
     )
