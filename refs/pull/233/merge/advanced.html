@@ -443,6 +443,7 @@ or a loss for each output by passing a list of losses or a dict of losses.</p>
     <span class="o">...</span>
     <span class="n">loss</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;out1&quot;</span><span class="p">:</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="s2">&quot;out2&quot;</span><span class="p">:</span> <span class="n">CategoricalCrossentropy</span><span class="p">},</span>
     <span class="n">loss__from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># BinaryCrossentropy(from_logits=True) &amp; CategoricalCrossentropy(from_logits=True)</span>
+    <span class="n">loss__label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># passed to each sub-item, i.e. `loss={o: l(label_smoothing=0.1) for o, l in loss.items()}`</span>
     <span class="n">loss__out2__label_smoothing</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)</span>
 <span class="p">)</span>
 </pre></div>
