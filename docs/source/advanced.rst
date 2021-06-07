@@ -438,10 +438,10 @@ simply use the ``fit__`` or ``predict__`` routing prefixes on your callback:
 
 Any routed constructor parameters must also use the corresponding prefix to get routed correctly.
 
-Routing as args or kwargs
-+++++++++++++++++++++++++
+Routing as positional or keyword arguments
+++++++++++++++++++++++++++++++++++++++++++
 
-It is possible that the consturctor of the class you need instantiated does not accept kwargs.
+It is possible that the consturctor of the class you need instantiated does not accept keyword arguments.
 In this case, instead of ``__name_of_kwarg=value`` you can use ``__0=value`` (or any other integer),
 which tells SciKeras to pass that parameter as an positional argument instead of a keyword argument.
 
