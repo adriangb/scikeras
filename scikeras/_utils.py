@@ -3,13 +3,10 @@ import os
 import random
 import warnings
 
-from inspect import isclass
 from typing import Any, Callable, Dict, Iterable, Union
 
 import numpy as np
 import tensorflow as tf
-
-from numpy.core.fromnumeric import sort
 
 
 DIGITS = frozenset(str(i) for i in range(10))
@@ -130,7 +127,7 @@ def unflatten_params(items, params, base_params=None):
     """Recursively compile nested structures of classes
     using parameters from params.
     """
-    if isclass(items):
+    if inspect.isclass(items):
         item = items
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         base_params = base_params or dict()
