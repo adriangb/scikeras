@@ -416,9 +416,10 @@ within <code class="docutils literal notranslate"><span class="pre">model_build_
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Only routed parameters can be tuned; the object syntax can not be tuned.
-That is, in the example above, <code class="docutils literal notranslate"><span class="pre">optimizer__learning_rate</span></code> can be tuned with
-<cite>sklearn.model_selection.RandomizedSearchCV</cite>; <cite>SGD(learning_rate=0.5)</cite> can
-not be used with that class.</p>
+That is, in the example above, it’s possible to tune the learning rate with
+Scikit-Learn’s <code class="docutils literal notranslate"><span class="pre">RandomizedSearchCV</span></code> by specifying <code class="docutils literal notranslate"><span class="pre">optimizer__learning_rate</span></code>.
+It’s not possible to tune the learning rate with Scikit-Learn when
+<code class="docutils literal notranslate"><span class="pre">optimizer=SGD(learning_rate=0.5)</span></code> is specified.</p>
 </div>
 </section>
 <section id="losses">
@@ -426,15 +427,12 @@ not be used with that class.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.losses</span> <span class="kn">import</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="n">CategoricalCrossentropy</span>
 
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="o">...</span>
+    <span class="o">...</span><span class="p">,</span>
     <span class="n">loss</span><span class="o">=</span><span class="n">BinaryCrossentropy</span><span class="p">,</span>
     <span class="n">loss__label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># results in BinaryCrossentropy(label_smoothing=0.1)</span>
 <span class="p">)</span>
 <span class="c1"># pure Keras object only syntax is still supported, but parameters can&#39;t be tuned</span>
-<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="o">...</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span>
-<span class="p">)</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Keras, and SciKeras by extension, support passing a single loss (which will be applied to all outputs)
@@ -443,14 +441,14 @@ or a loss for each output by passing a list of losses or a dict of losses.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.losses</span> <span class="kn">import</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="n">CategoricalCrossentropy</span>
 
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="o">...</span>
+    <span class="o">...</span><span class="p">,</span>
     <span class="n">loss</span><span class="o">=</span><span class="p">[</span><span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="n">CategoricalCrossentropy</span><span class="p">],</span>
     <span class="n">loss__from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># BinaryCrossentropy(from_logits=True) &amp; CategoricalCrossentropy(from_logits=True)</span>
     <span class="n">loss__1__label_smoothing</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)</span>
 <span class="p">)</span>
 <span class="c1"># or</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="o">...</span>
+    <span class="o">...</span><span class="p">,</span>
     <span class="n">loss</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;out1&quot;</span><span class="p">:</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="s2">&quot;out2&quot;</span><span class="p">:</span> <span class="n">CategoricalCrossentropy</span><span class="p">},</span>
     <span class="n">loss__from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># BinaryCrossentropy(from_logits=True) &amp; CategoricalCrossentropy(from_logits=True)</span>
     <span class="n">loss__out2__label_smoothing</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)</span>
@@ -466,29 +464,29 @@ Here are several support use cases:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.metrics</span> <span class="kn">import</span> <span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span>
 
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="o">...</span>
+    <span class="o">...</span><span class="p">,</span>
     <span class="n">metrics</span><span class="o">=</span><span class="n">BinaryAccuracy</span><span class="p">,</span>
-    <span class="n">metrics__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="c1"># or to apply multiple metrics to all outputs</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="o">...</span>
+    <span class="o">...</span><span class="p">,</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span><span class="p">],</span>  <span class="c1"># both applied to all outputs</span>
-    <span class="n">metrics__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="c1"># or for different metrics to each output</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="o">...</span>
+    <span class="o">...</span><span class="p">,</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;out1&quot;</span><span class="p">:</span> <span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="s2">&quot;out2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span><span class="p">]},</span>
-    <span class="n">metrics__out1__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
-    <span class="n">metrics__out2__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__out1__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__out2__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="c1"># assuming you ordered your outputs like [out1, out2], this is equivalent to</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="o">...</span>
+    <span class="o">...</span><span class="p">,</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="p">[</span><span class="n">AUC</span><span class="p">,</span> <span class="n">BinaryAccuracy</span><span class="p">]],</span>
-    <span class="n">metrics__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
-    <span class="n">metrics__1__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__1__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -497,7 +495,7 @@ Here are several support use cases:</p>
 <section id="callbacks">
 <h4>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="o">...</span>
+    <span class="o">...</span><span class="p">,</span>
     <span class="n">callbacks</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span>
     <span class="n">callbacks__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
 <span class="p">)</span>
@@ -506,13 +504,13 @@ Here are several support use cases:</p>
 <p>Just like metrics and losses, callbacks support several syntaxes to compile them depending on your needs:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># for multiple callbacks using dict syntax</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="o">...</span>
+    <span class="o">...</span><span class="p">,</span>
     <span class="n">callbacks</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;bl&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">BaseLogger</span><span class="p">,</span> <span class="s2">&quot;es&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">}</span>
     <span class="n">callbacks__es__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="c1"># or using list sytnax</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-    <span class="o">...</span>
+    <span class="o">...</span><span class="p">,</span>
     <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">BaseLogger</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">]</span>
     <span class="n">callbacks__1__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>  <span class="c1"># EarlyStopping(monitor=&quot;loss&quot;)</span>
 <span class="p">)</span>
@@ -525,7 +523,7 @@ For example:</p>
 simply use the <code class="docutils literal notranslate"><span class="pre">fit__</span></code> or <code class="docutils literal notranslate"><span class="pre">predict__</span></code> routing prefixes on your callback:</p>
 <blockquote>
 <div><dl class="simple">
-<dt>clf = KerasClassifier(</dt><dd><p>…
+<dt>clf = KerasClassifier(</dt><dd><p>…,
 callbacks=tf.keras.callbacks.Callback,  # called from both fit and predict
 fit__callbacks=tf.keras.callbacks.Callback,  # called only from fit
 predict__callbacks=tf.keras.callbacks.Callback,  # called only from predict</p>
@@ -535,9 +533,9 @@ predict__callbacks=tf.keras.callbacks.Callback,  # called only from predict</p>
 </div></blockquote>
 <p>Any routed constructor parameters must also use the corresponding prefix to get routed correctly.</p>
 </section>
-<section id="routing-as-args-or-kwargs">
-<h4>Routing as args or kwargs<a class="headerlink" href="#routing-as-args-or-kwargs" title="Permalink to this headline">¶</a></h4>
-<p>It is possible that the consturctor of the class you need instantiated does not accept kwargs.
+<section id="routing-as-positional-or-keyword-arguments">
+<h4>Routing as positional or keyword arguments<a class="headerlink" href="#routing-as-positional-or-keyword-arguments" title="Permalink to this headline">¶</a></h4>
+<p>It is possible that the consturctor of the class you need instantiated does not accept keyword arguments.
 In this case, instead of <code class="docutils literal notranslate"><span class="pre">__name_of_kwarg=value</span></code> you can use <code class="docutils literal notranslate"><span class="pre">__0=value</span></code> (or any other integer),
 which tells SciKeras to pass that parameter as an positional argument instead of a keyword argument.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow</span> <span class="kn">import</span> <span class="n">keras</span>
@@ -555,7 +553,7 @@ which tells SciKeras to pass that parameter as an positional argument instead of
          <span class="k">return</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span>
 
  <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
-     <span class="o">...</span>
+     <span class="o">...</span><span class="p">,</span>
      <span class="n">callbacks</span><span class="o">=</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">LearningRateScheduler</span><span class="p">,</span>
      <span class="n">callbacks__0</span><span class="o">=</span><span class="n">Schedule</span><span class="p">,</span>  <span class="c1"># __0 indicates this should be passed as an arg; LearningRateScheduler does not accept kwargs</span>
      <span class="n">callbacks__0__coef</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
