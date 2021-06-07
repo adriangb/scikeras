@@ -144,7 +144,7 @@ def unflatten_params(items, params, base_params=None):
             )
         kwargs = {k: v for k, v in args_and_kwargs.items() if k[0] not in DIGITS}
         args = [(int(k), v) for k, v in args_and_kwargs.items() if k not in kwargs]
-        args = [v for _, v in sorted(args)]  # sorts by key / arg num
+        args = (v for _, v in sorted(args))  # sorts by key / arg num
         return item(*args, **kwargs)
     if isinstance(items, (list, tuple)):
         iter_type_ = type(items)
