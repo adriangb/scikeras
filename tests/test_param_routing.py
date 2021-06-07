@@ -3,7 +3,6 @@ import inspect
 import numpy as np
 import pytest
 
-from attr import dataclass
 from tensorflow.keras import Model
 
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
