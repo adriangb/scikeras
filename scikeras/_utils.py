@@ -68,6 +68,9 @@ def route_params(
     pass_filter: Iterable[str]
         Only keys from `params` that are in the iterable are passed.
         This does not affect routed parameters.
+    strict: bool
+        Pop any routed parameters that are not being routed to `destination`
+        (including parameters routed to `destination__...`).
 
     Returns
     -------
