@@ -353,27 +353,27 @@ Here are several support use cases:
     clf = KerasClassifier(
         ...,
         metrics=BinaryAccuracy,
-        metrics__threshold=0.65,
+        metrics__threashold=0.65,
     )
     # or to apply multiple metrics to all outputs
     clf = KerasClassifier(
         ...,
         metrics=[BinaryAccuracy, AUC],  # both applied to all outputs
-        metrics__0__threshold=0.65,
+        metrics__0__threashold=0.65,
     )
     # or for different metrics to each output
     clf = KerasClassifier(
         ...,
         metrics={"out1": BinaryAccuracy, "out2": [BinaryAccuracy, AUC]},
-        metrics__out1__threshold=0.65,
-        metrics__out2__0__threshold=0.65,
+        metrics__out1__threashold=0.65,
+        metrics__out2__0__threashold=0.65,
     )
     # assuming you ordered your outputs like [out1, out2], this is equivalent to
     clf = KerasClassifier(
         ...,
         metrics=[BinaryAccuracy, [AUC, BinaryAccuracy]],
-        metrics__0__threshold=0.65,
-        metrics__1__0__threshold=0.65,
+        metrics__0__threashold=0.65,
+        metrics__1__0__threashold=0.65,
     )
 
 
