@@ -25,7 +25,7 @@ TensorFlow build or `tensorflow-cpu`_, you can instruct pip to ignore dependenci
     pip install --no-deps scikeras
 
 Then manually install compatible versions of TensorFlow and Scikit-Learn.
-As of SciKeras v0.2.1, the minimum required versions are as follows:
+As of SciKeras v0.3.3, the minimum required versions are as follows:
 
 - TensorFlow: v2.4.0
 - Scikit-Learn: v0.22.0
