@@ -959,7 +959,7 @@ class BaseWrapper(BaseEstimator):
         # filter kwargs and get attributes for predict
         params = self.get_params()
         pred_args = route_params(
-            params, destination="predict", pass_filter=self._predict_kwargs
+            params, destination="predict", pass_filter=self._predict_kwargs, strict=True
         )
         pred_args = {
             k: v for k, v in pred_args.items() if not k.startswith("callbacks")
