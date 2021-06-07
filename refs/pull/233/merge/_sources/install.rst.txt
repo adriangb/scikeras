@@ -17,6 +17,19 @@ To install with pip, run:
 
 We recommend to use a virtual environment for this.
 
+To install without any dependencies, eg. to use a custom
+TensorFlow build or `tensorflow-cpu`_, you can instruct pip to ignore dependencies:
+
+.. code:: bash
+
+    pip install --no-deps scikeras
+
+Then manually install compatible versions of TensorFlow and Scikit-Learn.
+As of SciKeras v0.3.3, the minimum required versions are as follows:
+
+- TensorFlow: v2.4.0
+- Scikit-Learn: v0.22.0
+
 Developer Installation
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -35,4 +48,5 @@ We use Poetry_ to manage dependencies.
     pytest -n auto  # parallelized tests via pytest-xdist
 
 
-.. _Poetry: http://pytorch.org/
+.. _Poetry: https://python-poetry.org/
+.. _tensorflow-cpu: https://pypi.org/project/tensorflow-cpu/
