@@ -777,11 +777,15 @@ class BaseWrapper(BaseEstimator):
                 if isinstance(callbacks, Mapping):
                     # Keras does not officially support dicts, convert to a list
                     callbacks = list(callbacks.values())
-                elif isinstance(callbacks, List):
-                    callbacks = callbacks
-                else:
+                else isinstance(callbacks, tf.keras.callbacks.Callback):
                     # a single instance, not officially supported so wrap in a list
                     callbacks = [callbacks]
+                elif isinstance(callbacks, List):
+                    pass  # lists are good as is
+                else:
+                    raise TypeError(
+                        "``callbacks`` must be a dict of, list of or single tf.keras.callback.Callback"
+                    )
             else:
                 callbacks = []
             return callbacks
