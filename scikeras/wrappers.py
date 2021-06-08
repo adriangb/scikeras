@@ -780,11 +780,23 @@ class BaseWrapper(BaseEstimator):
                 elif isinstance(callbacks, tf.keras.callbacks.Callback):
                     # a single instance, not officially supported so wrap in a list
                     callbacks = [callbacks]
-                elif isinstance(callbacks, List):
-                    pass  # lists are good as is
-                else:
+                err = False
+                if not isinstance(callbacks, List):
+                    err = True
+                for cb in callbacks:
+                    if isinstance(cb, List):
+                        for nested_cb in cb:
+                            if not isinstance(nested_cb, tf.keras.callbacks.Callback):
+                                err = True
+                    elif not isinstance(cb, tf.keras.callbacks.Callback):
+                        err = True
+                if err:
                     raise TypeError(
-                        "``callbacks`` must be a dict of, list of or single tf.keras.callback.Callback"
+                        "If specified, ``callbacks`` must be one of:"
+                        "\n - A dict of string keys with callbacks or lists of callbacks as values"
+                        "\n - A list of callbacks or lists of callbacks"
+                        "\n - A single callback"
+                        "\nWhere each callback can be a instance of `tf.keras.callbacks.Callback` or a sublass of it to be compiled by SciKeras"
                     )
             else:
                 callbacks = []
