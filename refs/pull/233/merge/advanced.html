@@ -466,34 +466,36 @@ Here are several support use cases:</p>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="o">...</span><span class="p">,</span>
     <span class="n">metrics</span><span class="o">=</span><span class="n">BinaryAccuracy</span><span class="p">,</span>
-    <span class="n">metrics__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="c1"># or to apply multiple metrics to all outputs</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="o">...</span><span class="p">,</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span><span class="p">],</span>  <span class="c1"># both applied to all outputs</span>
-    <span class="n">metrics__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="c1"># or for different metrics to each output</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="o">...</span><span class="p">,</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;out1&quot;</span><span class="p">:</span> <span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="s2">&quot;out2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span><span class="p">]},</span>
-    <span class="n">metrics__out1__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
-    <span class="n">metrics__out2__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__out1__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__out2__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="c1"># assuming you ordered your outputs like [out1, out2], this is equivalent to</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="o">...</span><span class="p">,</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="p">[</span><span class="n">AUC</span><span class="p">,</span> <span class="n">BinaryAccuracy</span><span class="p">]],</span>
-    <span class="n">metrics__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
-    <span class="n">metrics__1__0__threashold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__1__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <p>See the <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/metrics">Keras Metrics docs</a> for more details on mapping metrics to outputs.</p>
 </section>
+</section>
 <section id="callbacks">
-<h4>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this headline">¶</a></h4>
+<h3>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this headline">¶</a></h3>
+<p>SciKeras can route parameters to callbacks.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
     <span class="o">...</span><span class="p">,</span>
     <span class="n">callbacks</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span>
@@ -534,7 +536,7 @@ predict__callbacks=tf.keras.callbacks.Callback,  # called only from predict</p>
 <p>Any routed constructor parameters must also use the corresponding prefix to get routed correctly.</p>
 </section>
 <section id="routing-as-positional-or-keyword-arguments">
-<h4>Routing as positional or keyword arguments<a class="headerlink" href="#routing-as-positional-or-keyword-arguments" title="Permalink to this headline">¶</a></h4>
+<h3>Routing as positional or keyword arguments<a class="headerlink" href="#routing-as-positional-or-keyword-arguments" title="Permalink to this headline">¶</a></h3>
 <p>It is possible that the consturctor of the class you need instantiated does not accept keyword arguments.
 In this case, instead of <code class="docutils literal notranslate"><span class="pre">__name_of_kwarg=value</span></code> you can use <code class="docutils literal notranslate"><span class="pre">__0=value</span></code> (or any other integer),
 which tells SciKeras to pass that parameter as an positional argument instead of a keyword argument.</p>
@@ -560,7 +562,6 @@ which tells SciKeras to pass that parameter as an positional argument instead of
  <span class="p">)</span>
 </pre></div>
 </div>
-</section>
 </section>
 </section>
 <section id="custom-scorers">

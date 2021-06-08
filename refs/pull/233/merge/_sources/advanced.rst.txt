@@ -353,34 +353,36 @@ Here are several support use cases:
     clf = KerasClassifier(
         ...,
         metrics=BinaryAccuracy,
-        metrics__threashold=0.65,
+        metrics__threshold=0.65,
     )
     # or to apply multiple metrics to all outputs
     clf = KerasClassifier(
         ...,
         metrics=[BinaryAccuracy, AUC],  # both applied to all outputs
-        metrics__0__threashold=0.65,
+        metrics__0__threshold=0.65,
     )
     # or for different metrics to each output
     clf = KerasClassifier(
         ...,
         metrics={"out1": BinaryAccuracy, "out2": [BinaryAccuracy, AUC]},
-        metrics__out1__threashold=0.65,
-        metrics__out2__0__threashold=0.65,
+        metrics__out1__threshold=0.65,
+        metrics__out2__0__threshold=0.65,
     )
     # assuming you ordered your outputs like [out1, out2], this is equivalent to
     clf = KerasClassifier(
         ...,
         metrics=[BinaryAccuracy, [AUC, BinaryAccuracy]],
-        metrics__0__threashold=0.65,
-        metrics__1__0__threashold=0.65,
+        metrics__0__threshold=0.65,
+        metrics__1__0__threshold=0.65,
     )
 
 
 See the `Keras Metrics docs`_ for more details on mapping metrics to outputs.
 
 Callbacks
-+++++++++
+^^^^^^^^^
+
+SciKeras can route parameters to callbacks.
 
 .. code:: python
 
@@ -439,7 +441,7 @@ simply use the ``fit__`` or ``predict__`` routing prefixes on your callback:
 Any routed constructor parameters must also use the corresponding prefix to get routed correctly.
 
 Routing as positional or keyword arguments
-++++++++++++++++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is possible that the consturctor of the class you need instantiated does not accept keyword arguments.
 In this case, instead of ``__name_of_kwarg=value`` you can use ``__0=value`` (or any other integer),
