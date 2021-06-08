@@ -502,7 +502,7 @@ class BaseWrapper(BaseEstimator):
                             f"`{bs_kwarg}=-1` requires that `X` implement `shape`"
                         )
         fit_args = {k: v for k, v in fit_args.items() if not k.startswith("callbacks")}
-        fit_args["callbacks"] = self._fit_callbacks + self._callbacks
+        fit_args["callbacks"] = self._fit_callbacks
 
         if self._random_state is not None:
             with TFRandomState(self._random_state):
@@ -790,9 +790,9 @@ class BaseWrapper(BaseEstimator):
                 callbacks = []
             return callbacks
 
-        self._callbacks = initialize("callbacks")
-        self._fit_callbacks = initialize("fit__callbacks")
-        self._predict_callbacks = initialize("predict__callbacks")
+        all_callbacks = initialize("callbacks")
+        self._fit_callbacks = all_callbacks + initialize("fit__callbacks")
+        self._predict_callbacks = all_callbacks + initialize("predict__callbacks")
 
     def _initialize(
         self, X: np.ndarray, y: Union[np.ndarray, None] = None
@@ -968,7 +968,7 @@ class BaseWrapper(BaseEstimator):
         pred_args = {
             k: v for k, v in pred_args.items() if not k.startswith("callbacks")
         }
-        pred_args["callbacks"] = self._callbacks + self._predict_callbacks
+        pred_args["callbacks"] = self._predict_callbacks
         pred_args.update(kwargs)
         if "batch_size" in pred_args:
             if pred_args["batch_size"] == -1:
