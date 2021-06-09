@@ -70,8 +70,8 @@ class MultiOutputClassifier(KerasClassifier):
     "multilabel-indicator" by mapping to multiple Keras outputs.
     """
 
-    def __init__(self, model=None, split: bool = True, **kwargs):
-        super().__init__(model=model, **kwargs)
+    def __init__(self, model=None, loss=None, split: bool = True, **kwargs):
+        super().__init__(model=model, loss=loss, **kwargs)
         self.split = split
 
     @property

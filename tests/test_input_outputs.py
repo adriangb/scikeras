@@ -29,6 +29,9 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
     """Tests Functional API Classifier with 2 inputs.
     """
 
+    def __init__(self, *args, loss=None, **kwargs):
+        super().__init__(*args, loss=loss, **kwargs)
+
     def _keras_build_fn(
         self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
     ) -> Model:
@@ -428,7 +431,7 @@ def continuous():
     y = np.random.randint(low=0, high=2, size=(1000,))
     X = y.reshape(-1, 1)
     sklearn_est = MLPRegressor(**mlp_kwargs)
-    scikeras_est = KerasRegressor(dynamic_regressor, **scikeras_kwargs)
+    scikeras_est = KerasRegressor(dynamic_regressor, loss=None, **scikeras_kwargs)
     for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
         y_ = y.astype(dtype)
         yield TestParams(
@@ -450,7 +453,7 @@ def continuous_multioutput():
     y = np.column_stack([y, y])
 
     sklearn_est = MLPRegressor(**mlp_kwargs)
-    scikeras_est = KerasRegressor(dynamic_regressor, **scikeras_kwargs)
+    scikeras_est = KerasRegressor(dynamic_regressor, loss=None, **scikeras_kwargs)
     for dtype in ("float32", "float64", "int64", "int32", "uint8", "uint16"):
         y_ = y.astype(dtype)
         yield TestParams(
@@ -508,8 +511,8 @@ def test_output_shapes_and_dtypes_against_sklearn_reg(test_data: TestParams):
 @pytest.mark.parametrize(
     "est",
     (
-        KerasRegressor(dynamic_regressor, model__hidden_layer_sizes=[]),
-        KerasClassifier(dynamic_classifier, model__hidden_layer_sizes=[]),
+        KerasRegressor(dynamic_regressor, loss=None, model__hidden_layer_sizes=[]),
+        KerasClassifier(dynamic_classifier, loss=None, model__hidden_layer_sizes=[]),
     ),
 )
 @pytest.mark.parametrize(

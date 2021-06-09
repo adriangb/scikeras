@@ -22,8 +22,12 @@ class TestRandomState:
     @pytest.mark.parametrize(
         "estimator",
         [
-            KerasRegressor(model=dynamic_regressor, model__hidden_layer_sizes=(100,),),
-            KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
+            KerasRegressor(
+                model=dynamic_regressor, model__hidden_layer_sizes=(100,), loss=None
+            ),
+            KerasClassifier(
+                model=dynamic_classifier, model__hidden_layer_sizes=(100,), loss=None
+            ),
         ],
     )
     def test_random_states(self, random_state, estimator):
@@ -54,8 +58,12 @@ class TestRandomState:
     @pytest.mark.parametrize(
         "estimator",
         [
-            KerasRegressor(model=dynamic_regressor, model__hidden_layer_sizes=(100,),),
-            KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
+            KerasRegressor(
+                model=dynamic_regressor, model__hidden_layer_sizes=(100,), loss=None
+            ),
+            KerasClassifier(
+                model=dynamic_classifier, model__hidden_layer_sizes=(100,), loss=None
+            ),
         ],
     )
     @pytest.mark.parametrize("pyhash", [None, "0", "1"])
@@ -117,6 +125,7 @@ def test_sample_weights_fit():
         model__hidden_layer_sizes=(100,),
         epochs=10,
         random_state=0,
+        loss=None,
     )
     estimator1 = clone(estimator)
     estimator2 = clone(estimator)
@@ -187,12 +196,16 @@ def test_build_fn_default_params():
     """Tests that default arguments arguments of
     `build_fn` are registered as hyperparameters.
     """
-    est = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,))
+    est = KerasClassifier(
+        model=dynamic_classifier, model__hidden_layer_sizes=(100,), loss=None
+    )
     params = est.get_params()
     # (100, ) is the default for dynamic_classifier
     assert params["model__hidden_layer_sizes"] == (100,)
 
-    est = KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(200,))
+    est = KerasClassifier(
+        model=dynamic_classifier, model__hidden_layer_sizes=(200,), loss=None
+    )
     params = est.get_params()
     assert params["model__hidden_layer_sizes"] == (200,)
 
@@ -207,7 +220,10 @@ class TestMetricsParam:
         as a string and not as a retrieved function.
         """
         est = KerasClassifier(
-            model=dynamic_classifier, model__hidden_layer_sizes=(100,), metrics=[metric]
+            model=dynamic_classifier,
+            model__hidden_layer_sizes=(100,),
+            metrics=[metric],
+            loss=None,
         )
         X, y = make_classification()
         est.fit(X, y)
@@ -221,7 +237,10 @@ def test_class_weight_param():
     Tests that fit and partial_fit correctly handle the class_weight parameter.
     """
     clf = KerasClassifier(
-        model=dynamic_classifier, model__hidden_layer_sizes=(100,), random_state=0,
+        model=dynamic_classifier,
+        model__hidden_layer_sizes=(100,),
+        random_state=0,
+        loss=None,
     )
     problems = (2, 3)
     for n_centers in problems:
@@ -276,6 +295,7 @@ def test_kwargs(wrapper, builder):
         batch_size=original_batch_size,  # test that this is overridden by kwargs
         fit__batch_size=original_batch_size,  # test that this is overridden by kwargs
         predict__batch_size=original_batch_size,  # test that this is overridden by kwargs
+        loss=None,
     )
     X, y = np.random.random((100, 10)), np.random.randint(low=0, high=3, size=(100,))
     est.initialize(X, y)
@@ -332,7 +352,9 @@ def test_batch_size_all_fit(length, prefix, base):
 
     y = np.random.random((length,))
     X = y.reshape((-1, 1))
-    est = KerasRegressor(dynamic_regressor, hidden_layer_sizes=[], **{kw: -1})
+    est = KerasRegressor(
+        dynamic_regressor, hidden_layer_sizes=[], **{kw: -1}, loss=None
+    )
 
     est.initialize(X, y)
 
@@ -355,7 +377,9 @@ def test_batch_size_all_predict(length, prefix, base):
 
     y = np.random.random((length,))
     X = y.reshape((-1, 1))
-    est = KerasRegressor(dynamic_regressor, hidden_layer_sizes=[], **{kw: -1})
+    est = KerasRegressor(
+        dynamic_regressor, hidden_layer_sizes=[], **{kw: -1}, loss=None
+    )
 
     est.fit(X, y)
 
@@ -378,7 +402,9 @@ def test_batch_size_all_fit(length, prefix, base):
 
     y = np.random.random((length,))
     X = y.reshape((-1, 1))
-    est = KerasRegressor(dynamic_regressor, hidden_layer_sizes=[], **{kw: -1})
+    est = KerasRegressor(
+        dynamic_regressor, hidden_layer_sizes=[], **{kw: -1}, loss=None
+    )
 
     est.initialize(X, y)
 
@@ -405,7 +431,7 @@ def test_batch_size_all_fit_non_array(prefix, base):
 
     y = np.random.random((100,))
     X = y.reshape((-1, 1))
-    est = CustomReg(dynamic_regressor, hidden_layer_sizes=[], **{kw: -1})
+    est = CustomReg(dynamic_regressor, hidden_layer_sizes=[], **{kw: -1}, loss=None)
 
     with pytest.raises(ValueError, match="requires that `X` implement `shape`"):
         est.fit(X, y)
@@ -419,7 +445,9 @@ def test_batch_size_all_predict_non_array():
 
     y = np.random.random((100,))
     X = y.reshape((-1, 1))
-    est = CustomReg(dynamic_regressor, hidden_layer_sizes=[], predict__batch_size=-1)
+    est = CustomReg(
+        dynamic_regressor, hidden_layer_sizes=[], predict__batch_size=-1, loss=None
+    )
 
     est.fit(X, y)
 

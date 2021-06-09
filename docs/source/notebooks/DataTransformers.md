@@ -316,7 +316,6 @@ from sklearn.metrics import accuracy_score
 
 
 class MultiOutputClassifier(KerasClassifier):
-
     @property
     def target_encoder(self):
         return MultiOutputTransformer()

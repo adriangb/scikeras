@@ -4,7 +4,7 @@ import inspect
 import warnings
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import numpy as np
 import tensorflow as tf
@@ -23,6 +23,7 @@ from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.keras.utils import register_keras_serializable
 
+from scikeras import _types as T
 from scikeras._utils import (
     TFRandomState,
     _class_from_strings,
@@ -53,7 +54,7 @@ class BaseWrapper(BaseEstimator):
 
     Parameters
     ----------
-    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+    model : Optional[Callable[..., tf.keras.Model], tf.keras.Model], default None
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
@@ -63,7 +64,7 @@ class BaseWrapper(BaseEstimator):
         an instance of tf.keras.optimizers.Optimizer
         or a class inheriting from tf.keras.optimizers.Optimizer.
         Only strings and classes support parameter routing.
-    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+    loss : Optional[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable]], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
         an instance of tf.keras.losses.Loss
@@ -80,7 +81,7 @@ class BaseWrapper(BaseEstimator):
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.
-    batch_size : Union[int, None], default None
+    batch_size : Optional[int], default None
         Number of samples per gradient update.
         This will be applied to both `fit` and `predict`. To specify different numbers,
         pass `fit__batch_size=32` and `predict__batch_size=1000` (for example).
@@ -192,37 +193,18 @@ class BaseWrapper(BaseEstimator):
 
     def __init__(
         self,
-        model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
+        model: Optional[T.Model] = None,
         *,
-        build_fn: Union[
-            None, Callable[..., tf.keras.Model], tf.keras.Model
-        ] = None,  # for backwards compatibility
+        build_fn: Optional[T.Model] = None,  # for backwards compatibility
         warm_start: bool = False,
-        random_state: Union[int, np.random.RandomState, None] = None,
-        optimizer: Union[
-            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
-        ] = "rmsprop",
-        loss: Union[
-            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
-        ] = None,
-        metrics: Union[
-            List[
-                Union[
-                    str,
-                    tf.keras.metrics.Metric,
-                    Type[tf.keras.metrics.Metric],
-                    Callable,
-                ]
-            ],
-            None,
-        ] = None,
-        batch_size: Union[int, None] = None,
-        validation_batch_size: Union[int, None] = None,
+        random_state: Optional[T.RandomState] = None,
+        optimizer: T.Optimizer = "rmsprop",
+        loss: Optional[T.Loss] = None,
+        metrics: Optional[T.Metrics] = None,
+        batch_size: Optional[int] = None,
+        validation_batch_size: Optional[int] = None,
         verbose: int = 1,
-        callbacks: Union[
-            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
-            None,
-        ] = None,
+        callbacks: Optional[T.Callbacks] = None,
         validation_split: float = 0.0,
         shuffle: bool = True,
         run_eagerly: bool = False,
@@ -420,7 +402,7 @@ class BaseWrapper(BaseEstimator):
 
         return model
 
-    def _ensure_compiled_model(self) -> None:
+    def _ensure_compiled_model(self, X=None, y=None) -> None:
         # compile model if user gave us an un-compiled model
         if not (hasattr(self.model_, "loss") and hasattr(self.model_, "optimizer")):
             self.model_.compile(**self._get_compile_kwargs())
@@ -443,7 +425,7 @@ class BaseWrapper(BaseEstimator):
             Training samples, as accepted by tf.keras.Model
         y : Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]]
             Target data, as accepted by tf.keras.Model
-        sample_weight : Union[np.ndarray, None]
+        sample_weight : Optional[np.ndarray]
             Sample weights. Ignored by Keras if None.
         warm_start : bool
             If True, don't don't overwrite
@@ -553,7 +535,7 @@ class BaseWrapper(BaseEstimator):
                 given = loss_name(self.loss)
                 got = loss_name(self.model_.loss)
                 if given != default_val and got != given:
-                    raise ValueError(
+                    warnings.warn(
                         f"loss={self.loss} but model compiled with {self.model_.loss}."
                         " Data may not match loss function!"
                     )
@@ -855,7 +837,7 @@ class BaseWrapper(BaseEstimator):
             X, y = self._initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
-        self._ensure_compiled_model()
+        self._ensure_compiled_model(X=X, y=y)
 
         if sample_weight is not None:
             X, sample_weight = self._validate_sample_weight(X, sample_weight)
@@ -1132,7 +1114,7 @@ class KerasClassifier(BaseWrapper):
 
     Parameters
     ----------
-    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+    model : Optional[Callable[..., tf.keras.Model], tf.keras.Model], default None
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
@@ -1142,12 +1124,26 @@ class KerasClassifier(BaseWrapper):
         an instance of tf.keras.optimizers.Optimizer
         or a class inheriting from tf.keras.optimizers.Optimizer.
         Only strings and classes support parameter routing.
-    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+    loss : Optional[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable]], default "categorical_crossentropy"
         The loss function to use for training.
         This can be a string for Keras' built in losses,
         an instance of tf.keras.losses.Loss
         or a class inheriting from tf.keras.losses.Loss .
         Only strings and classes support parameter routing.
+
+        For convience, the loss defaults to
+        `"categorical_crossentropy"`. This assumes that the model has
+        1 output with ``N`` output units if the dataset has ``N`` classes. It works with
+        both an array of class labels (``[1, 0, 2]``) or one-hot
+        encoded labels (``[[0, 1, 0], [1, 0, 0], [0, 0, 1]]``).
+
+        .. warning::
+
+           This default does not work for binary classification with
+           one output node/neuron (though it works with two output
+           neurons). In the case with output node/neuron,
+           set ``loss="bce"`` or ``loss="binary_crossentropy"``.
+
     random_state : Union[int, np.random.RandomState, None], default None
         Set the Tensorflow random number generators to a
         reproducible deterministic state using this seed.
@@ -1159,12 +1155,12 @@ class KerasClassifier(BaseWrapper):
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.
-    batch_size : Union[int, None], default None
+    batch_size : Optional[int], default None
         Number of samples per gradient update.
         This will be applied to both `fit` and `predict`. To specify different numbers,
         pass `fit__batch_size=32` and `predict__batch_size=1000` (for example).
         To auto-adjust the batch size to use all samples, pass `batch_size=-1`.
-    class_weight : Union[Dict[Any, float], str, None], default None
+    class_weight : Optional[Dict[Any, float], str], default None
         Weights associated with classes in the form ``{class_label: weight}``.
         If not given, all classes are supposed to have weight one.
         The "balanced" mode uses the values of y to automatically adjust
@@ -1245,42 +1241,23 @@ class KerasClassifier(BaseWrapper):
 
     def __init__(
         self,
-        model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
+        model: Optional[T.Model] = None,
         *,
-        build_fn: Union[
-            None, Callable[..., tf.keras.Model], tf.keras.Model
-        ] = None,  # for backwards compatibility
+        build_fn: Optional[T.Model] = None,  # for backwards compatibility
         warm_start: bool = False,
-        random_state: Union[int, np.random.RandomState, None] = None,
-        optimizer: Union[
-            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
-        ] = "rmsprop",
-        loss: Union[
-            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
-        ] = None,
-        metrics: Union[
-            List[
-                Union[
-                    str,
-                    tf.keras.metrics.Metric,
-                    Type[tf.keras.metrics.Metric],
-                    Callable,
-                ]
-            ],
-            None,
-        ] = None,
-        batch_size: Union[int, None] = None,
-        validation_batch_size: Union[int, None] = None,
+        random_state: Optional[T.RandomState] = None,
+        optimizer: T.Optimizer = "rmsprop",
+        loss: Optional[T.Loss] = "categorical_crossentropy",
+        metrics: Optional[T.Metrics] = None,
+        batch_size: Optional[int] = None,
+        validation_batch_size: Optional[int] = None,
         verbose: int = 1,
-        callbacks: Union[
-            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
-            None,
-        ] = None,
+        callbacks: Optional[T.Callbacks] = None,
         validation_split: float = 0.0,
         shuffle: bool = True,
         run_eagerly: bool = False,
         epochs: int = 1,
-        class_weight: Union[Dict[Any, float], str, None] = None,
+        class_weight: Optional[Union[Dict[Any, float], str]] = None,
         **kwargs,
     ):
         super().__init__(
@@ -1308,7 +1285,51 @@ class KerasClassifier(BaseWrapper):
         if target_type == "binary" and self.classes_ is not None:
             # check that this is not a multiclass problem missing categories
             target_type = type_of_target(self.classes_)
+        if target_type == "binary" and self.loss == "categorical_crossentropy":
+            # Warn in case the user decides to compile their own model
+            warnings.warn(
+                "A binary target with two targets is specified; "
+                "however loss='categorical_crossentropy' is specified. "
+                "With a single output neurons, Keras will not learn. "
+                "Any one of the following will clear this warning:\n\n"
+                "    * Set loss='binary_crossentropy' or loss='bce'\n"
+                "    * Set the model too have two output neurons"
+            )
         return target_type
+
+    def _fit_keras_model(self, X, y=None, **kwargs):
+        bad_loss = "sparse_categorical_crossentropy"
+        if (
+            loss_name(self.model_.loss) == bad_loss
+            and self.loss
+            and self.loss != bad_loss
+        ):
+            raise ValueError(
+                f"loss='{bad_loss}' must be specified at initialization. "
+                "To clear this error, use one of the following code snippets:\n\n"
+                f"    >>> est = {self.__name__}(... loss='{bad_loss}')  # option 1\n"
+                f"    >>> est.set_params(loss='{bad_loss}').initialize(X, y)'  # option 2\n\n"
+                "Setting loss=None is another method of clearing this error."
+            )
+        try:
+            super()._fit_keras_model(X, y=y, **kwargs)
+        except ValueError as e:
+            if (
+                hasattr(self, "model_")
+                and loss_name(self.model_.loss) == "categorical_crossentropy"
+                and hasattr(self.model_, "outputs")
+                and len(self.model_.outputs) == 1
+                and self.model_.outputs[0].shape[1] == 1
+            ):
+                raise ValueError(
+                    "The model is configured to have a single output with a "
+                    f"single output neuron, but the loss='{self.loss}' is "
+                    "expecting n_classes output neurons (where n_classes > 1)\n\n"
+                    f"loss='{self.loss}' is often used with one-hot encoded targets. "
+                    "More detail on Keras losses: https://keras.io/api/losses/"
+                ) from e
+            else:
+                raise e
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
@@ -1356,7 +1377,7 @@ class KerasClassifier(BaseWrapper):
         categories = "auto" if self.classes_ is None else [self.classes_]
         return ClassifierLabelEncoder(loss=self.loss, categories=categories)
 
-    def initialize(self, X, y) -> "KerasClassifier":
+    def initialize(self, *args, **kwargs) -> "KerasClassifier":
         """Initialize the model without any fitting.
         You only need to call this model if you explicitly do not want to do any fitting
         (for example with a pretrained model). You should _not_ call this
@@ -1377,7 +1398,8 @@ class KerasClassifier(BaseWrapper):
             A reference to the KerasClassifier instance for chained calling.
         """
         self.classes_ = None
-        super().initialize(X=X, y=y)
+        super().initialize(*args, **kwargs)
+
         return self
 
     def fit(self, X, y, sample_weight=None, **kwargs) -> "KerasClassifier":
@@ -1499,7 +1521,7 @@ class KerasRegressor(BaseWrapper):
     Parameters
     ----------
 
-    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+    model : Optional[Callable[..., tf.keras.Model], tf.keras.Model], default None
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
@@ -1509,7 +1531,7 @@ class KerasRegressor(BaseWrapper):
         an instance of tf.keras.optimizers.Optimizer
         or a class inheriting from tf.keras.optimizers.Optimizer.
         Only strings and classes support parameter routing.
-    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+    loss : Optional[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable]], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
         an instance of tf.keras.losses.Loss
@@ -1526,7 +1548,7 @@ class KerasRegressor(BaseWrapper):
         If False, subsequent fit calls will reset the entire model.
         This has no impact on partial_fit, which always trains
         for a single epoch starting from the current epoch.
-    batch_size : Union[int, None], default None
+    batch_size : Optional[int], default None
         Number of samples per gradient update.
         This will be applied to both `fit` and `predict`. To specify different numbers,
         pass `fit__batch_size=32` and `predict__batch_size=1000` (for example).
@@ -1610,6 +1632,45 @@ class KerasRegressor(BaseWrapper):
         },
         **BaseWrapper._tags,
     }
+
+    def __init__(
+        self,
+        model: Optional[T.Model] = None,
+        *,
+        build_fn: Optional[T.Model] = None,  # for backwards compatibility
+        warm_start: bool = False,
+        random_state: Optional[T.RandomState] = None,
+        optimizer: T.Optimizer = "rmsprop",
+        loss: Optional[T.Loss] = "mse",
+        metrics: Optional[T.Metrics] = None,
+        batch_size: Optional[int] = None,
+        validation_batch_size: Optional[int] = None,
+        verbose: int = 1,
+        callbacks: Optional[T.Callbacks] = None,
+        validation_split: float = 0.0,
+        shuffle: bool = True,
+        run_eagerly: bool = False,
+        epochs: int = 1,
+        **kwargs,
+    ):
+        super().__init__(
+            model=model,
+            build_fn=build_fn,
+            warm_start=warm_start,
+            random_state=random_state,
+            optimizer=optimizer,
+            loss=loss,
+            metrics=metrics,
+            batch_size=batch_size,
+            validation_batch_size=validation_batch_size,
+            verbose=verbose,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            shuffle=shuffle,
+            run_eagerly=run_eagerly,
+            epochs=epochs,
+            **kwargs,
+        )
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
