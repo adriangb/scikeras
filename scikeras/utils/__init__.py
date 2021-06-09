@@ -14,7 +14,7 @@ def _camel2snake(s: str) -> str:
     return "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")
 
 
-def loss_name(loss: Union[str, Loss, Callable]) -> str:
+def loss_name(loss: Union[str, Loss, Callable]) -> Union[str, None]:
     """Retrieves a loss's full name (eg: "mean_squared_error").
 
     Parameters
@@ -25,8 +25,9 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
 
     Returns
     -------
-    str
-        String name of the loss.
+    Union[str, None]
+        String name of the loss. String inputs that do not map to a known
+        Keras loss function return `None`.
 
     Notes
     -----
@@ -43,6 +44,8 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     'binary_crossentropy'
     >>> loss_name(losses.binary_crossentropy)
     'binary_crossentropy'
+    >>> loss_name("abcdefg")
+    None
 
     Raises
     ------
@@ -56,13 +59,17 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
             "``loss`` must be a string, a function, an instance of ``tf.keras.losses.Loss``"
             " or a type inheriting from ``tf.keras.losses.Loss``"
         )
-    fn_or_cls = keras_loss_get(loss)
+    try:
+        fn_or_cls = keras_loss_get(loss)
+    except ValueError:
+        # unknown loss
+        return None
     if isinstance(fn_or_cls, Loss):
         return _camel2snake(fn_or_cls.__class__.__name__)
     return fn_or_cls.__name__
 
 
-def metric_name(metric: Union[str, Metric, Callable]) -> str:
+def metric_name(metric: Union[str, Metric, Callable]) -> Union[str, None]:
     """Retrieves a metric's full name (eg: "mean_squared_error").
 
     Parameters
@@ -73,8 +80,9 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
 
     Returns
     -------
-    str
+    Union[str, None]
         Full name for Keras metric. Ex: "mean_squared_error".
+        String inputs that do not map to a known Keras loss function return `None`.
 
     Notes
     -----
@@ -91,6 +99,8 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
     'BinaryCrossentropy'
     >>> metric_name(metrics.binary_crossentropy)
     'binary_crossentropy'
+    >>> metric_name("abcdefg")
+    None
 
     Raises
     ------
@@ -106,7 +116,11 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
             " ``tf.keras.metrics.Metric`` or a type inheriting from"
             " ``tf.keras.metrics.Metric``"
         )
-    fn_or_cls = keras_metric_get(metric)
+    try:
+        fn_or_cls = keras_metric_get(metric)
+    except ValueError:
+        # unknown metric
+        return None
     if isinstance(fn_or_cls, Metric):
         return _camel2snake(fn_or_cls.__class__.__name__)
     return fn_or_cls.__name__

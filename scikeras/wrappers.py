@@ -345,27 +345,36 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs = route_params(
             init_params, destination="compile", pass_filter=self._compile_kwargs,
         )
-        compile_kwargs["optimizer"] = _class_from_strings(
-            compile_kwargs["optimizer"], optimizers_module.get
-        )
+        try:
+            compile_kwargs["optimizer"] = _class_from_strings(
+                compile_kwargs["optimizer"], optimizers_module.get
+            )
+        except ValueError:
+            pass  # unknown optimizer
         compile_kwargs["optimizer"] = unflatten_params(
             items=compile_kwargs["optimizer"],
             params=route_params(
                 init_params, destination="optimizer", pass_filter=set(), strict=True,
             ),
         )
-        compile_kwargs["loss"] = _class_from_strings(
-            compile_kwargs["loss"], losses_module.get
-        )
+        try:
+            compile_kwargs["loss"] = _class_from_strings(
+                compile_kwargs["loss"], losses_module.get
+            )
+        except ValueError:
+            pass  # unknown loss
         compile_kwargs["loss"] = unflatten_params(
             items=compile_kwargs["loss"],
             params=route_params(
                 init_params, destination="loss", pass_filter=set(), strict=False,
             ),
         )
-        compile_kwargs["metrics"] = _class_from_strings(
-            compile_kwargs["metrics"], metrics_module.get
-        )
+        try:
+            compile_kwargs["metrics"] = _class_from_strings(
+                compile_kwargs["metrics"], metrics_module.get
+            )
+        except ValueError:
+            pass  # unknown loss
         compile_kwargs["metrics"] = unflatten_params(
             items=compile_kwargs["metrics"],
             params=route_params(
@@ -374,7 +383,7 @@ class BaseWrapper(BaseEstimator):
         )
         return compile_kwargs
 
-    def _build_keras_model(self):
+    def _build_keras_model(self) -> None:
         """Build the Keras model.
 
         This method will process all arguments and call the model building
@@ -417,13 +426,17 @@ class BaseWrapper(BaseEstimator):
                 model = final_build_fn(**build_params)
         else:
             model = final_build_fn(**build_params)
-
-        return model
+        self.model_ = model
+        self._ensure_compiled_model()
+        return
 
     def _ensure_compiled_model(self) -> None:
         # compile model if user gave us an un-compiled model
         if not (hasattr(self.model_, "loss") and hasattr(self.model_, "optimizer")):
-            self.model_.compile(**self._get_compile_kwargs())
+            self._compile_model(self._get_compile_kwargs())
+
+    def _compile_model(self, compile_kwargs: Dict[str, Any]) -> None:
+        self.model_.compile(**compile_kwargs)
 
     def _fit_keras_model(
         self,
@@ -514,13 +527,12 @@ class BaseWrapper(BaseEstimator):
             self.history_ = defaultdict(list)
 
         for key, val in hist.history.items():
-            try:
-                key = metric_name(key)
-            except ValueError as e:
+            key_name = metric_name(key)
+            if key_name is not None:
                 # Keras puts keys like "val_accuracy" and "loss" and
-                # "val_loss" in hist.history
-                if "Unknown metric function" not in str(e):
-                    raise e
+                # "val_loss" in hist.history these will return
+                # None since they are not a real metric
+                key = key_name
             self.history_[key] += val
 
     def _check_model_compatibility(self, y: np.ndarray) -> None:
@@ -790,7 +802,7 @@ class BaseWrapper(BaseEstimator):
         feature_meta = getattr(self.feature_encoder, "get_metadata", dict)()
         vars(self).update(**feature_meta)
 
-        self.model_ = self._build_keras_model()
+        self._build_keras_model()
 
         return X, y
 
@@ -855,7 +867,6 @@ class BaseWrapper(BaseEstimator):
             X, y = self._initialize(X, y)
         else:
             X, y = self._validate_data(X, y)
-        self._ensure_compiled_model()
 
         if sample_weight is not None:
             X, sample_weight = self._validate_sample_weight(X, sample_weight)
@@ -1257,7 +1268,7 @@ class KerasClassifier(BaseWrapper):
         ] = "rmsprop",
         loss: Union[
             Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
-        ] = None,
+        ] = "auto",
         metrics: Union[
             List[
                 Union[
@@ -1309,6 +1320,45 @@ class KerasClassifier(BaseWrapper):
             # check that this is not a multiclass problem missing categories
             target_type = type_of_target(self.classes_)
         return target_type
+
+    def _compile_model(self, compile_kwargs: Dict[str, Any]) -> None:
+        if compile_kwargs["loss"] == "auto":
+            if len(self.model_.outputs) > 1:
+                raise ValueError(
+                    'Only single-output models are supported with `loss="auto"`'
+                )
+            loss = None
+            hint = ""
+            if self.target_type_ == "binary":
+                if self.model_.outputs[0].shape[1] != 1:
+                    raise ValueError(
+                        "Binary classification expects a model with exactly 1 output unit."
+                    )
+                loss = "binary_crossentropy"
+            elif self.target_type_ == "multiclass":
+                if self.model_.outputs[0].shape[1] == 1:
+                    raise ValueError(
+                        "Multi-class targets require the model to have >1 output units."
+                    )
+                loss = "sparse_categorical_crossentropy"
+            elif self.target_type_ == "multilabel-indicator":
+                # one-hot encoded multiclass problem OR multilabel-indicator problem
+                hint = (
+                    "For this type of problem, the following may help:"
+                    '\n - If there is only one class per example, loss="categorical_crossentropy" might be appropriate.'
+                    '\n - If there are multiple classes per example, loss="binary_crossentropy" might be appropriate.'
+                )
+            if loss is None:
+                msg = (
+                    f'`loss="auto"` is not supported for tasks of type {self.target_type_}.'
+                    "\nInstead, you must compile the model yourself or explicitly pass a loss function, for example:"
+                    '\n   clf = KerasClassifier(..., loss="categorical_crossentropy")'
+                )
+                if hint:
+                    msg += f"\n\n{hint}"
+                raise NotImplementedError(msg)
+            compile_kwargs["loss"] = loss
+        self.model_.compile(**compile_kwargs)
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
@@ -1610,6 +1660,73 @@ class KerasRegressor(BaseWrapper):
         },
         **BaseWrapper._tags,
     }
+
+    def __init__(
+        self,
+        model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
+        *,
+        build_fn: Union[
+            None, Callable[..., tf.keras.Model], tf.keras.Model
+        ] = None,  # for backwards compatibility
+        warm_start: bool = False,
+        random_state: Union[int, np.random.RandomState, None] = None,
+        optimizer: Union[
+            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
+        ] = "rmsprop",
+        loss: Union[
+            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
+        ] = "auto",
+        metrics: Union[
+            List[
+                Union[
+                    str,
+                    tf.keras.metrics.Metric,
+                    Type[tf.keras.metrics.Metric],
+                    Callable,
+                ]
+            ],
+            None,
+        ] = None,
+        batch_size: Union[int, None] = None,
+        validation_batch_size: Union[int, None] = None,
+        verbose: int = 1,
+        callbacks: Union[
+            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
+            None,
+        ] = None,
+        validation_split: float = 0.0,
+        shuffle: bool = True,
+        run_eagerly: bool = False,
+        epochs: int = 1,
+        **kwargs,
+    ):
+        super().__init__(
+            model=model,
+            build_fn=build_fn,
+            warm_start=warm_start,
+            random_state=random_state,
+            optimizer=optimizer,
+            loss=loss,
+            metrics=metrics,
+            batch_size=batch_size,
+            validation_batch_size=validation_batch_size,
+            verbose=verbose,
+            callbacks=callbacks,
+            validation_split=validation_split,
+            shuffle=shuffle,
+            run_eagerly=run_eagerly,
+            epochs=epochs,
+            **kwargs,
+        )
+
+    def _compile_model(self, compile_kwargs: Dict[str, Any]) -> None:
+        if compile_kwargs["loss"] == "auto":
+            if len(self.model_.outputs) > 1:
+                raise ValueError(
+                    'Only single-output models are supported with `loss="auto"`'
+                )
+            compile_kwargs["loss"] = "mean_squared_error"
+        self.model_.compile(**compile_kwargs)
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:

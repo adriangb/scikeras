@@ -26,11 +26,13 @@ def dynamic_classifier(
     for layer_size in hidden_layer_sizes:
         hidden = Dense(layer_size, activation="relu")(hidden)
 
+    loss = None if compile_kwargs["loss"] == "auto" else compile_kwargs["loss"]
+
     if target_type_ == "binary":
-        compile_kwargs["loss"] = compile_kwargs["loss"] or "binary_crossentropy"
+        compile_kwargs["loss"] = loss or "binary_crossentropy"
         out = [Dense(1, activation="sigmoid")(hidden)]
     elif target_type_ == "multilabel-indicator":
-        compile_kwargs["loss"] = compile_kwargs["loss"] or "binary_crossentropy"
+        compile_kwargs["loss"] = loss or "binary_crossentropy"
         if isinstance(n_classes_, list):
             out = [
                 Dense(1, activation="sigmoid")(hidden)
@@ -39,13 +41,11 @@ def dynamic_classifier(
         else:
             out = Dense(n_classes_, activation="softmax")(hidden)
     elif target_type_ == "multiclass-multioutput":
-        compile_kwargs["loss"] = compile_kwargs["loss"] or "binary_crossentropy"
+        compile_kwargs["loss"] = loss or "binary_crossentropy"
         out = [Dense(n, activation="softmax")(hidden) for n in n_classes_]
     else:
         # multiclass
-        compile_kwargs["loss"] = (
-            compile_kwargs["loss"] or "sparse_categorical_crossentropy"
-        )
+        compile_kwargs["loss"] = loss or "sparse_categorical_crossentropy"
         out = [Dense(n_classes_, activation="softmax")(hidden)]
 
     model = Model(inp, out)
@@ -60,13 +60,13 @@ def dynamic_regressor(
     meta: Optional[Dict[str, Any]] = None,
     compile_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Model:
-    """Creates a basic MLP regressor dynamically.
-    """
+    """Creates a basic MLP regressor dynamically."""
     # get parameters
     n_features_in_ = meta["n_features_in_"]
     n_outputs_ = meta["n_outputs_"]
 
-    compile_kwargs["loss"] = compile_kwargs["loss"] or "mse"
+    if compile_kwargs["loss"] == "auto":
+        compile_kwargs["loss"] = "mean_squared_error"
 
     inp = Input(shape=(n_features_in_,))
 

@@ -57,9 +57,8 @@ def test_loss_types(loss):
         loss_name(loss)
 
 
-def test_unknown_loss_raises():
-    with pytest.raises(ValueError, match="Unknown loss function"):
-        loss_name("unknown_loss")
+def test_unknown_loss():
+    assert loss_name("unknown_loss") == None
 
 
 @pytest.mark.parametrize("obj", [object(), object, list()])
@@ -69,8 +68,7 @@ def test_metric_types(obj):
 
 
 def test_unknown_metric():
-    with pytest.raises(ValueError, match="Unknown metric function"):
-        metric_name("unknown_metric")
+    assert metric_name("unknown_metric") == None
 
 
 @pytest.mark.parametrize("metric", [CustomMetric, CustomMetric()])
