@@ -1,0 +1,690 @@
+{
+ "cells": [
+  {
+   "cell_type": "raw",
+   "id": "1b9a58ef",
+   "metadata": {},
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/MLPClassifier_MLPRegressor.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "975fc0bd",
+   "metadata": {},
+   "source": [
+    "# MLPClassifier and MLPRegressor in SciKeras\n",
+    "\n",
+    "SciKeras is a bridge between Keras and Scikit-Learn. As such, one of SciKeras' design goals is to be able to create a Scikit-Learn style estimator backed by Keras.\n",
+    "\n",
+    "This notebook implements an estimator that is analogous to `sklearn.neural_network.MLPClassifier` using Keras. This estimator should (for the most part) work as a drop-in replacement for `MLPClassifier`!\n",
+    "\n",
+    "## Table of contents\n",
+    "\n",
+    "* [1. Setup](#1.-Setup)\n",
+    "* [2. Defining the Keras Model](#2.-Defining-the-Keras-Model)\n",
+    "  * [2.1 Inputs](#2.1-Inputs)\n",
+    "  * [2.2 Hidden layers](#2.2-Hidden-layers)\n",
+    "  * [2.3 Output layers](#2.3-Output-layers)\n",
+    "  * [2.4 Losses and optimizer](#2.4-Losses-and-optimizer)\n",
+    "  * [2.5 Wrapping with SciKeras](#2.5-Wrapping-with-SciKeras)\n",
+    "* [3. Testing our classifier](#3.-Testing-our-classifier)\n",
+    "* [4. Self contained MLPClassifier](#4.-Self-contained-MLPClassifier)\n",
+    "  * [4.1 Subclassing](#4.1-Subclassing)\n",
+    "* [5. MLPRegressor](#5.-MLPRegressor)\n",
+    "\n",
+    "## 1. Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "2eb065b1",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:03.161976Z",
+     "iopub.status.busy": "2021-06-18T23:17:03.161358Z",
+     "iopub.status.idle": "2021-06-18T23:17:04.761155Z",
+     "shell.execute_reply": "2021-06-18T23:17:04.762064Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "try:\n",
+    "    import scikeras\n",
+    "except ImportError:\n",
+    "    !python -m pip install scikeras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c6cdf09f",
+   "metadata": {},
+   "source": [
+    "Silence TensorFlow logging to keep output succinct."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "561d5735",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:04.765894Z",
+     "iopub.status.busy": "2021-06-18T23:17:04.764748Z",
+     "iopub.status.idle": "2021-06-18T23:17:04.769914Z",
+     "shell.execute_reply": "2021-06-18T23:17:04.770661Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "from tensorflow import get_logger\n",
+    "get_logger().setLevel('ERROR')\n",
+    "warnings.filterwarnings(\"ignore\", message=\"Setting the random state for TF\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "88f9c8c2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:04.774267Z",
+     "iopub.status.busy": "2021-06-18T23:17:04.772988Z",
+     "iopub.status.idle": "2021-06-18T23:17:05.166625Z",
+     "shell.execute_reply": "2021-06-18T23:17:05.167443Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from scikeras.wrappers import KerasClassifier, KerasRegressor\n",
+    "from tensorflow import keras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e30dea3c",
+   "metadata": {},
+   "source": [
+    "## 2. Defining the Keras Model\n",
+    "\n",
+    "First, we outline our model building function, using a `Sequential` Model:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "8296b955",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:05.170790Z",
+     "iopub.status.busy": "2021-06-18T23:17:05.169751Z",
+     "iopub.status.idle": "2021-06-18T23:17:05.173990Z",
+     "shell.execute_reply": "2021-06-18T23:17:05.174667Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def get_clf_model():\n",
+    "    model = keras.Sequential()\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ccdb5bba",
+   "metadata": {},
+   "source": [
+    "### 2.1 Inputs\n",
+    "\n",
+    "We need to define an input layer for Keras. SciKeras allows you to dynamically determine the input size based on the features (`X`). To do this, you need to add the `meta` parameter to `get_clf_model`'s parameters. `meta` will be a dictionary with all of the `meta` attributes that `KerasClassifier` generates during the `fit` call, including `n_features_in_`, which we will use to dynamically size the input layer."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "1e3f6b26",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:05.178063Z",
+     "iopub.status.busy": "2021-06-18T23:17:05.176996Z",
+     "iopub.status.idle": "2021-06-18T23:17:05.182286Z",
+     "shell.execute_reply": "2021-06-18T23:17:05.182961Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from typing import Dict, Iterable, Any\n",
+    "\n",
+    "\n",
+    "def get_clf_model(meta: Dict[str, Any]):\n",
+    "    model = keras.Sequential()\n",
+    "    inp = keras.layers.Input(shape=(meta[\"n_features_in_\"]))\n",
+    "    model.add(inp)\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2b4f9fff",
+   "metadata": {},
+   "source": [
+    "### 2.2 Hidden Layers\n",
+    "\n",
+    "Multilayer perceptrons are generally composed of an input layer, an output layer and 0 or more hidden layers. The size of the hidden layers is specified via the `hidden_layer_sizes` parameter in MLClassifier, where the the ith element represents the number of neurons in the ith hidden layer. Let's add that parameter:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "61acd880",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:05.186295Z",
+     "iopub.status.busy": "2021-06-18T23:17:05.185223Z",
+     "iopub.status.idle": "2021-06-18T23:17:05.190686Z",
+     "shell.execute_reply": "2021-06-18T23:17:05.191364Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any]):\n",
+    "    model = keras.Sequential()\n",
+    "    inp = keras.layers.Input(shape=(meta[\"n_features_in_\"]))\n",
+    "    model.add(inp)\n",
+    "    for hidden_layer_size in hidden_layer_sizes:\n",
+    "        layer = keras.layers.Dense(hidden_layer_size, activation=\"relu\")\n",
+    "        model.add(layer)\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e5498690",
+   "metadata": {},
+   "source": [
+    "### 2.3 Output layers\n",
+    "\n",
+    "The output layer needs to reflect the type of classification task being performed. Here, we will handle 2 cases:\n",
+    "\n",
+    "- binary classification: single output unit with sigmoid activation\n",
+    "- multiclass classification: one output unit for each class, with softmax activation\n",
+    "The main complication arises from determining which one to use. Like with the input features, SciKeras provides useful information on the target within the `meta` parameter. Specifically, we will use the `n_classes_` and `target_type_` attributes to determine the number of output units and activation function."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "accbaf05",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:05.194579Z",
+     "iopub.status.busy": "2021-06-18T23:17:05.193528Z",
+     "iopub.status.idle": "2021-06-18T23:17:05.200864Z",
+     "shell.execute_reply": "2021-06-18T23:17:05.201559Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any]):\n",
+    "    model = keras.Sequential()\n",
+    "    inp = keras.layers.Input(shape=(meta[\"n_features_in_\"]))\n",
+    "    model.add(inp)\n",
+    "    for hidden_layer_size in hidden_layer_sizes:\n",
+    "        layer = keras.layers.Dense(hidden_layer_size, activation=\"relu\")\n",
+    "        model.add(layer)\n",
+    "    if meta[\"target_type_\"] == \"binary\":\n",
+    "        n_output_units = 1\n",
+    "        output_activation = \"sigmoid\"\n",
+    "    elif meta[\"target_type_\"] == \"multiclass\":\n",
+    "        n_output_units = meta[\"n_classes_\"]\n",
+    "        output_activation = \"softmax\"\n",
+    "    else:\n",
+    "        raise NotImplementedError(f\"Unsupported task type: {meta['target_type_']}\")\n",
+    "    out = keras.layers.Dense(n_output_units, activation=output_activation)\n",
+    "    model.add(out)\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bba6950b",
+   "metadata": {},
+   "source": [
+    "For now, we raise a `NotImplementedError` for other target types. For an example handling multi-output target types, see the [Multi Output notebook](https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MultiInput.ipynb).\n",
+    "\n",
+    "### 2.4 Losses and optimizer\n",
+    "\n",
+    "Like the output layer, the loss must match the type of classification task. Generally, it is easier and safet to allow SciKeras to compile your model for you by passing the loss to `KerasClassifier` directly (`KerasClassifier(loss=\"binary_crossentropy\")`). However, in order to implement custom logic around the choice of loss function, we compile the model ourselves within `get_clf_model`; SciKeras will not re-compile the model."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "ece8116b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:05.204751Z",
+     "iopub.status.busy": "2021-06-18T23:17:05.203696Z",
+     "iopub.status.idle": "2021-06-18T23:17:05.210979Z",
+     "shell.execute_reply": "2021-06-18T23:17:05.211740Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any]):\n",
+    "    model = keras.Sequential()\n",
+    "    inp = keras.layers.Input(shape=(meta[\"n_features_in_\"]))\n",
+    "    model.add(inp)\n",
+    "    for hidden_layer_size in hidden_layer_sizes:\n",
+    "        layer = keras.layers.Dense(hidden_layer_size, activation=\"relu\")\n",
+    "        model.add(layer)\n",
+    "    if meta[\"target_type_\"] == \"binary\":\n",
+    "        n_output_units = 1\n",
+    "        output_activation = \"sigmoid\"\n",
+    "        loss = \"binary_crossentropy\"\n",
+    "    elif meta[\"target_type_\"] == \"multiclass\":\n",
+    "        n_output_units = meta[\"n_classes_\"]\n",
+    "        output_activation = \"softmax\"\n",
+    "        loss = \"sparse_categorical_crossentropy\"\n",
+    "    else:\n",
+    "        raise NotImplementedError(f\"Unsupported task type: {meta['target_type_']}\")\n",
+    "    out = keras.layers.Dense(n_output_units, activation=output_activation)\n",
+    "    model.add(out)\n",
+    "    model.compile(loss=loss)\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c36c2172",
+   "metadata": {},
+   "source": [
+    "At this point, we have a valid, compiled model. However if we want to be able to tune the optimizer, we should accept `compile_kwargs` as a parameter in `get_clf_model`. `compile_kwargs` will be a dictionary containing valid `kwargs` for `Model.compile`, so we can unpack it directly like `model.compile(**compile_kwargs)`. In this case however, we will only be taking the `optimizer` kwarg."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "527b5460",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:05.215268Z",
+     "iopub.status.busy": "2021-06-18T23:17:05.214160Z",
+     "iopub.status.idle": "2021-06-18T23:17:05.221892Z",
+     "shell.execute_reply": "2021-06-18T23:17:05.222611Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any], compile_kwargs: Dict[str, Any]):\n",
+    "    model = keras.Sequential()\n",
+    "    inp = keras.layers.Input(shape=(meta[\"n_features_in_\"]))\n",
+    "    model.add(inp)\n",
+    "    for hidden_layer_size in hidden_layer_sizes:\n",
+    "        layer = keras.layers.Dense(hidden_layer_size, activation=\"relu\")\n",
+    "        model.add(layer)\n",
+    "    if meta[\"target_type_\"] == \"binary\":\n",
+    "        n_output_units = 1\n",
+    "        output_activation = \"sigmoid\"\n",
+    "        loss = \"binary_crossentropy\"\n",
+    "    elif meta[\"target_type_\"] == \"multiclass\":\n",
+    "        n_output_units = meta[\"n_classes_\"]\n",
+    "        output_activation = \"softmax\"\n",
+    "        loss = \"sparse_categorical_crossentropy\"\n",
+    "    else:\n",
+    "        raise NotImplementedError(f\"Unsupported task type: {meta['target_type_']}\")\n",
+    "    out = keras.layers.Dense(n_output_units, activation=output_activation)\n",
+    "    model.add(out)\n",
+    "    model.compile(loss=loss, optimizer=compile_kwargs[\"optimizer\"])\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "627031a1",
+   "metadata": {},
+   "source": [
+    "### 2.5 Wrapping with SciKeras\n",
+    "\n",
+    "Our last step in defining our model is to wrap it with SciKeras. A couple of things to note are:\n",
+    "- Every user-defined parameter in `model`/`get_clf_model` (in our case just `hidden_layer_sizes`) must be defined as a keyword argument to `KerasClassifier` with a default value.\n",
+    "- Keras defaults to `\"rmsprop\"` for `optimizer`. We set it to `\"adam\"` to mimic MLPClassifier.\n",
+    "- We set the learning rate for the optimizer to `0.001`, again to mimic MLPClassifier. We set this parameter using [parameter routing](https://www.adriangb.com/scikeras/stable/advanced.html#routed-parameters).\n",
+    "- Other parameters, such as `activation`, can be added similar to `hidden_layer_sizes`, but we omit them here for simplicity."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "ae7ba60b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:05.225659Z",
+     "iopub.status.busy": "2021-06-18T23:17:05.224690Z",
+     "iopub.status.idle": "2021-06-18T23:17:05.229148Z",
+     "shell.execute_reply": "2021-06-18T23:17:05.229904Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "clf = KerasClassifier(\n",
+    "    model=get_clf_model,\n",
+    "    hidden_layer_sizes=(100, ),\n",
+    "    optimizer=\"adam\",\n",
+    "    optimizer__learning_rate=0.001,\n",
+    "    epochs=50,\n",
+    "    verbose=0,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "abc6b0b1",
+   "metadata": {},
+   "source": [
+    "## 3. Testing our classifier\n",
+    "\n",
+    "Before continouing, we will run a small test to make sure we get somewhat reasonable results."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "8849482a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:05.233201Z",
+     "iopub.status.busy": "2021-06-18T23:17:05.232165Z",
+     "iopub.status.idle": "2021-06-18T23:17:06.078612Z",
+     "shell.execute_reply": "2021-06-18T23:17:06.079075Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.datasets import make_classification\n",
+    "\n",
+    "\n",
+    "X, y = make_classification()\n",
+    "\n",
+    "# check that fit works\n",
+    "clf.fit(X, y)\n",
+    "# check score\n",
+    "print(clf.score(X, y))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b29d7394",
+   "metadata": {},
+   "source": [
+    "We get a score above 0.7, which is reasonable and indicates that our classifier is generally working.\n",
+    "\n",
+    "## 4. Self contained MLPClassifier\n",
+    "\n",
+    "You will have noticed that up until now, we define our Keras model in a function and pass that function to `KerasClassifier` via the `model` argument.\n",
+    "\n",
+    "This is convenient, but it does not give us a self-contained class that we could package within a module for users to instantiate. To do that, we need to subclass `KerasClassifier`.\n",
+    "\n",
+    "### 4.1 Subclassing\n",
+    "\n",
+    "By subclassing KerasClassifier, you can embed your Keras model into directly into your estimator class. We start by inheriting from KerasClassifier and defining an `__init__` method with all of our parameters."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "efe5b0de",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:06.084705Z",
+     "iopub.status.busy": "2021-06-18T23:17:06.084150Z",
+     "iopub.status.idle": "2021-06-18T23:17:06.087252Z",
+     "shell.execute_reply": "2021-06-18T23:17:06.087699Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "class MLPClassifier(KerasClassifier):\n",
+    "\n",
+    "    def __init__(\n",
+    "        self,\n",
+    "        hidden_layer_sizes=(100, ),\n",
+    "        optimizer=\"adam\",\n",
+    "        optimizer__learning_rate=0.001,\n",
+    "        epochs=200,\n",
+    "        verbose=0,\n",
+    "        **kwargs\n",
+    "    ):\n",
+    "        super().__init__(**kwargs)\n",
+    "        self.hidden_layer_sizes = hidden_layer_sizes\n",
+    "        self.optimizer = optimizer\n",
+    "        self.epochs = epochs\n",
+    "        self.verbose = verbose"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "150cfa4c",
+   "metadata": {},
+   "source": [
+    "Next, we will embed our model into `_keras_build_fn`, which takes the place of `get_clf_model`. Note that since this is now an part of the model, we no longer need to accept the any parameters in the function signature. We still accept `compile_kwargs` because we use it to get the optimizer initialized with all of it's parameters."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "22528045",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:06.097141Z",
+     "iopub.status.busy": "2021-06-18T23:17:06.096617Z",
+     "iopub.status.idle": "2021-06-18T23:17:06.099611Z",
+     "shell.execute_reply": "2021-06-18T23:17:06.100061Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "class MLPClassifier(KerasClassifier):\n",
+    "\n",
+    "    def __init__(\n",
+    "        self,\n",
+    "        hidden_layer_sizes=(100, ),\n",
+    "        optimizer=\"adam\",\n",
+    "        optimizer__learning_rate=0.001,\n",
+    "        epochs=200,\n",
+    "        verbose=0,\n",
+    "        **kwargs,\n",
+    "    ):\n",
+    "        super().__init__(**kwargs)\n",
+    "        self.hidden_layer_sizes = hidden_layer_sizes\n",
+    "        self.optimizer = optimizer\n",
+    "        self.epochs = epochs\n",
+    "        self.verbose = verbose\n",
+    "\n",
+    "    def _keras_build_fn(self, compile_kwargs: Dict[str, Any]):\n",
+    "        model = keras.Sequential()\n",
+    "        inp = keras.layers.Input(shape=(self.n_features_in_))\n",
+    "        model.add(inp)\n",
+    "        for hidden_layer_size in self.hidden_layer_sizes:\n",
+    "            layer = keras.layers.Dense(hidden_layer_size, activation=\"relu\")\n",
+    "            model.add(layer)\n",
+    "        if self.target_type_ == \"binary\":\n",
+    "            n_output_units = 1\n",
+    "            output_activation = \"sigmoid\"\n",
+    "            loss = \"binary_crossentropy\"\n",
+    "        elif self.target_type_ == \"multiclass\":\n",
+    "            n_output_units = self.n_classes_\n",
+    "            output_activation = \"softmax\"\n",
+    "            loss = \"sparse_categorical_crossentropy\"\n",
+    "        else:\n",
+    "            raise NotImplementedError(f\"Unsupported task type: {self.target_type_}\")\n",
+    "        out = keras.layers.Dense(n_output_units, activation=output_activation)\n",
+    "        model.add(out)\n",
+    "        model.compile(loss=loss, optimizer=compile_kwargs[\"optimizer\"])\n",
+    "        return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "dd21f766",
+   "metadata": {},
+   "source": [
+    "Let's check that our subclassed model works:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "08b491ea",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:06.105684Z",
+     "iopub.status.busy": "2021-06-18T23:17:06.103377Z",
+     "iopub.status.idle": "2021-06-18T23:17:06.656312Z",
+     "shell.execute_reply": "2021-06-18T23:17:06.656740Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0.89\n"
+     ]
+    }
+   ],
+   "source": [
+    "clf = MLPClassifier(epochs=20)  # for notebook execution time\n",
+    "\n",
+    "# check score\n",
+    "print(clf.fit(X, y).score(X, y))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7015ad0d",
+   "metadata": {},
+   "source": [
+    "## 5. MLPRegressor\n",
+    "\n",
+    "The process for MLPRegressor is similar, we only change the loss function and output layers."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "8e616979",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:06.664315Z",
+     "iopub.status.busy": "2021-06-18T23:17:06.663851Z",
+     "iopub.status.idle": "2021-06-18T23:17:06.667237Z",
+     "shell.execute_reply": "2021-06-18T23:17:06.666781Z"
+    },
+    "lines_to_next_cell": 2
+   },
+   "outputs": [],
+   "source": [
+    "class MLPRegressor(KerasRegressor):\n",
+    "\n",
+    "    def __init__(\n",
+    "        self,\n",
+    "        hidden_layer_sizes=(100, ),\n",
+    "        optimizer=\"adam\",\n",
+    "        optimizer__learning_rate=0.001,\n",
+    "        epochs=200,\n",
+    "        verbose=0,\n",
+    "        **kwargs,\n",
+    "    ):\n",
+    "        super().__init__(**kwargs)\n",
+    "        self.hidden_layer_sizes = hidden_layer_sizes\n",
+    "        self.optimizer = optimizer\n",
+    "        self.epochs = epochs\n",
+    "        self.verbose = verbose\n",
+    "\n",
+    "    def _keras_build_fn(self, compile_kwargs: Dict[str, Any]):\n",
+    "        model = keras.Sequential()\n",
+    "        inp = keras.layers.Input(shape=(self.n_features_in_))\n",
+    "        model.add(inp)\n",
+    "        for hidden_layer_size in self.hidden_layer_sizes:\n",
+    "            layer = keras.layers.Dense(hidden_layer_size, activation=\"relu\")\n",
+    "            model.add(layer)\n",
+    "        out = keras.layers.Dense(1)\n",
+    "        model.add(out)\n",
+    "        model.compile(loss=\"mse\", optimizer=compile_kwargs[\"optimizer\"])\n",
+    "        return model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "bd095bb9",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-06-18T23:17:06.672915Z",
+     "iopub.status.busy": "2021-06-18T23:17:06.672415Z",
+     "iopub.status.idle": "2021-06-18T23:17:07.203959Z",
+     "shell.execute_reply": "2021-06-18T23:17:07.204638Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0.1707598580079963\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.datasets import make_regression\n",
+    "\n",
+    "\n",
+    "reg = MLPRegressor(epochs=20)  # for notebook execution time\n",
+    "\n",
+    "# Define a simple linear relationship\n",
+    "y = np.arange(100)\n",
+    "X = (y/2).reshape(-1, 1)\n",
+    "\n",
+    "# check score\n",
+    "reg.fit(X, y)\n",
+    "print(reg.score(X, y))"
+   ]
+  }
+ ],
+ "metadata": {
+  "jupytext": {
+   "formats": "ipynb,md"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
