@@ -199,6 +199,10 @@ Moving that check to this interface would:
 2. Move the implementation from a hardcoded private method to be stand-alone (making it easier to test, etc.).
 3. Make usage of these checks both composable and optional.
 
+This implementation could also be split up:
+1. Transform X & y into arrays.
+2. Check shapes, styles, etc. as tf.data.Dataset
+
 ```python
 def _check_array_dtype(arr, force_numeric):
     if not isinstance(arr, np.ndarray):
