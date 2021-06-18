@@ -275,3 +275,21 @@ class KerasRegressor:
     ):
         ...
 ```
+
+## Issues this can potentially resolve
+
+- #167
+- #106 / #143
+- #209
+- #148 (by allowing users to implement it)
+- #111
+- #167
+
+## Outstanding questions
+
+Some outstanding issues:
+
+1. API for transforming prediciton probabilties into class predictions.
+This only applies to classifiers, but can it be generalized and included into the base interface?
+2. Validations that require a model to be built. For example, checking the model's output shape (#106, #143).
+3. Transformations involving not just the data but other parameters passed to Keras' `fit`/`predict` (#167).
