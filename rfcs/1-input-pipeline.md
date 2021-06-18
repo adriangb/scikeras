@@ -146,6 +146,10 @@ class BaseWrapper:
 
 ### One-hot encode targets
 
+This moves one-hot encoding out of `ClassifierLabelEncoder`.
+This means the transformation can be applied to any input, including tf.data.Datasets.
+Performance should also be better because TensorFlow lazily applies and optimizes `map` operations on `Dataset`.
+
 ```python
 
 def is_ohe_dataset(data: tf.data.Dataset) -> bool:
@@ -162,7 +166,9 @@ class DatasetOneHotEncoder(DatasetTransformer):
         if initialize:
             loss_requires_ohe = is_categorical_crossentropy(getattr(self.model, "loss"))
             self.needs_ohe_ = loss_requires_ohe and not is_ohe_dataset(data)
-            self.classes_ = getattr(self.model, "classes_", None) or tf.unique(next(iter(data))[1])[1]
+            if self.needs_ohe_:
+                user_supplied_classes = getattr(self.model, "classes_", None)
+                self.classes_ = user_supplied_classes if user_supplied_classes is not None else tf.unique(next(iter(data))[1])[1]
         if self.needs_ohe_:
             data = data.map(lambda X, y, sample_weight: (X, tf.one_hot(y, indices=self.classes_, depth=len(self.classes_))))
         return data
@@ -171,9 +177,7 @@ class DatasetOneHotEncoder(DatasetTransformer):
         return np.argmax(y_pred_proba, axis=1)
 ```
 
-We can add this to the default Dataset transformations so that automatic one-hot encoding can be done
-not only for array-like inputs but also for Datasets:
-
+The we add this to the default list of transformers for classifiers:
 
 ```python
 class KerasClassifier:
@@ -189,6 +193,11 @@ class KerasClassifier:
 ## Validate array-like data
 
 This mirrors the current implementation of `BaseWrapper._validate_data`.
+
+Moving that check to this interface would:
+1. Only apply these checks array-like inputs.
+2. Move the implementation from a hardcoded private method to be stand-alone (making it easier to test, etc.).
+3. Make usage of these checks both composable and optional.
 
 ```python
 def _check_array_dtype(arr, force_numeric):
