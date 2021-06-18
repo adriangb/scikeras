@@ -1,6 +1,6 @@
 ```python
 import itertools
-from typing import Optional, Protocol, Sequence, Tuple, Union
+from typing import Optional, Protocol, Sequence, Tuple, Type, Union
 
 from numpy import ndarray
 from numpy.typing import ArrayLike
@@ -51,8 +51,8 @@ class BaseWrapper:
     
     def __init__(
         self,
-        array_transformers: Sequence[ArrayTransformer] = tuple(),  # a tuple with default transformers
-        dataset_transformers: Sequence[DatasetTransformer] = tuple(),
+        array_transformers: Sequence[Type[ArrayTransformer]] = tuple(),  # a tuple with default transformers
+        dataset_transformers: Sequence[Type[DatasetTransformer]] = tuple(),
     ) -> None:
         self.array_transformers = array_transformers
         self.dataset_transformers = dataset_transformers
@@ -60,24 +60,26 @@ class BaseWrapper:
     def _transform_data(self, X: Input, y: Union[ArrayLike, None], sample_weight: Union[ArrayLike, None]):
         # sample implementation
         if not isinstance(X, tf.data.Dataset):
-            for at in self.array_transformers:
+            for at in self.array_transformers_:
                 X, y, sample_weight = at.transform_in(X, y, sample_weight)
             data = tf.data.Dataset.from_tensors(X, y, sample_weight)
         else:
             data = X
-        for dt in self.dataset_transformers:
+        for dt in self.dataset_transformers_:
             data = dt.transform_in(data)
         return data
 
     def _initialize(self, X: Input, y: Optional[ArrayLike], sample_weight: Optional[ArrayLike]) -> tf.data.Dataset:
         # sample implementation
         if not isinstance(X, tf.data.Dataset):
-            for at in self.array_transformers:
+            self.array_transformers_ = [at(self) for at in self.array_transformers]
+            for at in self.array_transformers_:
                 X, y, sample_weight = at.initilize_transform_in(X, y, sample_weight)
             data = tf.data.Dataset.from_tensors(X, y, sample_weight)
         else:
             data = X
-        for dt in self.dataset_transformers:
+        self.dataset_transformers_ = [dt(self) for at in self.dataset_transformers]
+        for dt in self.dataset_transformers_:
             data = dt.initilize_transform_in(data)
         # build model, etc.
         return data
