@@ -3,11 +3,13 @@ import os
 import random
 import warnings
 
-from inspect import isclass
 from typing import Any, Callable, Dict, Iterable, Union
 
 import numpy as np
 import tensorflow as tf
+
+
+DIGITS = frozenset(str(i) for i in range(10))
 
 
 class TFRandomState:
@@ -66,6 +68,9 @@ def route_params(
     pass_filter: Iterable[str]
         Only keys from `params` that are in the iterable are passed.
         This does not affect routed parameters.
+    strict: bool
+        Pop any routed parameters that are not being routed to `destination`
+        (including parameters routed to `destination__...`).
 
     Returns
     -------
@@ -125,19 +130,22 @@ def unflatten_params(items, params, base_params=None):
     """Recursively compile nested structures of classes
     using parameters from params.
     """
-    if isclass(items):
+    if inspect.isclass(items):
         item = items
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         base_params = base_params or dict()
-        kwargs = {**base_params, **new_base_params}
-        for p, v in kwargs.items():
-            kwargs[p] = unflatten_params(
+        args_and_kwargs = {**base_params, **new_base_params}
+        for p, v in args_and_kwargs.items():
+            args_and_kwargs[p] = unflatten_params(
                 items=v,
                 params=route_params(
                     params=params, destination=f"{p}", pass_filter=set(), strict=False,
                 ),
             )
-        return item(**kwargs)
+        kwargs = {k: v for k, v in args_and_kwargs.items() if k[0] not in DIGITS}
+        args = [(int(k), v) for k, v in args_and_kwargs.items() if k not in kwargs]
+        args = (v for _, v in sorted(args))  # sorts by key / arg num
+        return item(*args, **kwargs)
     if isinstance(items, (list, tuple)):
         iter_type_ = type(items)
         res = list()
