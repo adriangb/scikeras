@@ -44,38 +44,57 @@ The second pipeline is then run in all cases.
 These pipelines will consist of chained transformers implementing a Scikit-Learn-like interface, but without being restricted to the exact Scikit-Learn API.
 
 ```python
-from typing import Optional, Protocol, Sequence, Tuple, Type, Union
+from typing import Any, Dict, Optional, Tuple, Sequence, Union, TYPE_CHECKING
 
-from numpy import ndarray
-from numpy.typing import ArrayLike
+import numpy as np
+import tensorflow as tf
+
+from scikeras.wrappers import BaseWrapper
+
+
+Data = Tuple[np.ndarray, Union[np.ndarray, None], Union[np.ndarray, None]]
+ArrayLike = Union[Sequence, np.ndarray]
+
+
+class NotInitializedError(Exception):
+    ...
 
 
 class ArrayTransformer:
 
-    def __init__(self, model: BaseWrapper) -> None:
+    def set_model(self, model: "BaseWrapper") -> None:
         self.model = model
 
-    def transform_input(self, X: ArrayLike, y: Optional[ArrayLike], sample_weight: Optional[ArrayLike], *, initialize: bool = True) -> Tuple[ndarray, Union[ndarray, None], Union[ndarray, None]]:
+    def transform_input(self, X: ArrayLike, y: Optional[ArrayLike], sample_weight: Optional[ArrayLike], *, initialize: bool = True) -> Data:
         return X, y, sample_weight
 
-    def transform_output_proba(self, y_pred_proba: ndarray) -> ndarray:
-        return y_pred_proba
+    def transform_output(self, y_pred_proba: np.ndarray, y: Union[np.ndarray, None]) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
+        return y_pred_proba, None
+
+    def get_meta(self) -> Dict[str, Any]:
+        return {}
 
 
 class DatasetTransformer:
 
-    def __init__(self, model: BaseWrapper) -> None:
+    def set_model(self, model: "BaseWrapper") -> None:
         self.model = model
 
-    def transform_input(self, data: tf.data.Dataset, initialize: bool = True) -> tf.data.Dataset:
+    def transform_input(self, data: tf.data.Dataset, *, initialize: bool = True) -> tf.data.Dataset:
         return data
 
-    def transform_output_proba(self, y_pred_proba: ndarray) -> ndarray:
-        return y_pred_proba
+    def transform_output(self, y_pred_proba: np.ndarray, y: Union[np.ndarray, None]) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
+        return y_pred_proba, None
+
+    def get_meta(self) -> Dict[str, Any]:
+        return {}
+
 ```
 
-SciKeras will initialize the pipeline of transformers by passing a reference to the current estimator,
-and will then iterate through them as described above:
+SciKeras will initialize the pipeline of transformers by calling `set_model` with a reference to the current estimator.
+This is exactly how Keras handles callbacks ([`set_model`](https://github.com/tensorflow/tensorflow/blob/a4dfb8d1a71385bd6d122e4f27f86dcebb96712d/tensorflow/python/keras/callbacks.py#L302), [in-place modification of `model`](https://github.com/tensorflow/tensorflow/blob/a4dfb8d1a71385bd6d122e4f27f86dcebb96712d/tensorflow/python/keras/callbacks.py#L1153) in History).
+
+Then SciKeras will then iterate through them, similar to a Scikit-Learn pipeline
 
 ```python
 import itertools
@@ -99,21 +118,26 @@ class BaseWrapper:
         self.array_transformers = array_transformers
         self.dataset_transformers = dataset_transformers
 
-    def _transform_input(self, X: Input, y: Optional[ArrayLike], sample_weight: Optional[ArrayLike], *, initialize: bool) -> tf.data.Dataset:
-        # sample implementation
+    def _transform_input(self, X: Union[tf.data.Dataset, ArrayLike], y: Optional[ArrayLike], sample_weight: Optional[ArrayLike], *, initialize: bool) -> tf.data.Dataset:
         if initialize:
-            self.array_transformers_ = [t(self) for t in self.array_transformers]
-            self.dataset_transformers_ = [t(self) for t in self.dataset_transformers]
-        if not isinstance(X, tf.data.Dataset):
-            for t in self.array_transformers_:
-                X, y, sample_weight = t.transform_input(X, y, sample_weight, initialize=initialize)
-            data = tf.data.Dataset.from_tensors(X, y, sample_weight)
-        else:
+            for tf in itertools.chain(self.array_pipeline, self.dataset_pipeline):
+                tf.set_model(self)
+        if isinstance(X, tf.data.Dataset):
+            self._numpy_input = False
             data = X
-        for t in self.dataset_transformers_:
+        else:
+            self._numpy_input = True
+            for t in self.array_pipeline:
+                X, y, sample_weight = t.transform_input(X, y, sample_weight, initialize=initialize)
+            data = tf.data.Dataset.from_tensors((X, y, sample_weight))
+        for t in self.dataset_pipeline_:
             data = t.transform_input(data, initialize=initialize)
-        # build self.model_, etc.
-        return data
+        if self._numpy_input:
+            # keep as numpy arrays to allow validation_split and such to work
+            X, y, sample_weight = next(iter(data))
+            return X, y, sample_weight
+        else:
+            return data, None, None
 
     def initialize(self, X: Input, y: Optional[ArrayLike], sample_weight: Optional[ArrayLike]) -> "BaseWrapper":
         self._transform_input(X, y, sample_weight, initialize=True)
@@ -137,8 +161,34 @@ class BaseWrapper:
             reversed(self.dataset_transformers_),
             reversed(self.array_transformers_)
         ):
-            y_pred = t.transform_output_proba(y_pred)
-        return y_pred
+            y_proba = t.transform_output(y_proba, None)
+        return y_proba
+```
+
+Classifiers (as well as LTR or other learning problems where `y` is not the raw prediction probabilties) can use this interface
+to convert probabilities to class predictions, or to modify the probabilites themselves. Two small examples:
+
+```python
+class BinaryPredictionReshaper(DatasetTransformer):
+
+    def transform_input(self, data: tf.data.Dataset, *, initialize: bool) -> tf.data.Dataset:
+        if initialize:
+            self._is_binary = ... # call type_of_target or other check
+        return data
+
+    def transform_output(self, y_pred_proba: np.ndarray, y: Union[np.ndarray, None]) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
+        shp = y_pred_proba.shape
+        if self._is_binary and len(shp) == 1 or len(shp) == 2 and shp[1] == 1:
+            # single sigmoid output, reshape to a 2D array of predicitons, which is what sklearn expects
+            y_pred_proba = np.column_stack([1-y_pred_proba, y_pred_proba])
+        return y_pred_proba, y
+
+class ClassifierPredictionDecoder(DatasetTransformer):
+
+    def transform_output(self, y_pred_proba: np.ndarray, y: Union[np.ndarray, None]) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
+        if y is None:
+            y = np.argmax(y_pred_proba, axis=1)
+        return y_pred_proba, y
 ```
 
 
@@ -151,30 +201,34 @@ This means the transformation can be applied to any input, including tf.data.Dat
 Performance should also be better because TensorFlow lazily applies and optimizes `map` operations on `Dataset`.
 
 ```python
-
-def is_ohe_dataset(data: tf.data.Dataset) -> bool:
+def _is_ohe_dataset(data: tf.data.Dataset) -> bool:
     target_shape = data.element_spec[1].shape
     if len(target_shape) != 2 or target_shape[1] == 1:
-        return False
+        return False  # needs to be 2D with >=2 columns to be one-hot encoded
     y = next(iter(data))[1]
-    return tf.math.reduce_all(tf.math.reduce_sum(y, axis=1) == 1, axis=0).numpy()
+    return tf.math.reduce_all(tf.math.reduce_sum(y, axis=1) == 1, axis=0).numpy()  # all rows add up to 1
 
 
-class DatasetOneHotEncoder(DatasetTransformer):
+class ClassifierOneHotEncoder(DatasetTransformer):
+    """One-hot encode the target if the loss function is categorical crossentropy.
+    """
 
-    def transform_input(self, data: tf.data.Dataset, initialize: bool = True) -> tf.data.Dataset:
+    def transform_input(self, data: tf.data.Dataset, *, initialize: bool) -> tf.data.Dataset:
         if initialize:
-            loss_requires_ohe = is_categorical_crossentropy(getattr(self.model, "loss"))
-            self.needs_ohe_ = loss_requires_ohe and not is_ohe_dataset(data)
-            if self.needs_ohe_:
+            loss = getattr(self.model, "loss", None)
+            loss_requires_ohe = False if loss is None else is_categorical_crossentropy(loss)
+            self._needs_ohe = loss_requires_ohe and not _is_ohe_dataset(data)
+            if self._needs_ohe:
                 user_supplied_classes = getattr(self.model, "classes_", None)
                 self.classes_ = user_supplied_classes if user_supplied_classes is not None else tf.unique(next(iter(data))[1])[1]
-        if self.needs_ohe_:
-            data = data.map(lambda X, y, sample_weight: (X, tf.one_hot(y, indices=self.classes_, depth=len(self.classes_))))
+        if self._needs_ohe:
+            data = data.map(lambda X, y, sample_weight: (X, tf.one_hot(y, indices=self.classes_, depth=len(self.classes_)), sample_weight))
         return data
 
-    def transform_output_proba(self, y_pred_proba: ndarray) -> ndarray:
-        return np.argmax(y_pred_proba, axis=1)
+    def transform_output(self, y_pred_proba: np.ndarray, y: Union[np.ndarray, None]) -> Tuple[np.ndarray, Union[np.ndarray, None]]:
+        if y is None and self._needs_ohe:
+            y = np.argmax(y_pred_proba, axis=1)
+        return y_pred_proba, y
 ```
 
 The we add this to the default list of transformers for classifiers:
@@ -204,13 +258,12 @@ This implementation could also be split up:
 2. Check shapes, styles, etc. as tf.data.Dataset
 
 ```python
-def _check_array_dtype(arr, force_numeric):
+def _check_array_dtype(arr: ArrayLike, force_numeric: bool):
     if not isinstance(arr, np.ndarray):
         return _check_array_dtype(np.asarray(arr), force_numeric=force_numeric)
     elif (
-        arr.dtype.kind not in ("O", "U", "S") or not force_numeric
-    ):  # object, unicode or string
-        # already numeric
+         arr.dtype.kind in ("O", "U", "S" or not force_numeric
+    ):
         return None  # check_array won't do any casting with dtype=None
     else:
         # default to TFs backend float type
@@ -218,47 +271,88 @@ def _check_array_dtype(arr, force_numeric):
         return tf.keras.backend.floatx()
 
 
-class _InputValidator(ArrayTransformer):
+class ValidateFeaturesArray(ArrayTransformer):
 
-    def __init__(self, model: BaseWrapper, y_numeric: bool):
-        super().__init__(model)
-        self.y_numeric = y_numeric
+    def transform_input(self, X: ArrayLike, y: Optional[ArrayLike], sample_weight: Optional[ArrayLike], *, initialize: bool) -> Data:
+        X = check_array(
+            X,
+            allow_nd=True,
+            ensure_2d=True,
+            dtype=_check_array_dtype(X, force_numeric=True)
+        )
+        n_feautres_in_ = X.shape[1]
+        if initialize:
+            self.n_feautres_in_ = n_feautres_in_
+        else:
+            if self.n_feautres_in_ != n_feautres_in_:
+                raise ValueError(
+                    f"Expected X to have {self.n_feautres_in_} features, but got {n_feautres_in_} features"
+                )
+        return X, y, sample_weight
+    
+    def get_meta(self) -> Dict[str, Any]:
+        return {"n_features_in_": self.n_feautres_in_}
 
-    def transform_input(self, X: ArrayLike, y: Optional[ArrayLike], sample_weight: Optional[ArrayLike], *, initialize: bool = True) -> Tuple[ndarray, Union[ndarray, None], Union[ndarray, None]]:            
+
+class ValidateClassifierTargetArray(ArrayTransformer):
+
+    def transform_input(self, X: ArrayLike, y: Optional[ArrayLike], sample_weight: Optional[ArrayLike], *, initialize: bool) -> Data:
         if y is not None:
-            assert len(X) == len(y), "X and y must be of the same lenght"
             y = check_array(
                 y,
                 ensure_2d=False,
                 allow_nd=False,
-                dtype=_check_array_dtype(y, force_numeric=self.y_numeric),
+                dtype=_check_array_dtype(y, force_numeric=False),
             )
-            y_dtype_ = y.dtype
-            y_ndim_ = y.ndim
-            if reset:
-                self.model.target_type_ = self._type_of_target(y)
-                self.model.y_dtype_ = y_dtype_
-                self.model.y_ndim_ = y_ndim_
+            classes_ = np.unique(y)
+            if initialize:
+                self.classes_ = classes_
             else:
-                ...  # raise errors
-        if X is not None:
-            X = check_array(
-                X, allow_nd=True, dtype=_check_array_dtype(X, force_numeric=True)
-            )
-            X_dtype_ = X.dtype
-            X_shape_ = X.shape
-            n_features_in_ = X.shape[1]
-            if reset:
-                self.model.X_dtype_ = X_dtype_
-                self.model.X_shape_ = X_shape_
-                self.model.n_features_in_ = n_features_in_
-            else:
-                ...  # raise errors
-        return X, y
+                if self.classes_ != classes_:
+                    raise ValueError(
+                        f"Expected y to have {self.classes_} classes, but got {classes_} classes"
+                    )
+        return X, y, sample_weight
+
+    def get_meta(self) -> Dict[str, Any]:
+        return {"classes_": self.classes_}
 
 
-RegressorInputValidator = functools.partial(_InputValidator, y_numeric=True)
-ClassifierInputValidator = functools.partial(_InputValidator, y_numeric=False)
+class ValidateRegressorTargetArray(ArrayTransformer):
+
+    def transform_input(self, X: ArrayLike, y: Optional[ArrayLike], sample_weight: Optional[ArrayLike], *, initialize: bool) -> Data:
+        if y is not None:
+            y = check_array(
+                y,
+                ensure_2d=False,
+                allow_nd=False,
+                dtype=_check_array_dtype(y, force_numeric=True),
+            )
+        return X, y, sample_weight
+
+
+class ValidateSampleWeight(ArrayTransformer):
+
+    def transform_input(self, X: ArrayLike, y: Optional[ArrayLike], sample_weight: Optional[ArrayLike], *, initialize: bool) -> Data:
+        if isinstance(sample_weight, numbers.Number):
+            sample_weight = np.full(shape=(len(X),), fill_value=sample_weight)
+        if sample_weight is not None:
+            sample_weight = check_array(
+                sample_weight,
+                accept_sparse=False,
+                ensure_2d=False,
+                dtype=tf.keras.backend.floatx(),
+                copy=False,
+            )
+            if sample_weight.ndim != 1:
+                raise ValueError("Sample weights must be 1D array or scalar")
+            if np.all(sample_weight == 0):
+                raise ValueError(
+                    "No training samples had any weight; only zeros were passed in sample_weight."
+                    " That means there's nothing to train on by definition, so training can not be completed."
+                )
+        return X, y, sample_weight
+
 ```
 
 Now we can add this to the default array transformers:
@@ -293,7 +387,5 @@ class KerasRegressor:
 
 Some outstanding issues:
 
-1. API for transforming prediciton probabilties into class predictions.
-This only applies to classifiers, but can it be generalized and included into the base interface?
-2. Validations that require a model to be built. For example, checking the model's output shape (#106, #143).
-3. Transformations involving not just the data but other parameters passed to Keras' `fit`/`predict` (#167).
+1. Validations that require a model to be built. For example, checking the model's output shape (#106, #143).
+2. Transformations involving not just the data but other parameters passed to Keras' `fit`/`predict` (#167).
