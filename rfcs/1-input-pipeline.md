@@ -392,3 +392,4 @@ Do we split the pipeline into pre/post build? What about pre/post compile?
 Does this split happen at the object level (eg a method that is called before building and another after) or at
 the pipeline level (eg. different iterables of transformers)?
 2. Transformations involving not just the data but other parameters passed to Keras' `fit`/`predict` (#167).
+Do we make a new interface just for that? Or expand the `DatasetTransformer` interface?
