@@ -378,7 +378,7 @@ class KerasRegressor:
 
 - [#160](https://github.com/adriangb/scikeras/pull/160), "Dealing with variable length inputs"
 - #106 / #143
-- #209
+- [#209](https://github.com/adriangb/scikeras/pull/209), "ENH: programmatic validations and error handling"
 - #148 (by allowing users to implement it)
 - #111
 - #167
