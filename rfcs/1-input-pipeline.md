@@ -387,4 +387,8 @@ class KerasRegressor:
 Some outstanding issues:
 
 1. Validations that require a model to be built. For example, checking the model's output shape (#106, #143).
+Do we run this pipeline before building the model, so that the model building can benefit from metadata like `classes_`?
+Do we split the pipeline into pre/post build? What about pre/post compile?
+Does this split happen at the object level (eg a method that is called before building and another after) or at
+the pipeline level (eg. different iterables of transformers)?
 2. Transformations involving not just the data but other parameters passed to Keras' `fit`/`predict` (#167).
