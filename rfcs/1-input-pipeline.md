@@ -380,7 +380,7 @@ class KerasRegressor:
 - [#106](https://github.com/adriangb/scikeras/pull/106), "Validate inputs to Keras model"
 - [#209](https://github.com/adriangb/scikeras/pull/209), "ENH: programmatic validations and error handling"
 - #148 (by allowing users to implement it)
-- #111
+- [#111](https://github.com/adriangb/scikeras/pull/111), "move data validation to a modular interface"
 - #167
 
 ## Outstanding questions
