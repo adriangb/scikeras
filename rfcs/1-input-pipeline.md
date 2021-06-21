@@ -34,14 +34,15 @@ Some of the speicific functional requirements are:
 
 ## Proposal
 
-This proposal consists of 2 pipelines:
-1. A pipeline for preparing array-like data for a `tf.data.Dataset`. This would include, for example, integer-encoding object-dtype arrays (`tf.Tensors` can't hold objects).
-2. A pipeline for applying transformations to `tf.data.Dataset`s. For example, one-hot encoding targets for classifiers using the categorical crossentropy loss.
+This proposal consists of an expansion / generalization of our current `BaseWrapper.target_encoder` and `BaseWrapper.feature_encoder` data pipeline concepts to encompass:
+1. Manipulation of the entire dataset (X, y & sample_weight) both as array-like data and as `tf.data.Dataset`.
+2. A standard interface to establish a reference to the current `BaseWrapper` instance (i.e. a setter for `model`).
 
-If the data comes in as a `tf.data.Dataset`, the first pipeline is skipped. If not, it is run and the output is converted to a `Dataset`.
-The second pipeline is then run in all cases.
+Additionally, this proposal seeks to establish a contract on where in the dataflow these pipelines are executed.
 
 These pipelines will consist of chained transformers implementing a Scikit-Learn-like interface, but without being restricted to the exact Scikit-Learn API.
+
+For example:
 
 ```python
 from typing import Any, Dict, Optional, Tuple, Sequence, Union, TYPE_CHECKING
