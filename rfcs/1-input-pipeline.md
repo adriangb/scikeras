@@ -3,7 +3,7 @@
 One of the primary functions of the Scikit-Learn wrappers for Keras is fielding conversion from Scikit-Learn's data types
 to TensorFlow's data types. An example of these conversions is integer-encoding or one-hot encoding categorical targets.
 
-Originally, these conversions were hardcoded into the wrappers in an ad-hoc manner (see here).
+Originally, these conversions were hardcoded into the wrappers in an ad-hoc manner (see [here](https://github.com/keras-team/keras/blob/80ca7a7a06058076fde5ee36f8ac1f2ca30f8996/keras/wrappers/scikit_learn.py#L155-L157)).
 SciKeras introduced the concept of `TargetTransformer` and `InputTransformer`,
 two Scikit-Learn style transformers that formalize this data conversion framework and allow users to insert their own custom pipeline.
 
