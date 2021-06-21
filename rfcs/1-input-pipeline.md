@@ -376,7 +376,7 @@ class KerasRegressor:
 
 ## Issues this can potentially resolve
 
-- #167
+- [#160](https://github.com/adriangb/scikeras/pull/160), "Dealing with variable length inputs"
 - #106 / #143
 - #209
 - #148 (by allowing users to implement it)
