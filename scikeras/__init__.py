@@ -9,6 +9,19 @@ except ModuleNotFoundError:
 
 __version__ = importlib_metadata.version("scikeras")
 
+
+MIN_TF_VERSION = "2.4.0"
+TF_VERSION_ERR = f"SciKeras requires TensorFlow >= {MIN_TF_VERSION}."
+
+from packaging import version
+try:
+    from tensorflow import __version__ as tf_version
+except ImportError:
+    raise ImportError("TensorFlow is not installed. " + TF_VERSION_ERR)
+else:
+    if version.parse(tf_version) < version.parse(MIN_TF_VERSION):
+        raise ImportError(TF_VERSION_ERR)
+
 from tensorflow import keras as _keras
 
 from scikeras import _saving_utils
