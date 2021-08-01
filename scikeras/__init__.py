@@ -14,6 +14,8 @@ MIN_TF_VERSION = "2.4.0"
 TF_VERSION_ERR = f"SciKeras requires TensorFlow >= {MIN_TF_VERSION}."
 
 from packaging import version
+
+
 try:
     from tensorflow import __version__ as tf_version
 except ImportError:
