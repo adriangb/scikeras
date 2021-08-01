@@ -282,9 +282,7 @@ def test_kwargs(wrapper, builder):
     # check fit
     match = "estimator parameters as keyword arguments"
     with mock.patch.object(est.model_, "fit", side_effect=est.model_.fit) as mock_fit:
-        est.fit(
-            X, y, batch_size=kwarg_batch_size, epochs=kwarg_epochs, **extra_kwargs
-        )
+        est.fit(X, y, batch_size=kwarg_batch_size, epochs=kwarg_epochs, **extra_kwargs)
         call_args = mock_fit.call_args_list
         assert len(call_args) == 1
         call_kwargs = call_args[0][1]

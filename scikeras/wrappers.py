@@ -35,7 +35,6 @@ from scikeras.utils import loss_name, metric_name
 from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
 
 
-
 class BaseWrapper(BaseEstimator):
     """Implementation of the scikit-learn classifier API for Keras.
 
@@ -931,9 +930,13 @@ class BaseWrapper(BaseEstimator):
             (ex: instance.partial_fit(X, y).transform(X) )
         """
         if "epochs" in kwargs:
-            raise TypeError("Invalid argument `epochs` to `partial_fit`: `partial_fit` always trains for 1 epoch")
+            raise TypeError(
+                "Invalid argument `epochs` to `partial_fit`: `partial_fit` always trains for 1 epoch"
+            )
         if "initial_epoch" in kwargs:
-            raise TypeError("Invalid argument `initial_epoch` to `partial_fit`: `partial_fit` always trains for from the current epoch")
+            raise TypeError(
+                "Invalid argument `initial_epoch` to `partial_fit`: `partial_fit` always trains for from the current epoch"
+            )
 
         self._fit(
             X,
@@ -942,7 +945,7 @@ class BaseWrapper(BaseEstimator):
             warm_start=True,
             epochs=1,
             initial_epoch=self.current_epoch,
-            **kwargs
+            **kwargs,
         )
         return self
 
@@ -1455,7 +1458,9 @@ class KerasClassifier(BaseWrapper):
         super().fit(X=X, y=y, sample_weight=sample_weight, **kwargs)
         return self
 
-    def partial_fit(self, X, y, classes=None, sample_weight=None, **kwargs) -> "KerasClassifier":
+    def partial_fit(
+        self, X, y, classes=None, sample_weight=None, **kwargs
+    ) -> "KerasClassifier":
         """Fit classifier for a single epoch, preserving the current epoch
         and all model parameters and state.
 
