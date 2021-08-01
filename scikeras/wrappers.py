@@ -35,15 +35,6 @@ from scikeras.utils import loss_name, metric_name
 from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
 
 
-_kwarg_warn = """Passing estimator parameters as keyword arguments (aka as `**kwargs`) to `{0}` is not supported by the Scikit-Learn API, and will be removed in a future version of SciKeras.
-
-To resolve this issue, either set these parameters in the constructor (e.g., `est = BaseWrapper(..., foo=bar)`) or via `set_params` (e.g., `est.set_params(foo=bar)`). The following parameters were passed to `{0}`:
-
-{1}
-
-More detail is available at https://www.adriangb.com/scikeras/migration.html#variable-keyword-arguments-in-fit-and-predict
-"""
-
 
 class BaseWrapper(BaseEstimator):
     """Implementation of the scikit-learn classifier API for Keras.
@@ -734,10 +725,6 @@ class BaseWrapper(BaseEstimator):
         BaseWrapper
             A reference to the instance that can be chain called (``est.fit(X,y).transform(X)``).
         """
-        if kwargs:
-            kwarg_list = "\n * ".join([f"`{k}={v}`" for k, v in kwargs.items()])
-            warnings.warn(_kwarg_warn.format("fit", kwarg_list))
-
         # epochs via kwargs > fit__epochs > epochs
         kwargs["epochs"] = kwargs.get(
             "epochs", getattr(self, "fit__epochs", self.epochs)
@@ -919,7 +906,7 @@ class BaseWrapper(BaseEstimator):
             **kwargs,
         )
 
-    def partial_fit(self, X, y, sample_weight=None) -> "BaseWrapper":
+    def partial_fit(self, X, y, sample_weight=None, **kwargs) -> "BaseWrapper":
         """Fit the estimator for a single epoch, preserving the current
         training history and model parameters.
 
@@ -934,6 +921,8 @@ class BaseWrapper(BaseEstimator):
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.fit``.
 
         Returns
         -------
@@ -941,6 +930,11 @@ class BaseWrapper(BaseEstimator):
             A reference to the instance that can be chain called
             (ex: instance.partial_fit(X, y).transform(X) )
         """
+        if "epochs" in kwargs:
+            raise TypeError("Invalid argument `epochs` to `partial_fit`: `partial_fit` always trains for 1 epoch")
+        if "initial_epoch" in kwargs:
+            raise TypeError("Invalid argument `initial_epoch` to `partial_fit`: `partial_fit` always trains for from the current epoch")
+
         self._fit(
             X,
             y,
@@ -948,6 +942,7 @@ class BaseWrapper(BaseEstimator):
             warm_start=True,
             epochs=1,
             initial_epoch=self.current_epoch,
+            **kwargs
         )
         return self
 
@@ -957,10 +952,6 @@ class BaseWrapper(BaseEstimator):
         For classification, this corresponds to predict_proba.
         For regression, this corresponds to predict.
         """
-        if kwargs:
-            kwarg_list = "\n * ".join([f"`{k}={v}`" for k, v in kwargs.items()])
-            warnings.warn(_kwarg_warn.format("predict", kwarg_list), stacklevel=2)
-
         # check if fitted
         if not self.initialized_:
             raise NotFittedError(
@@ -1464,7 +1455,7 @@ class KerasClassifier(BaseWrapper):
         super().fit(X=X, y=y, sample_weight=sample_weight, **kwargs)
         return self
 
-    def partial_fit(self, X, y, classes=None, sample_weight=None) -> "KerasClassifier":
+    def partial_fit(self, X, y, classes=None, sample_weight=None, **kwargs) -> "KerasClassifier":
         """Fit classifier for a single epoch, preserving the current epoch
         and all model parameters and state.
 
@@ -1485,6 +1476,8 @@ class KerasClassifier(BaseWrapper):
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
+        **kwargs : Dict[str, Any]
+            Extra arguments to route to ``Model.fit``.
 
         Returns
         -------
@@ -1498,7 +1491,7 @@ class KerasClassifier(BaseWrapper):
         if self.class_weight is not None:
             sample_weight = 1 if sample_weight is None else sample_weight
             sample_weight *= compute_sample_weight(class_weight=self.class_weight, y=y)
-        super().partial_fit(X, y, sample_weight=sample_weight)
+        super().partial_fit(X, y, sample_weight=sample_weight, **kwargs)
         return self
 
     def predict_proba(self, X, **kwargs):
