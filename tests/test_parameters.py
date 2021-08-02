@@ -282,10 +282,7 @@ def test_kwargs(wrapper, builder):
     # check fit
     match = "estimator parameters as keyword arguments"
     with mock.patch.object(est.model_, "fit", side_effect=est.model_.fit) as mock_fit:
-        with pytest.warns(UserWarning, match=match.format("fit")):
-            est.fit(
-                X, y, batch_size=kwarg_batch_size, epochs=kwarg_epochs, **extra_kwargs
-            )
+        est.fit(X, y, batch_size=kwarg_batch_size, epochs=kwarg_epochs, **extra_kwargs)
         call_args = mock_fit.call_args_list
         assert len(call_args) == 1
         call_kwargs = call_args[0][1]
@@ -297,16 +294,14 @@ def test_kwargs(wrapper, builder):
     with mock.patch.object(
         est.model_, "predict", side_effect=est.model_.predict
     ) as mock_predict:
-        with pytest.warns(UserWarning, match=match.format("predict")):
-            est.predict(X, batch_size=kwarg_batch_size, **extra_kwargs)
+        est.predict(X, batch_size=kwarg_batch_size, **extra_kwargs)
         call_args = mock_predict.call_args_list
         assert len(call_args) == 1
         call_kwargs = call_args[0][1]
         assert "batch_size" in call_kwargs
         assert call_kwargs["batch_size"] == kwarg_batch_size
         if isinstance(est, KerasClassifier):
-            with pytest.warns(UserWarning, match=match.format("predict")):
-                est.predict_proba(X, batch_size=kwarg_batch_size, **extra_kwargs)
+            est.predict_proba(X, batch_size=kwarg_batch_size, **extra_kwargs)
             call_args = mock_predict.call_args_list
             assert len(call_args) == 2
             call_kwargs = call_args[1][1]
@@ -321,6 +316,13 @@ def test_kwargs(wrapper, builder):
             or hasattr(est, "fit__" + k)
             or hasattr(est, "predict__" + k)
         )
+
+
+@pytest.mark.parametrize("kwargs", (dict(epochs=1), dict(initial_epoch=1)))
+def test_partial_fit_epoch_kwargs(kwargs):
+    est = KerasClassifier(dynamic_classifier)
+    with pytest.raises(TypeError, match="Invalid argument"):
+        est.partial_fit([[1]], [1], **kwargs)
 
 
 @pytest.mark.parametrize("length", (10, 100))
