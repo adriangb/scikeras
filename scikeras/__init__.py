@@ -18,10 +18,10 @@ from packaging import version
 
 try:
     from tensorflow import __version__ as tf_version
-except ImportError:
+except ImportError:  # pragma: no cover
     raise ImportError("TensorFlow is not installed. " + TF_VERSION_ERR)
 else:
-    if version.parse(tf_version) < version.parse(MIN_TF_VERSION):
+    if version.parse(tf_version) < version.parse(MIN_TF_VERSION):  # pragma: no cover
         raise ImportError(TF_VERSION_ERR)
 
 from tensorflow import keras as _keras
