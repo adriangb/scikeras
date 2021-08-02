@@ -318,6 +318,13 @@ def test_kwargs(wrapper, builder):
         )
 
 
+@pytest.mark.parametrize("kwargs", (dict(epochs=1), dict(initial_epoch=1)))
+def test_partial_fit_epoch_kwargs(kwargs):
+    est = KerasClassifier(dynamic_classifier)
+    with pytest.raises(TypeError, match="Invalid argument"):
+        est.partial_fit([[1]], [1], **kwargs)
+
+
 @pytest.mark.parametrize("length", (10, 100))
 @pytest.mark.parametrize("prefix", ("", "fit__"))
 @pytest.mark.parametrize("base", ("validation_batch_size", "batch_size"))
