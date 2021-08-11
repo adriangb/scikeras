@@ -9,6 +9,10 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Tuple, Type, Un
 import numpy as np
 import tensorflow as tf
 
+from scipy.sparse import coo_matrix, csr_matrix, isspmatrix, isspmatrix_coo
+from scipy.sparse.csc import isspmatrix_csc
+from scipy.sparse.dia import isspmatrix_dia
+from scipy.sparse.dok import isspmatrix_dok
 from sklearn.base import BaseEstimator
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
@@ -593,6 +597,7 @@ class BaseWrapper(BaseEstimator):
             X, y = check_X_y(
                 X,
                 y,
+                accept_sparse=True,
                 allow_nd=True,  # allow X to have more than 2 dimensions
                 multi_output=True,  # allow y to be 2D
                 dtype=None,
@@ -625,7 +630,10 @@ class BaseWrapper(BaseEstimator):
                     )
         if X is not None:
             X = check_array(
-                X, allow_nd=True, dtype=_check_array_dtype(X, force_numeric=True)
+                X,
+                allow_nd=True,
+                dtype=_check_array_dtype(X, force_numeric=True),
+                accept_sparse=True,
             )
             X_dtype_ = X.dtype
             X_shape_ = X.shape
@@ -656,6 +664,15 @@ class BaseWrapper(BaseEstimator):
                             n_features_in_, self.__class__.__name__, self.n_features_in_
                         )
                     )
+            if (
+                isspmatrix_dok(X)
+                or isspmatrix_dia(X)
+                or isspmatrix_csc(X)
+                or isspmatrix_coo(X)
+            ):
+                # TensorFlow does not support DOK, DIA, CSC or COO
+                X = csr_matrix(X)
+                X.sort_indices()
         return X, y
 
     def _type_of_target(self, y: np.ndarray) -> str:
