@@ -537,14 +537,3 @@ def test_input_dtype_conversion(X_dtype, est):
 
     with patch.object(est.model_, "fit", new=check_dtypes):
         est.partial_fit(X, y)
-
-
-def test_sparse_matrix():
-    y = np.random.randint(low=0, high=2, size=(1000,))
-    X = coo_matrix(y.reshape(-1, 1))
-
-    est = KerasClassifier(
-        dynamic_classifier, model__hidden_layer_sizes=[100], epochs=20,
-    )
-    est.fit(X, y)
-    assert est.score(X, y) > 0.85
