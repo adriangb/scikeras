@@ -18,16 +18,15 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from tensorflow import keras
+from tensorflow.keras import backend as K
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
 from tensorflow.keras.models import Model, Sequential
-from tensorflow.python import keras
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
-from tensorflow.python.keras.utils.np_utils import to_categorical
+from tensorflow.keras.utils import register_keras_serializable, to_categorical
 
-from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .testing_utils import basic_checks

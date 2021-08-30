@@ -45,7 +45,7 @@ We use Poetry_ to manage dependencies.
     poetry install
     poetry shell
 
-    pytest -n auto  # parallelized tests via pytest-xdist
+    pytest -v
 
 
 .. _Poetry: https://python-poetry.org/

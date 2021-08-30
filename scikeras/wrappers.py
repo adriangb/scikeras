@@ -18,17 +18,18 @@ from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
-from tensorflow.keras import metrics as metrics_module
-from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.keras.utils import register_keras_serializable
 
 from scikeras._utils import (
     TFRandomState,
-    _class_from_strings,
     accepts_kwargs,
+    get_loss_class_function_or_string,
+    get_metric_class,
+    get_optimizer_class,
     has_param,
     route_params,
+    try_to_convert_strings_to_classes,
     unflatten_params,
 )
 from scikeras.utils import loss_name, metric_name
@@ -332,8 +333,8 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs = route_params(
             init_params, destination="compile", pass_filter=self._compile_kwargs,
         )
-        compile_kwargs["optimizer"] = _class_from_strings(
-            compile_kwargs["optimizer"], optimizers_module.get
+        compile_kwargs["optimizer"] = try_to_convert_strings_to_classes(
+            compile_kwargs["optimizer"], get_optimizer_class
         )
         compile_kwargs["optimizer"] = unflatten_params(
             items=compile_kwargs["optimizer"],
@@ -341,8 +342,8 @@ class BaseWrapper(BaseEstimator):
                 init_params, destination="optimizer", pass_filter=set(), strict=True,
             ),
         )
-        compile_kwargs["loss"] = _class_from_strings(
-            compile_kwargs["loss"], losses_module.get
+        compile_kwargs["loss"] = try_to_convert_strings_to_classes(
+            compile_kwargs["loss"], get_loss_class_function_or_string
         )
         compile_kwargs["loss"] = unflatten_params(
             items=compile_kwargs["loss"],
@@ -350,8 +351,8 @@ class BaseWrapper(BaseEstimator):
                 init_params, destination="loss", pass_filter=set(), strict=False,
             ),
         )
-        compile_kwargs["metrics"] = _class_from_strings(
-            compile_kwargs["metrics"], metrics_module.get
+        compile_kwargs["metrics"] = try_to_convert_strings_to_classes(
+            compile_kwargs["metrics"], get_metric_class
         )
         compile_kwargs["metrics"] = unflatten_params(
             items=compile_kwargs["metrics"],
@@ -411,7 +412,8 @@ class BaseWrapper(BaseEstimator):
     def _ensure_compiled_model(self) -> None:
         # compile model if user gave us an un-compiled model
         if not (hasattr(self.model_, "loss") and hasattr(self.model_, "optimizer")):
-            self.model_.compile(**self._get_compile_kwargs())
+            kw = self._get_compile_kwargs()
+            self.model_.compile(**kw)
 
     def _fit_keras_model(
         self,

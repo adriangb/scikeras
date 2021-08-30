@@ -8,7 +8,6 @@ import pytest
 import tensorflow as tf
 
 from sklearn.base import BaseEstimator
-from sklearn.datasets import make_classification, make_regression
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.multioutput import (
@@ -16,8 +15,8 @@ from sklearn.multioutput import (
 )
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
-from tensorflow.python.keras.layers import Concatenate, Dense, Input
-from tensorflow.python.keras.models import Model
+from tensorflow.keras.layers import Concatenate, Dense, Input
+from tensorflow.keras.models import Model
 
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
