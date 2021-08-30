@@ -3,10 +3,16 @@ import os
 import random
 import warnings
 
-from typing import Any, Callable, Dict, Iterable, Union
+from types import FunctionType
+from typing import Any, Callable, Dict, Iterable, Mapping, Sequence, Type, Union
 
 import numpy as np
 import tensorflow as tf
+
+from numpy.lib.arraysetops import isin
+from tensorflow.keras import losses as losses_mod
+from tensorflow.keras import metrics as metrics_mod
+from tensorflow.keras import optimizers as optimizers_mod
 
 
 DIGITS = frozenset(str(i) for i in range(10))
@@ -185,29 +191,47 @@ def unflatten_params(items, params, base_params=None):
     return item
 
 
-def _class_from_strings(items: Union[str, dict, tuple, list], class_getter: Callable):
+def get_optimizer_class(
+    optimizer: Union[str, optimizers_mod.Optimizer, Type[optimizers_mod.Optimizer]]
+) -> optimizers_mod.Optimizer:
+    return type(
+        optimizers_mod.get(optimizer)
+    )  # optimizers.get returns instances instead of classes
+
+
+def get_metric_class(
+    metric: Union[str, metrics_mod.Metric, Type[metrics_mod.Metric]]
+) -> Union[metrics_mod.Metric, str]:
+    if metric in ("acc", "accuracy", "ce", "crossentropy"):
+        # Keras matches "acc" and others in this list to the right function
+        # based on the Model's loss function, output shape, etc.
+        # We pass them through here to let Keras deal with these.
+        return metric
+    return metrics_mod.get(metric)  # always returns a class
+
+
+def get_loss_class_function_or_string(loss: str) -> Union[losses_mod.Loss, Callable]:
+    got = losses_mod.get(loss)
+    if type(got) == FunctionType:
+        return got
+    return type(got)  # a class, e.g. if loss="BinaryCrossentropy"
+
+
+def try_to_convert_strings_to_classes(
+    items: Union[str, dict, tuple, list], class_getter: Callable
+):
     """Convert shorthand optimizer/loss/metric names to classes.
     """
     if isinstance(items, str):
-        item = items
-        if class_getter is tf.keras.metrics.get and item in (
-            "acc",
-            "accuracy",
-            "ce",
-            "crossentropy",
-        ):
-            # Keras matches "acc" and others in this list to the right function
-            # based on the Model's loss function, output shape, etc.
-            # We pass them through here to let Keras deal with these.
-            return item
-        got = class_getter(item)
-        if hasattr(got, "__class__") and type(got).__module__.startswith("tensorflow"):
-            # optimizers.get returns instances instead of classes
-            got = got.__class__
-        return got
-    elif isinstance(items, (list, tuple)):
-        return type(items)([_class_from_strings(item, class_getter) for item in items])
-    elif isinstance(items, dict):
-        return {k: _class_from_strings(item, class_getter) for k, item in items.items()}
+        return class_getter(items)  # single item, despite parameter name
+    elif isinstance(items, Sequence):
+        return type(items)(
+            [try_to_convert_strings_to_classes(item, class_getter) for item in items]
+        )
+    elif isinstance(items, Mapping):
+        return {
+            k: try_to_convert_strings_to_classes(item, class_getter)
+            for k, item in items.items()
+        }
     else:
-        return items
+        return items  # not a string or known collection

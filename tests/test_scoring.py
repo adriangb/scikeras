@@ -1,7 +1,7 @@
 import numpy as np
 
 from sklearn.metrics import r2_score as sklearn_r2_score
-from tensorflow.python.framework.ops import convert_to_tensor
+from tensorflow import convert_to_tensor
 
 from scikeras.wrappers import KerasRegressor
 

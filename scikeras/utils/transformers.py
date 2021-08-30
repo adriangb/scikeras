@@ -8,8 +8,20 @@ from sklearn.exceptions import NotFittedError
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder
 from sklearn.utils.multiclass import type_of_target
-from tensorflow.keras.losses import Loss
-from tensorflow.python.keras.losses import is_categorical_crossentropy
+from tensorflow.keras.losses import (
+    CategoricalCrossentropy,
+    Loss,
+    categorical_crossentropy,
+)
+
+
+def _is_categorical_crossentropy(loss):
+    return (
+        isinstance(loss, CategoricalCrossentropy)
+        or loss == categorical_crossentropy
+        or getattr(loss, "__name__", None) == "categorical_crossentropy"
+        or loss in ("categorical_crossentropy", "cce", "CategoricalCrossentropy")
+    )
 
 
 class TargetReshaper(BaseEstimator, TransformerMixin):
@@ -154,7 +166,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             "multiclass-multioutput": FunctionTransformer(),
             "multilabel-indicator": FunctionTransformer(),
         }
-        if is_categorical_crossentropy(self.loss):
+        if _is_categorical_crossentropy(self.loss):
             encoders["multiclass"] = make_pipeline(
                 TargetReshaper(),
                 OneHotEncoder(
@@ -246,7 +258,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
         elif self._target_type == "multiclass":
             # array([0.8, 0.1, 0.1], [.1, .8, .1]) -> array(['apple', 'orange'])
             idx = np.argmax(y, axis=-1)
-            if not is_categorical_crossentropy(self.loss):
+            if not _is_categorical_crossentropy(self.loss):
                 class_predictions = idx.reshape(-1, 1)
             else:
                 class_predictions = np.zeros(y.shape, dtype=int)
