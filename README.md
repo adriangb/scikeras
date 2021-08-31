@@ -24,6 +24,13 @@ pip install scikeras
 
 The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.4.0`.
 
+You will need to manually install TensorFlow; due to TensorFlow's packaging it is not a direct dependency of SciKeras.
+You can do this by running:
+
+```bash
+pip install tensorflow
+```
+
 ### Migrating from `tf.keras.wrappers.scikit_learn`
 
 Please see the [migration](https://www.adriangb.com/scikeras/stable/migration.html) section of our documentation.
