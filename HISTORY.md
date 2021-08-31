@@ -1,5 +1,17 @@
 # History
 
+## 0.4.0 (2021-08-30)
+
+Features:
+
+* Support routed parameters to callbacks (#233)
+
+Changes:
+
+* Official support for extra keyword arguments (`**kwargs`) in `fit()`, `predict()` and `predict_proba()` that are routed directly to Keras (#238)
+* Remove hard dependency on `tensorflow`, allowing users to choose `tensorflow-cpu` or other distributions in environments where they can't control `pip` arguments (#237)
+* Remove hard dependency on `tensorflow`, allowing users to choose `tensorflow-cpu` or other distributions (#237)
+
 ## 0.3.1 (2021-04-12)
 
 Fixes:

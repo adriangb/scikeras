@@ -17,15 +17,22 @@ To install with pip, run:
 
 We recommend to use a virtual environment for this.
 
-To install without any dependencies, eg. to use a custom
-TensorFlow build or `tensorflow-cpu`_, you can instruct pip to ignore dependencies:
+You will need to manually install TensorFlow; due to TensorFlow's packaging it is not a direct dependency of SciKeras.
+You can do this by running:
+
+.. code:: bash
+
+    pip install tensorflow
+
+This allows you to install an alternative TensorFlow binary, for example `tensorflow-cpu`_.
+
+You can also install SciKeras without any dependencies, for example to install a nightly version of Scikit-Learn:
 
 .. code:: bash
 
     pip install --no-deps scikeras
 
-Then manually install compatible versions of TensorFlow and Scikit-Learn.
-As of SciKeras v0.3.3, the minimum required versions are as follows:
+As of SciKeras v0.4.0, the minimum required versions are as follows:
 
 - TensorFlow: v2.4.0
 - Scikit-Learn: v0.22.0
@@ -33,8 +40,8 @@ As of SciKeras v0.3.3, the minimum required versions are as follows:
 Developer Installation
 ~~~~~~~~~~~~~~~~~~~~~~
 
-If you would like to use the must recent additions to scikeras or
-help development, you should install scikeras from source.
+If you would like to use the must recent additions to SciKeras or
+help development, you should install SciKeras from source.
 
 We use Poetry_ to manage dependencies.
 
