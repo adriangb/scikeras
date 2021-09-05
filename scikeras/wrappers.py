@@ -1357,7 +1357,7 @@ class KerasClassifier(BaseWrapper):
     @property
     def _fit_kwargs(self) -> Set[str]:
         # remove class_weight since KerasClassifier re-processes it into sample_weight
-        return BaseWrapper._fit_kwargs - set(("class_weight",))
+        return BaseWrapper._fit_kwargs - {"class_weight"}
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
