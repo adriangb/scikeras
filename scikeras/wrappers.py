@@ -479,7 +479,9 @@ class BaseWrapper(BaseEstimator):
 
         # collect parameters
         params = self.get_params()
-        fit_args = route_params(params, destination="fit", pass_filter=self._fit_kwargs)
+        fit_args = route_params(
+            params, destination="fit", pass_filter=self._fit_kwargs, strict=True
+        )
         fit_args["sample_weight"] = sample_weight
         fit_args["epochs"] = initial_epoch + epochs
         fit_args["initial_epoch"] = initial_epoch
@@ -757,7 +759,7 @@ class BaseWrapper(BaseEstimator):
         def initialize(destination: str):
             if params.get(destination) is not None:
                 callback_kwargs = route_params(
-                    params, destination=destination, pass_filter=set()
+                    params, destination=destination, pass_filter=set(), strict=False
                 )
                 callbacks = unflatten_params(
                     items=params[destination], params=callback_kwargs
@@ -1084,7 +1086,9 @@ class BaseWrapper(BaseEstimator):
 
         # filter kwargs and get attributes for score
         params = self.get_params()
-        score_args = route_params(params, destination="score", pass_filter=set())
+        score_args = route_params(
+            params, destination="score", pass_filter=set(), strict=True
+        )
 
         return self.scorer(y, y_pred, sample_weight=sample_weight, **score_args)
 
