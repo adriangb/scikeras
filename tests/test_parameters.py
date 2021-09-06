@@ -9,6 +9,8 @@ from sklearn.base import clone
 from sklearn.datasets import make_blobs, make_classification
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import FunctionTransformer
+from tensorflow.keras import Sequential
+from tensorflow.keras import layers as layers_mod
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
@@ -255,6 +257,39 @@ def test_class_weight_param():
             clf.partial_fit(X_train, y_train)
         y_pred = clf.predict(X_test)
         assert np.mean(y_pred == 0) > 0.95
+
+
+@pytest.mark.parametrize("class_weight", ("balanced", {0: 0.5, 1: 0.5}, {0: 1, 1: 1},))
+def test_class_weight_balanced(class_weight):
+    """KerasClassifier should accept the class_weight parameter in the same format as ScikitLearn.
+    Passing "balanced" will automatically compute class_weight.
+    Class weights will always be converted to sample weights before calling the Keras model,
+    preserving compatibility with encoders.
+    """
+
+    clf = KerasClassifier(
+        model=dynamic_classifier, model__hidden_layer_sizes=[], class_weight="balanced"
+    )
+    clf.fit([[1], [1]], [0, 1])
+
+    class TestModel(Sequential):
+        def fit(self, *args, **kwargs):
+            np.testing.assert_equal(
+                kwargs["sample_weight"] / kwargs["sample_weight"], [1, 1]
+            )
+            return super().fit(*args, **kwargs)
+
+    def get_model() -> TestModel:
+        return TestModel(
+            [layers_mod.InputLayer((1,)), layers_mod.Dense(1, activation="sigmoid")]
+        )
+
+    X, y = [[1], [1]], [0, 1]
+
+    clf = KerasClassifier(
+        get_model, loss="binary_crossentropy", class_weight=class_weight
+    )
+    clf.fit(X, y)
 
 
 @pytest.mark.parametrize(
