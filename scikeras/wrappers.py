@@ -4,7 +4,7 @@ import inspect
 import warnings
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Type, Union
 
 import numpy as np
 import tensorflow as tf
@@ -1353,6 +1353,11 @@ class KerasClassifier(BaseWrapper):
             # check that this is not a multiclass problem missing categories
             target_type = type_of_target(self.classes_)
         return target_type
+
+    @property
+    def _fit_kwargs(self) -> Set[str]:
+        # remove class_weight since KerasClassifier re-processes it into sample_weight
+        return BaseWrapper._fit_kwargs - {"class_weight"}
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
