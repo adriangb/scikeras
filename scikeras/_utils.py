@@ -75,8 +75,8 @@ def route_params(
         Only keys from `params` that are in the iterable are passed.
         This does not affect routed parameters.
     strict: bool
-        Pop any routed parameters that are not being routed to `destination`
-        (including parameters routed to `destination__...`).
+        Only include routed parameters target at `destination__...`
+        and not any further routing (i.e. exclude `destination__inner__...`).
 
     Returns
     -------
@@ -84,18 +84,18 @@ def route_params(
         Filtered parameters, with any routing prefixes removed.
     """
     res = dict()
-    for key, val in params.items():
-        if "__" in key:
-            # routed param
-            if key.startswith(destination + "__"):
-                new_key = key[len(destination + "__") :]
-                res[new_key] = val
-        else:
-            # non routed
-            if pass_filter is None or key in pass_filter:
-                res[key] = val
-    if strict:
-        res = {k: v for k, v in res.items() if "__" not in k}
+    routed = {k: v for k, v in params.items() if "__" in k}
+    non_routed = {k: params[k] for k in (params.keys() - routed.keys())}
+    for key, val in non_routed.items():
+        if pass_filter is None or key in pass_filter:
+            res[key] = val
+    for key, val in routed.items():
+        prefix = destination + "__"
+        if key.startswith(prefix):
+            new_key = key[len(prefix) :]
+            if strict and "__" in new_key:
+                continue
+            res[new_key] = val
     return res
 
 

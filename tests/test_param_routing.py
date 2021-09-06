@@ -3,7 +3,8 @@ import inspect
 import numpy as np
 import pytest
 
-from tensorflow.keras import Model
+from tensorflow.keras import Model, Sequential
+from tensorflow.keras import layers as layers_mod
 
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
@@ -128,4 +129,54 @@ def test_routed_unrouted_equivalence():
     clf.fit(X, y)
 
     clf = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
+    clf.fit(X, y)
+
+
+def test_parameter_precedence():
+    """Routed parameters should override non-routed parameters, and fit keyword arguments should override routed"""
+
+    class TestModel(Sequential):
+        def fit(self, *args, **kwargs):
+            assert kwargs["class_weight"] == {0: 0.5, 1: 0.5}
+            assert kwargs.pop("custom") == "fit_keyword"
+            return super().fit(*args, **kwargs)
+
+    def get_model() -> TestModel:
+        return TestModel(
+            [layers_mod.InputLayer((1,)), layers_mod.Dense(1, activation="sigmoid")]
+        )
+
+    X, y = [[1], [2]], [0, 1]
+
+    clf = KerasClassifier(
+        get_model,
+        loss="binary_crossentropy",
+        fit__class_weight={
+            0: 0.5,
+            1: 0.5,
+        },  # test w/ a built in parameter to make sure we can override them
+        fit__custom="constructor_routed",
+    )
+
+    clf.fit(X, y, custom="fit_keyword")
+
+
+def test_exclude_parameters_with_further_routing():
+    """SciKeras should only route parameters to final destinations that do not contain further routing
+    For example, optimizer__xyz__abc should _not_ be passed to the Optimizer as Optimizer(xyz__abc=xyz__abc).
+    """
+
+    def get_model() -> Sequential:
+        return Sequential(
+            [layers_mod.InputLayer((1,)), layers_mod.Dense(1, activation="sigmoid")]
+        )
+
+    X, y = [[1], [2]], [0, 1]
+
+    clf = KerasClassifier(
+        get_model,
+        loss="binary_crossentropy",
+        optimizer__this_should_not_pass__abc="error!",
+    )
+
     clf.fit(X, y)
