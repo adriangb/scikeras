@@ -159,3 +159,24 @@ def test_parameter_precedence():
     )
 
     clf.fit(X, y, custom="fit_keyword")
+
+
+def test_exclude_parameters_with_further_routing():
+    """SciKeras should only route parameters to final destinations that do not contain further routing
+    For example, optimizer__xyz__abc should _not_ be passed to the Optimizer as Optimizer(xyz__abc=xyz__abc).
+    """
+
+    def get_model() -> Sequential:
+        return Sequential(
+            [layers_mod.InputLayer((1,)), layers_mod.Dense(1, activation="sigmoid")]
+        )
+
+    X, y = [[1], [2]], [0, 1]
+
+    clf = KerasClassifier(
+        get_model,
+        loss="binary_crossentropy",
+        optimizer__this_should_not_pass__abc="error!",
+    )
+
+    clf.fit(X, y)
