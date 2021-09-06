@@ -1,5 +1,13 @@
 # History
 
+## 0.4.1 (2021-09-06)
+
+Fixes:
+
+* Add missing dependency on `packaging` (#247). Thank you @sim-san for reporting and fixing!
+* Fixed an issue causing routed parameters (`fit__class_weight`) to be overridden by non-routed parameters, including default values (`class_weight=None`) (#244). Thank you @8549 for reporting the issue.
+* Fix handling of `class_weight="balanced"` (#245)
+
 ## 0.4.0 (2021-08-30)
 
 Features:
