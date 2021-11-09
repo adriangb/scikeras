@@ -1,0 +1,362 @@
+{
+ "cells": [
+  {
+   "cell_type": "raw",
+   "id": "439d3e03",
+   "metadata": {},
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Benchmarks.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "45509a28",
+   "metadata": {},
+   "source": [
+    "# SciKeras Benchmarks\n",
+    "\n",
+    "SciKeras wraps Keras Models, but does not alter their performance since all of the heavy lifting still happens within Keras/Tensorflow. In this notebook, we compare the performance and accuracy of a pure-Keras Model to the same model wrapped in SciKeras.\n",
+    "\n",
+    "## Table of contents\n",
+    "\n",
+    "* [1. Setup](#1.-Setup)\n",
+    "* [2. Dataset](#2.-Dataset)\n",
+    "* [3. Define Keras Model](#3.-Define-Keras-Model)\n",
+    "* [4. Keras benchmarks](#4.-Keras-benchmarks)\n",
+    "* [5. SciKeras benchmark](#5.-SciKeras-benchmark)\n",
+    "\n",
+    "## 1. Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "07946d67",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-11-09T21:10:34.713793Z",
+     "iopub.status.busy": "2021-11-09T21:10:34.712966Z",
+     "iopub.status.idle": "2021-11-09T21:10:37.577016Z",
+     "shell.execute_reply": "2021-11-09T21:10:37.577991Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "try:\n",
+    "    import scikeras\n",
+    "except ImportError:\n",
+    "    !python -m pip install scikeras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9761212a",
+   "metadata": {},
+   "source": [
+    "Silence TensorFlow logging to keep output succinct."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "e7ed5e1b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-11-09T21:10:37.591850Z",
+     "iopub.status.busy": "2021-11-09T21:10:37.581897Z",
+     "iopub.status.idle": "2021-11-09T21:10:37.594572Z",
+     "shell.execute_reply": "2021-11-09T21:10:37.593618Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "from tensorflow import get_logger\n",
+    "get_logger().setLevel('ERROR')\n",
+    "warnings.filterwarnings(\"ignore\", message=\"Setting the random state for TF\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "2eef10e5",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-11-09T21:10:37.600249Z",
+     "iopub.status.busy": "2021-11-09T21:10:37.599460Z",
+     "iopub.status.idle": "2021-11-09T21:10:38.200035Z",
+     "shell.execute_reply": "2021-11-09T21:10:38.201049Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from scikeras.wrappers import KerasClassifier, KerasRegressor\n",
+    "from tensorflow import keras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "17908301",
+   "metadata": {},
+   "source": [
+    "## 2. Dataset\n",
+    "\n",
+    "We will be using the MNIST dataset available within Keras."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "0710a680",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-11-09T21:10:38.208384Z",
+     "iopub.status.busy": "2021-11-09T21:10:38.207525Z",
+     "iopub.status.idle": "2021-11-09T21:10:38.778653Z",
+     "shell.execute_reply": "2021-11-09T21:10:38.779217Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()\n",
+    "# Scale images to the [0, 1] range\n",
+    "x_train = x_train.astype(\"float32\") / 255\n",
+    "x_test = x_test.astype(\"float32\") / 255\n",
+    "# Make sure images have shape (28, 28, 1)\n",
+    "x_train = np.expand_dims(x_train, -1)\n",
+    "x_test = np.expand_dims(x_test, -1)\n",
+    "# Reduce dataset size for faster benchmarks\n",
+    "x_train, y_train = x_train[:2000], y_train[:2000]\n",
+    "x_test, y_test = x_test[:500], y_test[:500]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7648e5b9",
+   "metadata": {},
+   "source": [
+    "## 3. Define Keras Model\n",
+    "\n",
+    "Next we will define our Keras model (adapted from [keras.io](https://keras.io/examples/vision/mnist_convnet/)):"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "82d911b5",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-11-09T21:10:38.794581Z",
+     "iopub.status.busy": "2021-11-09T21:10:38.793881Z",
+     "iopub.status.idle": "2021-11-09T21:10:38.798220Z",
+     "shell.execute_reply": "2021-11-09T21:10:38.798812Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "num_classes = 10\n",
+    "input_shape = (28, 28, 1)\n",
+    "\n",
+    "\n",
+    "def get_model():\n",
+    "    model = keras.Sequential(\n",
+    "        [\n",
+    "            keras.Input(input_shape),\n",
+    "            keras.layers.Conv2D(32, kernel_size=(3, 3), activation=\"relu\"),\n",
+    "            keras.layers.MaxPooling2D(pool_size=(2, 2)),\n",
+    "            keras.layers.Conv2D(64, kernel_size=(3, 3), activation=\"relu\"),\n",
+    "            keras.layers.MaxPooling2D(pool_size=(2, 2)),\n",
+    "            keras.layers.Flatten(),\n",
+    "            keras.layers.Dropout(0.5),\n",
+    "            keras.layers.Dense(num_classes, activation=\"softmax\"),\n",
+    "        ]\n",
+    "    )\n",
+    "    model.compile(\n",
+    "        loss=\"sparse_categorical_crossentropy\", optimizer=\"adam\"\n",
+    "    )\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "12282a05",
+   "metadata": {},
+   "source": [
+    "## 4. Keras benchmarks"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "4ff98ac3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-11-09T21:10:38.805444Z",
+     "iopub.status.busy": "2021-11-09T21:10:38.804652Z",
+     "iopub.status.idle": "2021-11-09T21:10:38.808295Z",
+     "shell.execute_reply": "2021-11-09T21:10:38.807648Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "fit_kwargs = {\"batch_size\": 128, \"validation_split\": 0.1, \"verbose\": 0, \"epochs\": 5}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "b0ccc290",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-11-09T21:10:38.815492Z",
+     "iopub.status.busy": "2021-11-09T21:10:38.813213Z",
+     "iopub.status.idle": "2021-11-09T21:10:38.816447Z",
+     "shell.execute_reply": "2021-11-09T21:10:38.817053Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.metrics import accuracy_score\n",
+    "from scikeras._utils import tensorflow_random_state"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "ffcce03f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-11-09T21:10:38.829812Z",
+     "iopub.status.busy": "2021-11-09T21:10:38.829100Z",
+     "iopub.status.idle": "2021-11-09T21:10:50.780687Z",
+     "shell.execute_reply": "2021-11-09T21:10:50.781468Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Training time: 11.37\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Accuracy: 0.88\n"
+     ]
+    }
+   ],
+   "source": [
+    "from time import time\n",
+    "\n",
+    "with tensorflow_random_state(seed=0):  # we force a TF random state to be able to compare accuracy\n",
+    "    model = get_model()\n",
+    "    start = time()\n",
+    "    model.fit(x_train, y_train, **fit_kwargs)\n",
+    "    print(f\"Training time: {time()-start:.2f}\")\n",
+    "    y_pred = np.argmax(model.predict(x_test), axis=1)\n",
+    "print(f\"Accuracy: {accuracy_score(y_test, y_pred)}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "71440108",
+   "metadata": {},
+   "source": [
+    "## 5. SciKeras benchmark"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "8e4548dc",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-11-09T21:10:50.785369Z",
+     "iopub.status.busy": "2021-11-09T21:10:50.784682Z",
+     "iopub.status.idle": "2021-11-09T21:10:50.791514Z",
+     "shell.execute_reply": "2021-11-09T21:10:50.792387Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "clf = KerasClassifier(\n",
+    "    model=get_model,\n",
+    "    random_state=0,\n",
+    "    **fit_kwargs\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "d516a4cb",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2021-11-09T21:10:50.796234Z",
+     "iopub.status.busy": "2021-11-09T21:10:50.795570Z",
+     "iopub.status.idle": "2021-11-09T21:11:02.295706Z",
+     "shell.execute_reply": "2021-11-09T21:11:02.296624Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Training time: 11.26\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Accuracy: 0.88\n"
+     ]
+    }
+   ],
+   "source": [
+    "start = time()\n",
+    "clf.fit(x_train, y_train)\n",
+    "print(f\"Training time: {time()-start:.2f}\")\n",
+    "y_pred = clf.predict(x_test)\n",
+    "print(f\"Accuracy: {accuracy_score(y_test, y_pred)}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7a96932b",
+   "metadata": {},
+   "source": [
+    "As you can see, the overhead for SciKeras is <1 sec, and the accuracy is identical."
+   ]
+  }
+ ],
+ "metadata": {
+  "jupytext": {
+   "formats": "ipynb,md"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
