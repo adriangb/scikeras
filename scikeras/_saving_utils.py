@@ -4,7 +4,7 @@ import tempfile
 
 from io import BytesIO
 from types import MethodType
-from typing import Any, Callable, Dict, Iterable, List, Tuple
+from typing import Any, Callable, Dict, Hashable, Iterable, List, Tuple
 
 import numpy as np
 import tensorflow.keras as keras
@@ -111,6 +111,13 @@ def pack_keras_model(
         unpack_keras_model,
         (model_bytes, optimizer_weights),
     )
+
+
+def deepcopy_model(model: keras.Model, memo: Dict[Hashable, Any]) -> keras.Model:
+    _, (model_bytes, optimizer_weights) = pack_keras_model(model)
+    new_model = unpack_keras_model(model_bytes, optimizer_weights)
+    memo[model] = new_model
+    return new_model
 
 
 def unpack_keras_optimizer(
