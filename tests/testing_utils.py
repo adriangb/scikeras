@@ -27,7 +27,7 @@ def basic_checks(estimator, loader):
 
 
 def _get_check_estimator_ids(obj, estimator_ids=None):
-    """Backport from Scikit-Learn = 0.23.0, not available in 0.22.0"""
+    """Backport from Scikit-Learn = 1.0.0, not available in 0.22.0"""
     if obj in estimator_ids:
         return estimator_ids[obj]
     if not isinstance(obj, partial):
