@@ -35,7 +35,7 @@ You can also install SciKeras without any dependencies, for example to install a
 As of SciKeras v0.4.0, the minimum required versions are as follows:
 
 - TensorFlow: v2.7.0
-- Scikit-Learn: v0.22.0
+- Scikit-Learn: v0.23.0
 
 Developer Installation
 ~~~~~~~~~~~~~~~~~~~~~~
