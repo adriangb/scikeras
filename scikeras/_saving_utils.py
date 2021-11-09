@@ -7,10 +7,10 @@ from types import MethodType
 from typing import Any, Callable, Dict, Iterable, List, Tuple
 
 import numpy as np
+import tensorflow.keras as keras
 
 from tensorflow import Variable
 from tensorflow import io as tf_io
-from tensorflow import keras
 from tensorflow.keras.models import load_model
 
 

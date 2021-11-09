@@ -106,13 +106,13 @@ fit_kwargs = {"batch_size": 128, "validation_split": 0.1, "verbose": 0, "epochs"
 
 ```python
 from sklearn.metrics import accuracy_score
-from scikeras._utils import TFRandomState
+from scikeras._utils import tensorflow_random_state
 ```
 
 ```python
 from time import time
 
-with TFRandomState(seed=0):  # we force a TF random state to be able to compare accuracy
+with tensorflow_random_state(seed=0):  # we force a TF random state to be able to compare accuracy
     model = get_model()
     start = time()
     model.fit(x_train, y_train, **fit_kwargs)

@@ -205,10 +205,7 @@ def test_target_shape_changes_incremental_fit_clf():
 
     est = KerasClassifier(model=dynamic_classifier, hidden_layer_sizes=(100,))
     est.fit(X, y)
-    with pytest.raises(
-        ValueError,
-        match="The number of features in X is different to the number",  # raised by transformers
-    ):
+    with pytest.raises(ValueError, match="features"):  # raised by transformers
         est.partial_fit(X, np.column_stack([y, y]))
 
 

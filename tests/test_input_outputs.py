@@ -410,8 +410,7 @@ def test_output_shapes_and_dtypes_against_sklearn_cls(test_data: TestParams):
         return keras_model_fit(x=x, y=y, **kwargs)
 
     with patch.object(scikeras_est.model_, "fit", new=check_dtypes):
-        with pytest.warns(UserWarning, match="Setting the random state for TF"):
-            scikeras_est.fit(X_train, y_train)
+        scikeras_est.fit(X_train, y_train)
 
     y_out_scikeras = scikeras_est.predict(X_test)
     y_out_sklearn = sklearn_est.fit(X_train, y_train).predict(X_test)

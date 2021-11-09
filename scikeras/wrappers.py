@@ -22,13 +22,13 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.utils import register_keras_serializable
 
 from scikeras._utils import (
-    TFRandomState,
     accepts_kwargs,
     get_loss_class_function_or_string,
     get_metric_class,
     get_optimizer_class,
     has_param,
     route_params,
+    tensorflow_random_state,
     try_to_convert_strings_to_classes,
     unflatten_params,
 )
@@ -402,7 +402,7 @@ class BaseWrapper(BaseEstimator):
 
         # build model
         if self._random_state is not None:
-            with TFRandomState(self._random_state):
+            with tensorflow_random_state(self._random_state):
                 model = final_build_fn(**build_params)
         else:
             model = final_build_fn(**build_params)
@@ -497,7 +497,7 @@ class BaseWrapper(BaseEstimator):
         fit_args["callbacks"] = self._fit_callbacks
 
         if self._random_state is not None:
-            with TFRandomState(self._random_state):
+            with tensorflow_random_state(self._random_state):
                 hist = self.model_.fit(x=X, y=y, **fit_args)
         else:
             hist = self.model_.fit(x=X, y=y, **fit_args)
@@ -1281,8 +1281,6 @@ class KerasClassifier(BaseWrapper):
             sparse tensors",
             "check_no_attributes_set_in_init": "can only \
             pass if all params are hardcoded in __init__",
-            "check_class_weight_classifiers": "fails without \
-            >20 epochs, tested seperately",
         },
         **BaseWrapper._tags,
     }

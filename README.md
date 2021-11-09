@@ -22,7 +22,7 @@ This package is available on PyPi:
 pip install scikeras
 ```
 
-The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.4.0`.
+The only dependencies are `scikit-learn>=0.22` and `TensorFlow>=2.7.0`.
 
 You will need to manually install TensorFlow; due to TensorFlow's packaging it is not a direct dependency of SciKeras.
 You can do this by running:

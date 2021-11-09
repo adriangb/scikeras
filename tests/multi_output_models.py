@@ -43,7 +43,7 @@ class MultiLabelTransformer(ClassifierLabelEncoder):
         if self._target_type not in ("multilabel-indicator", "multiclass-multioutput"):
             return super().inverse_transform(y, return_proba=return_proba)
         if return_proba:
-            return y
+            return np.column_stack(y)
         if self._target_type == "multilabel-indicator":
             if self.split:
                 y = np.column_stack(y)

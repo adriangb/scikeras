@@ -10,7 +10,7 @@ except ModuleNotFoundError:
 __version__ = importlib_metadata.version("scikeras")
 
 
-MIN_TF_VERSION = "2.4.0"
+MIN_TF_VERSION = "2..7.0"
 TF_VERSION_ERR = f"SciKeras requires TensorFlow >= {MIN_TF_VERSION}."
 
 from packaging import version
