@@ -24,7 +24,7 @@ else:
     if version.parse(tf_version) < version.parse(MIN_TF_VERSION):  # pragma: no cover
         raise ImportError(TF_VERSION_ERR)
 
-from tensorflow import keras as _keras
+import tensorflow.keras as _keras
 
 from scikeras import _saving_utils
 
