@@ -129,10 +129,11 @@
 <li><p><a class="reference internal" href="#changes-to-your-code" id="id2">Changes to your code</a></p>
 <ul>
 <li><p><a class="reference internal" href="#fit-returns-self" id="id3">Fit returns <code class="docutils literal notranslate"><span class="pre">self</span></code></a></p></li>
-<li><p><a class="reference internal" href="#one-hot-encoding-of-targets-for-categorical-crossentropy-losses" id="id4">One-hot encoding of targets for categorical crossentropy losses</a></p></li>
-<li><p><a class="reference internal" href="#variable-keyword-arguments-in-fit-and-predict" id="id5">Variable keyword arguments in fit and predict</a></p></li>
-<li><p><a class="reference internal" href="#renaming-of-build-fn-to-model" id="id6">Renaming of <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> to <code class="docutils literal notranslate"><span class="pre">model</span></code></a></p></li>
-<li><p><a class="reference internal" href="#default-arguments-in-build-fn-model" id="id7">Default arguments in build_fn/model</a></p></li>
+<li><p><a class="reference internal" href="#score-return-r-2-by-default-for-regressors" id="id4"><code class="docutils literal notranslate"><span class="pre">score()</span></code> return R^2 by default for regressors</a></p></li>
+<li><p><a class="reference internal" href="#one-hot-encoding-of-targets-for-categorical-crossentropy-losses" id="id5">One-hot encoding of targets for categorical crossentropy losses</a></p></li>
+<li><p><a class="reference internal" href="#variable-keyword-arguments-in-fit-and-predict" id="id6">Variable keyword arguments in fit and predict</a></p></li>
+<li><p><a class="reference internal" href="#renaming-of-build-fn-to-model" id="id7">Renaming of <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> to <code class="docutils literal notranslate"><span class="pre">model</span></code></a></p></li>
+<li><p><a class="reference internal" href="#default-arguments-in-build-fn-model" id="id8">Default arguments in build_fn/model</a></p></li>
 </ul>
 </li>
 </ul>
@@ -183,8 +184,14 @@ clf = KerasClassifier(get_model)
 <p>Unlike the TensorFlow wrappers, SciKeras normalizes the names of the keys, so that if you use <cite>metrics=[“mae”]</cite> you will get a key named <cite>“mean_absolute_error”</cite>.</p>
 </div>
 </section>
+<section id="score-return-r-2-by-default-for-regressors">
+<h3><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">score()</span></code> return R^2 by default for regressors</a><a class="headerlink" href="#score-return-r-2-by-default-for-regressors" title="Permalink to this headline">¶</a></h3>
+<p>Keras returns your model’s mean loss when <code class="docutils literal notranslate"><span class="pre">KerasRegressor.score()</span></code> is called.
+SciKeras, like most Scikit-Learn estimators, returns the coefficient of determination of the prediction (also known as R^2 score).
+This is however customizable.</p>
+</section>
 <section id="one-hot-encoding-of-targets-for-categorical-crossentropy-losses">
-<h3><a class="toc-backref" href="#id4">One-hot encoding of targets for categorical crossentropy losses</a><a class="headerlink" href="#one-hot-encoding-of-targets-for-categorical-crossentropy-losses" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id5">One-hot encoding of targets for categorical crossentropy losses</a><a class="headerlink" href="#one-hot-encoding-of-targets-for-categorical-crossentropy-losses" title="Permalink to this headline">¶</a></h3>
 <p>SciKeras will not longer implicitly inspect your Model’s loss function to determine if
 it needs to one-hot encode your target to match the loss function. Instead, you must explicitly
 pass your loss function to the constructor:</p>
@@ -193,7 +200,7 @@ pass your loss function to the constructor:</p>
 </div>
 </section>
 <section id="variable-keyword-arguments-in-fit-and-predict">
-<h3><a class="toc-backref" href="#id5">Variable keyword arguments in fit and predict</a><a class="headerlink" href="#variable-keyword-arguments-in-fit-and-predict" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id6">Variable keyword arguments in fit and predict</a><a class="headerlink" href="#variable-keyword-arguments-in-fit-and-predict" title="Permalink to this headline">¶</a></h3>
 <p>Keras supports a variable keyword arguments (commonly referred to as <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>) for <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">predict</span></code>.
 Scikit-Learn on the other hand does not support these arguments, and using them is largely incompatible with the Scikit-Learn ecosystem.
 As a compromise, SciKeras supports these arguments, but we recommended that you set parameters using the constructor
@@ -220,7 +227,7 @@ This is much more compatible with the Scikit-Learn API.
 In fact, this is what Scikti-Learn does in the background for hyperparameter tuning.</p>
 </section>
 <section id="renaming-of-build-fn-to-model">
-<h3><a class="toc-backref" href="#id6">Renaming of <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> to <code class="docutils literal notranslate"><span class="pre">model</span></code></a><a class="headerlink" href="#renaming-of-build-fn-to-model" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id7">Renaming of <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> to <code class="docutils literal notranslate"><span class="pre">model</span></code></a><a class="headerlink" href="#renaming-of-build-fn-to-model" title="Permalink to this headline">¶</a></h3>
 <p>SciKeras renamed the constructor argument <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> to <code class="docutils literal notranslate"><span class="pre">model</span></code>. In a future release,
 passing <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> as a _keyword_ argument will raise a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>. Passing it as a positional
 argument remains unchanged. You can make the following change to future proof your code:</p>
@@ -230,7 +237,7 @@ argument remains unchanged. You can make the following change to future proof yo
 </div>
 </section>
 <section id="default-arguments-in-build-fn-model">
-<h3><a class="toc-backref" href="#id7">Default arguments in build_fn/model</a><a class="headerlink" href="#default-arguments-in-build-fn-model" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id8">Default arguments in build_fn/model</a><a class="headerlink" href="#default-arguments-in-build-fn-model" title="Permalink to this headline">¶</a></h3>
 <p>SciKeras will no longer introspect your callable <cite>model</cite> for <em>user defined</em> parameters
 (the behavior for parameters like <code class="docutils literal notranslate"><span class="pre">optimizer</span></code> is unchanged).
 You must now “declare” them as keyword arguments to the constructor if you want them to be
