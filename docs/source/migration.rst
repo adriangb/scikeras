@@ -60,6 +60,13 @@ Calling ``fit`` resets this attribute, calling ``partial_fit`` on the other hand
 .. note::
    Unlike the TensorFlow wrappers, SciKeras normalizes the names of the keys, so that if you use `metrics=["mae"]` you will get a key named `"mean_absolute_error"`.
 
+``score()`` return R^2 by default for regressors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Keras returns your model's mean loss when ``KerasRegressor.score()`` is called.
+SciKeras, like most Scikit-Learn estimators, returns the coefficient of determination of the prediction (also known as R^2 score).
+This is however customizable.
+
 One-hot encoding of targets for categorical crossentropy losses
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
