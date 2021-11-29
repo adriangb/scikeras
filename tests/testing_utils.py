@@ -6,7 +6,6 @@ from functools import partial
 import numpy as np
 import pytest
 
-from sklearn import config_context
 from sklearn.utils.estimator_checks import (
     parametrize_with_checks as _parametrize_with_checks,
 )
@@ -28,28 +27,20 @@ def basic_checks(estimator, loader):
 
 
 def _get_check_estimator_ids(obj, estimator_ids=None):
-    """Backport from Scikit-Learn = 0.23.0, not available in 0.22.0"""
-    if callable(obj):
-        if not isinstance(obj, partial):
-            return obj.__name__
+    """Backport from Scikit-Learn = 1.0.0, not available in 0.22.0"""
+    if obj in estimator_ids:
+        return estimator_ids[obj]
+    if not isinstance(obj, partial):
+        return obj.__name__
 
-        if not obj.keywords:
-            return obj.func.__name__
+    if not obj.keywords:
+        return obj.func.__name__
 
-        kwstring = ",".join(["{}={}".format(k, v) for k, v in obj.keywords.items()])
-        return "{}({})".format(obj.func.__name__, kwstring)
-    if hasattr(obj, "get_params"):
-        # An estimator
-        if estimator_ids is None:
-            # Get id/string from parameters
-            with config_context(print_changed_only=True):
-                return re.sub(r"\s", "", str(obj))
-        else:
-            # User user supplied ID
-            return estimator_ids[obj]
+    kwstring = ",".join(["{}={}".format(k, v) for k, v in obj.keywords.items()])
+    return "{}({})".format(obj.func.__name__, kwstring)
 
 
-def parametrize_with_checks(estimators, ids=None):
+def parametrize_with_checks(estimators):
     """Wraps scikit-learn's fixture to allow setting IDs.
 
     This is done for 2 reasons:
@@ -63,8 +54,12 @@ def parametrize_with_checks(estimators, ids=None):
     """
     checks_generator = _parametrize_with_checks(estimators).args[1]
 
-    if ids is not None:
-        estimator_ids = {estimator: _id for _id, estimator in zip(ids, estimators)}
-        ids = partial(_get_check_estimator_ids, estimator_ids=estimator_ids)
+    estimator_ids = {
+        estimator: _id
+        for _id, estimator in zip(
+            (e.__class__.__name__ for e in estimators), estimators
+        )
+    }
+    ids = partial(_get_check_estimator_ids, estimator_ids=estimator_ids)
 
     return pytest.mark.parametrize("estimator, check", checks_generator, ids=ids)

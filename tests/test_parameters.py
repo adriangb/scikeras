@@ -130,11 +130,9 @@ def test_sample_weights_fit():
     # heavily weight towards y=1 points
     sw_first_class = [0.8] * 5000 + [0.2] * 5000
     # train estimator 1 with weights
-    with pytest.warns(UserWarning, match="Setting the random state"):
-        estimator1.fit(X, y, sample_weight=sw_first_class)
+    estimator1.fit(X, y, sample_weight=sw_first_class)
     # train estimator 2 without weights
-    with pytest.warns(UserWarning, match="Setting the random state"):
-        estimator2.fit(X, y)
+    estimator2.fit(X, y)
     # estimator1 should tilt towards y=1
     # estimator2 should predict about equally
     average_diff_pred_prob_1 = np.average(np.diff(estimator1.predict_proba(X), axis=1))
@@ -214,49 +212,6 @@ class TestMetricsParam:
         X, y = make_classification()
         est.fit(X, y)
         assert len(est.history_[metric]) == 1
-
-
-def test_class_weight_param():
-    """Backport of sklearn.utils.estimator_checks.check_class_weight_classifiers
-    for sklearn <= 0.23.0.
-
-    Tests that fit and partial_fit correctly handle the class_weight parameter.
-    """
-    clf = KerasClassifier(
-        model=dynamic_classifier, model__hidden_layer_sizes=(100,), random_state=0,
-    )
-    problems = (2, 3)
-    for n_centers in problems:
-        # create a very noisy dataset
-        X, y = make_blobs(centers=n_centers, random_state=0, cluster_std=20)
-        X_train, X_test, y_train, _ = train_test_split(
-            X, y, test_size=0.5, random_state=0
-        )
-
-        n_centers = len(np.unique(y_train))
-
-        if n_centers == 2:
-            class_weight = {0: 1000, 1: 0.0001}
-            fit_epochs = 4
-            partial_fit_epochs = 3
-        else:
-            class_weight = {0: 1000, 1: 0.0001, 2: 0.0001}
-            fit_epochs = 8
-            partial_fit_epochs = 6
-
-        clf.set_params(class_weight=class_weight)
-
-        # run fit epochs followed by several partial_fit iterations
-        # these numbers are purely empirical, just like they are in the
-        # original sklearn test
-        clf.set_params(fit__epochs=fit_epochs)
-        clf.fit(X_train, y_train)
-        y_pred = clf.predict(X_test)
-        assert np.mean(y_pred == 0) > 0.8
-        for _ in range(partial_fit_epochs):
-            clf.partial_fit(X_train, y_train)
-        y_pred = clf.predict(X_test)
-        assert np.mean(y_pred == 0) > 0.95
 
 
 @pytest.mark.parametrize("class_weight", ("balanced", {0: 0.5, 1: 0.5}, {0: 1, 1: 1},))

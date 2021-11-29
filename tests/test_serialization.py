@@ -7,7 +7,7 @@ import pytest
 import tensorflow as tf
 
 from sklearn.base import clone
-from sklearn.datasets import load_boston, make_regression
+from sklearn.datasets import fetch_california_housing, make_regression
 from tensorflow import keras
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
@@ -55,7 +55,7 @@ def test_custom_loss_function():
     estimator = KerasRegressor(
         model=dynamic_regressor, loss=CustomLoss(), model__hidden_layer_sizes=(100,),
     )
-    check_pickle(estimator, load_boston)
+    check_pickle(estimator, fetch_california_housing)
 
 
 # ---------------------- Subclassed Model Tests ------------------
@@ -87,7 +87,7 @@ def test_custom_model_registered():
     """Test that a registered subclassed Model can be serialized.
     """
     estimator = KerasRegressor(model=build_fn_custom_model_registered)
-    check_pickle(estimator, load_boston)
+    check_pickle(estimator, fetch_california_housing)
 
 
 def build_fn_custom_model_unregistered(
@@ -115,7 +115,7 @@ def test_custom_model_unregistered():
     """Test that pickling an unregistered subclassed model works.
     """
     estimator = KerasRegressor(model=build_fn_custom_model_unregistered)
-    check_pickle(estimator, load_boston)
+    check_pickle(estimator, fetch_california_housing)
 
 
 # ---------------- Model Compiled with `run_eagerly` --------------------
@@ -127,7 +127,7 @@ def test_run_eagerly():
     estimator = KerasRegressor(
         model=dynamic_regressor, run_eagerly=True, model__hidden_layer_sizes=(100,),
     )
-    check_pickle(estimator, load_boston)
+    check_pickle(estimator, fetch_california_housing)
 
 
 def _weights_close(model1, model2):
