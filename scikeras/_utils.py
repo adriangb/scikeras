@@ -1,16 +1,7 @@
 import inspect
 
 from types import FunctionType
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Mapping,
-    Sequence,
-    Type,
-    Union,
-)
+from typing import Any, Callable, Dict, Iterable, Mapping, Sequence, Type, Union
 
 from tensorflow.keras import losses as losses_mod
 from tensorflow.keras import metrics as metrics_mod
