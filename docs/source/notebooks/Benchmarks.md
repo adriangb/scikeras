@@ -106,7 +106,7 @@ fit_kwargs = {"batch_size": 128, "validation_split": 0.1, "verbose": 0, "epochs"
 
 ```python
 from sklearn.metrics import accuracy_score
-from scikeras._utils import tensorflow_random_state
+from scikeras.utils.random_state import tensorflow_random_state
 ```
 
 ```python
