@@ -28,11 +28,11 @@ from scikeras._utils import (
     get_optimizer_class,
     has_param,
     route_params,
-    tensorflow_random_state,
     try_to_convert_strings_to_classes,
     unflatten_params,
 )
 from scikeras.utils import loss_name, metric_name
+from scikeras.utils.random_state import tensorflow_random_state
 from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
 
 
