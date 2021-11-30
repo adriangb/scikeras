@@ -1,0 +1,646 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Advanced Usage of SciKeras Wrappers &#8212; SciKeras 0.6.0 documentation</title>
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/insipid.css" />
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script defer src="_static/insipid.js"></script>
+    <script defer src="_static/insipid-sidebar.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="SciKeras API" href="api.html" />
+    <link rel="prev" title="SciKeras Benchmarks" href="notebooks/Benchmarks.html" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+  </head>
+  <body class="sidebar-visible">
+    <script type="text/javascript">
+        (function() {
+            var $body = $(document.body);
+            $body.addClass('js');
+            $body.addClass('sidebar-resizing');  // avoid transitions on load
+            $body.removeClass('sidebar-visible');
+            try {
+                var sidebar = localStorage.getItem('sphinx-sidebar');
+                if (sidebar === 'visible') {
+                    $body.addClass('sidebar-visible');
+                }
+                var sidebar_width = localStorage.getItem('sphinx-sidebar-width');
+                if (sidebar_width) {
+                    $(':root').css('--sidebar-width', sidebar_width);
+                }
+            } catch(e) {
+            }
+        })();
+    </script>
+    <header id="topbar-placeholder">
+      <div id="topbar">
+        <div id="titlebar">
+          <div class="buttons">
+            <button id="sidebar-button" type="button" aria-controls="sphinxsidebar" accesskey="M">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg>
+            </button>
+            <button id="search-button" type="button" title="Search" aria-label="Search" aria-expanded="false" aria-controls="search-form" accesskey="S">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+            </button>
+          </div>
+          <div class="title">
+            <a class="parent" href="index.html" accesskey="U">SciKeras 0.6.0 documentation</a>
+            <a class="top" href="#">Advanced Usage of SciKeras Wrappers</a>
+          </div>
+          <div class="buttons">
+            <button id="fullscreen-button" type="button" aria-hidden="true">
+              <span class="enable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M212.686 315.314L120 408l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C10.697 480 0 469.255 0 456V344c0-21.382 25.803-32.09 40.922-16.971L72 360l92.686-92.686c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.249 6.248 6.249 16.378 0 22.627zm22.628-118.628L328 104l-32.922-31.029C279.958 57.851 290.666 32 312.048 32h112C437.303 32 448 42.745 448 56v112c0 21.382-25.803 32.09-40.922 16.971L376 152l-92.686 92.686c-6.248 6.248-16.379 6.248-22.627 0l-25.373-25.373c-6.249-6.248-6.249-16.378 0-22.627z"/></svg>
+              </span>
+              <span class="disable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M4.686 427.314L104 328l-32.922-31.029C55.958 281.851 66.666 256 88.048 256h112C213.303 256 224 266.745 224 280v112c0 21.382-25.803 32.09-40.922 16.971L152 376l-99.314 99.314c-6.248 6.248-16.379 6.248-22.627 0L4.686 449.941c-6.248-6.248-6.248-16.379 0-22.627zM443.314 84.686L344 184l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C234.697 256 224 245.255 224 232V120c0-21.382 25.803-32.09 40.922-16.971L296 136l99.314-99.314c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.248 6.248 6.248 16.379 0 22.627z"/></svg>
+              </span>
+            </button>
+            <a href="https://github.com/adriangb/scikeras/" title="Github">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!-- Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div id="searchbox" role="search">
+          <form id="search-form" class="search" style="display: none" action="search.html" method="get">
+            <input type="search" name="q" placeholder="Search ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <button>Go</button>
+          </form>
+        </div>
+      </div>
+    </header>
+    <nav>
+      <a href="notebooks/Benchmarks.html" class="nav-icon previous" title="previous:&#13;SciKeras Benchmarks" aria-label="Previous topic" accesskey="P" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6 0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9 0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>
+      </a>
+      <a href="api.html" class="nav-icon next" title="next:&#13;SciKeras API" aria-label="Next topic" accesskey="N" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9 0l-22.6-22.6c-9.4-9.4-9.4-24.6 0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6 0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9 0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg>
+      </a>
+    </nav>
+
+    <nav class="relbar">
+      <a class="previous" href="notebooks/Benchmarks.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            SciKeras Benchmarks
+          </span>
+        </div>
+      </a>
+      <a class="next" href="api.html" aria-label="Next topic" >
+        <div class="title">
+          <span class="text">
+            <span class="direction">next</span>
+            SciKeras API
+          </span>
+        </div>
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
+        </div>
+      </a>
+    </nav>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<section id="advanced-usage-of-scikeras-wrappers">
+<h1>Advanced Usage of SciKeras Wrappers<a class="headerlink" href="#advanced-usage-of-scikeras-wrappers" title="Permalink to this headline">¶</a></h1>
+<section id="wrapper-classes">
+<h2>Wrapper Classes<a class="headerlink" href="#wrapper-classes" title="Permalink to this headline">¶</a></h2>
+<p>SciKeras has three wrapper classes avialable to
+users: <a class="reference internal" href="generated/scikeras.wrappers.KerasClassifier.html#scikeras.wrappers.KerasClassifier" title="scikeras.wrappers.KerasClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.KerasClassifier</span></code></a>,
+<a class="reference internal" href="generated/scikeras.wrappers.KerasRegressor.html#scikeras.wrappers.KerasRegressor" title="scikeras.wrappers.KerasRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.KerasRegressor</span></code></a> and
+<a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper" title="scikeras.wrappers.BaseWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrapper</span></code></a>. <code class="docutils literal notranslate"><span class="pre">BaseWrapper</span></code> provides general <code class="docutils literal notranslate"><span class="pre">Keras</span></code> wrapping functionality and
+<code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> and <code class="docutils literal notranslate"><span class="pre">KerasRegressor</span></code> extend this with functionality
+specific to classifiers and regressors respectively. Although you will
+usually be using either <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> and <code class="docutils literal notranslate"><span class="pre">KerasRegressor</span></code>, this document focuses
+on the overall functionality of the wrappers and hence will refer to
+<a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper" title="scikeras.wrappers.BaseWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrapper</span></code></a> as a proxy for both of the wrapper classes.
+Detailed information on usage of specific classes is available in the
+<a class="reference internal" href="api.html#scikeras-api"><span class="std std-ref">SciKeras API</span></a> documentation.</p>
+<p>SciKeras wraps the Keras <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code> to
+provide an interface that should be familiar for Scikit-Learn users and is compatible
+with most of the Scikit-Learn ecosystem.</p>
+<p>To get started, define your <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code> architecture like you always do,
+but within a callable top-level function (we will call this function <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code> for
+the remained of these docs, but you are free to name it as you wish).
+Then pass this function to <a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper" title="scikeras.wrappers.BaseWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseWrapper</span></code></a> in the <code class="docutils literal notranslate"><span class="pre">model</span></code> parameter.
+Finally, you can call <a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper.fit" title="scikeras.wrappers.BaseWrapper.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a>
+and <a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper.predict" title="scikeras.wrappers.BaseWrapper.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a>, as with an sklearn
+estimator. The finished code could look something like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">model_build_fn</span><span class="p">():</span>
+     <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+     <span class="o">...</span>
+     <span class="k">return</span> <span class="n">model</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model_build_fn</span><span class="p">)</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_valid</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Let’s see what SciKeras did:</p>
+<ul class="simple">
+<li><p>wraps <code class="docutils literal notranslate"><span class="pre">tensorflow.keras.Model</span></code> in an sklearn interface</p></li>
+<li><p>handles encoding and decoding of the target <code class="docutils literal notranslate"><span class="pre">y</span></code></p></li>
+<li><p>compiles the <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code> (unless you do it yourself in <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code>)</p></li>
+<li><p>makes all <code class="docutils literal notranslate"><span class="pre">Keras</span></code> objects serializable so that they can be used with <a class="reference external" href="https://scikit-learn.org/stable/modules/classes.html#module-sklearn.model_selection" title="(in scikit-learn v1.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_selection</span></code></a>.</p></li>
+</ul>
+<p>SciKeras abstracts away the incompatibilities and data conversions,
+letting you focus on defining your architecture and
+choosing your hyperparameters.
+At the same time, SciKeras is very flexible and can be
+extended with ease, getting out of your way as much as possible.</p>
+<section id="initialization">
+<h3>Initialization<a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
+<p>When you instantiate the <a class="reference internal" href="generated/scikeras.wrappers.KerasClassifier.html#scikeras.wrappers.KerasClassifier" title="scikeras.wrappers.KerasClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasClassifier</span></code></a> or
+<a class="reference internal" href="generated/scikeras.wrappers.KerasRegressor.html#scikeras.wrappers.KerasRegressor" title="scikeras.wrappers.KerasRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasRegressor</span></code></a> instance, only the given arguments are stored.
+These arguments are stored unmodified. For instance, the <code class="docutils literal notranslate"><span class="pre">model</span></code> will
+remain uninstantiated. This is to make sure that the arguments you
+pass are not touched afterwards, which makes it possible to clone the
+wrapper instance, for example in a <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html#sklearn.model_selection.GridSearchCV" title="(in scikit-learn v1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridSearchCV</span></code></a>.</p>
+<p>Only when the <a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper.fit" title="scikeras.wrappers.BaseWrapper.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> or
+<a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper.initialize" title="scikeras.wrappers.BaseWrapper.initialize"><code class="xref py py-func docutils literal notranslate"><span class="pre">initialize()</span></code></a> methods are called, are the
+different attributes of the wrapper, such as <code class="docutils literal notranslate"><span class="pre">model_</span></code>, initialized.
+An initialized attribute’s name always ends on an underscore; e.g., the
+initialized <code class="docutils literal notranslate"><span class="pre">model</span></code> is called <code class="docutils literal notranslate"><span class="pre">model_</span></code>. (This is the same
+nomenclature as sklearn uses.) Therefore, you always know which
+attributes you set and which ones were created by the wrappers.</p>
+<p>Once initialized by calling <code class="docutils literal notranslate"><span class="pre">fit</span></code>, the wrappers create several attributes,
+documented in the <a class="reference internal" href="api.html#scikeras-api"><span class="std std-ref">SciKeras API</span></a> documentation.</p>
+</section>
+<section id="compilation-of-model">
+<h3>Compilation of <code class="docutils literal notranslate"><span class="pre">Model</span></code><a class="headerlink" href="#compilation-of-model" title="Permalink to this headline">¶</a></h3>
+<p>You have two options to compile your model:</p>
+<p>1. Compile your model within <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code> and return this
+compiled model. In this case, SciKeras will not re-compile your model
+and all compilation parameters (such as <code class="docutils literal notranslate"><span class="pre">optimizer</span></code>) given to
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrapper.__init__()</span></code> will be ignored.</p>
+<p>2. Return an uncompiled model from <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code> and let
+SciKeras handle the compilation. In this case, SciKeras will
+apply all of the compilation parameters, including instantiating
+losses, metrics and optimizers.</p>
+<p>The first route will be more flexible if you wish to determine how to compile
+your <code class="docutils literal notranslate"><span class="pre">Model</span></code> within the same function in which you define it. The latter will
+offer an easy way to compile and tune compilation parameters. Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">model_build_fn</span><span class="p">(</span><span class="n">compile_kwargs</span><span class="p">):</span>
+    <span class="c1"># you can access the ``optimizer`` param here</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">compile_kwargs</span><span class="p">[</span><span class="s2">&quot;optimizer&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># and apply any custom logic you wish</span>
+        <span class="o">...</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="o">...</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model_build_fn</span><span class="p">)</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_valid</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.optimizers</span> <span class="kn">import</span> <span class="n">Adam</span>
+
+<span class="k">def</span> <span class="nf">model_build_fn</span><span class="p">():</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="o">...</span>
+    <span class="c1"># Do not call model.compile</span>
+    <span class="k">return</span> <span class="n">model</span>  <span class="c1"># That&#39;s it, SciKeras will compile your model for you</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model_build_fn</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="n">Adam</span><span class="p">)</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_valid</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In all cases, returning an un-compiled model is equivalent to
+calling <code class="docutils literal notranslate"><span class="pre">model.compile(**compile_kwargs)</span></code> within <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code>.</p>
+</section>
+</section>
+<section id="arguments-to-model-build-fn">
+<h2>Arguments to <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code><a class="headerlink" href="#arguments-to-model-build-fn" title="Permalink to this headline">¶</a></h2>
+<section id="user-defined-keyword-arguments-passed-to-init">
+<h3>User-defined keyword arguments passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">__init__()</span></code><a class="headerlink" href="#user-defined-keyword-arguments-passed-to-init" title="Permalink to this headline">¶</a></h3>
+<p>All keyword arguments that were given to <code class="xref py py-func docutils literal notranslate"><span class="pre">__init__()</span></code>
+will be passed to <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code> directly.
+For example, calling <code class="docutils literal notranslate"><span class="pre">KerasClassifier(myparam=10)</span></code> will result in a
+<code class="docutils literal notranslate"><span class="pre">model_build_fn(my_param=10)</span></code> call.
+Note however that <code class="docutils literal notranslate"><span class="pre">KerasClassifier(optimizer=&quot;sgd&quot;)</span></code> will <strong>not</strong> result in
+<code class="docutils literal notranslate"><span class="pre">model_build_fn(optimizer=&quot;sgd&quot;)</span></code>. Instead, you must access <code class="docutils literal notranslate"><span class="pre">optimizer</span></code> either
+via <code class="docutils literal notranslate"><span class="pre">compile_kwargs</span></code> if you want a compiled optimizer
+or <code class="docutils literal notranslate"><span class="pre">params</span></code> if you want the raw input.</p>
+</section>
+<section id="optional-arguments">
+<h3>Optional arguments<a class="headerlink" href="#optional-arguments" title="Permalink to this headline">¶</a></h3>
+<p>You may want to use attributes from
+<a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper" title="scikeras.wrappers.BaseWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseWrapper</span></code></a> such as <code class="docutils literal notranslate"><span class="pre">n_features_in_</span></code> while building
+your model, or you may wish to let SciKeras compile your optimizers and losses
+but apply some custom logic on top of that compilation.</p>
+<p>To enable this, SciKeras uses three special arguments to <code class="docutils literal notranslate"><span class="pre">model</span></code> that will only
+be passed if they are present in <code class="docutils literal notranslate"><span class="pre">model</span></code>’s signature (i.e. there is an argument
+with the same name in <code class="docutils literal notranslate"><span class="pre">model</span></code>’s signature):</p>
+<section id="meta">
+<h4><code class="docutils literal notranslate"><span class="pre">meta</span></code><a class="headerlink" href="#meta" title="Permalink to this headline">¶</a></h4>
+<p>This is a dictionary containing all of the attributes that
+<a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper" title="scikeras.wrappers.BaseWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseWrapper</span></code></a> creates when it is initialized
+These include <code class="docutils literal notranslate"><span class="pre">n_features_in_</span></code>, <code class="docutils literal notranslate"><span class="pre">y_dtype_</span></code>, etc. For a full list,
+see the <a class="reference internal" href="api.html#scikeras-api"><span class="std std-ref">SciKeras API</span></a> documentation.</p>
+</section>
+<section id="compile-kwargs">
+<h4><code class="docutils literal notranslate"><span class="pre">compile_kwargs</span></code><a class="headerlink" href="#compile-kwargs" title="Permalink to this headline">¶</a></h4>
+<p>This is a dictionary of parameters destined for <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.Keras.Model.compile()</span></code>.
+This dictionary can be used like <code class="docutils literal notranslate"><span class="pre">model.compile(**compile_kwargs)</span></code>.
+All optimizers, losses and metrics will be compiled to objects,
+even if string shorthands (e.g. <code class="docutils literal notranslate"><span class="pre">optimizer=&quot;adam&quot;</span></code>) were passed.</p>
+</section>
+<section id="params">
+<h4><code class="docutils literal notranslate"><span class="pre">params</span></code><a class="headerlink" href="#params" title="Permalink to this headline">¶</a></h4>
+<p>Raw dictionary of parameters passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">__init__()</span></code>.
+This is basically the same as calling <a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper.get_params" title="scikeras.wrappers.BaseWrapper.get_params"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_params()</span></code></a>.</p>
+</section>
+</section>
+<section id="data-transformers">
+<h3>Data Transformers<a class="headerlink" href="#data-transformers" title="Permalink to this headline">¶</a></h3>
+<p>In some cases, the input actually consists of multiple inputs. E.g.,
+in a text classification task, you might have an array that contains
+the integers representing the tokens for each sample, and another
+array containing the number of tokens of each sample. SciKeras has you
+covered here as well.</p>
+<p>Scikit-Learn natively supports multiple outputs, although it technically
+requires them to be arrays of equal length
+(see docs for Scikit-Learn’s <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.multioutput.MultiOutputClassifier.html#sklearn.multioutput.MultiOutputClassifier" title="(in scikit-learn v1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiOutputClassifier</span></code></a>).
+Scikit-Learn has no support for multiple inputs.
+To work around this issue, SciKeras implements a data conversion
+abstraction in the form of Scikit-Learn style transformers,
+one for <code class="docutils literal notranslate"><span class="pre">X</span></code> (features) and one for <code class="docutils literal notranslate"><span class="pre">y</span></code> (target).
+By implementing a custom transformer, you can split a single input <code class="docutils literal notranslate"><span class="pre">X</span></code> into multiple inputs
+for <code class="xref py py-class docutils literal notranslate"><span class="pre">tensorflow.keras.Model</span></code> or perform any other manipulation you need.
+To override the default transformers, simply override
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrappers.target_encoder()</span></code> or
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrappers.feature_encoder()</span></code> for <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">X</span></code> respectively.</p>
+<p>SciKeras uses <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html#sklearn.utils.multiclass.type_of_target" title="(in scikit-learn v1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.utils.multiclass.type_of_target()</span></code></a> to categorize the target
+type, and implements basic handling of the following cases out of the box:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 16%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>type_of_target(y)</p></th>
+<th class="head"><p>Example y</p></th>
+<th class="head"><p>No. of Outputs</p></th>
+<th class="head"><p>No. of classes</p></th>
+<th class="head"><p>SciKeras
+Supported</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>“multiclass”</p></td>
+<td><p>[1, 2, 3]</p></td>
+<td><p>1</p></td>
+<td><p>&gt;2</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>“binary”</p></td>
+<td><p>[1, 0, 1]</p></td>
+<td><p>1</p></td>
+<td><p>1 or 2</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>“mulilabel-indicator”</p></td>
+<td><p>[[1, 1],</p>
+<p>[0, 2],</p>
+<p>[1, 1]]</p>
+</td>
+<td><p>1 or &gt;1</p></td>
+<td><p>2 per target</p></td>
+<td><p>Single output</p>
+<p>only</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>“multiclass-multioutput”</p></td>
+<td><p>[[1, 1],</p>
+<p>[3, 2],</p>
+<p>[2, 3]]</p>
+</td>
+<td><p>&gt;1</p></td>
+<td><p>&gt;=2 per target</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>“continuous”</p></td>
+<td><p>[.1, .3, .9]</p></td>
+<td><p>1</p></td>
+<td><p>continuous</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>“continuous-multioutput”</p></td>
+<td><p>[[.1, .1],</p>
+<p>[.3, .2],</p>
+<p>[.2, .9]]</p>
+</td>
+<td><p>&gt;1</p></td>
+<td><p>continuous</p></td>
+<td><p>Yes</p></td>
+</tr>
+</tbody>
+</table>
+<p>If you find that your target is classified as <code class="docutils literal notranslate"><span class="pre">&quot;multiclass-multioutput&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;unknown&quot;</span></code>, you will have to
+implement your own data processing routine.</p>
+<p>For a complete examples implementing custom data processing, see the examples in the
+<a class="reference internal" href="tutorials.html#tutorials"><span class="std std-ref">Tutorials</span></a> section.</p>
+</section>
+</section>
+<section id="routed-parameters">
+<h2>Routed parameters<a class="headerlink" href="#routed-parameters" title="Permalink to this headline">¶</a></h2>
+<p id="param-routing">For more advanced used cases, SciKeras supports
+Scikit-Learn style parameter routing to override parameters
+for individual consumers (methods or class initializers).</p>
+<p>All special prefixes are stored in the <code class="docutils literal notranslate"><span class="pre">prefixes_</span></code> class attribute
+of <code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrappers</span></code>. Currently, they are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">model__</span></code>: passed to <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code> (or whatever function is passed to the <code class="docutils literal notranslate"><span class="pre">model</span></code> param of <a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper" title="scikeras.wrappers.BaseWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrapper</span></code></a>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fit__</span></code>: passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.fit()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">predict__</span></code>: passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.predict()</span></code>. Note that internally SciKeras also uses <code class="xref py py-func docutils literal notranslate"><span class="pre">tensorflow.keras.Model.predict()</span></code> within <a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper.score" title="scikeras.wrappers.BaseWrapper.score"><code class="xref py py-func docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrapper.score()</span></code></a> and so this prefix applies to both.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">callbacks__</span></code>: used to instantiate callbacks.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimizer__</span></code>: used to instantiate optimizers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">loss__</span></code>: used to instantiate losses.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">metrics__</span></code>: used to instantiate metrics.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">score__</span></code>: passed to the scoring function, i.e. <a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper.scorer" title="scikeras.wrappers.BaseWrapper.scorer"><code class="xref py py-func docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrapper.scorer()</span></code></a>.</p></li>
+</ul>
+<p>All routed parameters will be available for hyperparameter tuning.</p>
+<p>For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">fit__batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">predict__batch_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Below are some example use cases.</p>
+<section id="compilation-with-routed-parameters">
+<h3>Compilation with routed parameters<a class="headerlink" href="#compilation-with-routed-parameters" title="Permalink to this headline">¶</a></h3>
+<p>SciKeras can compile optimizers, losses and metrics with routed parameters.
+This allows hyperparameter tuning with deeply nested parameters to optimizer, losses and metrics.
+You can use this feature both when you let SciKeras compile your Model and when you compile your own model
+within <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code> (by accepting the <code class="docutils literal notranslate"><span class="pre">compile_kwargs</span></code> parameter).</p>
+<section id="optimizer">
+<h4>Optimizer<a class="headerlink" href="#optimizer" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scikeras.wrappers</span> <span class="kn">import</span> <span class="n">KerasClassifier</span>
+<span class="kn">from</span> <span class="nn">tensorflow</span> <span class="kn">import</span> <span class="n">keras</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model_build_fn</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">SGD</span><span class="p">,</span>
+    <span class="n">optimizer__learning_rate</span><span class="o">=</span><span class="mf">0.05</span>
+<span class="p">)</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>  <span class="c1"># equivalent model</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model_build_fn</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only routed parameters can be tuned; the object syntax can not be tuned.
+That is, in the example above, it’s possible to tune the learning rate with
+Scikit-Learn’s <code class="docutils literal notranslate"><span class="pre">RandomizedSearchCV</span></code> by specifying <code class="docutils literal notranslate"><span class="pre">optimizer__learning_rate</span></code>.
+It’s not possible to tune the learning rate with Scikit-Learn when
+<code class="docutils literal notranslate"><span class="pre">optimizer=SGD(learning_rate=0.5)</span></code> is specified.</p>
+</div>
+</section>
+<section id="losses">
+<h4>Losses<a class="headerlink" href="#losses" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.losses</span> <span class="kn">import</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="n">CategoricalCrossentropy</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">BinaryCrossentropy</span><span class="p">,</span>
+    <span class="n">loss__label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># results in BinaryCrossentropy(label_smoothing=0.1)</span>
+<span class="p">)</span>
+<span class="c1"># pure Keras object only syntax is still supported, but parameters can&#39;t be tuned</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Keras, and SciKeras by extension, support passing a single loss (which will be applied to all outputs)
+or a loss for each output by passing a list of losses or a dict of losses.</p>
+<p>Additionally, SciKeras supports routed parameters to each individual loss, or to all losses together.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.losses</span> <span class="kn">import</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="n">CategoricalCrossentropy</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="p">[</span><span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="n">CategoricalCrossentropy</span><span class="p">],</span>
+    <span class="n">loss__from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># BinaryCrossentropy(from_logits=True) &amp; CategoricalCrossentropy(from_logits=True)</span>
+    <span class="n">loss__1__label_smoothing</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)</span>
+<span class="p">)</span>
+<span class="c1"># or</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;out1&quot;</span><span class="p">:</span> <span class="n">BinaryCrossentropy</span><span class="p">,</span> <span class="s2">&quot;out2&quot;</span><span class="p">:</span> <span class="n">CategoricalCrossentropy</span><span class="p">},</span>
+    <span class="n">loss__from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># BinaryCrossentropy(from_logits=True) &amp; CategoricalCrossentropy(from_logits=True)</span>
+    <span class="n">loss__out2__label_smoothing</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># overrides the above, results in CategoricalCrossentropy(label_smoothing=0.5)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>With this parameter routing in place, you can now use hyperparameter tuning on each loss’ parameters.</p>
+</section>
+<section id="metrics">
+<h4>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h4>
+<p>Metrics have similar semantics to losses, but multiple metrics per output are supported.
+Here are several support use cases:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.metrics</span> <span class="kn">import</span> <span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="n">BinaryAccuracy</span><span class="p">,</span>
+    <span class="n">metrics__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># or to apply multiple metrics to all outputs</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span><span class="p">],</span>  <span class="c1"># both applied to all outputs</span>
+    <span class="n">metrics__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># or for different metrics to each output</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;out1&quot;</span><span class="p">:</span> <span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="s2">&quot;out2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="n">AUC</span><span class="p">]},</span>
+    <span class="n">metrics__out1__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__out2__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># assuming you ordered your outputs like [out1, out2], this is equivalent to</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">BinaryAccuracy</span><span class="p">,</span> <span class="p">[</span><span class="n">AUC</span><span class="p">,</span> <span class="n">BinaryAccuracy</span><span class="p">]],</span>
+    <span class="n">metrics__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">metrics__1__0__threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See the <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/metrics">Keras Metrics docs</a> for more details on mapping metrics to outputs.</p>
+</section>
+</section>
+<section id="callbacks">
+<h3>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this headline">¶</a></h3>
+<p>SciKeras can route parameters to callbacks.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span>
+    <span class="n">callbacks__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Just like metrics and losses, callbacks support several syntaxes to compile them depending on your needs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># for multiple callbacks using dict syntax</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;bl&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">BaseLogger</span><span class="p">,</span> <span class="s2">&quot;es&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">}</span>
+    <span class="n">callbacks__es__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># or using list sytnax</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">BaseLogger</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">]</span>
+    <span class="n">callbacks__1__monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>  <span class="c1"># EarlyStopping(monitor=&quot;loss&quot;)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Keras callbacks are event based, and are triggered depending on the methods they implement.
+For example:</p>
+<p>See the <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/callbacks">Keras Callbacks docs</a> for more details on method-based event dispatch.</p>
+<p>If for any reason you do need to create seperate callbacks for <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">predict</span></code>,
+simply use the <code class="docutils literal notranslate"><span class="pre">fit__</span></code> or <code class="docutils literal notranslate"><span class="pre">predict__</span></code> routing prefixes on your callback:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>clf = KerasClassifier(</dt><dd><p>…,
+callbacks=tf.keras.callbacks.Callback,  # called from both fit and predict
+fit__callbacks=tf.keras.callbacks.Callback,  # called only from fit
+predict__callbacks=tf.keras.callbacks.Callback,  # called only from predict</p>
+</dd>
+</dl>
+<p>)</p>
+</div></blockquote>
+<p>Any routed constructor parameters must also use the corresponding prefix to get routed correctly.</p>
+</section>
+<section id="routing-as-positional-or-keyword-arguments">
+<h3>Routing as positional or keyword arguments<a class="headerlink" href="#routing-as-positional-or-keyword-arguments" title="Permalink to this headline">¶</a></h3>
+<p>It is possible that the consturctor of the class you need instantiated does not accept keyword arguments.
+In this case, instead of <code class="docutils literal notranslate"><span class="pre">__name_of_kwarg=value</span></code> you can use <code class="docutils literal notranslate"><span class="pre">__0=value</span></code> (or any other integer),
+which tells SciKeras to pass that parameter as an positional argument instead of a keyword argument.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow</span> <span class="kn">import</span> <span class="n">keras</span>
+
+ <span class="k">class</span> <span class="nc">Schedule</span><span class="p">:</span>
+     <span class="sd">&quot;&quot;&quot;Exponential decay lr scheduler.</span>
+<span class="sd">     &quot;&quot;&quot;</span>
+     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait_until_epoch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">coef</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">wait_until_epoch</span> <span class="o">=</span> <span class="n">wait_until_epoch</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">coef</span>
+
+     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+         <span class="k">if</span> <span class="n">epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">wait_until_epoch</span><span class="p">:</span>
+             <span class="k">return</span> <span class="n">lr</span>
+         <span class="k">return</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span>
+
+ <span class="n">clf</span> <span class="o">=</span> <span class="n">KerasClassifier</span><span class="p">(</span>
+     <span class="o">...</span><span class="p">,</span>
+     <span class="n">callbacks</span><span class="o">=</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">LearningRateScheduler</span><span class="p">,</span>
+     <span class="n">callbacks__0</span><span class="o">=</span><span class="n">Schedule</span><span class="p">,</span>  <span class="c1"># __0 indicates this should be passed as an arg; LearningRateScheduler does not accept kwargs</span>
+     <span class="n">callbacks__0__coef</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+ <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="custom-scorers">
+<h2>Custom Scorers<a class="headerlink" href="#custom-scorers" title="Permalink to this headline">¶</a></h2>
+<p>SciKeras uses <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html#sklearn.metrics.accuracy_score" title="(in scikit-learn v1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.accuracy_score()</span></code></a> and <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html#sklearn.metrics.accuracy_score" title="(in scikit-learn v1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.accuracy_score()</span></code></a>
+as the scoring functions for <a class="reference internal" href="generated/scikeras.wrappers.KerasClassifier.html#scikeras.wrappers.KerasClassifier" title="scikeras.wrappers.KerasClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.KerasClassifier</span></code></a>
+and <a class="reference internal" href="generated/scikeras.wrappers.KerasRegressor.html#scikeras.wrappers.KerasRegressor" title="scikeras.wrappers.KerasRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.KerasRegressor</span></code></a> respectively. To override these scoring functions,</p>
+</section>
+</section>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+    <nav class="relbar">
+      <a class="previous" href="notebooks/Benchmarks.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            SciKeras Benchmarks
+          </span>
+        </div>
+      </a>
+      <a class="next" href="api.html" aria-label="Next topic" >
+        <div class="title">
+          <span class="text">
+            <span class="direction">next</span>
+            SciKeras API
+          </span>
+        </div>
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.3 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
+        </div>
+      </a>
+    </nav>
+
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+
+          <div class="sidebar-resize-handle"></div>
+
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Migrating from <code class="docutils literal notranslate"><span class="pre">tf.keras.wrappers.scikit_learn</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Usage of SciKeras Wrappers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wrapper-classes">Wrapper Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#arguments-to-model-build-fn">Arguments to <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#routed-parameters">Routed parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-scorers">Custom Scorers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">SciKeras API</a></li>
+</ul>
+
+<hr class="docutils" />
+<ul>
+  <li class="toctree-l1"><a class="reference internal" href="genindex.html" accesskey="I">General Index</a></li>
+  <li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
+</ul>
+<div id="ethical-ad-placement"></div>
+        </div>
+      </div>
+    <footer role="contentinfo">
+      &#169; Copyright 2020, SciKeras Developers.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.1.
+      <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
+<a class="reference internal" href="_sources/advanced.rst.txt" rel="nofollow">Show Source</a>.
+    </footer>
+    <div class="sidebar-resize-handle"></div>
+    <div id="overlay"></div>
+  </body>
+</html>
