@@ -13,7 +13,7 @@ To install with pip, run:
 
 .. code:: bash
 
-    pip install scikeras
+    pip install scikeras[tensorflow]
 
 We recommend to use a virtual environment for this.
 

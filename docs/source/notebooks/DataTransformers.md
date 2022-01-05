@@ -50,7 +50,7 @@ In this notebook, we explore how to reconcile this functionality with the sklear
 try:
     import scikeras
 except ImportError:
-    !python -m pip install scikeras
+    !python -m pip install scikeras[tensorflow]
 ```
 
 Silence TensorFlow warnings to keep output succint.

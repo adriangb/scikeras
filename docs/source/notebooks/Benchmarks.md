@@ -35,7 +35,7 @@ SciKeras wraps Keras Models, but does not alter their performance since all of t
 try:
     import scikeras
 except ImportError:
-    !python -m pip install scikeras
+    !python -m pip install scikeras[tensorflow]
 ```
 
 Silence TensorFlow logging to keep output succinct.

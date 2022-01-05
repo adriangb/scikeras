@@ -19,13 +19,15 @@ An overview of the advantages and differences as compared to the TF wrappers can
 This package is available on PyPi:
 
 ```bash
-pip install scikeras
+# Normal tensorflow
+pip install scikeras[tensorflow]
+
+# or tensorflow-cpu
+pip install scikeras[tensorflow-cpu]
 ```
 
 The current version of SciKeras depends on `scikit-learn>=1.0.0` and `TensorFlow>=2.7.0`.
 
-You will need to manually install TensorFlow; due to TensorFlow's packaging it is not a direct dependency of SciKeras.
-You can do this by running:
 
 ```bash
 pip install tensorflow

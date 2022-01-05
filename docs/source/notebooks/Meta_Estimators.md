@@ -35,7 +35,7 @@ In this notebook, we implement sklearn ensemble and tree meta-estimators backed 
 try:
     import scikeras
 except ImportError:
-    !python -m pip install scikeras
+    !python -m pip install scikeras[tensorflow]
 ```
 
 Silence TensorFlow logging to keep output succinct.
