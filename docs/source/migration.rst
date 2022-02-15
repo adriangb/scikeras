@@ -146,3 +146,10 @@ tunable parameters (i.e. settable via ``set_params``):
 
 That said, if you do not need them to work with ``set_params`` (which is only really
 necessary if you are doing hyperparameter tuning), you do not need to make any changes.
+
+Only Scikit-Learn compatible inputs are supported
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to be compatible with all of the features of Scikit-Learn, SciKeras has to make some assumptions about the inputs.
+The main implication of this is that **TensorFlow Dataset inputs are not supported**.
+Instead, you will have to convert your inputs to a numpy array, Pandas dataframe or lists before passing them into SciKeras (or a Scikit-Learn pipeline/hyperparameter tuner wrapping it).
