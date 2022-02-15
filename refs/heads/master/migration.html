@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Migrating from tf.keras.wrappers.scikit_learn &#8212; SciKeras 0.6.0 documentation</title>
+    <title>Migrating from tf.keras.wrappers.scikit_learn &#8212; SciKeras 0.6.1 documentation</title>
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/insipid.css" />
@@ -57,7 +57,7 @@
             </button>
           </div>
           <div class="title">
-            <a class="parent" href="index.html" accesskey="U">SciKeras 0.6.0 documentation</a>
+            <a class="parent" href="index.html" accesskey="U">SciKeras 0.6.1 documentation</a>
             <a class="top" href="#">Migrating from <code class="docutils literal notranslate"><span class="pre">tf.keras.wrappers.scikit_learn</span></code></a>
           </div>
           <div class="buttons">
@@ -134,6 +134,7 @@
 <li><p><a class="reference internal" href="#variable-keyword-arguments-in-fit-and-predict" id="id6">Variable keyword arguments in fit and predict</a></p></li>
 <li><p><a class="reference internal" href="#renaming-of-build-fn-to-model" id="id7">Renaming of <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> to <code class="docutils literal notranslate"><span class="pre">model</span></code></a></p></li>
 <li><p><a class="reference internal" href="#default-arguments-in-build-fn-model" id="id8">Default arguments in build_fn/model</a></p></li>
+<li><p><a class="reference internal" href="#only-scikit-learn-compatible-inputs-are-supported" id="id9">Only Scikit-Learn compatible inputs are supported</a></p></li>
 </ul>
 </li>
 </ul>
@@ -254,6 +255,12 @@ tunable parameters (i.e. settable via <code class="docutils literal notranslate"
 </div>
 <p>That said, if you do not need them to work with <code class="docutils literal notranslate"><span class="pre">set_params</span></code> (which is only really
 necessary if you are doing hyperparameter tuning), you do not need to make any changes.</p>
+</section>
+<section id="only-scikit-learn-compatible-inputs-are-supported">
+<h3><a class="toc-backref" href="#id9">Only Scikit-Learn compatible inputs are supported</a><a class="headerlink" href="#only-scikit-learn-compatible-inputs-are-supported" title="Permalink to this headline">¶</a></h3>
+<p>In order to be compatible with all of the features of Scikit-Learn, SciKeras has to make some assumptions about the inputs.
+The main implication of this is that <strong>TensorFlow Dataset inputs are not supported</strong>.
+Instead, you will have to convert your inputs to a numpy array, Pandas dataframe or lists before passing them into SciKeras (or a Scikit-Learn pipeline/hyperparameter tuner wrapping it).</p>
 </section>
 </section>
 </section>
