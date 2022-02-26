@@ -540,7 +540,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 1s 1ms/step - loss: 0.8033
+32/32 [==============================] - 1s 2ms/step - loss: 0.7781
 </pre></div></div>
 </div>
 <p>Also, as in <code class="docutils literal notranslate"><span class="pre">sklearn</span></code>, you may call <code class="docutils literal notranslate"><span class="pre">predict</span></code> or <code class="docutils literal notranslate"><span class="pre">predict_proba</span></code> on the fitted model.</p>
@@ -561,7 +561,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 63ms/step
+1/1 [==============================] - 0s 76ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -570,7 +570,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([0, 0, 0, 0, 0])
+array([1, 0, 0, 0, 0])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -587,7 +587,7 @@ array([0, 0, 0, 0, 0])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 21ms/step
+1/1 [==============================] - 0s 23ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -596,11 +596,11 @@ array([0, 0, 0, 0, 0])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.66084886, 0.33915114],
-       [0.6041776 , 0.3958224 ],
-       [0.9224738 , 0.07752621],
-       [0.7605437 , 0.2394563 ],
-       [0.90356255, 0.09643742]], dtype=float32)
+array([[0.46258217, 0.5374178 ],
+       [0.78197724, 0.21802276],
+       [0.65506804, 0.34493196],
+       [0.8033415 , 0.19665846],
+       [0.6930051 , 0.3069949 ]], dtype=float32)
 </pre></div></div>
 </div>
 </section>
@@ -685,7 +685,7 @@ array([[0.66084886, 0.33915114],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 1s 2ms/step - loss: 45023.1523 - r_squared: -0.0338
+32/32 [==============================] - 1s 1ms/step - loss: 45059.1875 - r_squared: -0.0678
 </pre></div></div>
 </div>
 </section>
@@ -706,7 +706,7 @@ array([[0.66084886, 0.33915114],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 57ms/step
+1/1 [==============================] - 0s 44ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -715,7 +715,7 @@ array([[0.66084886, 0.33915114],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([-0.18497705,  0.07648534, -0.9198343 ,  0.41366056,  0.1028763 ],
+array([ 0.9367439 , -0.6828141 , -0.52917534, -0.33147103,  0.19897014],
       dtype=float32)
 </pre></div></div>
 </div>
@@ -750,7 +750,7 @@ array([-0.18497705,  0.07648534, -0.9198343 ,  0.41366056,  0.1028763 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 38ms/step
+1/1 [==============================] - 0s 58ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -759,7 +759,7 @@ array([-0.18497705,  0.07648534, -0.9198343 ,  0.41366056,  0.1028763 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([-0.18497705,  0.07648534, -0.9198343 ,  0.41366056,  0.1028763 ],
+array([ 0.9367439 , -0.6828141 , -0.52917534, -0.33147103,  0.19897014],
       dtype=float32)
 </pre></div></div>
 </div>
@@ -782,7 +782,7 @@ array([-0.18497705,  0.07648534, -0.9198343 ,  0.41366056,  0.1028763 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 906us/step
+32/32 [==============================] - 0s 1ms/step
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -837,8 +837,8 @@ array([-0.18497705,  0.07648534, -0.9198343 ,  0.41366056,  0.1028763 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 1ms/step - loss: 0.6787
-32/32 [==============================] - 0s 904us/step
+32/32 [==============================] - 1s 2ms/step - loss: 0.7103
+32/32 [==============================] - 0s 1ms/step
 </pre></div></div>
 </div>
 <p>To save the whole pipeline, including the Keras model, use <code class="docutils literal notranslate"><span class="pre">pickle</span></code>.</p>
@@ -1014,8 +1014,7 @@ Fitting 5 folds for each of 8 candidates, totalling 40 fits
   super(Adam, self).__init__(name, **kwargs)
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fef5c9a8b80&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fef5c9a8c10&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f32fed591f0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
@@ -1026,16 +1025,17 @@ WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_
   super(Adam, self).__init__(name, **kwargs)
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f3a8c9579d0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f3a8c957040&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f0fc04af9d0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f0fc04af040&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f32b1ab0820&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fef5ebf93a0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f32b085f4c0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f3a8caa0ee0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f3a93d20d30&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fef5cafa160&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f0fc0601ee0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f32b18e45e0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f0fc587ed30&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
 </pre></div></div>
