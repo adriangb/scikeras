@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Typ
 import numpy as np
 import tensorflow as tf
 
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
@@ -1158,7 +1158,7 @@ class BaseWrapper(BaseEstimator):
         return repr_
 
 
-class KerasClassifier(BaseWrapper):
+class KerasClassifier(BaseWrapper, ClassifierMixin):
     """Implementation of the scikit-learn classifier API for Keras.
 
     Below are a list of SciKeras specific parameters. For details on other parameters,
@@ -1531,7 +1531,7 @@ class KerasClassifier(BaseWrapper):
         return y
 
 
-class KerasRegressor(BaseWrapper):
+class KerasRegressor(BaseWrapper, RegressorMixin):
     """Implementation of the scikit-learn classifier API for Keras.
 
     Below are a list of SciKeras specific parameters. For details on other parameters,
