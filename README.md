@@ -33,7 +33,7 @@ they need to be optional.
 
 `pip install scikeras[tensorflow]` is basically equivalent to `pip install scikeras tensorflow`
 and is offered just for convenience. You can also install just SciKeras with
-`pip install scikera`s, but you will need a version of tensorflow installed at
+`pip install scikeras`, but you will need a version of tensorflow installed at
 runtime or SciKeras will throw an error when you try to import it.
 
 The current version of SciKeras depends on `scikit-learn>=1.0.0` and `TensorFlow>=2.7.0`.
