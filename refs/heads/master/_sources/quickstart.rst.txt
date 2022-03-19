@@ -88,7 +88,7 @@ Another advantage of SciKeras is that you can perform an sklearn
         "optimizer": ["adam", "sgd"],
         "optimizer__learning_rate": [0.0001, 0.001, 0.1],
     }
-    gs = GridSearchCV(net, params, refit=False, cv=3, scoring='accuracy')
+    gs = GridSearchCV(clf, params, refit=False, cv=3, scoring='accuracy')
 
     gs.fit(X, y)
     print(gs.best_score_, gs.best_params_)
