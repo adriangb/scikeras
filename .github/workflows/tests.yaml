@@ -4,6 +4,9 @@ on:
   push:
     branches: [ master ]
   pull_request:
+  schedule:
+    # run every day at midnight
+    - cron: "0 0 * * *"
 
 jobs:
   Linting:
@@ -26,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: ["3.7", "3.8", "3.9"]
 
     steps:
       - uses: actions/checkout@v2
@@ -58,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: ["3.9"]
 
     steps:
       - uses: actions/checkout@v2
@@ -100,7 +103,7 @@ jobs:
     strategy:
       matrix:
         tf-version: [2.7.0]
-        python-version: [3.7, 3.8]
+        python-version: ["3.7", "3.9"]
         sklearn-version: [1.0.0]
 
     steps:
@@ -135,7 +138,7 @@ jobs:
     strategy:
       matrix:
         os: [MacOS, Windows]  # test all OSs (except Ubuntu, which is already running other tests)
-        python-version: [3.7, 3.9]  # test only the two extremes of supported Python versions
+        python-version: ["3.7", "3.9"]  # test only the two extremes of supported Python versions
 
     steps:
       - uses: actions/checkout@v2
