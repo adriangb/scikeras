@@ -10,8 +10,7 @@ from scikeras.wrappers import KerasClassifier
 
 
 def test_callbacks_prefixes():
-    """Test dispatching of callbacks using no prefix, the fit__ prefix or the predict__ prefix.
-    """
+    """Test dispatching of callbacks using no prefix, the fit__ prefix or the predict__ prefix."""
 
     class SentinalCallback(Callback):
         def __init__(self, call_logs: DefaultDict[str, int]):
@@ -93,8 +92,7 @@ def test_callbacks_prefixes():
     ],
 )
 def test_callback_param_routing_syntax(callback_kwargs: Dict[str, Any]):
-    """Test support for the various parameter routing syntaxes for callbacks.
-    """
+    """Test support for the various parameter routing syntaxes for callbacks."""
 
     def get_clf() -> keras.Model:
         model = keras.models.Sequential()
@@ -115,8 +113,7 @@ def test_callback_param_routing_syntax(callback_kwargs: Dict[str, Any]):
 
 
 def test_callback_compiling_args_or_kwargs():
-    """Test compiling callbacks with routed positional (args) or keyword (kwargs) arguments.
-    """
+    """Test compiling callbacks with routed positional (args) or keyword (kwargs) arguments."""
 
     def get_clf() -> keras.Model:
         model = keras.models.Sequential()

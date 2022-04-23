@@ -60,8 +60,7 @@ def dynamic_regressor(
     meta: Optional[Dict[str, Any]] = None,
     compile_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Model:
-    """Creates a basic MLP regressor dynamically.
-    """
+    """Creates a basic MLP regressor dynamically."""
     # get parameters
     n_features_in_ = meta["n_features_in_"]
     n_outputs_ = meta["n_outputs_"]

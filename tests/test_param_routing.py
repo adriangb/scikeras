@@ -43,8 +43,16 @@ keras_regressor_base_meta_set = {
 @pytest.mark.parametrize(
     "wrapper, builder, expected_meta",
     [
-        (KerasClassifier, dynamic_classifier, keras_classifier_base_meta_set,),
-        (KerasRegressor, dynamic_regressor, keras_regressor_base_meta_set,),
+        (
+            KerasClassifier,
+            dynamic_classifier,
+            keras_classifier_base_meta_set,
+        ),
+        (
+            KerasRegressor,
+            dynamic_regressor,
+            keras_regressor_base_meta_set,
+        ),
     ],
 )
 def test_routing_basic(wrapper, builder, expected_meta):
@@ -76,8 +84,16 @@ def test_routing_basic(wrapper, builder, expected_meta):
 @pytest.mark.parametrize(
     "wrapper, builder, expected_meta",
     [
-        (KerasClassifier, dynamic_classifier, keras_classifier_base_meta_set,),
-        (KerasRegressor, dynamic_regressor, keras_regressor_base_meta_set,),
+        (
+            KerasClassifier,
+            dynamic_classifier,
+            keras_classifier_base_meta_set,
+        ),
+        (
+            KerasRegressor,
+            dynamic_regressor,
+            keras_regressor_base_meta_set,
+        ),
     ],
 )
 def test_routing_kwargs(wrapper, builder, expected_meta):

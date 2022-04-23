@@ -11,8 +11,7 @@ from scikeras.wrappers import BaseWrapper
 
 
 class AutoEncoderTransformer(BaseWrapper, TransformerMixin):
-    """Enables the ``transform`` and ``fit_transform`` methods.
-    """
+    """Enables the ``transform`` and ``fit_transform`` methods."""
 
     def fit(self, X):
         self.initialize(X)
@@ -24,8 +23,7 @@ class AutoEncoderTransformer(BaseWrapper, TransformerMixin):
 
 class TestAutoencoder:
     def test_simple_autoencoder_mnist(self):
-        """Tests an autoencoder following.
-        """
+        """Tests an autoencoder following."""
         # Data
         (x_train, _), (x_test, _) = keras.datasets.mnist.load_data()
         x_train = x_train.astype("float32") / 255.0
