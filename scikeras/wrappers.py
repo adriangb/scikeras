@@ -660,6 +660,11 @@ class BaseWrapper(BaseEstimator):
                         f"X has {len(X_shape_)} dimensions, but this {self.__name__}"
                         f" is expecting {len(self.X_shape_)} dimensions in X."
                     )
+                if X_shape_[1:] != self.X_shape_[1:]:
+                    raise ValueError(
+                        f"X has shape {X_shape_[1:]}, but this {self.__name__}"
+                        f" is expecting X of shape {self.X_shape_[1:]}"
+                    )
         return X, y
 
     def _type_of_target(self, y: np.ndarray) -> str:
