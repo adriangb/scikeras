@@ -62,7 +62,9 @@ def test_optimizer_invalid_string():
     optimizer = "sgf"  # sgf is not a loss
 
     est = KerasClassifier(
-        model=get_model, optimizer=optimizer, loss="binary_crossentropy",
+        model=get_model,
+        optimizer=optimizer,
+        loss="binary_crossentropy",
     )
     with pytest.raises(ValueError, match="Unknown optimizer"):
         est.fit(X, y)
@@ -102,7 +104,11 @@ def test_compiling_of_routed_parameters():
 
 
 @pytest.mark.parametrize(
-    "loss", (losses_module.BinaryCrossentropy, "BinaryCrossentropy",),
+    "loss",
+    (
+        losses_module.BinaryCrossentropy,
+        "BinaryCrossentropy",
+    ),
 )
 @pytest.mark.parametrize("n_outputs_", (1, 2))
 def test_loss(loss, n_outputs_):
@@ -127,7 +133,11 @@ def test_loss_invalid_string():
 
     loss = "binary_crossentropr"  # binary_crossentropr is not a loss
 
-    est = KerasClassifier(model=get_model, num_hidden=20, loss=loss,)
+    est = KerasClassifier(
+        model=get_model,
+        num_hidden=20,
+        loss=loss,
+    )
     with pytest.raises(ValueError, match="Unknown loss function"):
         est.fit(X, y)
 
@@ -141,7 +151,11 @@ def test_loss_uncompilable():
 
     loss = losses_module.binary_crossentropy
 
-    est = KerasClassifier(model=get_model, loss=loss, loss__from_logits=True,)
+    est = KerasClassifier(
+        model=get_model,
+        loss=loss,
+        loss__from_logits=True,
+    )
     with pytest.raises(
         TypeError, match="does not accept parameters because it's not a class"
     ):
@@ -149,7 +163,11 @@ def test_loss_uncompilable():
 
 
 @pytest.mark.parametrize(
-    "loss", (losses_module.BinaryCrossentropy, "BinaryCrossentropy",),
+    "loss",
+    (
+        losses_module.BinaryCrossentropy,
+        "BinaryCrossentropy",
+    ),
 )
 @pytest.mark.parametrize("n_outputs_", (1, 2))
 def test_loss_routed_params_iterable(loss, n_outputs_):
@@ -182,7 +200,11 @@ def test_loss_routed_params_iterable(loss, n_outputs_):
 
 
 @pytest.mark.parametrize(
-    "loss", (losses_module.BinaryCrossentropy, "BinaryCrossentropy",),
+    "loss",
+    (
+        losses_module.BinaryCrossentropy,
+        "BinaryCrossentropy",
+    ),
 )
 @pytest.mark.parametrize("n_outputs_", (1, 2))
 def test_loss_routed_params_dict(loss, n_outputs_):
@@ -310,7 +332,9 @@ def test_metrics_two_metric_per_output(n_outputs_):
         ]
 
     est = MultiOutputClassifier(
-        model=get_model, loss="binary_crossentropy", metrics=metrics_,
+        model=get_model,
+        loss="binary_crossentropy",
+        metrics=metrics_,
     )
     est.fit(X, y)
     if n_outputs_ == 1:
@@ -330,7 +354,9 @@ def test_metrics_two_metric_per_output(n_outputs_):
 
     # Dict of metrics
     est = MultiOutputClassifier(
-        model=get_model, loss="binary_crossentropy", metrics=metrics_,
+        model=get_model,
+        loss="binary_crossentropy",
+        metrics=metrics_,
     )
     est.fit(X, y)
     if n_outputs_ == 1:
@@ -441,7 +467,11 @@ def test_metrics_invalid_string():
         "acccuracy",
     ]  # acccuracy (extra `c`) is not a metric
 
-    est = KerasClassifier(model=get_model, loss="binary_crossentropy", metrics=metrics,)
+    est = KerasClassifier(
+        model=get_model,
+        loss="binary_crossentropy",
+        metrics=metrics,
+    )
     with pytest.raises(ValueError, match="Unknown metric function"):
         est.fit(X, y)
 

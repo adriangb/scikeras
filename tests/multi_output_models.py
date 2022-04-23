@@ -11,7 +11,8 @@ from scikeras.wrappers import KerasClassifier
 
 class MultiLabelTransformer(ClassifierLabelEncoder):
     def __init__(
-        self, split: bool = True,
+        self,
+        split: bool = True,
     ):
         super().__init__()
         self.split = split
@@ -79,8 +80,7 @@ class MultiOutputClassifier(KerasClassifier):
         return MultiLabelTransformer(split=self.split)
 
     def score(self, X, y):
-        """Taken from sklearn.multiouput.MultiOutputClassifier
-        """
+        """Taken from sklearn.multiouput.MultiOutputClassifier"""
         if self.target_type_ != "multilabel-indicator":
             return super().score(X, y)
         return np.mean(np.all(y == self.predict(X), axis=1))

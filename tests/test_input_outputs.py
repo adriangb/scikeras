@@ -25,11 +25,12 @@ from .multi_output_models import MultiOutputClassifier
 
 
 class FunctionalAPIMultiInputClassifier(KerasClassifier):
-    """Tests Functional API Classifier with 2 inputs.
-    """
+    """Tests Functional API Classifier with 2 inputs."""
 
     def _keras_build_fn(
-        self, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+        self,
+        meta: Dict[str, Any],
+        compile_kwargs: Dict[str, Any],
     ) -> Model:
         # get params
         n_classes_ = meta["n_classes_"]
@@ -52,12 +53,13 @@ class FunctionalAPIMultiInputClassifier(KerasClassifier):
 
     @property
     def feature_encoder(self):
-        return FunctionTransformer(func=lambda X: [X[:, 0], X[:, 1:4]],)
+        return FunctionTransformer(
+            func=lambda X: [X[:, 0], X[:, 1:4]],
+        )
 
 
 def test_multi_input():
-    """Tests custom multi-input Keras model.
-    """
+    """Tests custom multi-input Keras model."""
     clf = FunctionalAPIMultiInputClassifier()
     X = np.random.uniform(size=(10, 4))
     y = np.arange(0, 10, 1, int)
@@ -135,7 +137,10 @@ def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
         return  # not compatible, see test_KerasClassifier_loss_invariance
     X1, y1 = np.array([[1, 2, 3]]).T, np.array([1, 2, 3])
     clf = KerasClassifier(
-        model=dynamic_classifier, hidden_layer_sizes=(100,), loss=loss, random_state=0,
+        model=dynamic_classifier,
+        hidden_layer_sizes=(100,),
+        loss=loss,
+        random_state=0,
     )
     clf.fit(X1, y1)
     tfs = clf.target_encoder_
@@ -147,14 +152,16 @@ def test_KerasClassifier_transformers_can_be_reused(y, y_type, loss):
 
 
 def test_incompatible_output_dimensions():
-    """Compares to the scikit-learn RandomForestRegressor classifier.
-    """
+    """Compares to the scikit-learn RandomForestRegressor classifier."""
     # create dataset with 4 outputs
     X = np.random.rand(10, 20)
     y = np.random.randint(low=0, high=3, size=(10,))
 
     # create a model with 2 outputs
-    def build_fn_clf(meta: Dict[str, Any], compile_kwargs: Dict[str, Any],) -> Model:
+    def build_fn_clf(
+        meta: Dict[str, Any],
+        compile_kwargs: Dict[str, Any],
+    ) -> Model:
         # get params
         n_features_in_ = meta["n_features_in_"]
 

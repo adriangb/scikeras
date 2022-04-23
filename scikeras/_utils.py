@@ -77,8 +77,7 @@ def has_param(func: Callable, param: str) -> bool:
 
 
 def accepts_kwargs(func: Callable) -> bool:
-    """Check if ``func`` accepts kwargs.
-    """
+    """Check if ``func`` accepts kwargs."""
     return any(
         True
         for param in inspect.signature(func).parameters.values()
@@ -99,7 +98,10 @@ def unflatten_params(items, params, base_params=None):
             args_and_kwargs[p] = unflatten_params(
                 items=v,
                 params=route_params(
-                    params=params, destination=f"{p}", pass_filter=set(), strict=False,
+                    params=params,
+                    destination=f"{p}",
+                    pass_filter=set(),
+                    strict=False,
                 ),
             )
         kwargs = {k: v for k, v in args_and_kwargs.items() if k[0] not in DIGITS}
@@ -112,7 +114,10 @@ def unflatten_params(items, params, base_params=None):
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for idx, item in enumerate(items):
             item_params = route_params(
-                params=params, destination=f"{idx}", pass_filter=set(), strict=False,
+                params=params,
+                destination=f"{idx}",
+                pass_filter=set(),
+                strict=False,
             )
             res.append(
                 unflatten_params(
@@ -125,10 +130,15 @@ def unflatten_params(items, params, base_params=None):
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for key, item in items.items():
             item_params = route_params(
-                params=params, destination=f"{key}", pass_filter=set(), strict=False,
+                params=params,
+                destination=f"{key}",
+                pass_filter=set(),
+                strict=False,
             )
             res[key] = unflatten_params(
-                items=item, params=item_params, base_params=new_base_params,
+                items=item,
+                params=item_params,
+                base_params=new_base_params,
             )
         return res
     # non-compilable item, check if it has any routed parameters
@@ -174,8 +184,7 @@ def get_loss_class_function_or_string(loss: str) -> Union[losses_mod.Loss, Calla
 def try_to_convert_strings_to_classes(
     items: Union[str, dict, tuple, list], class_getter: Callable
 ):
-    """Convert shorthand optimizer/loss/metric names to classes.
-    """
+    """Convert shorthand optimizer/loss/metric names to classes."""
     if isinstance(items, str):
         return class_getter(items)  # single item, despite parameter name
     elif isinstance(items, Sequence):

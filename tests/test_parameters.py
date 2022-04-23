@@ -19,12 +19,16 @@ from .mlp_models import dynamic_classifier, dynamic_regressor
 
 class TestRandomState:
     @pytest.mark.parametrize(
-        "random_state", [0, 123, np.random.RandomState(0)],
+        "random_state",
+        [0, 123, np.random.RandomState(0)],
     )
     @pytest.mark.parametrize(
         "estimator",
         [
-            KerasRegressor(model=dynamic_regressor, model__hidden_layer_sizes=(100,),),
+            KerasRegressor(
+                model=dynamic_regressor,
+                model__hidden_layer_sizes=(100,),
+            ),
             KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
         ],
     )
@@ -56,7 +60,10 @@ class TestRandomState:
     @pytest.mark.parametrize(
         "estimator",
         [
-            KerasRegressor(model=dynamic_regressor, model__hidden_layer_sizes=(100,),),
+            KerasRegressor(
+                model=dynamic_regressor,
+                model__hidden_layer_sizes=(100,),
+            ),
             KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
         ],
     )
@@ -214,7 +221,14 @@ class TestMetricsParam:
         assert len(est.history_[metric]) == 1
 
 
-@pytest.mark.parametrize("class_weight", ("balanced", {0: 0.5, 1: 0.5}, {0: 1, 1: 1},))
+@pytest.mark.parametrize(
+    "class_weight",
+    (
+        "balanced",
+        {0: 0.5, 1: 0.5},
+        {0: 1, 1: 1},
+    ),
+)
 def test_class_weight_balanced(class_weight):
     """KerasClassifier should accept the class_weight parameter in the same format as ScikitLearn.
     Passing "balanced" will automatically compute class_weight.

@@ -261,7 +261,8 @@ class BaseWrapper(BaseEstimator):
 
     @staticmethod
     def _validate_sample_weight(
-        X: np.ndarray, sample_weight: Union[np.ndarray, Iterable],
+        X: np.ndarray,
+        sample_weight: Union[np.ndarray, Iterable],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Validate that the passed sample_weight and ensure it is a Numpy array."""
         sample_weight = _check_sample_weight(
@@ -331,7 +332,9 @@ class BaseWrapper(BaseEstimator):
         """
         init_params = self.get_params()
         compile_kwargs = route_params(
-            init_params, destination="compile", pass_filter=self._compile_kwargs,
+            init_params,
+            destination="compile",
+            pass_filter=self._compile_kwargs,
         )
         compile_kwargs["optimizer"] = try_to_convert_strings_to_classes(
             compile_kwargs["optimizer"], get_optimizer_class
@@ -339,7 +342,10 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs["optimizer"] = unflatten_params(
             items=compile_kwargs["optimizer"],
             params=route_params(
-                init_params, destination="optimizer", pass_filter=set(), strict=True,
+                init_params,
+                destination="optimizer",
+                pass_filter=set(),
+                strict=True,
             ),
         )
         compile_kwargs["loss"] = try_to_convert_strings_to_classes(
@@ -348,7 +354,10 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs["loss"] = unflatten_params(
             items=compile_kwargs["loss"],
             params=route_params(
-                init_params, destination="loss", pass_filter=set(), strict=False,
+                init_params,
+                destination="loss",
+                pass_filter=set(),
+                strict=False,
             ),
         )
         compile_kwargs["metrics"] = try_to_convert_strings_to_classes(
@@ -357,7 +366,10 @@ class BaseWrapper(BaseEstimator):
         compile_kwargs["metrics"] = unflatten_params(
             items=compile_kwargs["metrics"],
             params=route_params(
-                init_params, destination="metrics", pass_filter=set(), strict=False,
+                init_params,
+                destination="metrics",
+                pass_filter=set(),
+                strict=False,
             ),
         )
         return compile_kwargs
@@ -723,7 +735,11 @@ class BaseWrapper(BaseEstimator):
         kwargs["initial_epoch"] = kwargs.get("initial_epoch", 0)
 
         self._fit(
-            X=X, y=y, sample_weight=sample_weight, warm_start=self.warm_start, **kwargs,
+            X=X,
+            y=y,
+            sample_weight=sample_weight,
+            warm_start=self.warm_start,
+            **kwargs,
         )
 
         return self
