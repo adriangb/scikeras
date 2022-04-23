@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "6d2f7105",
+   "id": "59c31b9f",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Benchmarks.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "8c58b982",
+   "id": "0acb0079",
    "metadata": {},
    "source": [
     "# SciKeras Benchmarks\n",
@@ -31,13 +31,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "195d3548",
+   "id": "7e21f4f2",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-03-19T20:01:35.603261Z",
-     "iopub.status.busy": "2022-03-19T20:01:35.602751Z",
-     "iopub.status.idle": "2022-03-19T20:01:37.688606Z",
-     "shell.execute_reply": "2022-03-19T20:01:37.687934Z"
+     "iopub.execute_input": "2022-04-23T08:09:55.740193Z",
+     "iopub.status.busy": "2022-04-23T08:09:55.739823Z",
+     "iopub.status.idle": "2022-04-23T08:09:57.423153Z",
+     "shell.execute_reply": "2022-04-23T08:09:57.422631Z"
     }
    },
    "outputs": [],
@@ -50,7 +50,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "8c8bc0ae",
+   "id": "dc624c02",
    "metadata": {},
    "source": [
     "Silence TensorFlow logging to keep output succinct."
@@ -59,13 +59,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "d2c0b67e",
+   "id": "34f3fa56",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-03-19T20:01:37.699887Z",
-     "iopub.status.busy": "2022-03-19T20:01:37.699484Z",
-     "iopub.status.idle": "2022-03-19T20:01:37.704751Z",
-     "shell.execute_reply": "2022-03-19T20:01:37.704191Z"
+     "iopub.execute_input": "2022-04-23T08:09:57.427676Z",
+     "iopub.status.busy": "2022-04-23T08:09:57.426749Z",
+     "iopub.status.idle": "2022-04-23T08:09:57.432899Z",
+     "shell.execute_reply": "2022-04-23T08:09:57.430706Z"
     }
    },
    "outputs": [],
@@ -79,13 +79,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "6d9b5706",
+   "id": "93409e62",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-03-19T20:01:37.707581Z",
-     "iopub.status.busy": "2022-03-19T20:01:37.707420Z",
-     "iopub.status.idle": "2022-03-19T20:01:38.097610Z",
-     "shell.execute_reply": "2022-03-19T20:01:38.096240Z"
+     "iopub.execute_input": "2022-04-23T08:09:57.435625Z",
+     "iopub.status.busy": "2022-04-23T08:09:57.435371Z",
+     "iopub.status.idle": "2022-04-23T08:09:57.765752Z",
+     "shell.execute_reply": "2022-04-23T08:09:57.765279Z"
     }
    },
    "outputs": [],
@@ -97,7 +97,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "16c46ff6",
+   "id": "ceea1d1e",
    "metadata": {},
    "source": [
     "## 2. Dataset\n",
@@ -108,16 +108,88 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "a97059fb",
+   "id": "6ace9eed",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-03-19T20:01:38.102071Z",
-     "iopub.status.busy": "2022-03-19T20:01:38.101561Z",
-     "iopub.status.idle": "2022-03-19T20:01:38.563545Z",
-     "shell.execute_reply": "2022-03-19T20:01:38.562801Z"
+     "iopub.execute_input": "2022-04-23T08:09:57.769874Z",
+     "iopub.status.busy": "2022-04-23T08:09:57.768997Z",
+     "iopub.status.idle": "2022-04-23T08:09:58.513842Z",
+     "shell.execute_reply": "2022-04-23T08:09:58.513365Z"
     }
    },
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "   16384/11490434 [..............................] - ETA: 3s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "   73728/11490434 [..............................] - ETA: 8s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "  286720/11490434 [..............................] - ETA: 4s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 1081344/11490434 [=>............................] - ETA: 1s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 3588096/11490434 [========>.....................] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      " 9715712/11490434 [========================>.....] - ETA: 0s"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "11493376/11490434 [==============================] - 0s 0us/step\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "11501568/11490434 [==============================] - 0s 0us/step\n"
+     ]
+    }
+   ],
    "source": [
     "(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()\n",
     "# Scale images to the [0, 1] range\n",
@@ -133,7 +205,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ca4e6b84",
+   "id": "1d5cbf18",
    "metadata": {},
    "source": [
     "## 3. Define Keras Model\n",
@@ -144,13 +216,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "e85c98bc",
+   "id": "248cae97",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-03-19T20:01:38.573904Z",
-     "iopub.status.busy": "2022-03-19T20:01:38.573481Z",
-     "iopub.status.idle": "2022-03-19T20:01:38.587195Z",
-     "shell.execute_reply": "2022-03-19T20:01:38.581644Z"
+     "iopub.execute_input": "2022-04-23T08:09:58.518371Z",
+     "iopub.status.busy": "2022-04-23T08:09:58.517380Z",
+     "iopub.status.idle": "2022-04-23T08:09:58.523264Z",
+     "shell.execute_reply": "2022-04-23T08:09:58.522913Z"
     }
    },
    "outputs": [],
@@ -180,7 +252,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "0148adcc",
+   "id": "b9b4bc50",
    "metadata": {},
    "source": [
     "## 4. Keras benchmarks"
@@ -189,13 +261,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "e6785465",
+   "id": "610d6349",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-03-19T20:01:38.590366Z",
-     "iopub.status.busy": "2022-03-19T20:01:38.590103Z",
-     "iopub.status.idle": "2022-03-19T20:01:38.594922Z",
-     "shell.execute_reply": "2022-03-19T20:01:38.594255Z"
+     "iopub.execute_input": "2022-04-23T08:09:58.526708Z",
+     "iopub.status.busy": "2022-04-23T08:09:58.525847Z",
+     "iopub.status.idle": "2022-04-23T08:09:58.529682Z",
+     "shell.execute_reply": "2022-04-23T08:09:58.529332Z"
     }
    },
    "outputs": [],
@@ -206,13 +278,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "32e6df85",
+   "id": "e576a080",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-03-19T20:01:38.598014Z",
-     "iopub.status.busy": "2022-03-19T20:01:38.597711Z",
-     "iopub.status.idle": "2022-03-19T20:01:38.602231Z",
-     "shell.execute_reply": "2022-03-19T20:01:38.601492Z"
+     "iopub.execute_input": "2022-04-23T08:09:58.532895Z",
+     "iopub.status.busy": "2022-04-23T08:09:58.532067Z",
+     "iopub.status.idle": "2022-04-23T08:09:58.535604Z",
+     "shell.execute_reply": "2022-04-23T08:09:58.535270Z"
     }
    },
    "outputs": [],
@@ -224,13 +296,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "8fdac2dd",
+   "id": "d91b3db1",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-03-19T20:01:38.604877Z",
-     "iopub.status.busy": "2022-03-19T20:01:38.604589Z",
-     "iopub.status.idle": "2022-03-19T20:01:46.576976Z",
-     "shell.execute_reply": "2022-03-19T20:01:46.575814Z"
+     "iopub.execute_input": "2022-04-23T08:09:58.538773Z",
+     "iopub.status.busy": "2022-04-23T08:09:58.537930Z",
+     "iopub.status.idle": "2022-04-23T08:10:04.486253Z",
+     "shell.execute_reply": "2022-04-23T08:10:04.484915Z"
     }
    },
    "outputs": [
@@ -238,13 +310,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Training time: 7.70\n"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
+      "Training time: 5.73\n",
       "Accuracy: 0.88\n"
      ]
     }
@@ -263,7 +329,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "4147eaad",
+   "id": "8c78b302",
    "metadata": {},
    "source": [
     "## 5. SciKeras benchmark"
@@ -272,13 +338,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "02c507e7",
+   "id": "4ea006ed",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-03-19T20:01:46.580238Z",
-     "iopub.status.busy": "2022-03-19T20:01:46.579944Z",
-     "iopub.status.idle": "2022-03-19T20:01:46.584605Z",
-     "shell.execute_reply": "2022-03-19T20:01:46.583986Z"
+     "iopub.execute_input": "2022-04-23T08:10:04.489244Z",
+     "iopub.status.busy": "2022-04-23T08:10:04.488958Z",
+     "iopub.status.idle": "2022-04-23T08:10:04.491871Z",
+     "shell.execute_reply": "2022-04-23T08:10:04.491497Z"
     }
    },
    "outputs": [],
@@ -293,13 +359,13 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "7f418f00",
+   "id": "41708222",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-03-19T20:01:46.587521Z",
-     "iopub.status.busy": "2022-03-19T20:01:46.587263Z",
-     "iopub.status.idle": "2022-03-19T20:01:54.593988Z",
-     "shell.execute_reply": "2022-03-19T20:01:54.593437Z"
+     "iopub.execute_input": "2022-04-23T08:10:04.494147Z",
+     "iopub.status.busy": "2022-04-23T08:10:04.493845Z",
+     "iopub.status.idle": "2022-04-23T08:10:10.195161Z",
+     "shell.execute_reply": "2022-04-23T08:10:10.194074Z"
     }
    },
    "outputs": [
@@ -307,7 +373,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Training time: 7.84\n",
+      "Training time: 5.58\n",
       "Accuracy: 0.88\n"
      ]
     }
@@ -322,7 +388,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "5b932ee0",
+   "id": "ead4210c",
    "metadata": {},
    "source": [
     "As you can see, the overhead for SciKeras is <1 sec, and the accuracy is identical."
