@@ -23,34 +23,39 @@
     <link rel="prev" title="scikeras.utils" href="scikeras.utils.html" />
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-  </head>
-  <body class="sidebar-visible">
+  </head><body>
     <script type="text/javascript">
-        (function() {
-            var $body = $(document.body);
-            $body.addClass('js');
-            $body.addClass('sidebar-resizing');  // avoid transitions on load
-            $body.removeClass('sidebar-visible');
-            try {
-                var sidebar = localStorage.getItem('sphinx-sidebar');
-                if (sidebar === 'visible') {
-                    $body.addClass('sidebar-visible');
-                }
-                var sidebar_width = localStorage.getItem('sphinx-sidebar-width');
-                if (sidebar_width) {
-                    $(':root').css('--sidebar-width', sidebar_width);
-                }
-            } catch(e) {
+        document.body.classList.add('js');
+    </script>
+    <input type="checkbox" id="sidebar-checkbox" style="display: none;">
+    <label id="overlay" for="sidebar-checkbox"></label>
+    <div class="sidebar-resize-handle"></div>
+    <script type="text/javascript">
+        try {
+            let sidebar = localStorage.getItem('sphinx-sidebar');
+            const sidebar_width = localStorage.getItem('sphinx-sidebar-width');
+            if (sidebar_width) {
+                document.documentElement.style.setProperty('--sidebar-width', sidebar_width);
             }
-        })();
+            // show sidebar on wide screen
+            if (!sidebar && window.matchMedia('(min-width: 100rem)').matches) {
+                sidebar = 'visible';
+                // NB: We don't store the value in localStorage!
+            }
+            if (sidebar === 'visible') {
+                document.getElementById('sidebar-checkbox').checked = true;
+            }
+        } catch(e) {
+            console.info(e);
+        }
     </script>
     <header id="topbar-placeholder">
       <div id="topbar">
         <div id="titlebar">
           <div class="buttons">
-            <button id="sidebar-button" type="button" aria-controls="sphinxsidebar" accesskey="M">
+            <label for="sidebar-checkbox" id="sidebar-button" role="button" tabindex="0" aria-controls="sphinxsidebar" accesskey="M">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg>
-            </button>
+            </label>
             <button id="search-button" type="button" title="Search" aria-label="Search" aria-expanded="false" aria-controls="search-form" accesskey="S">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
             </button>
@@ -99,7 +104,7 @@
           </span>
         </div>
       </a>
-    </nav>
+    </nav>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -128,7 +133,7 @@
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.ClassifierLabelEncoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scikeras.utils.transformers.</span></span><span class="sig-name descname"><span class="pre">ClassifierLabelEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L94"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scikeras.utils.transformers.</span></span><span class="sig-name descname"><span class="pre">ClassifierLabelEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L94"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default target transformer for KerasClassifier.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -164,7 +169,7 @@ data passed to fit.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.ClassifierLabelEncoder.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L137"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.fit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L137"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the estimator to the target y.</p>
 <p>For all targets, this transforms classes into ordinal numbers.
 If the loss function is categorical_crossentropy, the target
@@ -193,7 +198,7 @@ will be one-hot encoded.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.ClassifierLabelEncoder.fit_transform">
-<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fit_params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L824"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.fit_transform" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fit_params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L824"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.fit_transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit to data, then transform it.</p>
 <p>Fits transformer to <cite>X</cite> and <cite>y</cite> with optional parameters <cite>fit_params</cite>
 and returns a transformed version of <cite>X</cite>.</p>
@@ -219,7 +224,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.ClassifierLabelEncoder.get_metadata">
-<span class="sig-name descname"><span class="pre">get_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L293"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.get_metadata" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L293"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.get_metadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a dictionary of meta-parameters generated when this transfromer
 was fitted.</p>
 <p>Used by SciKeras to bind these parameters to the SciKeras estimator itself
@@ -240,7 +245,7 @@ was fitted.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.ClassifierLabelEncoder.get_params">
-<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L193"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.get_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L193"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.get_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get parameters for this estimator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -261,7 +266,7 @@ contained subobjects that are estimators.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.ClassifierLabelEncoder.inverse_transform">
-<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_proba</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L230"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.inverse_transform" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_proba</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L230"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.inverse_transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Restore the data types, shape and classes of the input y
 to the output of the Keras Model.</p>
 <dl class="field-list simple">
@@ -294,7 +299,7 @@ If False, return the class predictions.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.ClassifierLabelEncoder.set_params">
-<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L217"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.set_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L217"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.set_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the parameters of this estimator.</p>
 <p>The method works on simple estimators as well as on nested objects
 (such as <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn.pipeline.Pipeline" title="(in scikit-learn v1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code></a>). The latter have
@@ -318,7 +323,7 @@ possible to update each component of a nested object.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.ClassifierLabelEncoder.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L214"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.transform" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L214"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.ClassifierLabelEncoder.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform the target y to the format expected by the Keras Model.</p>
 <p>If the loss function is categorical_crossentropy, the target
 will be one-hot encoded.
@@ -343,7 +348,7 @@ For other types of target, this transforms classes into ordinal numbers.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.RegressorTargetEncoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scikeras.utils.transformers.</span></span><span class="sig-name descname"><span class="pre">RegressorTargetEncoder</span></span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L314"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scikeras.utils.transformers.</span></span><span class="sig-name descname"><span class="pre">RegressorTargetEncoder</span></span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L314"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default target transformer for KerasRegressor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
@@ -357,7 +362,7 @@ For other types of target, this transforms classes into ordinal numbers.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.RegressorTargetEncoder.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L325"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.fit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L325"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the transformer to the target y.</p>
 <p>For RegressorTargetEncoder, this just records the dimensions
 of y as the expected number of outputs and saves the dtype.</p>
@@ -379,7 +384,7 @@ of y as the expected number of outputs and saves the dtype.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.RegressorTargetEncoder.fit_transform">
-<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fit_params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L824"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.fit_transform" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fit_params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L824"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.fit_transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit to data, then transform it.</p>
 <p>Fits transformer to <cite>X</cite> and <cite>y</cite> with optional parameters <cite>fit_params</cite>
 and returns a transformed version of <cite>X</cite>.</p>
@@ -405,7 +410,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.RegressorTargetEncoder.get_metadata">
-<span class="sig-name descname"><span class="pre">get_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L381"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.get_metadata" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L381"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.get_metadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a dictionary of meta-parameters generated when this transfromer
 was fitted.</p>
 <p>Used by SciKeras to bind these parameters to the SciKeras estimator itself
@@ -423,7 +428,7 @@ was fitted.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.RegressorTargetEncoder.get_params">
-<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L193"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.get_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L193"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.get_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get parameters for this estimator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -444,7 +449,7 @@ contained subobjects that are estimators.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.RegressorTargetEncoder.inverse_transform">
-<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L363"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.inverse_transform" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L363"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.inverse_transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Restore the data types and shape of the input y
 to the output of the Keras Model.</p>
 <dl class="field-list simple">
@@ -472,7 +477,7 @@ targets.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.RegressorTargetEncoder.set_params">
-<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L217"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.set_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L217"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.set_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the parameters of this estimator.</p>
 <p>The method works on simple estimators as well as on nested objects
 (such as <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn.pipeline.Pipeline" title="(in scikit-learn v1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code></a>). The latter have
@@ -496,7 +501,7 @@ possible to update each component of a nested object.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.RegressorTargetEncoder.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L342"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.transform" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L342"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.RegressorTargetEncoder.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform the target y to the format expected by the Keras Model.</p>
 <p>For RegressorTargetEncoder, this simply checks that the shape passed to
 fit matches the shape passed to transform.</p>
@@ -520,7 +525,7 @@ fit matches the shape passed to transform.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.TargetReshaper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scikeras.utils.transformers.</span></span><span class="sig-name descname"><span class="pre">TargetReshaper</span></span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L27"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scikeras.utils.transformers.</span></span><span class="sig-name descname"><span class="pre">TargetReshaper</span></span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L27"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert 1D targets to 2D and back.</p>
 <p>For use in pipelines with transformers that only accept
 2D inputs, like OneHotEncoder and OrdinalEncoder.</p>
@@ -534,7 +539,7 @@ fit matches the shape passed to transform.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.TargetReshaper.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L39"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.fit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L39"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the transformer to a target y.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -554,7 +559,7 @@ fit matches the shape passed to transform.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.TargetReshaper.fit_transform">
-<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fit_params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L824"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.fit_transform" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fit_params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L824"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.fit_transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit to data, then transform it.</p>
 <p>Fits transformer to <cite>X</cite> and <cite>y</cite> with optional parameters <cite>fit_params</cite>
 and returns a transformed version of <cite>X</cite>.</p>
@@ -580,7 +585,7 @@ and returns a transformed version of <cite>X</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.TargetReshaper.get_params">
-<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L193"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.get_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L193"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.get_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get parameters for this estimator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -601,7 +606,7 @@ contained subobjects that are estimators.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.TargetReshaper.inverse_transform">
-<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L68"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.inverse_transform" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L68"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.inverse_transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Revert the transformation of transform.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -630,7 +635,7 @@ will eb left untouched.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.TargetReshaper.set_params">
-<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L217"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.set_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/../.venv/lib/python3.8/site-packages/sklearn/base.py#L217"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.set_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the parameters of this estimator.</p>
 <p>The method works on simple estimators as well as on nested objects
 (such as <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn.pipeline.Pipeline" title="(in scikit-learn v1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code></a>). The latter have
@@ -654,7 +659,7 @@ possible to update each component of a nested object.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scikeras.utils.transformers.TargetReshaper.transform">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/962776a/scikeras/utils/transformers.py#L50"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.transform" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/adriangb/scikeras/blob/ede0c33/scikeras/utils/transformers.py#L50"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scikeras.utils.transformers.TargetReshaper.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Makes 1D y 2D.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -686,24 +691,6 @@ possible to update each component of a nested object.</p>
           </div>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-
-    <nav class="relbar">
-      <a class="previous" href="scikeras.utils.html" aria-label="Previous topic" >
-        <div class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
-        </div>
-        <div class="title">
-          <span class="text">
-            <span class="direction">previous</span>
-            scikeras.utils
-          </span>
-        </div>
-      </a>
-    </nav>
-
-
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 
@@ -731,13 +718,28 @@ possible to update each component of a nested object.</p>
 <div id="ethical-ad-placement"></div>
         </div>
       </div>
+      <div class="clearer"></div>
+    </div>
+
+    <nav class="relbar">
+      <a class="previous" href="scikeras.utils.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            scikeras.utils
+          </span>
+        </div>
+      </a>
+    </nav>
+
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
       Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/generated/scikeras.utils.transformers.rst.txt" rel="nofollow">Show Source</a>.
     </footer>
-    <div class="sidebar-resize-handle"></div>
-    <div id="overlay"></div>
   </body>
 </html>

@@ -26,34 +26,39 @@
     <link rel="prev" title="Tutorials" href="../tutorials.html" />
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-  </head>
-  <body class="sidebar-visible">
+  </head><body>
     <script type="text/javascript">
-        (function() {
-            var $body = $(document.body);
-            $body.addClass('js');
-            $body.addClass('sidebar-resizing');  // avoid transitions on load
-            $body.removeClass('sidebar-visible');
-            try {
-                var sidebar = localStorage.getItem('sphinx-sidebar');
-                if (sidebar === 'visible') {
-                    $body.addClass('sidebar-visible');
-                }
-                var sidebar_width = localStorage.getItem('sphinx-sidebar-width');
-                if (sidebar_width) {
-                    $(':root').css('--sidebar-width', sidebar_width);
-                }
-            } catch(e) {
+        document.body.classList.add('js');
+    </script>
+    <input type="checkbox" id="sidebar-checkbox" style="display: none;">
+    <label id="overlay" for="sidebar-checkbox"></label>
+    <div class="sidebar-resize-handle"></div>
+    <script type="text/javascript">
+        try {
+            let sidebar = localStorage.getItem('sphinx-sidebar');
+            const sidebar_width = localStorage.getItem('sphinx-sidebar-width');
+            if (sidebar_width) {
+                document.documentElement.style.setProperty('--sidebar-width', sidebar_width);
             }
-        })();
+            // show sidebar on wide screen
+            if (!sidebar && window.matchMedia('(min-width: 100rem)').matches) {
+                sidebar = 'visible';
+                // NB: We don't store the value in localStorage!
+            }
+            if (sidebar === 'visible') {
+                document.getElementById('sidebar-checkbox').checked = true;
+            }
+        } catch(e) {
+            console.info(e);
+        }
     </script>
     <header id="topbar-placeholder">
       <div id="topbar">
         <div id="titlebar">
           <div class="buttons">
-            <button id="sidebar-button" type="button" aria-controls="sphinxsidebar" accesskey="M">
+            <label for="sidebar-checkbox" id="sidebar-button" role="button" tabindex="0" aria-controls="sphinxsidebar" accesskey="M">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg>
-            </button>
+            </label>
             <button id="search-button" type="button" title="Search" aria-label="Search" aria-expanded="false" aria-controls="search-form" accesskey="S">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
             </button>
@@ -116,7 +121,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
         </div>
       </a>
-    </nav>
+    </nav>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -540,7 +545,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 1s 1ms/step - loss: 0.7117
+32/32 [==============================] - 0s 1ms/step - loss: 0.7137
 </pre></div></div>
 </div>
 <p>Also, as in <code class="docutils literal notranslate"><span class="pre">sklearn</span></code>, you may call <code class="docutils literal notranslate"><span class="pre">predict</span></code> or <code class="docutils literal notranslate"><span class="pre">predict_proba</span></code> on the fitted model.</p>
@@ -561,7 +566,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 69ms/step
+1/1 [==============================] - 0s 59ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -570,7 +575,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([0, 0, 0, 0, 0])
+array([1, 0, 0, 0, 0])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -587,7 +592,7 @@ array([0, 0, 0, 0, 0])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 32ms/step
+1/1 [==============================] - 0s 14ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -596,11 +601,11 @@ array([0, 0, 0, 0, 0])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.55140114, 0.44859883],
-       [0.8781029 , 0.1218971 ],
-       [0.8393868 , 0.16061321],
-       [0.873996  , 0.12600395],
-       [0.8617356 , 0.13826442]], dtype=float32)
+array([[0.40275127, 0.59724873],
+       [0.7974847 , 0.2025153 ],
+       [0.7590065 , 0.24099347],
+       [0.7719436 , 0.22805637],
+       [0.6259072 , 0.3740928 ]], dtype=float32)
 </pre></div></div>
 </div>
 </section>
@@ -685,7 +690,7 @@ array([[0.55140114, 0.44859883],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 1s 1ms/step - loss: 45037.7812 - r_squared: -0.0431
+32/32 [==============================] - 0s 1ms/step - loss: 45012.0938 - r_squared: -0.0325
 </pre></div></div>
 </div>
 </section>
@@ -706,7 +711,7 @@ array([[0.55140114, 0.44859883],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 50ms/step
+1/1 [==============================] - 0s 34ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -715,7 +720,7 @@ array([[0.55140114, 0.44859883],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([ 0.7278322 , -0.2087143 ,  0.7728871 ,  0.35468143,  0.6966881 ],
+array([ 0.59907997, -1.2564349 , -0.46912116, -0.08926867, -0.46925974],
       dtype=float32)
 </pre></div></div>
 </div>
@@ -750,7 +755,7 @@ array([ 0.7278322 , -0.2087143 ,  0.7728871 ,  0.35468143,  0.6966881 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 44ms/step
+1/1 [==============================] - 0s 34ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -759,7 +764,7 @@ array([ 0.7278322 , -0.2087143 ,  0.7728871 ,  0.35468143,  0.6966881 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([ 0.7278322 , -0.2087143 ,  0.7728871 ,  0.35468143,  0.6966881 ],
+array([ 0.59907997, -1.2564349 , -0.46912116, -0.08926867, -0.46925974],
       dtype=float32)
 </pre></div></div>
 </div>
@@ -782,7 +787,7 @@ array([ 0.7278322 , -0.2087143 ,  0.7728871 ,  0.35468143,  0.6966881 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 1ms/step
+32/32 [==============================] - 0s 693us/step
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -806,7 +811,7 @@ array([ 0.7278322 , -0.2087143 ,  0.7728871 ,  0.35468143,  0.6966881 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 977us/step
+32/32 [==============================] - 0s 742us/step
 </pre></div></div>
 </div>
 </section>
@@ -837,8 +842,8 @@ array([ 0.7278322 , -0.2087143 ,  0.7728871 ,  0.35468143,  0.6966881 ],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 1s 2ms/step - loss: 0.7006
-32/32 [==============================] - 0s 941us/step
+32/32 [==============================] - 0s 1ms/step - loss: 0.6672
+32/32 [==============================] - 0s 652us/step
 </pre></div></div>
 </div>
 <p>To save the whole pipeline, including the Keras model, use <code class="docutils literal notranslate"><span class="pre">pickle</span></code>.</p>
@@ -1014,8 +1019,8 @@ Fitting 5 folds for each of 8 candidates, totalling 40 fits
   super(Adam, self).__init__(name, **kwargs)
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fe2216c4280&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fe2216c4af0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f5cb42fd310&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f5cb42fd5e0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
@@ -1026,16 +1031,16 @@ WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_
   super(Adam, self).__init__(name, **kwargs)
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f1885e2c280&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f1885e2caf0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f58394a6310&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f58394a65e0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fe221613c10&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fe2215631f0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f5cb424cca0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f5cb419d280&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f1885d7bc10&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f1885ccc1f0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f58393f6ca0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f5839346280&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/keras/optimizer_v2/adam.py:105: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
   super(Adam, self).__init__(name, **kwargs)
 </pre></div></div>
@@ -1045,7 +1050,7 @@ WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.85 {&#39;model__dropout&#39;: 0.5, &#39;model__hidden_layer_sizes&#39;: (100,), &#39;optimizer__lr&#39;: 0.1}
+0.85 {&#39;model__dropout&#39;: 0.5, &#39;model__hidden_layer_sizes&#39;: (50, 50), &#39;optimizer__lr&#39;: 0.1}
 </pre></div></div>
 </div>
 <p>Of course, we could further nest the <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> within an <code class="docutils literal notranslate"><span class="pre">sklearn.pipeline.Pipeline</span></code>, in which case we just prefix the parameter by the name of the net (e.g. <code class="docutils literal notranslate"><span class="pre">clf__model__hidden_layer_sizes</span></code>).</p>
@@ -1057,35 +1062,6 @@ WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_
           </div>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-
-    <nav class="relbar">
-      <a class="previous" href="../tutorials.html" aria-label="Previous topic" >
-        <div class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
-        </div>
-        <div class="title">
-          <span class="text">
-            <span class="direction">previous</span>
-            Tutorials
-          </span>
-        </div>
-      </a>
-      <a class="next" href="MLPClassifier_MLPRegressor.html" aria-label="Next topic" >
-        <div class="title">
-          <span class="text">
-            <span class="direction">next</span>
-            MLPClassifier and MLPRegressor in SciKeras
-          </span>
-        </div>
-        <div class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
-        </div>
-      </a>
-    </nav>
-
-
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 
@@ -1117,13 +1093,39 @@ WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_
 <div id="ethical-ad-placement"></div>
         </div>
       </div>
+      <div class="clearer"></div>
+    </div>
+
+    <nav class="relbar">
+      <a class="previous" href="../tutorials.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            Tutorials
+          </span>
+        </div>
+      </a>
+      <a class="next" href="MLPClassifier_MLPRegressor.html" aria-label="Next topic" >
+        <div class="title">
+          <span class="text">
+            <span class="direction">next</span>
+            MLPClassifier and MLPRegressor in SciKeras
+          </span>
+        </div>
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
+        </div>
+      </a>
+    </nav>
+
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
       Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/notebooks/Basic_Usage.ipynb.txt" rel="nofollow">Show Source</a>.
     </footer>
-    <div class="sidebar-resize-handle"></div>
-    <div id="overlay"></div>
   </body>
 </html>
