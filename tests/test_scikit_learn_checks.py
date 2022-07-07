@@ -20,6 +20,7 @@ from .testing_utils import basic_checks, parametrize_with_checks
 higher_precision = (
     "check_classifiers_classes",
     "check_methods_sample_order_invariance",
+    "check_sample_weights_invariance",
 )
 
 
@@ -30,8 +31,10 @@ def use_floatx(x: str):
     """
     _floatx = floatx()
     set_floatx(x)
-    yield
-    set_floatx(_floatx)
+    try:
+        yield
+    finally:
+        set_floatx(_floatx)
 
 
 # Set batch size to a large number

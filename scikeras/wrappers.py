@@ -262,6 +262,7 @@ class BaseWrapper(BaseEstimator):
     @staticmethod
     def _validate_sample_weight(
         X: np.ndarray,
+        y: np.ndarray,
         sample_weight: Union[np.ndarray, Iterable],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Validate that the passed sample_weight and ensure it is a Numpy array."""
@@ -273,7 +274,15 @@ class BaseWrapper(BaseEstimator):
                 "No training samples had any weight; only zeros were passed in sample_weight."
                 " That means there's nothing to train on by definition, so training can not be completed."
             )
-        return X, sample_weight
+        # drop any zero sample weights
+        # this helps mirror the behavior of sklearn estimators
+        # which tend to have higher precisions
+        not_dropped_samples = sample_weight != 0
+        return (
+            X[not_dropped_samples, ...],
+            y[not_dropped_samples, ...],
+            sample_weight[not_dropped_samples, ...],
+        )
 
     def _check_model_param(self):
         """Checks ``model`` and returns model building
@@ -901,7 +910,7 @@ class BaseWrapper(BaseEstimator):
         self._ensure_compiled_model()
 
         if sample_weight is not None:
-            X, sample_weight = self._validate_sample_weight(X, sample_weight)
+            X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
 
         y = self.target_encoder_.transform(y)
         X = self.feature_encoder_.transform(X)
@@ -1081,14 +1090,14 @@ class BaseWrapper(BaseEstimator):
         float
             Score for the test data set.
         """
-        # validate sample weights
-        if sample_weight is not None:
-            X, sample_weight = self._validate_sample_weight(
-                X=X, sample_weight=sample_weight
-            )
-
         # validate y
         _, y = self._validate_data(X=None, y=y)
+
+        # validate sample weights
+        if sample_weight is not None:
+            X, y, sample_weight = self._validate_sample_weight(
+                X=X, y=y, sample_weight=sample_weight
+            )
 
         # compute Keras model score
         y_pred = self.predict(X)
