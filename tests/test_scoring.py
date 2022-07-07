@@ -34,20 +34,25 @@ def test_kerasregressor_r2_correctness():
         )
 
 
-def test_kerasregressor_r2_as_metric():
-    """Test custom R^2 implementation against scikit-learn's."""
+def test_kerasregressor_r2_as_metric_in_model():
+    """Test custom R^2 implementation as part of a model"""
+    epochs = 25
+
     est = KerasRegressor(
-        dynamic_regressor, metrics=[KerasRegressor.r_squared], epochs=10, random_state=0
+        dynamic_regressor,
+        metrics=[KerasRegressor.r_squared],
+        epochs=epochs,
+        random_state=42,
     )
 
-    y = np.random.randint(low=0, high=2, size=(1000,))
+    y = np.random.uniform(size=(1000,))
     X = y.reshape((-1, 1))
 
     est.fit(X, y)
 
-    current_score = est.score(X, y)
-    last_hist = est.history_["r_squared"][-1]
-    np.testing.assert_almost_equal(current_score, last_hist, decimal=3)
+    scores = np.array(est.history_["r_squared"])
 
-    current_eval = est.model_.evaluate(X, y, return_dict=True)["r_squared"]
-    np.testing.assert_almost_equal(current_score, current_eval, decimal=3)
+    # basic sanity check
+    assert np.all(scores <= 1) and len(scores) == epochs, scores
+    # rough estimate of expected end result given the random seed
+    assert scores[-1] > 0.9, scores
