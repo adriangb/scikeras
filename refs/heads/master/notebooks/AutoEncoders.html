@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Autoencoders in SciKeras &#8212; SciKeras 0.8.0 documentation</title>
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
@@ -14,6 +14,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
@@ -343,6 +344,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -351,10 +353,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -366,21 +372,24 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
 <a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a><section id="Autoencoders-in-SciKeras">
-<h1>Autoencoders in SciKeras<a class="headerlink" href="#Autoencoders-in-SciKeras" title="Permalink to this headline">¶</a></h1>
+<h1>Autoencoders in SciKeras<a class="headerlink" href="#Autoencoders-in-SciKeras" title="Permalink to this heading">¶</a></h1>
 <p>Autencoders are an approach to use nearual networks to distill data into it’s most important features, thereby compressing the data. We will be following the <a class="reference external" href="https://blog.keras.io/building-autoencoders-in-keras.html">Keras tutorial</a> on the topic, which goes much more in depth and breadth than we will here. You are highly encouraged to check out that tutorial if you want to learn about autoencoders in the general sense.</p>
 <section id="Table-of-contents">
-<h2>Table of contents<a class="headerlink" href="#Table-of-contents" title="Permalink to this headline">¶</a></h2>
+<h2>Table of contents<a class="headerlink" href="#Table-of-contents" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="#1.-Setup">1. Setup</a></p></li>
 <li><p><a class="reference external" href="#2.-Data">2. Data</a></p></li>
@@ -391,7 +400,7 @@ div.rendered_html tbody tr:hover {
 </ul>
 </section>
 <section id="1.-Setup">
-<h2>1. Setup<a class="headerlink" href="#1.-Setup" title="Permalink to this headline">¶</a></h2>
+<h2>1. Setup<a class="headerlink" href="#1.-Setup" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -427,7 +436,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="2.-Data">
-<h2>2. Data<a class="headerlink" href="#2.-Data" title="Permalink to this headline">¶</a></h2>
+<h2>2. Data<a class="headerlink" href="#2.-Data" title="Permalink to this heading">¶</a></h2>
 <p>We load the dataset from the Keras tutorial. The dataset consists of images of cats and dogs.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -452,13 +461,15 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+11490434/11490434 [==============================] - 0s 0us/step
 (60000, 784)
 (10000, 784)
 </pre></div></div>
 </div>
 </section>
 <section id="3.-Define-Keras-Model">
-<h2>3. Define Keras Model<a class="headerlink" href="#3.-Define-Keras-Model" title="Permalink to this headline">¶</a></h2>
+<h2>3. Define Keras Model<a class="headerlink" href="#3.-Define-Keras-Model" title="Permalink to this heading">¶</a></h2>
 <p>We will be defining a very simple autencoder. We define <em>three</em> model architectures:</p>
 <ol class="arabic simple">
 <li><p>An encoder: a series of densly connected layers culminating in an “output” layer that determines the encoding dimensions.</p></li>
@@ -561,7 +572,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="4.-Training">
-<h2>4. Training<a class="headerlink" href="#4.-Training" title="Permalink to this headline">¶</a></h2>
+<h2>4. Training<a class="headerlink" href="#4.-Training" title="Permalink to this heading">¶</a></h2>
 <p>To train the model, we pass the input images as both the features and the target. This will train the layers to compress the data as accurately as possible between the encoder and decoder. Note that we only pass the <code class="docutils literal notranslate"><span class="pre">X</span></code> parameter, since we defined the mapping <code class="docutils literal notranslate"><span class="pre">y=X</span></code> in <code class="docutils literal notranslate"><span class="pre">KerasTransformer.fit</span></code> above.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -582,7 +593,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="5.-Explore-Results">
-<h2>5. Explore Results<a class="headerlink" href="#5.-Explore-Results" title="Permalink to this headline">¶</a></h2>
+<h2>5. Explore Results<a class="headerlink" href="#5.-Explore-Results" title="Permalink to this heading">¶</a></h2>
 <p>Let’s compare our inputs to lossy decoded outputs:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -643,7 +654,7 @@ Compression ratio: 1/25
 </div>
 </section>
 <section id="6.-Deep-AutoEncoder">
-<h2>6. Deep AutoEncoder<a class="headerlink" href="#6.-Deep-AutoEncoder" title="Permalink to this headline">¶</a></h2>
+<h2>6. Deep AutoEncoder<a class="headerlink" href="#6.-Deep-AutoEncoder" title="Permalink to this heading">¶</a></h2>
 <p>We can easily expand our model to be a deep autoencoder by adding some hidden layers. All we have to do is add a parameter <code class="docutils literal notranslate"><span class="pre">hidden_layer_sizes</span></code> and use it in <code class="docutils literal notranslate"><span class="pre">_keras_build_fn</span></code> to build hidden layers. For simplicity, we use a single <code class="docutils literal notranslate"><span class="pre">hidden_layer_sizes</span></code> parameter and mirror it across the encoding layers and decoding layers, but there is nothing forcing us to build symetrical models.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
@@ -724,7 +735,7 @@ Compression ratio: 1/25
 1-MSE for training set (higher is better)
 
 AutoEncoder: 0.9899
-Deep AutoEncoder: 0.9902
+Deep AutoEncoder: 0.9901
 </pre></div></div>
 </div>
 <p>Suprisingly, our score got worse. It’s possible that that because of the extra trainable variables, our deep model trains slower than our simple model.</p>
@@ -797,7 +808,7 @@ Deep AutoEncoder: 0.9902
 
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/notebooks/AutoEncoders.ipynb.txt" rel="nofollow">Show Source</a>.
     </footer>

@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Meta Estimators in SciKeras &#8212; SciKeras 0.8.0 documentation</title>
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
@@ -14,6 +14,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
@@ -343,6 +344,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -351,10 +353,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -366,21 +372,24 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
 <a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Meta_Estimators.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a><section id="Meta-Estimators-in-SciKeras">
-<h1>Meta Estimators in SciKeras<a class="headerlink" href="#Meta-Estimators-in-SciKeras" title="Permalink to this headline">¶</a></h1>
+<h1>Meta Estimators in SciKeras<a class="headerlink" href="#Meta-Estimators-in-SciKeras" title="Permalink to this heading">¶</a></h1>
 <p>In this notebook, we implement sklearn ensemble and tree meta-estimators backed by a Keras MLP model.</p>
 <section id="Table-of-contents">
-<h2>Table of contents<a class="headerlink" href="#Table-of-contents" title="Permalink to this headline">¶</a></h2>
+<h2>Table of contents<a class="headerlink" href="#Table-of-contents" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="#1.-Setup">1. Setup</a></p></li>
 <li><p><a class="reference external" href="#2.-Defining-the-Keras-Model">2. Defining the Keras Model</a></p>
@@ -393,7 +402,7 @@ div.rendered_html tbody tr:hover {
 </ul>
 </section>
 <section id="1.-Setup">
-<h2>1. Setup<a class="headerlink" href="#1.-Setup" title="Permalink to this headline">¶</a></h2>
+<h2>1. Setup<a class="headerlink" href="#1.-Setup" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -429,7 +438,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="2.-Defining-the-Keras-Model">
-<h2>2. Defining the Keras Model<a class="headerlink" href="#2.-Defining-the-Keras-Model" title="Permalink to this headline">¶</a></h2>
+<h2>2. Defining the Keras Model<a class="headerlink" href="#2.-Defining-the-Keras-Model" title="Permalink to this heading">¶</a></h2>
 <p>We borrow our MLPClassifier implementation from the <a class="reference external" href="https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MLPClassifier_and_MLPRegressor.ipynb">MLPClassifier notebook</a>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -479,7 +488,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <section id="2.1-Building-a-boosting-ensemble">
-<h3>2.1 Building a boosting ensemble<a class="headerlink" href="#2.1-Building-a-boosting-ensemble" title="Permalink to this headline">¶</a></h3>
+<h3>2.1 Building a boosting ensemble<a class="headerlink" href="#2.1-Building-a-boosting-ensemble" title="Permalink to this heading">¶</a></h3>
 <p>Because SciKeras estimators are fully compliant with the Scikit-Learn API, we can make use of Scikit-Learn’s built in utilities. In particular example, we will use <code class="docutils literal notranslate"><span class="pre">AdaBoostClassifier</span></code> from <code class="docutils literal notranslate"><span class="pre">sklearn.ensemble.AdaBoostClassifier</span></code>, but the process is the same for most Scikit-Learn meta-estimators.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
@@ -495,7 +504,7 @@ div.rendered_html tbody tr:hover {
 </section>
 </section>
 <section id="3.-Testing-with-a-toy-dataset">
-<h2>3. Testing with a toy dataset<a class="headerlink" href="#3.-Testing-with-a-toy-dataset" title="Permalink to this headline">¶</a></h2>
+<h2>3. Testing with a toy dataset<a class="headerlink" href="#3.-Testing-with-a-toy-dataset" title="Permalink to this heading">¶</a></h2>
 <p>Before continouing, we will run a small test to make sure we get somewhat reasonable results.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -520,7 +529,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Single score: 0.35
+Single score: 0.37
 AdaBoost score: 0.82
 </pre></div></div>
 </div>
@@ -539,13 +548,13 @@ AdaBoost score: 0.82
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[-0.12538704  0.08275522 -0.0826977   0.17537518 -0.15027632]
-[ 0.06891925 -0.21101065  0.19634533 -0.07237635 -0.00961553]
+[-0.12516768  0.08282775 -0.08255257  0.17560978 -0.15035099]
+[ 0.06917351 -0.21098463  0.19656534 -0.0724231  -0.00970554]
 </pre></div></div>
 </div>
 </section>
 <section id="4.-Bagging-ensemble">
-<h2>4. Bagging ensemble<a class="headerlink" href="#4.-Bagging-ensemble" title="Permalink to this headline">¶</a></h2>
+<h2>4. Bagging ensemble<a class="headerlink" href="#4.-Bagging-ensemble" title="Permalink to this heading">¶</a></h2>
 <p>For comparison, we run the same test with an ensemble built using <code class="docutils literal notranslate"><span class="pre">sklearn.ensemble.BaggingClassifier</span></code>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -562,12 +571,21 @@ AdaBoost score: 0.82
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:tensorflow:5 out of the last 9 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fec39318f70&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 10 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f1b7e416f70&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Bagging score: 0.66
+Bagging score: 0.61
 </pre></div></div>
 </div>
 </section>
@@ -638,7 +656,7 @@ Bagging score: 0.66
 
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/notebooks/Meta_Estimators.ipynb.txt" rel="nofollow">Show Source</a>.
     </footer>

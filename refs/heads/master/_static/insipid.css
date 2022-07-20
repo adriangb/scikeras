@@ -165,7 +165,7 @@ strong:target {
 
 div.body dl > dt:target,
 div.body div.admonition dl > dt:target,
-div.body div.topic dl > dt:target,
+div.body .topic dl > dt:target,
 div.body .sidebar dl > dt:target,
 div.body .sidebar .sidebar-title a:target,
 div.body a:target,
@@ -184,21 +184,22 @@ section > hr.docutils {
     margin-right: -7px;
 }
 
-div.compound {
+div.compound:not(.toctree-wrapper) {
     margin-top: 1em;
     margin-bottom: 1em;
 }
 
-div.compound > .compound-first {
+div.compound:not(.toctree-wrapper) > * {
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+}
+
+div.compound:not(.toctree-wrapper) > *:first-child {
     margin-top: 0;
     margin-bottom: 0.2em;
 }
 
-div.compound > .compound-middle {
-    margin-top: 0.2em;
-    margin-bottom: 0.2em;
-}
-div.compound > .compound-last {
+div.compound:not(.toctree-wrapper) > *:last-child {
     margin-top: 0.2em;
     margin-bottom: 0;
 }
@@ -261,7 +262,7 @@ code,
 code.xref,
 a code,
 div.body div.admonition dl > dt code,
-div.body div.topic dl > dt code,
+div.body .topic dl > dt code,
 div.body .sidebar dl > dt code,
 h1 code, h2 code, h3 code, h4 code, h5 code, h6 code,
 div.code-block-caption code {
@@ -292,6 +293,10 @@ code.descname {
 div.code-block-caption {
     text-align: center;
     font-size: unset;
+}
+
+div.literal-block-wrapper {
+    clear: both;
 }
 
 td.linenos .linenodiv pre {
@@ -325,22 +330,24 @@ span.pre {
     overflow-wrap: anywhere;
 }
 
-table.autosummary span.pre {
-    overflow-wrap: break-word;
-}
-
 /* -- admonitions ----------------------------------------------------------- */
 
-div.topic, div.sidebar, aside.sidebar {
+div.topic, aside.topic,
+div.sidebar, aside.sidebar,
+nav.contents {
     border: none;
+    padding: 7px;
 }
 
 .section > div.admonition,
 section > div.admonition,
 div.body > div.admonition,
-.section > div.topic,
-section > div.topic,
-div.body > div.topic {
+.section > .topic,
+section > .topic,
+div.body > .topic,
+.section > nav.contents,
+section > nav.contents,
+div.body > nav.contents {
     margin: 10px -7px;
 }
 
@@ -350,7 +357,8 @@ aside.sidebar {
 }
 
 div.admonition > p.admonition-title,
-div.topic > p.topic-title,
+.topic > p.topic-title,
+nav.contents > p.topic-title,
 .sidebar > p.sidebar-title {
     margin: -7px -7px 7px -7px;
     padding: 4px 7px;
@@ -367,14 +375,21 @@ div.topic > p.topic-title,
 }
 
 div.admonition > p.admonition-title + *,
-div.topic > p.topic-title + *,
+.topic > p.topic-title + *,
+nav.contents > p.topic-title + *,
 .sidebar > p.sidebar-title + * {
     margin-top: 0;
 }
 
 div.admonition > :first-child:not(.admonition-title),
-div.topic > :first-child:not(.topic-title) {
+div.topic > :first-child:not(.topic-title),
+aside.topic > :first-child:not(.topic-title),
+nav.contents > :first-child:not(.topic-title) {
     margin-top: 0;
+}
+
+nav.contents > :last-child {
+    margin-bottom: 0;
 }
 
 div.admonition {
@@ -401,11 +416,12 @@ div.admonition.warning > p.admonition-title {
     background-color: #f0d5b8;
 }
 
-div.topic {
+div.topic, nav.contents, aside.topic {
     background-color: #fff0eb;
 }
 
-div.topic > p.topic-title {
+.topic > p.topic-title,
+nav.contents > p.topic-title {
     background-color: #f0dbd4;
 }
 
@@ -430,14 +446,14 @@ p.sidebar-subtitle {
 
 /* More specific selectors to override previous defintions */
 div.body div.admonition dl > dt,
-div.body div.topic dl > dt,
+div.body .topic dl > dt,
 div.body .sidebar dl > dt {
     padding: unset;
     background-color: unset;
 }
 
 div.body div.admonition dl:not(.glossary) > dt,
-div.body div.topic dl:not(.glossary) > dt,
+div.body .topic dl:not(.glossary) > dt,
 div.body .sidebar dl:not(.glossary) > dt {
     font-weight: unset;
 }
@@ -446,13 +462,17 @@ div.body .sidebar dl:not(.glossary) > dt {
 
 table.docutils {
     border-collapse: separate;
-    border-spacing: 5px 0px;
+    border-spacing: 4px 4px;
 }
 
 table.docutils th {
     font-weight: normal;
     background-color: rgba(27,31,35,.05);
     border-bottom: 2px solid #333;
+}
+
+table.docutils td {
+    overflow-wrap: break-word;
 }
 
 
@@ -515,7 +535,7 @@ div.body dl > dt:first-child {
 
 div.body dl > dt.label:target,
 div.body div.admonition dl > dt:target,
-div.body div.topic dl > dt:target,
+div.body .topic dl > dt:target,
 div.body .sidebar dl > dt:target {
     padding: 3px 7px;
     margin-top: -3px;
