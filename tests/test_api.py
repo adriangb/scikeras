@@ -1,7 +1,8 @@
 """Tests for Scikit-learn API wrapper."""
+from functools import partial
 import pickle
 
-from typing import Any, Dict
+from typing import Any, Dict, Sequence
 
 import numpy as np
 import pytest
@@ -872,3 +873,20 @@ class TestInitialize:
         np.testing.assert_allclose(y_pred_keras, y_pred_scikeras)
         # Check that we are still using the same model object
         assert est.model_ is m2
+
+def build_model_for_partial_wrapping(input_size: int = 100) -> keras.Model:
+    inp = keras.layers.Input((input_size,))
+    out = keras.layers.Dense(1)(inp)
+    return keras.Model(inp, out)
+
+
+def test_partial_model_build_fn() -> None:
+    X = np.random.random((100, 1))
+    y = np.random.uniform(low=0, high=3, size=(100,))
+
+    build_fn = partial(build_model_for_partial_wrapping, input_size=1)
+
+    clf = KerasClassifier(build_fn)
+    clf = clf.fit(X, y)
+    clf = pickle.loads(pickle.dumps(clf))
+    clf.predict(X)
