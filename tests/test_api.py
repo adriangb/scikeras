@@ -887,7 +887,7 @@ def test_partial_model_build_fn() -> None:
 
     build_fn = partial(build_model_for_partial_wrapping, input_size=1)
 
-    clf = KerasClassifier(build_fn)
-    clf = clf.fit(X, y)
-    clf = pickle.loads(pickle.dumps(clf))
-    clf.predict(X)
+    reg = KerasRegressor(build_fn, loss="mse")
+    dev = dev.fit(X, y)
+    reg = pickle.loads(pickle.dumps(reg))
+    reg.predict(X)
