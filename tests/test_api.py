@@ -1,7 +1,7 @@
 """Tests for Scikit-learn API wrapper."""
-from functools import partial
 import pickle
 
+from functools import partial
 from typing import Any, Dict, Sequence
 
 import numpy as np
@@ -873,6 +873,7 @@ class TestInitialize:
         np.testing.assert_allclose(y_pred_keras, y_pred_scikeras)
         # Check that we are still using the same model object
         assert est.model_ is m2
+
 
 def build_model_for_partial_wrapping(input_size: int = 100) -> keras.Model:
     inp = keras.layers.Input((input_size,))
