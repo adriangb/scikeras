@@ -2,7 +2,7 @@
 import pickle
 
 from functools import partial
-from typing import Any, Dict, Sequence
+from typing import Any, Dict
 
 import numpy as np
 import pytest
