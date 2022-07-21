@@ -14,6 +14,8 @@ body {
     min-width: unset;
     color: #000;
     background-color: #fff;
+    text-size-adjust: none;
+    -webkit-text-size-adjust: none;
 }
 
 /* keep the footer at the bottom (on very short pages) */
@@ -22,7 +24,7 @@ body { min-height: 100%; display: flex; flex-direction: column; }
 div.document { flex-grow: 1; }
 
 div.body {
-    padding: 20px;
+    padding: 0 20px;
     min-width: unset;  /* body_min_width is applied to <body> */
     overflow-x: auto;
 
@@ -32,7 +34,7 @@ div.body {
     line-height: 1.618;
 }
 
-body.js * {
+* {
     scroll-margin-top: var(--topbar-height);
     scroll-snap-margin-top: var(--topbar-height);  /* Safari */
 }
@@ -127,8 +129,13 @@ blockquote {
     clear: left;
     margin: 10px 0;
     border: 1px solid #0002;
-    border-left-width: 6px;
-    padding: 0 20px;
+    border-left-width: 7px;
+    padding: 0 1em;
+}
+
+.section > blockquote,
+section > blockquote {
+    margin: 10px -7px;
 }
 
 blockquote.pull-quote p:not(.attribution),
@@ -146,7 +153,7 @@ blockquote p.attribution {
     text-align: end;
 }
 
-div.figure {
+div.insipid-horizontally-scrollable {
     overflow-x: auto;
 }
 
@@ -158,7 +165,7 @@ strong:target {
 
 div.body dl > dt:target,
 div.body div.admonition dl > dt:target,
-div.body div.topic dl > dt:target,
+div.body .topic dl > dt:target,
 div.body .sidebar dl > dt:target,
 div.body .sidebar .sidebar-title a:target,
 div.body a:target,
@@ -171,25 +178,28 @@ hr.docutils {
     border-top: solid 1px #ccc;
 }
 
-img {
-    max-width: unset;
+.section > hr.docutils,
+section > hr.docutils {
+    margin-left: -7px;
+    margin-right: -7px;
 }
 
-div.compound {
+div.compound:not(.toctree-wrapper) {
     margin-top: 1em;
     margin-bottom: 1em;
 }
 
-div.compound > .compound-first {
+div.compound:not(.toctree-wrapper) > * {
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+}
+
+div.compound:not(.toctree-wrapper) > *:first-child {
     margin-top: 0;
     margin-bottom: 0.2em;
 }
 
-div.compound > .compound-middle {
-    margin-top: 0.2em;
-    margin-bottom: 0.2em;
-}
-div.compound > .compound-last {
+div.compound:not(.toctree-wrapper) > *:last-child {
     margin-top: 0.2em;
     margin-bottom: 0;
 }
@@ -211,18 +221,15 @@ a:visited {
 }
 
 a.external {
-    text-decoration: none;
-    border-bottom: 1px dotted #1863b5;
+    text-decoration: underline;
 }
 
 a.external:hover {
     text-decoration: none;
-    border-bottom: 1px dotted transparent;
 }
 
 a.external:visited {
     text-decoration: none;
-    border-bottom: 1px dotted #004188;
 }
 
 /* -- code formatting ------------------------------------------------------- */
@@ -237,11 +244,25 @@ pre {
     font-size: 0.875em;
 }
 
+.section > div > div.highlight,
+.section > .compound > div > div.highlight,
+.section > .literal-block-wrapper > div > div.highlight,
+.section > pre.literal-block,
+.section > .compound > pre.literal-block,
+section > div > div.highlight,
+section > .compound > div > div.highlight,
+section > .literal-block-wrapper > div > div.highlight,
+section > pre.literal-block,
+section > .compound > pre.literal-block {
+    margin-left: -7px;
+    margin-right: -7px;
+}
+
 code,
 code.xref,
 a code,
 div.body div.admonition dl > dt code,
-div.body div.topic dl > dt code,
+div.body .topic dl > dt code,
 div.body .sidebar dl > dt code,
 h1 code, h2 code, h3 code, h4 code, h5 code, h6 code,
 div.code-block-caption code {
@@ -274,6 +295,10 @@ div.code-block-caption {
     font-size: unset;
 }
 
+div.literal-block-wrapper {
+    clear: both;
+}
+
 td.linenos .linenodiv pre {
     color: #666;
     background-color: transparent;
@@ -300,14 +325,40 @@ kbd.docutils:not(.compound) {
     border: 1px solid #333;
 }
 
+span.pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 /* -- admonitions ----------------------------------------------------------- */
 
-div.topic, div.sidebar, aside.sidebar {
+div.topic, aside.topic,
+div.sidebar, aside.sidebar,
+nav.contents {
     border: none;
+    padding: 7px;
+}
+
+.section > div.admonition,
+section > div.admonition,
+div.body > div.admonition,
+.section > .topic,
+section > .topic,
+div.body > .topic,
+.section > nav.contents,
+section > nav.contents,
+div.body > nav.contents {
+    margin: 10px -7px;
+}
+
+div.sidebar,
+aside.sidebar {
+    margin-right: -7px;
 }
 
 div.admonition > p.admonition-title,
-div.topic > p.topic-title,
+.topic > p.topic-title,
+nav.contents > p.topic-title,
 .sidebar > p.sidebar-title {
     margin: -7px -7px 7px -7px;
     padding: 4px 7px;
@@ -324,13 +375,21 @@ div.topic > p.topic-title,
 }
 
 div.admonition > p.admonition-title + *,
-div.topic > p.topic-title + *,
+.topic > p.topic-title + *,
+nav.contents > p.topic-title + *,
 .sidebar > p.sidebar-title + * {
     margin-top: 0;
 }
 
-div.admonition > :first-child:not(.admonition-title) {
+div.admonition > :first-child:not(.admonition-title),
+div.topic > :first-child:not(.topic-title),
+aside.topic > :first-child:not(.topic-title),
+nav.contents > :first-child:not(.topic-title) {
     margin-top: 0;
+}
+
+nav.contents > :last-child {
+    margin-bottom: 0;
 }
 
 div.admonition {
@@ -357,11 +416,12 @@ div.admonition.warning > p.admonition-title {
     background-color: #f0d5b8;
 }
 
-div.topic {
+div.topic, nav.contents, aside.topic {
     background-color: #fff0eb;
 }
 
-div.topic > p.topic-title {
+.topic > p.topic-title,
+nav.contents > p.topic-title {
     background-color: #f0dbd4;
 }
 
@@ -386,14 +446,14 @@ p.sidebar-subtitle {
 
 /* More specific selectors to override previous defintions */
 div.body div.admonition dl > dt,
-div.body div.topic dl > dt,
+div.body .topic dl > dt,
 div.body .sidebar dl > dt {
     padding: unset;
     background-color: unset;
 }
 
 div.body div.admonition dl:not(.glossary) > dt,
-div.body div.topic dl:not(.glossary) > dt,
+div.body .topic dl:not(.glossary) > dt,
 div.body .sidebar dl:not(.glossary) > dt {
     font-weight: unset;
 }
@@ -402,7 +462,7 @@ div.body .sidebar dl:not(.glossary) > dt {
 
 table.docutils {
     border-collapse: separate;
-    border-spacing: 5px 0px;
+    border-spacing: 4px 4px;
 }
 
 table.docutils th {
@@ -411,26 +471,35 @@ table.docutils th {
     border-bottom: 2px solid #333;
 }
 
+table.docutils td {
+    overflow-wrap: break-word;
+}
+
 
 
 ol, ul {
     padding-left: 1.2em;
 }
 
+ol.simple p, ul.simple p {
+    margin-bottom: 0.3em;
+}
+
 .toctree-wrapper ul,
 .contents ul {
     list-style: none;
+    margin-top: 0.5em;
+    padding-left: 2em;
+}
+
+.toctree-wrapper li:not(:first-child),
+.contents li:not(:first-child) {
+    margin-top: 0.5em;
 }
 
 .toctree-wrapper > ul,
 .contents > ul {
     padding-left: unset;
-}
-
-.toctree-wrapper li,
-.contents li {
-    margin-top: 0.5em;
-    line-height: normal;
 }
 
 dl.citation > dt {
@@ -449,8 +518,15 @@ dl.field-list > dt {
 div.body dt:not(.label),
 dl.field-list > dt {
     margin-top: 1em;
-    padding: 1px 6px;
+    padding: 1px 7px;
     background-color: #f5f5f5;
+}
+
+.section > dl > dt:not(.label),
+.section > dl.field-list > dt,
+section > dl > dt:not(.label),
+section > dl.field-list > dt {
+    margin: 1em -7px 0;
 }
 
 div.body dl > dt:first-child {
@@ -459,7 +535,7 @@ div.body dl > dt:first-child {
 
 div.body dl > dt.label:target,
 div.body div.admonition dl > dt:target,
-div.body div.topic dl > dt:target,
+div.body .topic dl > dt:target,
 div.body .sidebar dl > dt:target {
     padding: 3px 7px;
     margin-top: -3px;
@@ -492,7 +568,7 @@ dd,
 dl.field-list > dd {
     padding-left: 0;
     margin-top: 3px;
-    margin-left: 20px;
+    margin-left: 2em;
 }
 
 dd:not(:last-child),
@@ -516,7 +592,7 @@ div.body dl.exception > dt:not(:target) {
 /* -- relbar ---------------------------------------------------------------- */
 
 .relbar {
-    padding: 10px;
+    padding: 10px 10px 0;
 }
 
 .relbar > a {
@@ -624,15 +700,19 @@ div.sphinxsidebar {
     overscroll-behavior: contain;
 }
 
-body.sidebar-visible {
+#sidebar-checkbox:checked ~ div.document,
+#sidebar-checkbox:checked ~ .relbar,
+#sidebar-checkbox:checked ~ footer {
     margin-left: var(--sidebar-width);
 }
 
-body.js:not(.sidebar-resizing) {
+body:not(.sidebar-resizing) div.document,
+body:not(.sidebar-resizing) .relbar,
+body:not(.sidebar-resizing) footer {
     transition: margin-left 0.3s ease-out;
 }
 
-body.js:not(.sidebar-resizing) .sphinxsidebar {
+body:not(.sidebar-resizing) .sphinxsidebar {
     transition: left 0.3s ease-out;
 }
 
@@ -658,7 +738,8 @@ div.sphinxsidebarwrapper > :last-child {
     bottom: 0;
 }
 
-body.js.sidebar-visible .sidebar-resize-handle {
+body.js #sidebar-checkbox:checked ~ .sidebar-resize-handle,
+body.js #sidebar-checkbox:checked ~ div.document .sidebar-resize-handle {
     display: block;
     cursor: col-resize;
     width: 10px;
@@ -668,16 +749,13 @@ body.js.sidebar-visible .sidebar-resize-handle {
     right: 0;
 }
 
-body.js.sidebar-visible > .sidebar-resize-handle {
-    left: 0;
+body.js #sidebar-checkbox:checked ~ .sidebar-resize-handle {
+    z-index: 390;
+    left: var(--sidebar-width);
 }
 
-body.js:not(.sidebar-visible) .sphinxsidebar {
+#sidebar-checkbox:not(:checked) ~ div.document .sphinxsidebar {
     left: calc(0px - var(--sidebar-width));
-}
-
-div.sphinxsidebar img {
-    max-width: 100%;
 }
 
 div.sphinxsidebar h3 {
@@ -831,20 +909,9 @@ div.sphinxsidebar input {
 
 #topbar-placeholder {
     z-index: 500;
-}
-
-body.js #topbar-placeholder {
     position: -webkit-sticky;
     position: sticky;
     top: 0;
-}
-
-body.sidebar-visible #topbar-placeholder {
-    margin-left: calc(0px - var(--sidebar-width));
-}
-
-body.js:not(.sidebar-resizing) #topbar-placeholder {
-    transition: margin-left 0.3s ease-out;
 }
 
 #topbar {
@@ -864,6 +931,7 @@ body.js:not(.sidebar-resizing) #topbar-placeholder {
 }
 
 #topbar button:hover,
+#titlebar .buttons > *:hover,
 #titlebar a:hover,
 .relbar a:hover,
 .relbar a:hover .icon {
@@ -921,7 +989,6 @@ body.js #topbar {
     transition: transform 0.3s ease-out;
 }
 
-body:not(.js) #sidebar-button,
 body:not(.js) #search-button {
     display: none;
 }
@@ -1018,11 +1085,11 @@ div.body, .relbar, footer, div.articleComments {
 .nav-icon.next {
     top: 50vh;
 }
-body.sidebar-visible .nav-icon.previous {
+#sidebar-checkbox:checked ~ nav .nav-icon.previous {
     left: var(--sidebar-width);
 }
 
-body.js:not(.sidebar-resizing) .nav-icon.previous {
+body:not(.sidebar-resizing) .nav-icon.previous {
     transition: left 0.3s ease-out;
 }
 
@@ -1040,21 +1107,18 @@ div.viewcode-block:target {
 }
 
 /* -- media queries --------------------------------------------------------- */
-
 @media only screen and (max-width: 39rem) {
-    body.sidebar-visible {
+    #sidebar-checkbox:checked ~ div.document,
+    #sidebar-checkbox:checked ~ .relbar,
+    #sidebar-checkbox:checked ~ footer {
         margin-left: 0;
     }
 
-    body.sidebar-visible #topbar-placeholder {
+    #sidebar-checkbox:checked ~ #topbar-placeholder {
         margin-left: 0;
     }
 
-    body.js.sidebar-visible {
-        overflow: hidden;
-    }
-
-    body.js #overlay {
+    #overlay {
         position: fixed;
         top: 0;
         left: 0;
@@ -1067,23 +1131,17 @@ div.viewcode-block:target {
         z-index: 380;
     }
 
-    body.js.sidebar-visible #overlay {
+    #sidebar-checkbox:checked ~ #overlay {
         visibility: visible;
         opacity: 1;
         transition: opacity 0.3s ease-out;
     }
 
-    body:not(.js) .sphinxsidebar {
-        position: relative;
-        top: unset;
-        width: unset;
-    }
-
-    body.js.sidebar-visible #titlebar .parent {
+    #sidebar-checkbox:checked ~ #topbar-placeholder #titlebar .parent {
         display: unset;
     }
 
-    body.js.sidebar-visible #titlebar .top {
+    #sidebar-checkbox:checked ~ #topbar-placeholder #titlebar #titlebar .top {
         display: none;
     }
 }
