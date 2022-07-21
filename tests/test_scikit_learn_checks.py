@@ -1,14 +1,10 @@
 """Tests using Scikit-Learn's bundled estimator_checks."""
 
 from contextlib import contextmanager
-from distutils.version import LooseVersion
 from typing import Any, Dict
-from unittest.mock import patch
 
-import numpy as np
 import pytest
 
-from sklearn import __version__ as sklearn_version
 from sklearn.datasets import load_iris
 from sklearn.utils.estimator_checks import check_no_attributes_set_in_init
 from tensorflow.keras import Model, Sequential, layers
@@ -24,6 +20,7 @@ from .testing_utils import basic_checks, parametrize_with_checks
 higher_precision = (
     "check_classifiers_classes",
     "check_methods_sample_order_invariance",
+    "check_sample_weights_invariance",
 )
 
 
@@ -34,8 +31,10 @@ def use_floatx(x: str):
     """
     _floatx = floatx()
     set_floatx(x)
-    yield
-    set_floatx(_floatx)
+    try:
+        yield
+    finally:
+        set_floatx(_floatx)
 
 
 # Set batch size to a large number
@@ -60,23 +59,12 @@ batch_size = 1000
             model__hidden_layer_sizes=[],
         ),
     ],
-    ids=["KerasClassifier", "KerasRegressor"],
 )
 def test_fully_compliant_estimators_low_precision(estimator, check):
     """Checks that can be passed with sklearn's default tolerances
     and in a single epoch.
     """
     check_name = check.func.__name__
-    if sklearn_version <= LooseVersion("0.23.0") and check_name in (
-        "check_classifiers_predictions",
-        "check_classifiers_classes",
-        "check_methods_subset_invariance",
-        "check_no_attributes_set_in_init",
-        "check_class_weight_classifiers",
-        "check_regressor_multioutput",
-    ):
-        # These tests have bugs that are fixed in 0.23.0
-        pytest.skip("This test is broken in sklearn<=0.23.0")
     if check_name in higher_precision:
         pytest.skip(
             "This test is run as part of test_fully_compliant_estimators_high_precision."
@@ -101,11 +89,9 @@ def test_fully_compliant_estimators_low_precision(estimator, check):
             epochs=20,
         ),
     ],
-    ids=["KerasClassifier", "KerasRegressor"],
 )
 def test_fully_compliant_estimators_high_precision(estimator, check):
-    """Checks that require higher training epochs.
-    """
+    """Checks that require higher training epochs."""
     check_name = check.func.__name__
     if check_name not in higher_precision:
         pytest.skip(
@@ -117,7 +103,11 @@ def test_fully_compliant_estimators_high_precision(estimator, check):
 
 class SubclassedClassifier(KerasClassifier):
     def __init__(
-        self, model__hidden_layer_sizes=(100,), metrics=None, loss=None, **kwargs,
+        self,
+        model__hidden_layer_sizes=(100,),
+        metrics=None,
+        loss=None,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.model__hidden_layer_sizes = model__hidden_layer_sizes
@@ -126,7 +116,10 @@ class SubclassedClassifier(KerasClassifier):
         self.optimizer = "sgd"
 
     def _keras_build_fn(
-        self, hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+        self,
+        hidden_layer_sizes,
+        meta: Dict[str, Any],
+        compile_kwargs: Dict[str, Any],
     ) -> Model:
         return dynamic_classifier(
             hidden_layer_sizes=hidden_layer_sizes,

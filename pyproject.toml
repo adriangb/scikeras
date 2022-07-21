@@ -11,10 +11,10 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Natural Language :: English",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.6",
   "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
 ]
 description = "Scikit-Learn API wrapper for Keras."
 documentation = "https://www.adriangb.com/scikeras/"
@@ -27,30 +27,34 @@ license = "MIT"
 name = "scikeras"
 readme = "README.md"
 repository = "https://github.com/adriangb/scikeras"
-version = "0.3.3"
+version = "0.8.0"
 
 [tool.poetry.dependencies]
-importlib-metadata = {version = "^3", python = "<3.8"}
-python = ">=3.6.1,<4.0"
-scikit-learn = ">=0.22.0"
+importlib-metadata = {version = ">=3", python = "<3.8"}
+python = ">=3.7.0,<3.11.0"
+scikit-learn = ">=1.0.0"
+packaging = ">=0.21"
+tensorflow = {version = ">=2.7.0", optional = true}
+tensorflow-cpu = {version = ">=2.7.0", optional = true}
+
+[tool.poetry.extras]
+tensorflow = ["tensorflow"]
+tensorflow-cpu = ["tensorflow-cpu"]
 
 [tool.poetry.dev-dependencies]
-tensorflow = ">=2.4.0"
-coverage = {extras = ["toml"], version = ">=5.4"}
-dataclasses = {version = "^0.8", python = "<3.7"}
-insipid-sphinx-theme = ">=0.2.2"
-ipykernel = ">=5.4.2"
+tensorflow = ">=2.7.0"
+coverage = {extras = ["toml"], version = ">=6.4.2"}
+insipid-sphinx-theme = ">=0.3.2"
+ipykernel = ">=6.15.1"
 jupyter = ">=1.0.0"
-jupytext = ">=1.9.1"
-matplotlib = ">=3.3.3"
-nbsphinx = ">=0.8.1"
-numpydoc = ">=1.1.0"
-pre-commit = ">=2.10.1"
-pytest = ">=6.2.2"
-pytest-cov = ">=2.11.1"
-pytest-sugar = "v0.9.4"
-pytest-xdist = ">=2.2.1"
-sphinx = ">=3.2.1"
+jupytext = ">=1.14.0"
+matplotlib = ">=3.5.2"
+nbsphinx = ">=0.8.9"
+numpydoc = ">=1.4.0"
+pre-commit = ">=2.20.0"
+pytest = ">=7.1.2"
+pytest-cov = ">=3.0.0"
+sphinx = ">=5.0.2"
 
 [tool.isort]
 atomic = true
@@ -79,5 +83,5 @@ source = ["scikeras/"]
 show_missing = true
 
 [build-system]
-build-backend = "poetry.masonry.api"
-requires = ["poetry>=1.0.10"]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.8"]

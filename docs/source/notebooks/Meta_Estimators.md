@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.10.2
+      jupytext_version: 1.11.4
   kernelspec:
     display_name: Python 3
     language: python
@@ -35,7 +35,7 @@ In this notebook, we implement sklearn ensemble and tree meta-estimators backed 
 try:
     import scikeras
 except ImportError:
-    !python -m pip install scikeras
+    !python -m pip install scikeras[tensorflow]
 ```
 
 Silence TensorFlow logging to keep output succinct.

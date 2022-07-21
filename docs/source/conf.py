@@ -31,8 +31,7 @@ release = __version__
 
 
 def maybe_skip_member(app, what, name, obj, skip, options) -> bool:
-    """Skip all private members, including __init__
-    """
+    """Skip all private members, including __init__"""
     if name.startswith("_"):
         return True
     return skip

@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.datasets import load_boston, load_digits, load_iris
+from sklearn.datasets import fetch_california_housing, load_digits, load_iris
 from sklearn.ensemble import (
     AdaBoostClassifier,
     AdaBoostRegressor,
@@ -18,23 +18,24 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from tensorflow import keras
+from tensorflow.keras import backend as K
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
 from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
 from tensorflow.keras.models import Model, Sequential
-from tensorflow.python import keras
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.utils.generic_utils import register_keras_serializable
-from tensorflow.python.keras.utils.np_utils import to_categorical
+from tensorflow.keras.utils import register_keras_serializable, to_categorical
 
-from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
+from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .testing_utils import basic_checks
 
 
 def build_fn_clf(
-    hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+    hidden_dim,
+    meta: Dict[str, Any],
+    compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Builds a Sequential based classifier."""
     # extract parameters
@@ -56,7 +57,9 @@ def build_fn_clf(
 
 
 def build_fn_reg(
-    hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+    hidden_dim,
+    meta: Dict[str, Any],
+    compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Builds a Sequential based regressor."""
     # extract parameters
@@ -75,19 +78,29 @@ def build_fn_reg(
 
 class InheritClassBuildFnClf(KerasClassifier):
     def _keras_build_fn(
-        self, hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+        self,
+        hidden_dim,
+        meta: Dict[str, Any],
+        compile_kwargs: Dict[str, Any],
     ) -> Model:
         return build_fn_clf(
-            hidden_dim=hidden_dim, meta=meta, compile_kwargs=compile_kwargs,
+            hidden_dim=hidden_dim,
+            meta=meta,
+            compile_kwargs=compile_kwargs,
         )
 
 
 class InheritClassBuildFnReg(KerasRegressor):
     def _keras_build_fn(
-        self, hidden_dim, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+        self,
+        hidden_dim,
+        meta: Dict[str, Any],
+        compile_kwargs: Dict[str, Any],
     ) -> Model:
         return build_fn_reg(
-            hidden_dim=hidden_dim, meta=meta, compile_kwargs=compile_kwargs,
+            hidden_dim=hidden_dim,
+            meta=meta,
+            compile_kwargs=compile_kwargs,
         )
 
 
@@ -108,13 +121,16 @@ class TestBasicAPI:
     def test_regression_build_fn(self):
         """Tests for errors using KerasRegressor."""
         reg = KerasRegressor(model=build_fn_reg, hidden_dim=5)
-        basic_checks(reg, load_boston)
+        basic_checks(reg, fetch_california_housing)
 
     def test_regression_inherit_class_build_fn(self):
         """Tests for errors using KerasRegressor inherited."""
 
-        reg = InheritClassBuildFnReg(model=None, hidden_dim=5,)
-        basic_checks(reg, load_boston)
+        reg = InheritClassBuildFnReg(
+            model=None,
+            hidden_dim=5,
+        )
+        basic_checks(reg, fetch_california_housing)
 
 
 def load_digits8x8():
@@ -129,7 +145,9 @@ def load_digits8x8():
 
 
 def build_fn_regs(
-    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+    hidden_layer_sizes,
+    meta: Dict[str, Any],
+    compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Dynamically build regressor."""
     # get params
@@ -146,7 +164,9 @@ def build_fn_regs(
 
 
 def build_fn_clss(
-    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+    hidden_layer_sizes,
+    meta: Dict[str, Any],
+    compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Dynamically build classifier."""
     # get params
@@ -162,7 +182,9 @@ def build_fn_clss(
 
 
 def build_fn_clscs(
-    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+    hidden_layer_sizes,
+    meta: Dict[str, Any],
+    compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Dynamically build functional API regressor."""
     # get params
@@ -180,7 +202,9 @@ def build_fn_clscs(
 
 
 def build_fn_clscf(
-    hidden_layer_sizes, meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+    hidden_layer_sizes,
+    meta: Dict[str, Any],
+    compile_kwargs: Dict[str, Any],
 ) -> Model:
     """Dynamically build functional API classifier."""
     # get params
@@ -200,7 +224,7 @@ def build_fn_clscf(
 
 CONFIG = {
     "MLPRegressor": (
-        load_boston,
+        fetch_california_housing,
         KerasRegressor,
         dynamic_regressor,
         (BaggingRegressor, AdaBoostRegressor),
@@ -230,7 +254,8 @@ class TestAdvancedAPIFuncs:
     """Tests advanced features such as pipelines and hyperparameter tuning."""
 
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_standalone(self, config):
         """Tests standalone estimator."""
@@ -247,16 +272,21 @@ class TestAdvancedAPIFuncs:
         basic_checks(estimator, loader)
 
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["MLPRegressor", "MLPClassifier", "CNNClassifier", "CNNClassifierF"],
     )
     def test_searchcv_init_params(self, config):
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
         loader, model, build_fn, _ = CONFIG[config]
         estimator = model(
-            build_fn, epochs=1, validation_split=0.1, model__hidden_layer_sizes=[],
+            build_fn,
+            epochs=1,
+            validation_split=0.1,
+            model__hidden_layer_sizes=[],
         )
         basic_checks(
-            GridSearchCV(estimator, {"model__hidden_layer_sizes": [[], [5]]}), loader,
+            GridSearchCV(estimator, {"model__hidden_layer_sizes": [[], [5]]}),
+            loader,
         )
         basic_checks(
             RandomizedSearchCV(
@@ -268,7 +298,8 @@ class TestAdvancedAPIFuncs:
         )
 
     @pytest.mark.parametrize(
-        "config", ["MLPClassifier"],
+        "config",
+        ["MLPClassifier"],
     )
     def test_searchcv_routed_params(self, config):
         """Tests compatibility with Scikit-learn's hyperparameter search CV."""
@@ -280,7 +311,10 @@ class TestAdvancedAPIFuncs:
         }
         search = GridSearchCV(estimator, params)
         basic_checks(search, loader)
-        assert search.best_estimator_.model_.optimizer._name.lower() in ("sgd", "adam",)
+        assert search.best_estimator_.model_.optimizer._name.lower() in (
+            "sgd",
+            "adam",
+        )
 
     @pytest.mark.parametrize("config", ["MLPRegressor", "MLPClassifier"])
     def test_ensemble(self, config):
@@ -306,7 +340,8 @@ class TestPrebuiltModel:
     """Tests using a prebuilt model instance."""
 
     @pytest.mark.parametrize(
-        "config", ["MLPRegressor", "MLPClassifier"],
+        "config",
+        ["MLPRegressor", "MLPClassifier"],
     )
     def test_basic(self, config):
         """Tests using a prebuilt model."""
@@ -327,7 +362,11 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
+                compile_kwargs={
+                    "optimizer": "adam",
+                    "loss": None,
+                    "metrics": None,
+                },
             )
         else:
             meta = {
@@ -337,7 +376,11 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
+                compile_kwargs={
+                    "optimizer": "adam",
+                    "loss": None,
+                    "metrics": None,
+                },
             )
 
         estimator = model(model=keras_model)
@@ -363,7 +406,11 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
+                compile_kwargs={
+                    "optimizer": "adam",
+                    "loss": None,
+                    "metrics": None,
+                },
             )
         else:
             meta = {
@@ -373,7 +420,11 @@ class TestPrebuiltModel:
             keras_model = build_fn(
                 meta=meta,
                 hidden_layer_sizes=(100,),
-                compile_kwargs={"optimizer": "adam", "loss": None, "metrics": None,},
+                compile_kwargs={
+                    "optimizer": "adam",
+                    "loss": None,
+                    "metrics": None,
+                },
             )
 
         base_estimator = model(model=keras_model)
@@ -385,11 +436,12 @@ class TestPrebuiltModel:
 def test_warm_start():
     """Test the warm start parameter."""
     # Load data
-    data = load_boston()
+    data = fetch_california_housing()
     X, y = data.data[:100], data.target[:100]
     # Initial fit
     estimator = KerasRegressor(
-        model=dynamic_regressor, model__hidden_layer_sizes=(100,),
+        model=dynamic_regressor,
+        model__hidden_layer_sizes=(100,),
     )
     estimator.fit(X, y)
     model = estimator.model_
@@ -416,10 +468,13 @@ class CustomMetric(metrics_module.MeanAbsoluteError):
 
 class TestPartialFit:
     def test_partial_fit(self):
-        data = load_boston()
+        data = fetch_california_housing()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
-            model=dynamic_regressor, model__hidden_layer_sizes=[100,],
+            model=dynamic_regressor,
+            model__hidden_layer_sizes=[
+                100,
+            ],
         )
 
         estimator.partial_fit(X, y)
@@ -433,11 +488,13 @@ class TestPartialFit:
         assert estimator.model_ is model, "Model memory address should remain constant"
 
     def test_partial_fit_history_metric_names(self):
-        data = load_boston()
+        data = fetch_california_housing()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
             model=dynamic_regressor,
-            model__hidden_layer_sizes=[100,],
+            model__hidden_layer_sizes=[
+                100,
+            ],
             metrics=["mse", CustomMetric(name="custom_metric")],
         )
         estimator.partial_fit(X, y)
@@ -458,12 +515,14 @@ class TestPartialFit:
         # into the history is added
         # As per https://github.com/keras-team/keras/issues/1766,
         # there is no direct measure of epochs
-        data = load_boston()
+        data = fetch_california_housing()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
             model=dynamic_regressor,
             metrics="mean_squared_error",
-            model__hidden_layer_sizes=[100,],
+            model__hidden_layer_sizes=[
+                100,
+            ],
         )
 
         for k in range(10):
@@ -478,13 +537,17 @@ class TestPartialFit:
         """Test that partial_fit trains for a single epoch,
         independently of what epoch value is passed to the constructor.
         """
-        data = load_boston()
+        data = fetch_california_housing()
         X, y = data.data[:100], data.target[:100]
         epochs = 9
         partial_fit_iter = 4
 
         estimator = KerasRegressor(
-            model=dynamic_regressor, model__hidden_layer_sizes=[100,], epochs=epochs,
+            model=dynamic_regressor,
+            model__hidden_layer_sizes=[
+                100,
+            ],
+            epochs=epochs,
         )
 
         # Check that each partial_fit call trains for 1 epoch
@@ -510,7 +573,7 @@ class TestPartialFit:
         behavior. It is tested because the epochs
         param has special handling within param routing.
         """
-        data = load_boston()
+        data = fetch_california_housing()
         X, y = data.data[:10], data.target[:10]
         epochs = 2
         partial_fit_iter = 3
@@ -537,7 +600,8 @@ class TestPartialFit:
         assert estimator.current_epoch == epochs + 1
 
     @pytest.mark.parametrize(
-        "config", ["CNNClassifier", "CNNClassifierF"],
+        "config",
+        ["CNNClassifier", "CNNClassifierF"],
     )
     def test_pf_pickle_pf(self, config):
         loader, model, build_fn, _ = CONFIG[config]
@@ -593,7 +657,9 @@ class TestPartialFit:
         clf = KerasClassifier(
             model=dynamic_classifier,
             loss="sparse_categorical_crossentropy",
-            model__hidden_layer_sizes=[100,],
+            model__hidden_layer_sizes=[
+                100,
+            ],
         )
         X1 = np.array([[1, 2, 3], [4, 5, 6]]).T
         y1 = np.array([1, 2, 2])
@@ -622,9 +688,8 @@ def force_compile_shorthand(hidden_layer_sizes, meta, compile_kwargs, params):
 
 class TestHistory:
     def test_history(self):
-        """Test that history_'s keys are strings and values are lists.
-        """
-        data = load_boston()
+        """Test that history_'s keys are strings and values are lists."""
+        data = fetch_california_housing()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
             model=dynamic_regressor, model__hidden_layer_sizes=[]
@@ -646,7 +711,7 @@ class TestHistory:
             model__hidden_layer_sizes=(100,),
             metrics=["mae"],  # shorthand
         )
-        X, y = load_boston(return_X_y=True)
+        X, y = fetch_california_housing(return_X_y=True)
         X = X[:100]
         y = y[:100]
         est.fit(X, y)
@@ -660,7 +725,7 @@ def test_compile_model_from_params():
     it is not re-compiled.
     """
     # Load data
-    data = load_boston()
+    data = fetch_california_housing()
     X, y = data.data[:100], data.target[:100]
 
     other_loss = losses_module.MeanAbsoluteError
@@ -718,13 +783,18 @@ def test_compile_model_from_params():
             super().__init__(*args, **kwargs, loss=loss)
 
     loss_obj = other_loss()
-    estimator = DefaultLossNotNone(model=build_fn, my_loss=loss_obj,)
+    estimator = DefaultLossNotNone(
+        model=build_fn,
+        my_loss=loss_obj,
+    )
     estimator.fit(X, y)
     assert estimator.model_.loss is loss_obj
 
     loss_obj = other_loss()
     estimator = DefaultLossNotNone(
-        model=build_fn, loss=losses_module.CategoricalHinge(), my_loss=loss_obj,
+        model=build_fn,
+        loss=losses_module.CategoricalHinge(),
+        my_loss=loss_obj,
     )
     with pytest.raises(ValueError, match=" but model compiled with "):
         estimator.fit(X, y)
@@ -756,8 +826,7 @@ def test_subclassed_model_no_params():
 
 
 class TestInitialize:
-    """Test the ``initialize`` method.
-    """
+    """Test the ``initialize`` method."""
 
     @pytest.mark.parametrize("wrapper", [KerasClassifier, KerasRegressor])
     def test_prebuilt_model(self, wrapper):
@@ -779,7 +848,9 @@ class TestInitialize:
         # Save Keras prediction
         y_pred_keras = m1.predict(X)
         # Keras outputs 2D despite input being 1D; reshape to match input
-        y_pred_keras = y_pred_keras.reshape(-1,)
+        y_pred_keras = y_pred_keras.reshape(
+            -1,
+        )
         # Extract the weights into a copy of the model
         weights = m1.get_weights()
         m2 = keras.models.clone_model(m1)

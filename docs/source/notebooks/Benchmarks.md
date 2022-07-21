@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.10.2
+      jupytext_version: 1.11.4
   kernelspec:
     display_name: Python 3
     language: python
@@ -35,7 +35,7 @@ SciKeras wraps Keras Models, but does not alter their performance since all of t
 try:
     import scikeras
 except ImportError:
-    !python -m pip install scikeras
+    !python -m pip install scikeras[tensorflow]
 ```
 
 Silence TensorFlow logging to keep output succinct.
@@ -106,13 +106,13 @@ fit_kwargs = {"batch_size": 128, "validation_split": 0.1, "verbose": 0, "epochs"
 
 ```python
 from sklearn.metrics import accuracy_score
-from scikeras._utils import TFRandomState
+from scikeras.utils.random_state import tensorflow_random_state
 ```
 
 ```python
 from time import time
 
-with TFRandomState(seed=0):  # we force a TF random state to be able to compare accuracy
+with tensorflow_random_state(seed=0):  # we force a TF random state to be able to compare accuracy
     model = get_model()
     start = time()
     model.fit(x_train, y_train, **fit_kwargs)

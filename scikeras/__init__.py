@@ -10,7 +10,7 @@ except ModuleNotFoundError:
 __version__ = importlib_metadata.version("scikeras")
 
 
-MIN_TF_VERSION = "2.4.0"
+MIN_TF_VERSION = "2.7.0"
 TF_VERSION_ERR = f"SciKeras requires TensorFlow >= {MIN_TF_VERSION}."
 
 from packaging import version
@@ -24,12 +24,13 @@ else:
     if version.parse(tf_version) < version.parse(MIN_TF_VERSION):  # pragma: no cover
         raise ImportError(TF_VERSION_ERR)
 
-from tensorflow import keras as _keras
+import tensorflow.keras as _keras
 
 from scikeras import _saving_utils
 
 
 _keras.Model.__reduce__ = _saving_utils.pack_keras_model
+_keras.Model.__deepcopy__ = _saving_utils.deepcopy_model
 _keras.losses.Loss.__reduce__ = _saving_utils.pack_keras_loss
 _keras.metrics.Metric.__reduce__ = _saving_utils.pack_keras_metric
 _keras.optimizers.Optimizer.__reduce__ = _saving_utils.pack_keras_optimizer

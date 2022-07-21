@@ -4,6 +4,9 @@ on:
   push:
     branches: [ master ]
   pull_request:
+  schedule:
+    # run every day at midnight
+    - cron: "0 0 * * *"
 
 jobs:
   Linting:
@@ -14,7 +17,7 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v2
-      
+
       - name: Update packages
         run: |
           pip install -U pip wheel
@@ -26,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.8]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
 
     steps:
       - uses: actions/checkout@v2
@@ -44,12 +47,12 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          poetry install
+          poetry install -E tensorflow
 
-      - name: Test with pytest 
+      - name: Test with pytest
         run: |
           poetry run python -m pip freeze
-          poetry run python -m pytest -v --cov=scikeras --cov-report xml --numprocesses=auto --color=yes
+          poetry run python -m pytest -v --cov=scikeras --cov-report xml --color=yes
 
       - uses: codecov/codecov-action@v1
 
@@ -58,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: ["3.10"]
 
     steps:
       - uses: actions/checkout@v2
@@ -90,7 +93,7 @@ jobs:
         if: always()
         run: |
           poetry run python -m pip freeze
-          poetry run python -m pytest -v --cov=scikeras --cov-report xml --numprocesses=auto --color=yes
+          poetry run python -m pytest -v --cov=scikeras --cov-report xml --color=yes
 
       - uses: codecov/codecov-action@v1
 
@@ -99,9 +102,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tf-version: [2.4.0]
-        python-version: [3.6, 3.8]
-        sklearn-version: [0.22.0]
+        tf-version: [2.7.0]
+        python-version: ["3.7", "3.9"]
+        sklearn-version: [1.0.0]
 
     steps:
       - uses: actions/checkout@v2
@@ -119,14 +122,13 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          poetry install
-          poetry add "tensorflow==${{matrix.tf-version}}"
+          poetry install -E tensorflow
           poetry add "scikit-learn==${{matrix.sklearn-version}}"
 
-      - name: Test with pytest 
+      - name: Test with pytest
         run: |
           poetry run python -m pip freeze
-          poetry run python -m pytest -v --cov=scikeras --cov-report xml --numprocesses=auto --color=yes
+          poetry run python -m pytest -v --cov=scikeras --cov-report xml --color=yes
 
       - uses: codecov/codecov-action@v1
 
@@ -136,7 +138,7 @@ jobs:
     strategy:
       matrix:
         os: [MacOS, Windows]  # test all OSs (except Ubuntu, which is already running other tests)
-        python-version: [3.6.7, 3.8.5]  # test only the two extremes of supported Python versions
+        python-version: ["3.7", "3.10"]  # test only the two extremes of supported Python versions
 
     steps:
       - uses: actions/checkout@v2
@@ -155,11 +157,11 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          poetry install
+          poetry install -E tensorflow
 
       - name: Test with pytest
         run: |
           poetry run python -m pip freeze
-          poetry run python -m pytest -v --cov=scikeras --cov-report xml --numprocesses=auto --color=yes
+          poetry run python -m pytest -v --cov=scikeras --cov-report xml --color=yes
 
       - uses: codecov/codecov-action@v1

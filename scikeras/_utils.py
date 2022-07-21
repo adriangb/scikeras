@@ -1,54 +1,14 @@
 import inspect
-import os
-import random
-import warnings
 
-from typing import Any, Callable, Dict, Iterable, Union
+from types import FunctionType
+from typing import Any, Callable, Dict, Iterable, Mapping, Sequence, Type, Union
 
-import numpy as np
-import tensorflow as tf
+from tensorflow.keras import losses as losses_mod
+from tensorflow.keras import metrics as metrics_mod
+from tensorflow.keras import optimizers as optimizers_mod
 
 
 DIGITS = frozenset(str(i) for i in range(10))
-
-
-class TFRandomState:
-    def __init__(self, seed):
-        self.seed = seed
-        self._not_found = object()
-
-    def __enter__(self):
-        warnings.warn(
-            "Setting the random state for TF involves "
-            "irreversibly re-setting the random seed. "
-            "This may have unintended side effects."
-        )
-
-        # Save values
-        self.origin_hashseed = os.environ.get("PYTHONHASHSEED", self._not_found)
-        self.origin_gpu_det = os.environ.get("TF_DETERMINISTIC_OPS", self._not_found)
-        self.orig_random_state = random.getstate()
-        self.orig_np_random_state = np.random.get_state()
-
-        # Set values
-        os.environ["PYTHONHASHSEED"] = str(self.seed)
-        os.environ["TF_DETERMINISTIC_OPS"] = "1"
-        random.seed(self.seed)
-        np.random.seed(self.seed)
-        tf.random.set_seed(self.seed)
-
-    def __exit__(self, type, value, traceback):
-        if self.origin_hashseed is not self._not_found:
-            os.environ["PYTHONHASHSEED"] = self.origin_hashseed
-        else:
-            os.environ.pop("PYTHONHASHSEED")
-        if self.origin_gpu_det is not self._not_found:
-            os.environ["TF_DETERMINISTIC_OPS"] = self.origin_gpu_det
-        else:
-            os.environ.pop("TF_DETERMINISTIC_OPS")
-        random.setstate(self.orig_random_state)
-        np.random.set_state(self.orig_np_random_state)
-        tf.random.set_seed(None)  # TODO: can we revert instead of unset?
 
 
 def route_params(
@@ -69,8 +29,8 @@ def route_params(
         Only keys from `params` that are in the iterable are passed.
         This does not affect routed parameters.
     strict: bool
-        Pop any routed parameters that are not being routed to `destination`
-        (including parameters routed to `destination__...`).
+        Only include routed parameters target at `destination__...`
+        and not any further routing (i.e. exclude `destination__inner__...`).
 
     Returns
     -------
@@ -78,18 +38,18 @@ def route_params(
         Filtered parameters, with any routing prefixes removed.
     """
     res = dict()
-    for key, val in params.items():
-        if "__" in key:
-            # routed param
-            if key.startswith(destination + "__"):
-                new_key = key[len(destination + "__") :]
-                res[new_key] = val
-        else:
-            # non routed
-            if pass_filter is None or key in pass_filter:
-                res[key] = val
-    if strict:
-        res = {k: v for k, v in res.items() if "__" not in k}
+    routed = {k: v for k, v in params.items() if "__" in k}
+    non_routed = {k: params[k] for k in (params.keys() - routed.keys())}
+    for key, val in non_routed.items():
+        if pass_filter is None or key in pass_filter:
+            res[key] = val
+    for key, val in routed.items():
+        prefix = destination + "__"
+        if key.startswith(prefix):
+            new_key = key[len(prefix) :]
+            if strict and "__" in new_key:
+                continue
+            res[new_key] = val
     return res
 
 
@@ -117,8 +77,7 @@ def has_param(func: Callable, param: str) -> bool:
 
 
 def accepts_kwargs(func: Callable) -> bool:
-    """Check if ``func`` accepts kwargs.
-    """
+    """Check if ``func`` accepts kwargs."""
     return any(
         True
         for param in inspect.signature(func).parameters.values()
@@ -139,7 +98,10 @@ def unflatten_params(items, params, base_params=None):
             args_and_kwargs[p] = unflatten_params(
                 items=v,
                 params=route_params(
-                    params=params, destination=f"{p}", pass_filter=set(), strict=False,
+                    params=params,
+                    destination=f"{p}",
+                    pass_filter=set(),
+                    strict=False,
                 ),
             )
         kwargs = {k: v for k, v in args_and_kwargs.items() if k[0] not in DIGITS}
@@ -152,7 +114,10 @@ def unflatten_params(items, params, base_params=None):
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for idx, item in enumerate(items):
             item_params = route_params(
-                params=params, destination=f"{idx}", pass_filter=set(), strict=False,
+                params=params,
+                destination=f"{idx}",
+                pass_filter=set(),
+                strict=False,
             )
             res.append(
                 unflatten_params(
@@ -165,10 +130,15 @@ def unflatten_params(items, params, base_params=None):
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for key, item in items.items():
             item_params = route_params(
-                params=params, destination=f"{key}", pass_filter=set(), strict=False,
+                params=params,
+                destination=f"{key}",
+                pass_filter=set(),
+                strict=False,
             )
             res[key] = unflatten_params(
-                items=item, params=item_params, base_params=new_base_params,
+                items=item,
+                params=item_params,
+                base_params=new_base_params,
             )
         return res
     # non-compilable item, check if it has any routed parameters
@@ -185,29 +155,46 @@ def unflatten_params(items, params, base_params=None):
     return item
 
 
-def _class_from_strings(items: Union[str, dict, tuple, list], class_getter: Callable):
-    """Convert shorthand optimizer/loss/metric names to classes.
-    """
-    if isinstance(items, str):
-        item = items
-        if class_getter is tf.keras.metrics.get and item in (
-            "acc",
-            "accuracy",
-            "ce",
-            "crossentropy",
-        ):
-            # Keras matches "acc" and others in this list to the right function
-            # based on the Model's loss function, output shape, etc.
-            # We pass them through here to let Keras deal with these.
-            return item
-        got = class_getter(item)
-        if hasattr(got, "__class__") and type(got).__module__.startswith("tensorflow"):
-            # optimizers.get returns instances instead of classes
-            got = got.__class__
+def get_optimizer_class(
+    optimizer: Union[str, optimizers_mod.Optimizer, Type[optimizers_mod.Optimizer]]
+) -> optimizers_mod.Optimizer:
+    return type(
+        optimizers_mod.get(optimizer)
+    )  # optimizers.get returns instances instead of classes
+
+
+def get_metric_class(
+    metric: Union[str, metrics_mod.Metric, Type[metrics_mod.Metric]]
+) -> Union[metrics_mod.Metric, str]:
+    if metric in ("acc", "accuracy", "ce", "crossentropy"):
+        # Keras matches "acc" and others in this list to the right function
+        # based on the Model's loss function, output shape, etc.
+        # We pass them through here to let Keras deal with these.
+        return metric
+    return metrics_mod.get(metric)  # always returns a class
+
+
+def get_loss_class_function_or_string(loss: str) -> Union[losses_mod.Loss, Callable]:
+    got = losses_mod.get(loss)
+    if type(got) == FunctionType:
         return got
-    elif isinstance(items, (list, tuple)):
-        return type(items)([_class_from_strings(item, class_getter) for item in items])
-    elif isinstance(items, dict):
-        return {k: _class_from_strings(item, class_getter) for k, item in items.items()}
+    return type(got)  # a class, e.g. if loss="BinaryCrossentropy"
+
+
+def try_to_convert_strings_to_classes(
+    items: Union[str, dict, tuple, list], class_getter: Callable
+):
+    """Convert shorthand optimizer/loss/metric names to classes."""
+    if isinstance(items, str):
+        return class_getter(items)  # single item, despite parameter name
+    elif isinstance(items, Sequence):
+        return type(items)(
+            [try_to_convert_strings_to_classes(item, class_getter) for item in items]
+        )
+    elif isinstance(items, Mapping):
+        return {
+            k: try_to_convert_strings_to_classes(item, class_getter)
+            for k, item in items.items()
+        }
     else:
-        return items
+        return items  # not a string or known collection

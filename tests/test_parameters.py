@@ -9,6 +9,8 @@ from sklearn.base import clone
 from sklearn.datasets import make_blobs, make_classification
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import FunctionTransformer
+from tensorflow.keras import Sequential
+from tensorflow.keras import layers as layers_mod
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
@@ -17,12 +19,16 @@ from .mlp_models import dynamic_classifier, dynamic_regressor
 
 class TestRandomState:
     @pytest.mark.parametrize(
-        "random_state", [0, 123, np.random.RandomState(0)],
+        "random_state",
+        [0, 123, np.random.RandomState(0)],
     )
     @pytest.mark.parametrize(
         "estimator",
         [
-            KerasRegressor(model=dynamic_regressor, model__hidden_layer_sizes=(100,),),
+            KerasRegressor(
+                model=dynamic_regressor,
+                model__hidden_layer_sizes=(100,),
+            ),
             KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
         ],
     )
@@ -54,7 +60,10 @@ class TestRandomState:
     @pytest.mark.parametrize(
         "estimator",
         [
-            KerasRegressor(model=dynamic_regressor, model__hidden_layer_sizes=(100,),),
+            KerasRegressor(
+                model=dynamic_regressor,
+                model__hidden_layer_sizes=(100,),
+            ),
             KerasClassifier(model=dynamic_classifier, model__hidden_layer_sizes=(100,)),
         ],
     )
@@ -128,11 +137,9 @@ def test_sample_weights_fit():
     # heavily weight towards y=1 points
     sw_first_class = [0.8] * 5000 + [0.2] * 5000
     # train estimator 1 with weights
-    with pytest.warns(UserWarning, match="Setting the random state"):
-        estimator1.fit(X, y, sample_weight=sw_first_class)
+    estimator1.fit(X, y, sample_weight=sw_first_class)
     # train estimator 2 without weights
-    with pytest.warns(UserWarning, match="Setting the random state"):
-        estimator2.fit(X, y)
+    estimator2.fit(X, y)
     # estimator1 should tilt towards y=1
     # estimator2 should predict about equally
     average_diff_pred_prob_1 = np.average(np.diff(estimator1.predict_proba(X), axis=1))
@@ -214,47 +221,44 @@ class TestMetricsParam:
         assert len(est.history_[metric]) == 1
 
 
-def test_class_weight_param():
-    """Backport of sklearn.utils.estimator_checks.check_class_weight_classifiers
-    for sklearn <= 0.23.0.
-
-    Tests that fit and partial_fit correctly handle the class_weight parameter.
+@pytest.mark.parametrize(
+    "class_weight",
+    (
+        "balanced",
+        {0: 0.5, 1: 0.5},
+        {0: 1, 1: 1},
+    ),
+)
+def test_class_weight_balanced(class_weight):
+    """KerasClassifier should accept the class_weight parameter in the same format as ScikitLearn.
+    Passing "balanced" will automatically compute class_weight.
+    Class weights will always be converted to sample weights before calling the Keras model,
+    preserving compatibility with encoders.
     """
+
     clf = KerasClassifier(
-        model=dynamic_classifier, model__hidden_layer_sizes=(100,), random_state=0,
+        model=dynamic_classifier, model__hidden_layer_sizes=[], class_weight="balanced"
     )
-    problems = (2, 3)
-    for n_centers in problems:
-        # create a very noisy dataset
-        X, y = make_blobs(centers=n_centers, random_state=0, cluster_std=20)
-        X_train, X_test, y_train, _ = train_test_split(
-            X, y, test_size=0.5, random_state=0
+    clf.fit([[1], [1]], [0, 1])
+
+    class TestModel(Sequential):
+        def fit(self, *args, **kwargs):
+            np.testing.assert_equal(
+                kwargs["sample_weight"] / kwargs["sample_weight"], [1, 1]
+            )
+            return super().fit(*args, **kwargs)
+
+    def get_model() -> TestModel:
+        return TestModel(
+            [layers_mod.InputLayer((1,)), layers_mod.Dense(1, activation="sigmoid")]
         )
 
-        n_centers = len(np.unique(y_train))
+    X, y = [[1], [1]], [0, 1]
 
-        if n_centers == 2:
-            class_weight = {0: 1000, 1: 0.0001}
-            fit_epochs = 4
-            partial_fit_epochs = 3
-        else:
-            class_weight = {0: 1000, 1: 0.0001, 2: 0.0001}
-            fit_epochs = 8
-            partial_fit_epochs = 6
-
-        clf.set_params(class_weight=class_weight)
-
-        # run fit epochs followed by several partial_fit iterations
-        # these numbers are purely empirical, just like they are in the
-        # original sklearn test
-        clf.set_params(fit__epochs=fit_epochs)
-        clf.fit(X_train, y_train)
-        y_pred = clf.predict(X_test)
-        assert np.mean(y_pred == 0) > 0.8
-        for _ in range(partial_fit_epochs):
-            clf.partial_fit(X_train, y_train)
-        y_pred = clf.predict(X_test)
-        assert np.mean(y_pred == 0) > 0.95
+    clf = KerasClassifier(
+        get_model, loss="binary_crossentropy", class_weight=class_weight
+    )
+    clf.fit(X, y)
 
 
 @pytest.mark.parametrize(

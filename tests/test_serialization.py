@@ -7,7 +7,7 @@ import pytest
 import tensorflow as tf
 
 from sklearn.base import clone
-from sklearn.datasets import load_boston, make_regression
+from sklearn.datasets import fetch_california_housing, make_regression
 from tensorflow import keras
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
@@ -50,22 +50,23 @@ class CustomLoss(keras.losses.MeanSquaredError):
 
 
 def test_custom_loss_function():
-    """Test that a custom loss function can be serialized.
-    """
+    """Test that a custom loss function can be serialized."""
     estimator = KerasRegressor(
-        model=dynamic_regressor, loss=CustomLoss(), model__hidden_layer_sizes=(100,),
+        model=dynamic_regressor,
+        loss=CustomLoss(),
+        model__hidden_layer_sizes=(100,),
     )
-    check_pickle(estimator, load_boston)
+    check_pickle(estimator, fetch_california_housing)
 
 
 # ---------------------- Subclassed Model Tests ------------------
 
 
 def build_fn_custom_model_registered(
-    meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+    meta: Dict[str, Any],
+    compile_kwargs: Dict[str, Any],
 ) -> Model:
-    """Dummy custom Model subclass that is registered to be serializable.
-    """
+    """Dummy custom Model subclass that is registered to be serializable."""
 
     @keras.utils.register_keras_serializable()
     class CustomModelRegistered(Model):
@@ -84,17 +85,16 @@ def build_fn_custom_model_registered(
 
 
 def test_custom_model_registered():
-    """Test that a registered subclassed Model can be serialized.
-    """
+    """Test that a registered subclassed Model can be serialized."""
     estimator = KerasRegressor(model=build_fn_custom_model_registered)
-    check_pickle(estimator, load_boston)
+    check_pickle(estimator, fetch_california_housing)
 
 
 def build_fn_custom_model_unregistered(
-    meta: Dict[str, Any], compile_kwargs: Dict[str, Any],
+    meta: Dict[str, Any],
+    compile_kwargs: Dict[str, Any],
 ) -> Model:
-    """Dummy custom Model subclass that is not registed to be serializable.
-    """
+    """Dummy custom Model subclass that is not registed to be serializable."""
 
     class CustomModelUnregistered(Model):
         pass
@@ -112,22 +112,22 @@ def build_fn_custom_model_unregistered(
 
 
 def test_custom_model_unregistered():
-    """Test that pickling an unregistered subclassed model works.
-    """
+    """Test that pickling an unregistered subclassed model works."""
     estimator = KerasRegressor(model=build_fn_custom_model_unregistered)
-    check_pickle(estimator, load_boston)
+    check_pickle(estimator, fetch_california_housing)
 
 
 # ---------------- Model Compiled with `run_eagerly` --------------------
 
 
 def test_run_eagerly():
-    """Test that models compiled with run_eagerly can be serialized.
-    """
+    """Test that models compiled with run_eagerly can be serialized."""
     estimator = KerasRegressor(
-        model=dynamic_regressor, run_eagerly=True, model__hidden_layer_sizes=(100,),
+        model=dynamic_regressor,
+        run_eagerly=True,
+        model__hidden_layer_sizes=(100,),
     )
-    check_pickle(estimator, load_boston)
+    check_pickle(estimator, fetch_california_housing)
 
 
 def _weights_close(model1, model2):
@@ -148,7 +148,13 @@ def _reload(model, epoch=None):
 
 
 @pytest.mark.parametrize(
-    "optim", ["adam", "sgd", keras.optimizers.Adam(), keras.optimizers.SGD(),],
+    "optim",
+    [
+        "adam",
+        "sgd",
+        keras.optimizers.Adam(),
+        keras.optimizers.SGD(),
+    ],
 )
 def test_partial_fit_pickle(optim):
     """
@@ -225,24 +231,29 @@ def test_pickle_loss(metric):
 
 
 @pytest.mark.parametrize(
-    "opt_cls", [keras.optimizers.Adam, keras.optimizers.RMSprop, keras.optimizers.SGD,],
+    "opt_cls",
+    [
+        keras.optimizers.Adam,
+        keras.optimizers.RMSprop,
+        keras.optimizers.SGD,
+    ],
 )
 def test_pickle_optimizer(opt_cls):
     # Minimize a variable subject to two different
     # loss functions
     opt = opt_cls()
     var1 = tf.Variable(10.0)
-    loss1 = lambda: (var1 ** 2) / 2.0
+    loss1 = lambda: (var1**2) / 2.0
     opt.minimize(loss1, [var1]).numpy()
-    loss2 = lambda: (var1 ** 2) / 1.0
+    loss2 = lambda: (var1**2) / 1.0
     opt.minimize(loss2, [var1]).numpy()
     val_no_pickle = var1.numpy()
     # Do the same with a roundtrip pickle in the middle
     opt = opt_cls()
     var1 = tf.Variable(10.0)
-    loss1 = lambda: (var1 ** 2) / 2.0
+    loss1 = lambda: (var1**2) / 2.0
     opt.minimize(loss1, [var1]).numpy()
-    loss2 = lambda: (var1 ** 2) / 1.0
+    loss2 = lambda: (var1**2) / 1.0
     opt = pickle.loads(pickle.dumps(opt))
     opt.minimize(loss2, [var1]).numpy()
     val_pickle = var1.numpy()
@@ -251,8 +262,7 @@ def test_pickle_optimizer(opt_cls):
 
 
 def test_pickle_with_callbacks():
-    """Test that models with callbacks (which hold a refence to the Keras model itself) are picklable.
-    """
+    """Test that models with callbacks (which hold a refence to the Keras model itself) are picklable."""
     clf = KerasRegressor(
         model=get_reg, loss="mse", callbacks=[keras.callbacks.Callback()]
     )

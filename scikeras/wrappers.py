@@ -4,13 +4,13 @@ import inspect
 import warnings
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Type, Union
 
 import numpy as np
 import tensorflow as tf
 
 from scipy.sparse import isspmatrix, lil_matrix
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
 from sklearn.metrics import r2_score as sklearn_r2_score
@@ -19,20 +19,21 @@ from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
 from tensorflow.keras import losses as losses_module
-from tensorflow.keras import metrics as metrics_module
-from tensorflow.keras import optimizers as optimizers_module
 from tensorflow.keras.models import Model
 from tensorflow.keras.utils import register_keras_serializable
 
 from scikeras._utils import (
-    TFRandomState,
-    _class_from_strings,
     accepts_kwargs,
+    get_loss_class_function_or_string,
+    get_metric_class,
+    get_optimizer_class,
     has_param,
     route_params,
+    try_to_convert_strings_to_classes,
     unflatten_params,
 )
 from scikeras.utils import loss_name, metric_name
+from scikeras.utils.random_state import tensorflow_random_state
 from scikeras.utils.transformers import ClassifierLabelEncoder, RegressorTargetEncoder
 
 
@@ -261,7 +262,9 @@ class BaseWrapper(BaseEstimator):
 
     @staticmethod
     def _validate_sample_weight(
-        X: np.ndarray, sample_weight: Union[np.ndarray, Iterable],
+        X: np.ndarray,
+        y: np.ndarray,
+        sample_weight: Union[np.ndarray, Iterable],
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Validate that the passed sample_weight and ensure it is a Numpy array."""
         sample_weight = _check_sample_weight(
@@ -272,7 +275,15 @@ class BaseWrapper(BaseEstimator):
                 "No training samples had any weight; only zeros were passed in sample_weight."
                 " That means there's nothing to train on by definition, so training can not be completed."
             )
-        return X, sample_weight
+        # drop any zero sample weights
+        # this helps mirror the behavior of sklearn estimators
+        # which tend to have higher precisions
+        not_dropped_samples = sample_weight != 0
+        return (
+            X[not_dropped_samples, ...],
+            y[not_dropped_samples, ...],
+            sample_weight[not_dropped_samples, ...],
+        )
 
     def _check_model_param(self):
         """Checks ``model`` and returns model building
@@ -331,33 +342,44 @@ class BaseWrapper(BaseEstimator):
         """
         init_params = self.get_params()
         compile_kwargs = route_params(
-            init_params, destination="compile", pass_filter=self._compile_kwargs,
+            init_params,
+            destination="compile",
+            pass_filter=self._compile_kwargs,
         )
-        compile_kwargs["optimizer"] = _class_from_strings(
-            compile_kwargs["optimizer"], optimizers_module.get
+        compile_kwargs["optimizer"] = try_to_convert_strings_to_classes(
+            compile_kwargs["optimizer"], get_optimizer_class
         )
         compile_kwargs["optimizer"] = unflatten_params(
             items=compile_kwargs["optimizer"],
             params=route_params(
-                init_params, destination="optimizer", pass_filter=set(), strict=True,
+                init_params,
+                destination="optimizer",
+                pass_filter=set(),
+                strict=True,
             ),
         )
-        compile_kwargs["loss"] = _class_from_strings(
-            compile_kwargs["loss"], losses_module.get
+        compile_kwargs["loss"] = try_to_convert_strings_to_classes(
+            compile_kwargs["loss"], get_loss_class_function_or_string
         )
         compile_kwargs["loss"] = unflatten_params(
             items=compile_kwargs["loss"],
             params=route_params(
-                init_params, destination="loss", pass_filter=set(), strict=False,
+                init_params,
+                destination="loss",
+                pass_filter=set(),
+                strict=False,
             ),
         )
-        compile_kwargs["metrics"] = _class_from_strings(
-            compile_kwargs["metrics"], metrics_module.get
+        compile_kwargs["metrics"] = try_to_convert_strings_to_classes(
+            compile_kwargs["metrics"], get_metric_class
         )
         compile_kwargs["metrics"] = unflatten_params(
             items=compile_kwargs["metrics"],
             params=route_params(
-                init_params, destination="metrics", pass_filter=set(), strict=False,
+                init_params,
+                destination="metrics",
+                pass_filter=set(),
+                strict=False,
             ),
         )
         return compile_kwargs
@@ -402,7 +424,7 @@ class BaseWrapper(BaseEstimator):
 
         # build model
         if self._random_state is not None:
-            with TFRandomState(self._random_state):
+            with tensorflow_random_state(self._random_state):
                 model = final_build_fn(**build_params)
         else:
             model = final_build_fn(**build_params)
@@ -412,7 +434,8 @@ class BaseWrapper(BaseEstimator):
     def _ensure_compiled_model(self) -> None:
         # compile model if user gave us an un-compiled model
         if not (hasattr(self.model_, "loss") and hasattr(self.model_, "optimizer")):
-            self.model_.compile(**self._get_compile_kwargs())
+            kw = self._get_compile_kwargs()
+            self.model_.compile(**kw)
 
     def _fit_keras_model(
         self,
@@ -496,7 +519,7 @@ class BaseWrapper(BaseEstimator):
         fit_args["callbacks"] = self._fit_callbacks
 
         if self._random_state is not None:
-            with TFRandomState(self._random_state):
+            with tensorflow_random_state(self._random_state):
                 hist = self.model_.fit(x=X, y=y, **fit_args)
         else:
             hist = self.model_.fit(x=X, y=y, **fit_args)
@@ -656,15 +679,10 @@ class BaseWrapper(BaseEstimator):
                         f"X has {len(X_shape_)} dimensions, but this {self.__name__}"
                         f" is expecting {len(self.X_shape_)} dimensions in X."
                     )
-                # The following check is a backport from
-                # sklearn.base.BaseEstimator._check_n_features
-                # since this method is not available in sklearn <= 0.22.0
-                if n_features_in_ != self.n_features_in_:
+                if X_shape_[1:] != self.X_shape_[1:]:
                     raise ValueError(
-                        "X has {} features, but {} is expecting {} features "
-                        "as input.".format(
-                            n_features_in_, self.__class__.__name__, self.n_features_in_
-                        )
+                        f"X has shape {X_shape_[1:]}, but this {self.__name__}"
+                        f" is expecting X of shape {self.X_shape_[1:]}"
                     )
         return X, y
 
@@ -741,7 +759,11 @@ class BaseWrapper(BaseEstimator):
         kwargs["initial_epoch"] = kwargs.get("initial_epoch", 0)
 
         self._fit(
-            X=X, y=y, sample_weight=sample_weight, warm_start=self.warm_start, **kwargs,
+            X=X,
+            y=y,
+            sample_weight=sample_weight,
+            warm_start=self.warm_start,
+            **kwargs,
         )
 
         return self
@@ -898,7 +920,7 @@ class BaseWrapper(BaseEstimator):
         self._ensure_compiled_model()
 
         if sample_weight is not None:
-            X, sample_weight = self._validate_sample_weight(X, sample_weight)
+            X, y, sample_weight = self._validate_sample_weight(X, y, sample_weight)
 
         y = self.target_encoder_.transform(y)
         X = self.feature_encoder_.transform(X)
@@ -1078,14 +1100,14 @@ class BaseWrapper(BaseEstimator):
         float
             Score for the test data set.
         """
-        # validate sample weights
-        if sample_weight is not None:
-            X, sample_weight = self._validate_sample_weight(
-                X=X, sample_weight=sample_weight
-            )
-
         # validate y
         _, y = self._validate_data(X=None, y=y)
+
+        # validate sample weights
+        if sample_weight is not None:
+            X, y, sample_weight = self._validate_sample_weight(
+                X=X, y=y, sample_weight=sample_weight
+            )
 
         # compute Keras model score
         y_pred = self.predict(X)
@@ -1176,7 +1198,7 @@ class BaseWrapper(BaseEstimator):
         return repr_
 
 
-class KerasClassifier(BaseWrapper):
+class KerasClassifier(BaseWrapper, ClassifierMixin):
     """Implementation of the scikit-learn classifier API for Keras.
 
     Below are a list of SciKeras specific parameters. For details on other parameters,
@@ -1289,8 +1311,6 @@ class KerasClassifier(BaseWrapper):
             sparse tensors",
             "check_no_attributes_set_in_init": "can only \
             pass if all params are hardcoded in __init__",
-            "check_class_weight_classifiers": "fails without \
-            >20 epochs, tested seperately",
         },
         **BaseWrapper._tags,
     }
@@ -1361,6 +1381,11 @@ class KerasClassifier(BaseWrapper):
             # check that this is not a multiclass problem missing categories
             target_type = type_of_target(self.classes_)
         return target_type
+
+    @property
+    def _fit_kwargs(self) -> Set[str]:
+        # remove class_weight since KerasClassifier re-processes it into sample_weight
+        return BaseWrapper._fit_kwargs - {"class_weight"}
 
     @staticmethod
     def scorer(y_true, y_pred, **kwargs) -> float:
@@ -1546,7 +1571,7 @@ class KerasClassifier(BaseWrapper):
         return y
 
 
-class KerasRegressor(BaseWrapper):
+class KerasRegressor(BaseWrapper, RegressorMixin):
     """Implementation of the scikit-learn classifier API for Keras.
 
     Below are a list of SciKeras specific parameters. For details on other parameters,
