@@ -1,5 +1,6 @@
 """Wrapper for using the Scikit-Learn API with Keras models.
 """
+import functools
 import inspect
 import warnings
 
@@ -313,7 +314,7 @@ class BaseWrapper(BaseEstimator):
             def final_build_fn():
                 return model
 
-        elif inspect.isfunction(model):
+        elif inspect.isfunction(model) or isinstance(model, functools.partial):
             if hasattr(self, "_keras_build_fn"):
                 raise ValueError(
                     "This class cannot implement ``_keras_build_fn`` if"
