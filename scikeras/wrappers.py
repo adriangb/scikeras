@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Typ
 import numpy as np
 import tensorflow as tf
 
+from scipy.sparse import isspmatrix, lil_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
@@ -579,11 +580,11 @@ class BaseWrapper(BaseEstimator):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape \
+        X : Union[array-like, sparse matrix, dataframe, of shape \
            (n_samples, n_features)
             The input samples. If None, ``check_array`` is called on y and
             ``check_X_y`` is called otherwise.
-        y : Union[array-like, sparse matrix, dataframe] of shape \
+        y : Union[array-like, dataframe,, of shape \
             (n_samples,), default=None
             The targets. If None, ``check_array`` is called on X and
             ``check_X_y`` is called otherwise.
@@ -617,6 +618,7 @@ class BaseWrapper(BaseEstimator):
             X, y = check_X_y(
                 X,
                 y,
+                accept_sparse=True,
                 allow_nd=True,  # allow X to have more than 2 dimensions
                 multi_output=True,  # allow y to be 2D
                 dtype=None,
@@ -648,8 +650,16 @@ class BaseWrapper(BaseEstimator):
                         f" is expecting {self.y_ndim_} dimensions in y."
                     )
         if X is not None:
+            if isspmatrix(X):
+                # TensorFlow does not support several of SciPy's sparse formats
+                # use SciPy to reformat here so at least the cost is known
+                X = lil_matrix(X)  # no-copy reformat
+
             X = check_array(
-                X, allow_nd=True, dtype=_check_array_dtype(X, force_numeric=True)
+                X,
+                allow_nd=True,
+                dtype=_check_array_dtype(X, force_numeric=True),
+                accept_sparse=True,
             )
             X_dtype_ = X.dtype
             X_shape_ = X.shape
@@ -719,10 +729,10 @@ class BaseWrapper(BaseEstimator):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe, of shape (n_samples, n_features)
             Training samples, where n_samples is the number of samples
             and n_features is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
+        y : Union[array-like, dataframe of shape (n_samples,) or (n_samples, n_outputs)
             True labels for X.
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
@@ -856,10 +866,10 @@ class BaseWrapper(BaseEstimator):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe, of shape (n_samples, n_features)
                 Training samples where n_samples is the number of samples
                 and `n_features` is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape \
+        y : Union[array-like, dataframe,, of shape \
             (n_samples,) or (n_samples, n_outputs), default None
             True labels for X.
 
@@ -885,10 +895,10 @@ class BaseWrapper(BaseEstimator):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe, of shape (n_samples, n_features)
                 Training samples where `n_samples` is the number of samples
                 and `n_features` is the number of features.
-        y :Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
+        y :Union[array-like, dataframe,, of shape (n_samples,) or (n_samples, n_outputs)
             True labels for X.
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
@@ -934,10 +944,10 @@ class BaseWrapper(BaseEstimator):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe, of shape (n_samples, n_features)
             Training samples where n_samples is the number of samples
             and n_features is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape \
+        y : Union[array-like, dataframe,, of shape \
             (n_samples,) or (n_samples, n_outputs)
             True labels for X.
         sample_weight : array-like of shape (n_samples,), default=None
@@ -1018,7 +1028,7 @@ class BaseWrapper(BaseEstimator):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe, of shape (n_samples, n_features)
             Training samples where n_samples is the number of samples
             and n_features is the number of features.
         **kwargs : Dict[str, Any]
@@ -1076,10 +1086,10 @@ class BaseWrapper(BaseEstimator):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe, of shape (n_samples, n_features)
             Test input samples, where n_samples is the number of samples
             and n_features is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape \
+        y : Union[array-like, dataframe,, of shape \
             (n_samples,) or (n_samples, n_outputs)
             True labels for X.
         sample_weight : array-like of shape (n_samples,), default=None
@@ -1432,10 +1442,10 @@ class KerasClassifier(BaseWrapper, ClassifierMixin):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe, of shape (n_samples, n_features)
                 Training samples where n_samples is the number of samples
                 and `n_features` is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape \
+        y : Union[array-like, dataframe,, of shape \
             (n_samples,) or (n_samples, n_outputs), default None
             True labels for X.
 
@@ -1453,10 +1463,10 @@ class KerasClassifier(BaseWrapper, ClassifierMixin):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe, of shape (n_samples, n_features)
             Training samples, where n_samples is the number of samples
             and n_features is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
+        y : Union[array-like, dataframe,, of shape (n_samples,) or (n_samples, n_outputs)
             True labels for X.
         sample_weight : array-like of shape (n_samples,), default=None
             Array of weights that are assigned to individual samples.
@@ -1492,10 +1502,10 @@ class KerasClassifier(BaseWrapper, ClassifierMixin):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe, of shape (n_samples, n_features)
             Training samples, where n_samples is the number of samples
             and n_features is the number of features.
-        y : Union[array-like, sparse matrix, dataframe] of shape (n_samples,) or (n_samples, n_outputs)
+        y : Union[array-like, dataframe,, of shape (n_samples,) or (n_samples, n_outputs)
             True labels for X.
         classes: ndarray of shape (n_classes,), default=None
             Classes across all calls to partial_fit. Can be obtained by via
@@ -1530,7 +1540,7 @@ class KerasClassifier(BaseWrapper, ClassifierMixin):
 
         Parameters
         ----------
-        X : Union[array-like, sparse matrix, dataframe] of shape (n_samples, n_features)
+        X : Union[array-like, sparse matrix, dataframe, of shape (n_samples, n_features)
             Training samples, where n_samples is the number of samples
             and n_features is the number of features.
         **kwargs : Dict[str, Any]

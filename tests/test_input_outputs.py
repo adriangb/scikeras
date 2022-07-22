@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
+from scipy.sparse import coo_matrix
 from sklearn.base import BaseEstimator
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
