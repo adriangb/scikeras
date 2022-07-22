@@ -14,3 +14,4 @@ Tutorials
    notebooks/DataTransformers
    notebooks/AutoEncoders
    notebooks/Benchmarks
+   notebooks/sparse
