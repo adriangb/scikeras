@@ -8,7 +8,7 @@ jupyter:
       format_version: '1.3'
       jupytext_version: 1.14.0
   kernelspec:
-    display_name: Python 3
+    display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
@@ -120,6 +120,30 @@ Our benchmark will be to just train each one of these pipelines and measure peak
 ```
 
 You should see at least 100x more memory consumption **increment** in the dense pipeline.
+
+
+### Runtime
+
+Using sparse inputs can have a drastic impact on memory usage, but it often (not always) hurts overall runtime.
+
+```python
+%timeit dense_pipeline.fit(X, y)
+```
+
+```python
+%timeit sparse_pipeline.fit(X, y)
+```
+
+## Tensorflow Datasets
+
+Tensorflow provides a whole suite of functionality around the [Dataset].
+Datasets are lazily evaluated, can be sparse and minimize the transformations required to feed data into the model.
+They are _a lot_ more performant and efficient at scale than using numpy datastructures, even sparse ones.
+
+SciKeras does not (and cannot) support Datasets directly because Scikit-Learn itself does not support them and SciKeras' outwards API is Scikit-Learn's API.
+You may want to explore breaking out of SciKeras and just using TensorFlow/Keras directly to see if Datasets can have a large impact for your use case.
+
+[Dataset]: https://www.tensorflow.org/api_docs/python/tf/data/Dataset
 
 
 ## Bonus: dtypes
