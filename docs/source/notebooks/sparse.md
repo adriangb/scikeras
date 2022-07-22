@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.11.4
+      jupytext_version: 1.14.0
   kernelspec:
     display_name: Python 3
     language: python
@@ -58,7 +58,7 @@ from sklearn.pipeline import Pipeline
 from tensorflow import keras
 ```
 
-# Data
+## Data
 
 The dataset we'll be using is designed to demostrate a worst-case/best-case scenario for dense and sparse input features respectively.
 It consists of a single categorical feature with equal number of categories as rows.
