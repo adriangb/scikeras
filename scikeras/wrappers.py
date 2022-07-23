@@ -5,12 +5,24 @@ import inspect
 import warnings
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Set,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 import numpy as np
 import tensorflow as tf
 
-from scipy.sparse import isspmatrix, lil_matrix
+from scipy.sparse import csr_matrix, isspmatrix, lil_matrix, spmatrix
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score as sklearn_accuracy_score
@@ -651,9 +663,18 @@ class BaseWrapper(BaseEstimator):
                     )
         if X is not None:
             if isspmatrix(X):
-                # TensorFlow does not support several of SciPy's sparse formats
-                # use SciPy to reformat here so at least the cost is known
-                X = lil_matrix(X)  # no-copy reformat
+                # TensorFlow requires sparse matrices to be sorted in row-major order
+                # see https://www.tensorflow.org/api_docs/python/tf/sparse/SparseTensor
+                # It supports conversion of "lil", "dok" and "dia"
+                Xs = cast(spmatrix, X)
+                if Xs.getformat() == "csr":
+                    Xs_csr = cast(csr_matrix, Xs)
+                    Xs_csr.sort_indices()
+                elif Xs.getformat() not in ("dok", "lil", "bsr"):
+                    raise ValueError(
+                        "TensorFlow does not support the sparse matrix format"
+                        f" {Xs.getformat()}"
+                    )
 
             X = check_array(
                 X,
