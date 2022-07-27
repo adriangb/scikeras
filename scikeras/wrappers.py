@@ -675,6 +675,7 @@ class BaseWrapper(BaseEstimator):
                         "TensorFlow does not support the sparse matrix format"
                         f" {Xs.getformat()}"
                     )
+                X = Xs
 
             X = check_array(
                 X,
