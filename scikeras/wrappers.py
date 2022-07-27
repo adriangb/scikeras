@@ -663,18 +663,16 @@ class BaseWrapper(BaseEstimator):
                     )
         if X is not None:
             if isspmatrix(X):
-                # TensorFlow requires sparse matrices to be sorted in row-major order
-                # see https://www.tensorflow.org/api_docs/python/tf/sparse/SparseTensor
-                # It supports conversion of "lil", "dok" and "dia"
                 Xs = cast(spmatrix, X)
                 if Xs.getformat() == "csr":
                     Xs_csr = cast(csr_matrix, Xs)
-                    Xs_csr.sort_indices()
                 elif Xs.getformat() not in ("dok", "lil", "bsr"):
                     raise ValueError(
                         "TensorFlow does not support the sparse matrix format"
                         f" {Xs.getformat()}"
                     )
+                X = Xs
+                 
 
             X = check_array(
                 X,
