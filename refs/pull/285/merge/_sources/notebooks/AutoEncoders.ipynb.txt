@@ -1,0 +1,609 @@
+{
+ "cells": [
+  {
+   "cell_type": "raw",
+   "id": "20164925",
+   "metadata": {},
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9a54ca93",
+   "metadata": {},
+   "source": [
+    "# Autoencoders in SciKeras\n",
+    "\n",
+    "Autencoders are an approach to use nearual networks to distill data into it's most important features, thereby compressing the data.\n",
+    "We will be following the [Keras tutorial](https://blog.keras.io/building-autoencoders-in-keras.html) on the topic, which goes much more in depth and breadth than we will here.\n",
+    "You are highly encouraged to check out that tutorial if you want to learn about autoencoders in the general sense.\n",
+    "\n",
+    "## Table of contents\n",
+    "\n",
+    "* [1. Setup](#1.-Setup)\n",
+    "* [2. Data](#2.-Data)\n",
+    "* [3. Define Keras Model](#3.-Define-Keras-Model)\n",
+    "* [4. Training](#4.-Training)\n",
+    "* [5. Explore Results](#5.-Explore-Results)\n",
+    "* [6. Deep AutoEncoder](#6.-Deep-AutoEncoder)\n",
+    "\n",
+    "## 1. Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "e6898299",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:27:19.433971Z",
+     "iopub.status.busy": "2022-10-08T17:27:19.433588Z",
+     "iopub.status.idle": "2022-10-08T17:27:22.941641Z",
+     "shell.execute_reply": "2022-10-08T17:27:22.940318Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "try:\n",
+    "    import scikeras\n",
+    "except ImportError:\n",
+    "    !python -m pip install scikeras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8b1375ce",
+   "metadata": {},
+   "source": [
+    "Silence TensorFlow logging to keep output succinct."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "9ed53e0b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:27:22.948684Z",
+     "iopub.status.busy": "2022-10-08T17:27:22.946965Z",
+     "iopub.status.idle": "2022-10-08T17:27:22.954511Z",
+     "shell.execute_reply": "2022-10-08T17:27:22.953697Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "from tensorflow import get_logger\n",
+    "get_logger().setLevel('ERROR')\n",
+    "warnings.filterwarnings(\"ignore\", message=\"Setting the random state for TF\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "1cd64033",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:27:22.959000Z",
+     "iopub.status.busy": "2022-10-08T17:27:22.958445Z",
+     "iopub.status.idle": "2022-10-08T17:27:23.330306Z",
+     "shell.execute_reply": "2022-10-08T17:27:23.329228Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from scikeras.wrappers import KerasClassifier, KerasRegressor\n",
+    "from tensorflow import keras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "786a0b57",
+   "metadata": {},
+   "source": [
+    "## 2. Data\n",
+    "\n",
+    "We load the dataset from the Keras tutorial. The dataset consists of images of cats and dogs."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "26be268b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:27:23.335651Z",
+     "iopub.status.busy": "2022-10-08T17:27:23.335053Z",
+     "iopub.status.idle": "2022-10-08T17:27:23.979545Z",
+     "shell.execute_reply": "2022-10-08T17:27:23.978343Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(60000, 784)\n",
+      "(10000, 784)\n"
+     ]
+    }
+   ],
+   "source": [
+    "from tensorflow.keras.datasets import mnist\n",
+    "import numpy as np\n",
+    "\n",
+    "\n",
+    "(x_train, _), (x_test, _) = mnist.load_data()\n",
+    "x_train = x_train.astype('float32') / 255.\n",
+    "x_test = x_test.astype('float32') / 255.\n",
+    "x_train = x_train.reshape((len(x_train), np.prod(x_train.shape[1:])))\n",
+    "x_test = x_test.reshape((len(x_test), np.prod(x_test.shape[1:])))\n",
+    "print(x_train.shape)\n",
+    "print(x_test.shape)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "00c32a97",
+   "metadata": {},
+   "source": [
+    "## 3. Define Keras Model\n",
+    "\n",
+    "We will be defining a very simple autencoder. We define _three_ model architectures:\n",
+    "\n",
+    "1. An encoder: a series of densly connected layers culminating in an \"output\" layer that determines the encoding dimensions.\n",
+    "2. A decoder: takes the output of the encoder as it's input and reconstructs the original data.\n",
+    "3. An autoencoder: a chain of the encoder and decoder that directly connects them for training purposes.\n",
+    "\n",
+    "The only variable we give our model is the encoding dimensions, which will be a hyperparemter of our final transformer.\n",
+    "\n",
+    "The encoder and decoder are views to the first/last layers of the autoencoder model.\n",
+    "They'll be directly used in `transform` and `inverse_transform`, so we'll create some SciKeras models with those layers\n",
+    "and save them as in `encoder_model_` and `decoder_model_`. All three models are created within `_keras_build_fn`.\n",
+    "\n",
+    "For a background on chaining Functional Models like this, see [All models are callable](https://keras.io/guides/functional_api/#all-models-are-callable-just-like-layers) in the Keras docs."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "04f37530",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:27:23.985213Z",
+     "iopub.status.busy": "2022-10-08T17:27:23.984277Z",
+     "iopub.status.idle": "2022-10-08T17:27:24.001644Z",
+     "shell.execute_reply": "2022-10-08T17:27:24.000514Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from typing import Dict, Any\n",
+    "\n",
+    "from sklearn.base import TransformerMixin\n",
+    "from sklearn.metrics import mean_squared_error\n",
+    "from scikeras.wrappers import BaseWrapper\n",
+    "\n",
+    "\n",
+    "class AutoEncoder(BaseWrapper, TransformerMixin):\n",
+    "    \"\"\"A class that enables transform and fit_transform.\n",
+    "    \"\"\"\n",
+    "\n",
+    "    encoder_model_: BaseWrapper\n",
+    "    decoder_model_: BaseWrapper\n",
+    "    \n",
+    "    def _keras_build_fn(self, encoding_dim: int, meta: Dict[str, Any]):\n",
+    "        n_features_in = meta[\"n_features_in_\"]\n",
+    "\n",
+    "        encoder_input = keras.Input(shape=(n_features_in,))\n",
+    "        encoder_output = keras.layers.Dense(encoding_dim, activation='relu')(encoder_input)\n",
+    "        encoder_model = keras.Model(encoder_input, encoder_output)\n",
+    "\n",
+    "        decoder_input = keras.Input(shape=(encoding_dim,))\n",
+    "        decoder_output = keras.layers.Dense(n_features_in, activation='sigmoid', name=\"decoder\")(decoder_input)\n",
+    "        decoder_model = keras.Model(decoder_input, decoder_output)\n",
+    "        \n",
+    "        autoencoder_input = keras.Input(shape=(n_features_in,))\n",
+    "        encoded_img = encoder_model(autoencoder_input)\n",
+    "        reconstructed_img = decoder_model(encoded_img)\n",
+    "\n",
+    "        autoencoder_model = keras.Model(autoencoder_input, reconstructed_img)\n",
+    "\n",
+    "        self.encoder_model_ = BaseWrapper(encoder_model, verbose=self.verbose)\n",
+    "        self.decoder_model_ = BaseWrapper(decoder_model, verbose=self.verbose)\n",
+    "\n",
+    "        return autoencoder_model\n",
+    "    \n",
+    "    def _initialize(self, X, y=None):\n",
+    "        X, _ = super()._initialize(X=X, y=y)\n",
+    "        # since encoder_model_ and decoder_model_ share layers (and their weights)\n",
+    "        # X_tf here come from random weights, but we only use it to initialize our models\n",
+    "        X_tf = self.encoder_model_.initialize(X).predict(X)\n",
+    "        self.decoder_model_.initialize(X_tf)\n",
+    "        return X, X\n",
+    "\n",
+    "    def initialize(self, X):\n",
+    "        self._initialize(X=X, y=X)\n",
+    "        return self\n",
+    "\n",
+    "    def fit(self, X, *, sample_weight=None) -> \"AutoEncoder\":\n",
+    "        super().fit(X=X, y=X, sample_weight=sample_weight)\n",
+    "        # at this point, encoder_model_ and decoder_model_\n",
+    "        # are both \"fitted\" because they share layers w/ model_\n",
+    "        # which is fit in the above call\n",
+    "        return self\n",
+    "\n",
+    "    def score(self, X) -> float:\n",
+    "        # Note: we use 1-MSE as the score\n",
+    "        # With MSE, \"larger is better\", but Scikit-Learn\n",
+    "        # always maximizes the score (e.g. in GridSearch)\n",
+    "        return 1 - mean_squared_error(self.predict(X), X)\n",
+    "\n",
+    "    def transform(self, X) -> np.ndarray:\n",
+    "        X: np.ndarray = self.feature_encoder_.transform(X)\n",
+    "        return self.encoder_model_.predict(X)\n",
+    "\n",
+    "    def inverse_transform(self, X_tf: np.ndarray):\n",
+    "        X: np.ndarray = self.decoder_model_.predict(X_tf)\n",
+    "        return self.feature_encoder_.inverse_transform(X)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "dfe41bd2",
+   "metadata": {},
+   "source": [
+    "Next, we wrap the Keras Model with Scikeras. Note that for our encoder/decoder estimators, we do not need to provide a loss function since no training will be done.\n",
+    "We do however need to have the `fit_model` and `encoding_dim` so that these will be settable by `BaseWrapper.set_params`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "142d9d6a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:27:24.008132Z",
+     "iopub.status.busy": "2022-10-08T17:27:24.006674Z",
+     "iopub.status.idle": "2022-10-08T17:27:24.013172Z",
+     "shell.execute_reply": "2022-10-08T17:27:24.012285Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "autoencoder = AutoEncoder(\n",
+    "    loss=\"binary_crossentropy\",\n",
+    "    encoding_dim=32,\n",
+    "    random_state=0,\n",
+    "    epochs=5,\n",
+    "    verbose=False,\n",
+    "    optimizer=\"adam\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7328c67c",
+   "metadata": {},
+   "source": [
+    "## 4. Training\n",
+    "\n",
+    "To train the model, we pass the input images as both the features and the target.\n",
+    "This will train the layers to compress the data as accurately as possible between the encoder and decoder.\n",
+    "Note that we only pass the `X` parameter, since we defined the mapping `y=X` in `KerasTransformer.fit` above."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "044c0208",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:27:24.020429Z",
+     "iopub.status.busy": "2022-10-08T17:27:24.018868Z",
+     "iopub.status.idle": "2022-10-08T17:28:16.177612Z",
+     "shell.execute_reply": "2022-10-08T17:28:16.176294Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "_ = autoencoder.fit(X=x_train)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a0f3d776",
+   "metadata": {},
+   "source": [
+    "Next, we round trip the test dataset and explore the performance of the autoencoder."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "db029bbb",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:28:16.183320Z",
+     "iopub.status.busy": "2022-10-08T17:28:16.182466Z",
+     "iopub.status.idle": "2022-10-08T17:28:18.512382Z",
+     "shell.execute_reply": "2022-10-08T17:28:18.505793Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "roundtrip_imgs = autoencoder.inverse_transform(autoencoder.transform(x_test))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6b9dd0b9",
+   "metadata": {},
+   "source": [
+    "## 5. Explore Results\n",
+    "\n",
+    "Let's compare our inputs to lossy decoded outputs:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "bb0ecaf0",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:28:18.518079Z",
+     "iopub.status.busy": "2022-10-08T17:28:18.517533Z",
+     "iopub.status.idle": "2022-10-08T17:28:23.436816Z",
+     "shell.execute_reply": "2022-10-08T17:28:23.435590Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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jz461KZOnRpqP/3pT9/ECP/P2WefXWvfcccdjV534403hpp7loGvPMdmQepbbbVVqGXBrxtvvHGtve+++4Y+I0aMCLVyrcv6HHbYYaFWztWqqqp777031OidLBS4lK1jxx9/fK39+9//PvS5/fbbOx4XC5c//elPoXb11VeHWvkZx6qrrhr6fOtb3wq1uXPn9jmGLGw7C+VuomnQ9euvv15rX3DBBaHPxz/+8VCbPHlyR+PqFd+YAAAAAAAAWmNjAgAAAAAAaI2NCQAAAAAAoDU2JgAAAAAAgNYIv27JHnvsEWqDBw8OtauuuirU/vKXv/RkTPROFhq2+eabN3rtNddcU2uXwVDQhk033TTUstCnc889t43h0E8+9rGPhVoZsjU/2WuvvUJts802q7Wzf19WK8OvefNmzJgRalnQYRkQO3LkyNDnueee69q4mhg9enSoNQmArKqquuGGG7o9HAa47bbbrtY+8MADG71u+vTptfYTTzzRtTHR/6ZNmxZqZVhnFt75uc99rmdjqqqqWmONNWrtQYMGhT7ZWv2Zz3ymV0Oih6688spau1x3qiqGWldVHjLdJCC2/HlVVVVHHnlkrX3xxReHPmuvvXaoZaGu2bUrvbP88svX2tk185AhQ0LtuOOOq7WPPfbY0OfMM88MtZtuuinUygDjhx56KPS55557Qq204YYbhlr2WZxz8cAze/bsUNt3331Dbdlll621P//5z4c+//Iv/xJqzz77bKhNmDCh1s7mefaZytZbbx1qnTrrrLNq7WOOOSb0ef7557v283rFNyYAAAAAAIDW2JgAAAAAAABaY2MCAAAAAABojYyJHhk6dGitvdtuu4U+L7/8cqhleQKvvPJK9wZGT4waNarWzp7tlmWKZMpnts6cObPjcUFTK664Yq29/fbbhz4PPPBAqF1wwQU9GxP9L8tkGIjK59tWVVVtsMEGoZatzU1MnTo11Jyb5132PNiHH3441N7znvfU2pdccknoc/rpp3dtXBtttFGolc9cX2211UKfJs/Wrqr5O6eFzpTXiYss0uz/hl1xxRW9GA68ofLZ79naluVcZOdKBr4yo+m9731v6JNlyg0fPrzPY3/7298OtWzuzJkzp9Y+//zzQ5/sWfC77rprqK255pq1dnZdQfd89atfrbU/9alPdXSc7Lx4xBFHNKr1UraulZmgVVVVBxxwQAujYV6VeQvZutJNP/vZz0KtScZElsOX/W395Cc/qbVfe+215oMbQHxjAgAAAAAAaI2NCQAAAAAAoDU2JgAAAAAAgNbYmAAAAAAAAFoj/LpHjj766Fp7s802C30uu+yyULvxxht7NiZ659Of/nStvdVWWzV63e9+97tQywLQodc+/OEP19qjR48Off7whz+0NBp4c774xS+G2pFHHtnRsR577LFQ+9CHPhRqEyZM6Oj4vLHsHDho0KBa+53vfGfo86tf/aprY3jmmWdCrQx/XW655To+fhlUx4Jvv/3267NPGchYVVX1/e9/vwejgf+z//77h9oHP/jBWjsL4Xz22Wd7Nib615VXXhlq2Rp24IEHhlq5jpVB6lUVg64zX/7yl0Nt/fXXD7W999471MqfmV3D0T1lePA555wT+vzyl78MtcUWq38Uucoqq4Q+WSB225ZffvlQy/4ejj322Fr7v//7v3s2Jgamz372s6HWaSj6xz72sVDr5r3OQNP/f+kAAAAAAMBCw8YEAAAAAADQGhsTAAAAAABAa2xMAAAAAAAArRF+3QVZCOOXvvSlWvuFF14IfU488cSejYl2fepTn+rodUcddVSozZw5c16HA2/auHHj+uwzbdq0FkYCfbv00ktr7XXXXbdrx7733ntD7YYbbuja8Xlj999/f6i9973vrbXHjx8f+qy11lpdG8O5557bZ5+f/vSnoXbQQQc1Ov7s2bPf9JiYf4wdOzbUspDY0hNPPBFqt9xyS1fGBP/M7rvv3mefiy++ONRuvfXWXgyHASoLxM5q3ZKdJ7NQ5Sz8eqeddqq1R44cGfo899xz8zA6/tFrr71Wa2fnrXXWWafP47ztbW8LtcGDB4faCSecEGpbbbVVn8fvpkGDBoXaFlts0eoY6H8f+chHau0yAL2qYsh75p577gm1888/v/OBzYd8YwIAAAAAAGiNjQkAAAAAAKA1NiYAAAAAAIDW2JgAAAAAAABaI/z6TRo1alSofetb3wq1RRddtNYugzqrqqpuuumm7g2M+VIWxvXKK6905djTp09vdOwsVGr48OF9Hn/ZZZcNtU5DwMvQrKqqqs997nO19qxZszo6Ns3sueeeffa56KKLWhgJA0kW7rbIIn3/n4YmYZpVVVVnnXVWrT1mzJhGryvH8Prrrzd6XRN77bVX145Fb9x+++2Nar30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\n",
+      "text/plain": [
+       "<Figure size 2000x400 with 20 Axes>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "import matplotlib.pyplot as plt\n",
+    "\n",
+    "\n",
+    "n = 10  # How many digits we will display\n",
+    "plt.figure(figsize=(20, 4))\n",
+    "for i in range(n):\n",
+    "    # Display original\n",
+    "    ax = plt.subplot(2, n, i + 1)\n",
+    "    plt.imshow(x_test[i].reshape(28, 28))\n",
+    "    plt.gray()\n",
+    "    ax.get_xaxis().set_visible(False)\n",
+    "    ax.get_yaxis().set_visible(False)\n",
+    "\n",
+    "    # Display reconstruction\n",
+    "    ax = plt.subplot(2, n, i + 1 + n)\n",
+    "    plt.imshow(roundtrip_imgs[i].reshape(28, 28))\n",
+    "    plt.gray()\n",
+    "    ax.get_xaxis().set_visible(False)\n",
+    "    ax.get_yaxis().set_visible(False)\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3b1fcb19",
+   "metadata": {},
+   "source": [
+    "What about the compression? Let's check the sizes of the arrays."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "7f000efc",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:28:23.441703Z",
+     "iopub.status.busy": "2022-10-08T17:28:23.440950Z",
+     "iopub.status.idle": "2022-10-08T17:28:24.341510Z",
+     "shell.execute_reply": "2022-10-08T17:28:24.340541Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "x_test size (in MB): 29.91\n",
+      "encoded_imgs size (in MB): 1.22\n",
+      "Compression ratio: 1/25\n"
+     ]
+    }
+   ],
+   "source": [
+    "encoded_imgs = autoencoder.transform(x_test)\n",
+    "print(f\"x_test size (in MB): {x_test.nbytes/1024**2:.2f}\")\n",
+    "print(f\"encoded_imgs size (in MB): {encoded_imgs.nbytes/1024**2:.2f}\")\n",
+    "cr = round((encoded_imgs.nbytes/x_test.nbytes), 2)\n",
+    "print(f\"Compression ratio: 1/{1/cr:.0f}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ebd3fa99",
+   "metadata": {},
+   "source": [
+    "## 6. Deep AutoEncoder"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "491f464e",
+   "metadata": {},
+   "source": [
+    "We can easily expand our model to be a deep autoencoder by adding some hidden layers. All we have to do is add a parameter `hidden_layer_sizes` and use it in `_keras_build_fn` to build hidden layers.\n",
+    "For simplicity, we use a single `hidden_layer_sizes` parameter and mirror it across the encoding layers and decoding layers, but there is nothing forcing us to build symetrical models."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "6eddf0b4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:28:24.346892Z",
+     "iopub.status.busy": "2022-10-08T17:28:24.346344Z",
+     "iopub.status.idle": "2022-10-08T17:28:24.366660Z",
+     "shell.execute_reply": "2022-10-08T17:28:24.365356Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from typing import List\n",
+    "\n",
+    "\n",
+    "class DeepAutoEncoder(AutoEncoder):\n",
+    "    \"\"\"A class that enables transform and fit_transform.\n",
+    "    \"\"\"\n",
+    "    \n",
+    "    def _keras_build_fn(self, encoding_dim: int, hidden_layer_sizes: List[str], meta: Dict[str, Any]):\n",
+    "        n_features_in = meta[\"n_features_in_\"]\n",
+    "\n",
+    "        encoder_input = keras.Input(shape=(n_features_in,))\n",
+    "        x = encoder_input\n",
+    "        for layer_size in hidden_layer_sizes:\n",
+    "            x = keras.layers.Dense(layer_size, activation='relu')(x)\n",
+    "        encoder_output = keras.layers.Dense(encoding_dim, activation='relu')(x)\n",
+    "        encoder_model = keras.Model(encoder_input, encoder_output)\n",
+    "\n",
+    "        decoder_input = keras.Input(shape=(encoding_dim,))\n",
+    "        x = decoder_input\n",
+    "        for layer_size in reversed(hidden_layer_sizes):\n",
+    "            x = keras.layers.Dense(layer_size, activation='relu')(x)\n",
+    "        decoder_output = keras.layers.Dense(n_features_in, activation='sigmoid', name=\"decoder\")(x)\n",
+    "        decoder_model = keras.Model(decoder_input, decoder_output)\n",
+    "\n",
+    "        autoencoder_input = keras.Input(shape=(n_features_in,))\n",
+    "        encoded_img = encoder_model(autoencoder_input)\n",
+    "        reconstructed_img = decoder_model(encoded_img)\n",
+    "\n",
+    "        autoencoder_model = keras.Model(autoencoder_input, reconstructed_img)\n",
+    "\n",
+    "        self.encoder_model_ = BaseWrapper(encoder_model, verbose=self.verbose)\n",
+    "        self.decoder_model_ = BaseWrapper(decoder_model, verbose=self.verbose)\n",
+    "\n",
+    "        return autoencoder_model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "05f73e9f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:28:24.372620Z",
+     "iopub.status.busy": "2022-10-08T17:28:24.371224Z",
+     "iopub.status.idle": "2022-10-08T17:29:56.468328Z",
+     "shell.execute_reply": "2022-10-08T17:29:56.461199Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "deep = DeepAutoEncoder(\n",
+    "    loss=\"binary_crossentropy\",\n",
+    "    encoding_dim=32,\n",
+    "    hidden_layer_sizes=[128],\n",
+    "    random_state=0,\n",
+    "    epochs=5,\n",
+    "    verbose=False,\n",
+    "    optimizer=\"adam\",\n",
+    ")\n",
+    "_ = deep.fit(X=x_train)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "b5e4c322",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-10-08T17:29:56.475545Z",
+     "iopub.status.busy": "2022-10-08T17:29:56.475176Z",
+     "iopub.status.idle": "2022-10-08T17:29:59.119705Z",
+     "shell.execute_reply": "2022-10-08T17:29:59.118735Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1-MSE for training set (higher is better)\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "AutoEncoder: 0.9899\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Deep AutoEncoder: 0.9916\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"1-MSE for training set (higher is better)\\n\")\n",
+    "score = autoencoder.score(X=x_test)\n",
+    "print(f\"AutoEncoder: {score:.4f}\")\n",
+    "\n",
+    "score = deep.score(X=x_test)\n",
+    "print(f\"Deep AutoEncoder: {score:.4f}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "63a565d1",
+   "metadata": {},
+   "source": [
+    "Suprisingly, our score got worse. It's possible that that because of the extra trainable variables, our deep model trains slower than our simple model.\n",
+    "\n",
+    "Check out the [Keras tutorial](https://blog.keras.io/building-autoencoders-in-keras.html) to see the difference after 100 epochs of training, as well as more architectures and applications for AutoEncoders!"
+   ]
+  }
+ ],
+ "metadata": {
+  "jupytext": {
+   "formats": "ipynb,md"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.14"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
