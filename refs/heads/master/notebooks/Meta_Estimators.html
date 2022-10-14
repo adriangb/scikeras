@@ -4,7 +4,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Meta Estimators in SciKeras &#8212; SciKeras 0.9.0 documentation</title>
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
@@ -16,6 +16,7 @@
     <script src="../_static/underscore.js"></script>
     <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -529,8 +530,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Single score: 0.36
-AdaBoost score: 0.82
+Single score: 0.50
+AdaBoost score: 0.87
 </pre></div></div>
 </div>
 <p>We see that the score for the AdaBoost classifier is slightly higher than that of an individual MLPRegressor instance. We can explore the individual classifiers, and see that each one is composed of a Keras Model with it’s own individual weights.</p>
@@ -548,8 +549,8 @@ AdaBoost score: 0.82
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[-0.12541305  0.08296063 -0.08277687  0.1757481  -0.15023252]
-[ 0.06894159 -0.21098901  0.19635181 -0.07199501 -0.00985563]
+[-0.00958941  0.04640602  0.08648801 -0.20450887  0.11056659]
+[ 0.22984985  0.20100594  0.21413462  0.03156966 -0.09935023]
 </pre></div></div>
 </div>
 </section>
@@ -576,8 +577,8 @@ AdaBoost score: 0.82
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-WARNING:tensorflow:5 out of the last 9 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fa55843ac10&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 10 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f359e7e0c10&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 9 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f4b452b4040&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 10 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f227425a5e0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -585,7 +586,7 @@ WARNING:tensorflow:5 out of the last 10 calls to &lt;function Model.make_train_f
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Bagging score: 0.61
+Bagging score: 0.74
 </pre></div></div>
 </div>
 </section>
@@ -657,7 +658,7 @@ Bagging score: 0.61
 
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/notebooks/Meta_Estimators.ipynb.txt" rel="nofollow">Show Source</a>.
     </footer>

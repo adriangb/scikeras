@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "a22b23b6",
+   "id": "c5c4e0ee",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "647f6b0c",
+   "id": "00c78878",
    "metadata": {},
    "source": [
     "# Sparse Inputs"
@@ -18,7 +18,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ade54c3b",
+   "id": "d7bd9e1e",
    "metadata": {},
    "source": [
     "SciKeras supports sparse inputs (`X`/features).\n",
@@ -29,7 +29,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "bec482d7",
+   "id": "8a5ccde6",
    "metadata": {},
    "source": [
     "## Setup"
@@ -38,13 +38,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "77e8aa9f",
+   "id": "351ac673",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:42:25.676985Z",
-     "iopub.status.busy": "2022-07-22T23:42:25.675669Z",
-     "iopub.status.idle": "2022-07-22T23:42:33.059681Z",
-     "shell.execute_reply": "2022-07-22T23:42:33.058923Z"
+     "iopub.execute_input": "2022-10-14T17:38:58.964462Z",
+     "iopub.status.busy": "2022-10-14T17:38:58.964147Z",
+     "iopub.status.idle": "2022-10-14T17:39:03.977621Z",
+     "shell.execute_reply": "2022-10-14T17:39:03.976882Z"
     }
    },
    "outputs": [
@@ -80,29 +80,8 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "\b \b|"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \b/"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \b-"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
       "\b \bdone\r\n",
-      "\u001b[?25hRequirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages (from memory_profiler) (5.9.1)\r\n",
+      "\u001b[?25hRequirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages (from memory_profiler) (5.9.2)\r\n",
       "Building wheels for collected packages: memory_profiler\r\n"
      ]
     },
@@ -131,57 +110,8 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "\b \b/"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \b-"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \b\\"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \b|"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \b/"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \b-"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \b\\"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
       "\b \bdone\r\n",
-      "\u001b[?25h  Created wheel for memory_profiler: filename=memory_profiler-0.60.0-py3-none-any.whl size=31267 sha256=e8bf848ba34b0d2f0c3bae83bda71b279b111160f4069faf320467f1d5eca5d5\r\n",
+      "\u001b[?25h  Created wheel for memory_profiler: filename=memory_profiler-0.60.0-py3-none-any.whl size=31267 sha256=e0fccc72ad0ca2e128ab8922151e83826842e799342aa4180ec7badb4c97da28\r\n",
       "  Stored in directory: /home/runner/.cache/pip/wheels/01/ca/8b/b518dd2aef69635ad6fcab87069c9c52f355a2e9c5d4c02da9\r\n",
       "Successfully built memory_profiler\r\n"
      ]
@@ -209,13 +139,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "ee32ea48",
+   "id": "4f25088e",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:42:33.063815Z",
-     "iopub.status.busy": "2022-07-22T23:42:33.063316Z",
-     "iopub.status.idle": "2022-07-22T23:42:35.386807Z",
-     "shell.execute_reply": "2022-07-22T23:42:35.386006Z"
+     "iopub.execute_input": "2022-10-14T17:39:03.983141Z",
+     "iopub.status.busy": "2022-10-14T17:39:03.981182Z",
+     "iopub.status.idle": "2022-10-14T17:39:06.699402Z",
+     "shell.execute_reply": "2022-10-14T17:39:06.698505Z"
     }
    },
    "outputs": [],
@@ -231,13 +161,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "ee6c25b5",
+   "id": "a1eeb8a0",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:42:35.391695Z",
-     "iopub.status.busy": "2022-07-22T23:42:35.391246Z",
-     "iopub.status.idle": "2022-07-22T23:42:35.402813Z",
-     "shell.execute_reply": "2022-07-22T23:42:35.402092Z"
+     "iopub.execute_input": "2022-10-14T17:39:06.704532Z",
+     "iopub.status.busy": "2022-10-14T17:39:06.704055Z",
+     "iopub.status.idle": "2022-10-14T17:39:06.722884Z",
+     "shell.execute_reply": "2022-10-14T17:39:06.722091Z"
     }
    },
    "outputs": [],
@@ -251,13 +181,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "c6a7a47b",
+   "id": "662436bd",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:42:35.407388Z",
-     "iopub.status.busy": "2022-07-22T23:42:35.406976Z",
-     "iopub.status.idle": "2022-07-22T23:42:35.846661Z",
-     "shell.execute_reply": "2022-07-22T23:42:35.845864Z"
+     "iopub.execute_input": "2022-10-14T17:39:06.727320Z",
+     "iopub.status.busy": "2022-10-14T17:39:06.727061Z",
+     "iopub.status.idle": "2022-10-14T17:39:07.008974Z",
+     "shell.execute_reply": "2022-10-14T17:39:07.008144Z"
     }
    },
    "outputs": [],
@@ -272,7 +202,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "46a10c44",
+   "id": "0fb3d108",
    "metadata": {},
    "source": [
     "## Data\n",
@@ -285,13 +215,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "15b7f9c9",
+   "id": "eb556926",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:42:35.853378Z",
-     "iopub.status.busy": "2022-07-22T23:42:35.853082Z",
-     "iopub.status.idle": "2022-07-22T23:42:35.860420Z",
-     "shell.execute_reply": "2022-07-22T23:42:35.859631Z"
+     "iopub.execute_input": "2022-10-14T17:39:07.013825Z",
+     "iopub.status.busy": "2022-10-14T17:39:07.012945Z",
+     "iopub.status.idle": "2022-10-14T17:39:07.021436Z",
+     "shell.execute_reply": "2022-10-14T17:39:07.020653Z"
     }
    },
    "outputs": [],
@@ -304,7 +234,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "5a399811",
+   "id": "ebf2e09f",
    "metadata": {},
    "source": [
     "## Model\n",
@@ -315,13 +245,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "20fca46d",
+   "id": "1a5d4f5d",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:42:35.864648Z",
-     "iopub.status.busy": "2022-07-22T23:42:35.864392Z",
-     "iopub.status.idle": "2022-07-22T23:42:35.869144Z",
-     "shell.execute_reply": "2022-07-22T23:42:35.868391Z"
+     "iopub.execute_input": "2022-10-14T17:39:07.025234Z",
+     "iopub.status.busy": "2022-10-14T17:39:07.024880Z",
+     "iopub.status.idle": "2022-10-14T17:39:07.029226Z",
+     "shell.execute_reply": "2022-10-14T17:39:07.028640Z"
     }
    },
    "outputs": [],
@@ -338,7 +268,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "78db2ce0",
+   "id": "a519f4af",
    "metadata": {},
    "source": [
     "## Pipelines\n",
@@ -350,13 +280,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "0a0e3b60",
+   "id": "8ef6fed2",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:42:35.879119Z",
-     "iopub.status.busy": "2022-07-22T23:42:35.878840Z",
-     "iopub.status.idle": "2022-07-22T23:42:35.883491Z",
-     "shell.execute_reply": "2022-07-22T23:42:35.882900Z"
+     "iopub.execute_input": "2022-10-14T17:39:07.032454Z",
+     "iopub.status.busy": "2022-10-14T17:39:07.031947Z",
+     "iopub.status.idle": "2022-10-14T17:39:07.038315Z",
+     "shell.execute_reply": "2022-10-14T17:39:07.037002Z"
     }
    },
    "outputs": [],
@@ -378,7 +308,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "1c4dafe6",
+   "id": "51fb670c",
    "metadata": {},
    "source": [
     "## Benchmark\n",
@@ -389,13 +319,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "01f873c0",
+   "id": "ec25127b",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:42:35.886797Z",
-     "iopub.status.busy": "2022-07-22T23:42:35.886366Z",
-     "iopub.status.idle": "2022-07-22T23:43:31.554576Z",
-     "shell.execute_reply": "2022-07-22T23:43:31.553564Z"
+     "iopub.execute_input": "2022-10-14T17:39:07.044040Z",
+     "iopub.status.busy": "2022-10-14T17:39:07.043534Z",
+     "iopub.status.idle": "2022-10-14T17:40:21.067058Z",
+     "shell.execute_reply": "2022-10-14T17:40:21.066126Z"
     }
    },
    "outputs": [
@@ -403,7 +333,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 3516.06 MiB, increment: 3134.72 MiB\n"
+      "peak memory: 3541.08 MiB, increment: 3151.93 MiB\n"
      ]
     }
    ],
@@ -414,13 +344,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "1fee87d3",
+   "id": "7c90c3f0",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:43:31.668652Z",
-     "iopub.status.busy": "2022-07-22T23:43:31.667926Z",
-     "iopub.status.idle": "2022-07-22T23:43:59.389144Z",
-     "shell.execute_reply": "2022-07-22T23:43:59.386156Z"
+     "iopub.execute_input": "2022-10-14T17:40:21.073166Z",
+     "iopub.status.busy": "2022-10-14T17:40:21.071859Z",
+     "iopub.status.idle": "2022-10-14T17:40:42.210966Z",
+     "shell.execute_reply": "2022-10-14T17:40:42.210159Z"
     }
    },
    "outputs": [
@@ -436,7 +366,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 647.04 MiB, increment: 59.64 MiB\n"
+      "peak memory: 639.63 MiB, increment: 64.95 MiB\n"
      ]
     }
    ],
@@ -446,7 +376,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "fa8449df",
+   "id": "c971fdcd",
    "metadata": {},
    "source": [
     "You should see at least 100x more memory consumption **increment** in the dense pipeline."
@@ -454,7 +384,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "75192c8d",
+   "id": "7d0030af",
    "metadata": {},
    "source": [
     "### Runtime\n",
@@ -465,13 +395,13 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "bbdc4e44",
+   "id": "74d88e87",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:43:59.404620Z",
-     "iopub.status.busy": "2022-07-22T23:43:59.400882Z",
-     "iopub.status.idle": "2022-07-22T23:52:18.609671Z",
-     "shell.execute_reply": "2022-07-22T23:52:18.601094Z"
+     "iopub.execute_input": "2022-10-14T17:40:42.215984Z",
+     "iopub.status.busy": "2022-10-14T17:40:42.215552Z",
+     "iopub.status.idle": "2022-10-14T17:46:31.255841Z",
+     "shell.execute_reply": "2022-10-14T17:46:31.255077Z"
     }
    },
    "outputs": [
@@ -479,7 +409,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "1min 2s ± 1.59 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
+      "43.4 s ± 2.05 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
      ]
     }
    ],
@@ -490,13 +420,13 @@
   {
    "cell_type": "code",
    "execution_count": 11,
-   "id": "2cb04e1b",
+   "id": "7d7a14a0",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:52:18.718463Z",
-     "iopub.status.busy": "2022-07-22T23:52:18.717500Z",
-     "iopub.status.idle": "2022-07-22T23:55:06.959322Z",
-     "shell.execute_reply": "2022-07-22T23:55:06.958595Z"
+     "iopub.execute_input": "2022-10-14T17:46:31.261579Z",
+     "iopub.status.busy": "2022-10-14T17:46:31.258957Z",
+     "iopub.status.idle": "2022-10-14T17:48:17.708420Z",
+     "shell.execute_reply": "2022-10-14T17:48:17.707559Z"
     }
    },
    "outputs": [
@@ -568,7 +498,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "20.7 s ± 3.02 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
+      "13.2 s ± 297 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
      ]
     }
    ],
@@ -578,7 +508,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "c1bd44b0",
+   "id": "3464c09b",
    "metadata": {},
    "source": [
     "## Tensorflow Datasets\n",
@@ -595,7 +525,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "d8ce47f2",
+   "id": "d3778a6c",
    "metadata": {},
    "source": [
     "## Bonus: dtypes\n",
@@ -606,13 +536,13 @@
   {
    "cell_type": "code",
    "execution_count": 12,
-   "id": "b9c31785",
+   "id": "5d9dd9fb",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:55:06.970105Z",
-     "iopub.status.busy": "2022-07-22T23:55:06.969340Z",
-     "iopub.status.idle": "2022-07-22T23:55:06.977847Z",
-     "shell.execute_reply": "2022-07-22T23:55:06.977034Z"
+     "iopub.execute_input": "2022-10-14T17:48:17.714391Z",
+     "iopub.status.busy": "2022-10-14T17:48:17.713862Z",
+     "iopub.status.idle": "2022-10-14T17:48:17.718258Z",
+     "shell.execute_reply": "2022-10-14T17:48:17.717506Z"
     }
    },
    "outputs": [],
@@ -628,13 +558,13 @@
   {
    "cell_type": "code",
    "execution_count": 13,
-   "id": "a074125f",
+   "id": "694b7781",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:55:06.984746Z",
-     "iopub.status.busy": "2022-07-22T23:55:06.984232Z",
-     "iopub.status.idle": "2022-07-22T23:55:24.688352Z",
-     "shell.execute_reply": "2022-07-22T23:55:24.687549Z"
+     "iopub.execute_input": "2022-10-14T17:48:17.721511Z",
+     "iopub.status.busy": "2022-10-14T17:48:17.721136Z",
+     "iopub.status.idle": "2022-10-14T17:48:33.635804Z",
+     "shell.execute_reply": "2022-10-14T17:48:33.634715Z"
     }
    },
    "outputs": [
@@ -650,7 +580,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 829.16 MiB, increment: 33.09 MiB\n"
+      "peak memory: 1016.38 MiB, increment: 4.57 MiB\n"
      ]
     }
    ],
@@ -678,7 +608,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.8.13"
+   "version": "3.8.14"
   }
  },
  "nbformat": 4,

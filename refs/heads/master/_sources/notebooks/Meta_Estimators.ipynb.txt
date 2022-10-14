@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "ec1cc11c",
+   "id": "41aea7b1",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Meta_Estimators.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "acaffd86",
+   "id": "ba366983",
    "metadata": {},
    "source": [
     "# Meta Estimators in SciKeras\n",
@@ -31,13 +31,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "78fb5b31",
+   "id": "276288cf",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:45:48.190345Z",
-     "iopub.status.busy": "2022-07-22T23:45:48.187118Z",
-     "iopub.status.idle": "2022-07-22T23:45:50.560470Z",
-     "shell.execute_reply": "2022-07-22T23:45:50.559683Z"
+     "iopub.execute_input": "2022-10-14T17:35:11.088214Z",
+     "iopub.status.busy": "2022-10-14T17:35:11.087691Z",
+     "iopub.status.idle": "2022-10-14T17:35:13.583267Z",
+     "shell.execute_reply": "2022-10-14T17:35:13.579708Z"
     }
    },
    "outputs": [],
@@ -50,7 +50,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "0144f8d0",
+   "id": "6defe593",
    "metadata": {},
    "source": [
     "Silence TensorFlow logging to keep output succinct."
@@ -59,13 +59,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "7c5bb4cb",
+   "id": "998da7d0",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:45:50.566927Z",
-     "iopub.status.busy": "2022-07-22T23:45:50.565289Z",
-     "iopub.status.idle": "2022-07-22T23:45:50.575117Z",
-     "shell.execute_reply": "2022-07-22T23:45:50.574404Z"
+     "iopub.execute_input": "2022-10-14T17:35:13.588466Z",
+     "iopub.status.busy": "2022-10-14T17:35:13.588000Z",
+     "iopub.status.idle": "2022-10-14T17:35:13.599470Z",
+     "shell.execute_reply": "2022-10-14T17:35:13.594790Z"
     }
    },
    "outputs": [],
@@ -79,13 +79,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "19f2fed9",
+   "id": "ecf4d611",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:45:50.580390Z",
-     "iopub.status.busy": "2022-07-22T23:45:50.579141Z",
-     "iopub.status.idle": "2022-07-22T23:45:50.871889Z",
-     "shell.execute_reply": "2022-07-22T23:45:50.870985Z"
+     "iopub.execute_input": "2022-10-14T17:35:13.603217Z",
+     "iopub.status.busy": "2022-10-14T17:35:13.602969Z",
+     "iopub.status.idle": "2022-10-14T17:35:13.967013Z",
+     "shell.execute_reply": "2022-10-14T17:35:13.966071Z"
     }
    },
    "outputs": [],
@@ -97,7 +97,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ff360d4e",
+   "id": "15271bb2",
    "metadata": {},
    "source": [
     "## 2. Defining the Keras Model\n",
@@ -108,13 +108,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "364fe874",
+   "id": "89a65a37",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:45:50.876699Z",
-     "iopub.status.busy": "2022-07-22T23:45:50.876257Z",
-     "iopub.status.idle": "2022-07-22T23:45:50.890116Z",
-     "shell.execute_reply": "2022-07-22T23:45:50.889324Z"
+     "iopub.execute_input": "2022-10-14T17:35:13.971160Z",
+     "iopub.status.busy": "2022-10-14T17:35:13.970774Z",
+     "iopub.status.idle": "2022-10-14T17:35:13.979359Z",
+     "shell.execute_reply": "2022-10-14T17:35:13.978786Z"
     }
    },
    "outputs": [],
@@ -147,7 +147,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "cc65d52c",
+   "id": "df7b442c",
    "metadata": {},
    "source": [
     "Next we wrap this Keras model with SciKeras"
@@ -156,13 +156,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "adb48652",
+   "id": "6d8d8795",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:45:50.896348Z",
-     "iopub.status.busy": "2022-07-22T23:45:50.894588Z",
-     "iopub.status.idle": "2022-07-22T23:45:50.902883Z",
-     "shell.execute_reply": "2022-07-22T23:45:50.902180Z"
+     "iopub.execute_input": "2022-10-14T17:35:13.984646Z",
+     "iopub.status.busy": "2022-10-14T17:35:13.983477Z",
+     "iopub.status.idle": "2022-10-14T17:35:13.988354Z",
+     "shell.execute_reply": "2022-10-14T17:35:13.987834Z"
     }
    },
    "outputs": [],
@@ -179,7 +179,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "d690349f",
+   "id": "ce8496f3",
    "metadata": {},
    "source": [
     "### 2.1 Building a boosting ensemble\n",
@@ -190,13 +190,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "59c92181",
+   "id": "61f2bb48",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:45:50.910115Z",
-     "iopub.status.busy": "2022-07-22T23:45:50.908739Z",
-     "iopub.status.idle": "2022-07-22T23:45:51.105758Z",
-     "shell.execute_reply": "2022-07-22T23:45:51.103602Z"
+     "iopub.execute_input": "2022-10-14T17:35:13.992952Z",
+     "iopub.status.busy": "2022-10-14T17:35:13.991818Z",
+     "iopub.status.idle": "2022-10-14T17:35:14.072066Z",
+     "shell.execute_reply": "2022-10-14T17:35:14.070926Z"
     }
    },
    "outputs": [],
@@ -209,7 +209,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "a706707d",
+   "id": "d33b6c88",
    "metadata": {},
    "source": [
     "## 3. Testing with a toy dataset\n",
@@ -220,13 +220,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "773a201f",
+   "id": "af21c44d",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:45:51.110851Z",
-     "iopub.status.busy": "2022-07-22T23:45:51.110427Z",
-     "iopub.status.idle": "2022-07-22T23:46:32.076972Z",
-     "shell.execute_reply": "2022-07-22T23:46:32.073877Z"
+     "iopub.execute_input": "2022-10-14T17:35:14.076961Z",
+     "iopub.status.busy": "2022-10-14T17:35:14.076660Z",
+     "iopub.status.idle": "2022-10-14T17:35:57.929433Z",
+     "shell.execute_reply": "2022-10-14T17:35:57.928574Z"
     }
    },
    "outputs": [
@@ -234,8 +234,8 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Single score: 0.36\n",
-      "AdaBoost score: 0.82\n"
+      "Single score: 0.50\n",
+      "AdaBoost score: 0.87\n"
      ]
     }
    ],
@@ -255,7 +255,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "37ce5e38",
+   "id": "f7949bdb",
    "metadata": {},
    "source": [
     "We see that the score for the AdaBoost classifier is slightly higher than that of an individual MLPRegressor instance. We can explore the individual classifiers, and see that each one is composed of a Keras Model with it's own individual weights.\n"
@@ -264,13 +264,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "cc95dd73",
+   "id": "8c9790da",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:46:32.082467Z",
-     "iopub.status.busy": "2022-07-22T23:46:32.081687Z",
-     "iopub.status.idle": "2022-07-22T23:46:32.096317Z",
-     "shell.execute_reply": "2022-07-22T23:46:32.095415Z"
+     "iopub.execute_input": "2022-10-14T17:35:57.935757Z",
+     "iopub.status.busy": "2022-10-14T17:35:57.933651Z",
+     "iopub.status.idle": "2022-10-14T17:35:57.955715Z",
+     "shell.execute_reply": "2022-10-14T17:35:57.954973Z"
     }
    },
    "outputs": [
@@ -278,8 +278,8 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "[-0.12541305  0.08296063 -0.08277687  0.1757481  -0.15023252]\n",
-      "[ 0.06894159 -0.21098901  0.19635181 -0.07199501 -0.00985563]\n"
+      "[-0.00958941  0.04640602  0.08648801 -0.20450887  0.11056659]\n",
+      "[ 0.22984985  0.20100594  0.21413462  0.03156966 -0.09935023]\n"
      ]
     }
    ],
@@ -290,7 +290,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "4638f0e4",
+   "id": "138773c5",
    "metadata": {},
    "source": [
     "## 4. Bagging ensemble\n",
@@ -301,13 +301,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "b667b519",
+   "id": "17f640f3",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-07-22T23:46:32.102113Z",
-     "iopub.status.busy": "2022-07-22T23:46:32.101764Z",
-     "iopub.status.idle": "2022-07-22T23:46:57.353049Z",
-     "shell.execute_reply": "2022-07-22T23:46:57.352210Z"
+     "iopub.execute_input": "2022-10-14T17:35:57.959100Z",
+     "iopub.status.busy": "2022-10-14T17:35:57.958635Z",
+     "iopub.status.idle": "2022-10-14T17:36:22.506105Z",
+     "shell.execute_reply": "2022-10-14T17:36:22.505307Z"
     }
    },
    "outputs": [
@@ -315,21 +315,21 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "WARNING:tensorflow:5 out of the last 9 calls to <function Model.make_train_function.<locals>.train_function at 0x7fa55843ac10> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
+      "WARNING:tensorflow:5 out of the last 9 calls to <function Model.make_train_function.<locals>.train_function at 0x7f4b452b4040> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
      ]
     },
     {
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "WARNING:tensorflow:5 out of the last 10 calls to <function Model.make_train_function.<locals>.train_function at 0x7f359e7e0c10> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
+      "WARNING:tensorflow:5 out of the last 10 calls to <function Model.make_train_function.<locals>.train_function at 0x7f227425a5e0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
      ]
     },
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Bagging score: 0.61\n"
+      "Bagging score: 0.74\n"
      ]
     }
    ],
@@ -364,7 +364,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.8.13"
+   "version": "3.8.14"
   }
  },
  "nbformat": 4,
