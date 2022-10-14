@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "f896341c",
+   "id": "e8d5afbc",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/MLPClassifier_MLPRegressor.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "a0f0eec3",
+   "id": "ff616de8",
    "metadata": {},
    "source": [
     "# MLPClassifier and MLPRegressor in SciKeras\n",
@@ -39,13 +39,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "d0fa0b3d",
+   "id": "dc2dc326",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:25:59.624510Z",
-     "iopub.status.busy": "2022-10-08T17:25:59.623760Z",
-     "iopub.status.idle": "2022-10-08T17:26:03.010224Z",
-     "shell.execute_reply": "2022-10-08T17:26:03.009112Z"
+     "iopub.execute_input": "2022-10-14T17:52:45.213247Z",
+     "iopub.status.busy": "2022-10-14T17:52:45.212606Z",
+     "iopub.status.idle": "2022-10-14T17:52:47.501574Z",
+     "shell.execute_reply": "2022-10-14T17:52:47.500879Z"
     }
    },
    "outputs": [],
@@ -58,7 +58,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "c50f3a0e",
+   "id": "cfaceccd",
    "metadata": {},
    "source": [
     "Silence TensorFlow logging to keep output succinct."
@@ -67,13 +67,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "359b0b76",
+   "id": "48b46eb5",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:03.015962Z",
-     "iopub.status.busy": "2022-10-08T17:26:03.015148Z",
-     "iopub.status.idle": "2022-10-08T17:26:03.026824Z",
-     "shell.execute_reply": "2022-10-08T17:26:03.025635Z"
+     "iopub.execute_input": "2022-10-14T17:52:47.505811Z",
+     "iopub.status.busy": "2022-10-14T17:52:47.505200Z",
+     "iopub.status.idle": "2022-10-14T17:52:47.509781Z",
+     "shell.execute_reply": "2022-10-14T17:52:47.509253Z"
     }
    },
    "outputs": [],
@@ -87,13 +87,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "4e12ff72",
+   "id": "4f0ceecd",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:03.030899Z",
-     "iopub.status.busy": "2022-10-08T17:26:03.030529Z",
-     "iopub.status.idle": "2022-10-08T17:26:03.441558Z",
-     "shell.execute_reply": "2022-10-08T17:26:03.440307Z"
+     "iopub.execute_input": "2022-10-14T17:52:47.512853Z",
+     "iopub.status.busy": "2022-10-14T17:52:47.512449Z",
+     "iopub.status.idle": "2022-10-14T17:52:47.771511Z",
+     "shell.execute_reply": "2022-10-14T17:52:47.770665Z"
     }
    },
    "outputs": [],
@@ -105,7 +105,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "38371665",
+   "id": "a27abae0",
    "metadata": {},
    "source": [
     "## 2. Defining the Keras Model\n",
@@ -116,13 +116,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "01961683",
+   "id": "b02661d9",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:03.447097Z",
-     "iopub.status.busy": "2022-10-08T17:26:03.446452Z",
-     "iopub.status.idle": "2022-10-08T17:26:03.459207Z",
-     "shell.execute_reply": "2022-10-08T17:26:03.458240Z"
+     "iopub.execute_input": "2022-10-14T17:52:47.775189Z",
+     "iopub.status.busy": "2022-10-14T17:52:47.774926Z",
+     "iopub.status.idle": "2022-10-14T17:52:47.778379Z",
+     "shell.execute_reply": "2022-10-14T17:52:47.777827Z"
     }
    },
    "outputs": [],
@@ -134,7 +134,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "0a8b1b09",
+   "id": "7d218885",
    "metadata": {},
    "source": [
     "### 2.1 Inputs\n",
@@ -145,13 +145,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "8218d6f8",
+   "id": "53fc50e7",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:03.463844Z",
-     "iopub.status.busy": "2022-10-08T17:26:03.463191Z",
-     "iopub.status.idle": "2022-10-08T17:26:03.469409Z",
-     "shell.execute_reply": "2022-10-08T17:26:03.467770Z"
+     "iopub.execute_input": "2022-10-14T17:52:47.781981Z",
+     "iopub.status.busy": "2022-10-14T17:52:47.781751Z",
+     "iopub.status.idle": "2022-10-14T17:52:47.790336Z",
+     "shell.execute_reply": "2022-10-14T17:52:47.789764Z"
     }
    },
    "outputs": [],
@@ -168,7 +168,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "be6614ff",
+   "id": "754c26b9",
    "metadata": {},
    "source": [
     "### 2.2 Hidden Layers\n",
@@ -179,13 +179,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "1bb46d21",
+   "id": "61bd9f74",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:03.473979Z",
-     "iopub.status.busy": "2022-10-08T17:26:03.473392Z",
-     "iopub.status.idle": "2022-10-08T17:26:03.485329Z",
-     "shell.execute_reply": "2022-10-08T17:26:03.484237Z"
+     "iopub.execute_input": "2022-10-14T17:52:47.793587Z",
+     "iopub.status.busy": "2022-10-14T17:52:47.793172Z",
+     "iopub.status.idle": "2022-10-14T17:52:47.799579Z",
+     "shell.execute_reply": "2022-10-14T17:52:47.797765Z"
     }
    },
    "outputs": [],
@@ -202,7 +202,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "cc8a4b6b",
+   "id": "e33dce26",
    "metadata": {},
    "source": [
     "### 2.3 Output layers\n",
@@ -217,13 +217,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "9947db0a",
+   "id": "acc270ee",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:03.490241Z",
-     "iopub.status.busy": "2022-10-08T17:26:03.489580Z",
-     "iopub.status.idle": "2022-10-08T17:26:03.504622Z",
-     "shell.execute_reply": "2022-10-08T17:26:03.502310Z"
+     "iopub.execute_input": "2022-10-14T17:52:47.802884Z",
+     "iopub.status.busy": "2022-10-14T17:52:47.802638Z",
+     "iopub.status.idle": "2022-10-14T17:52:47.810174Z",
+     "shell.execute_reply": "2022-10-14T17:52:47.808993Z"
     }
    },
    "outputs": [],
@@ -250,7 +250,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "1f02527d",
+   "id": "db402339",
    "metadata": {},
    "source": [
     "For now, we raise a `NotImplementedError` for other target types. For an example handling multi-output target types, see the [Multi Output notebook](https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MultiInput.ipynb).\n",
@@ -263,13 +263,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "07804587",
+   "id": "2c4d51da",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:03.514621Z",
-     "iopub.status.busy": "2022-10-08T17:26:03.513993Z",
-     "iopub.status.idle": "2022-10-08T17:26:03.521250Z",
-     "shell.execute_reply": "2022-10-08T17:26:03.520453Z"
+     "iopub.execute_input": "2022-10-14T17:52:47.816719Z",
+     "iopub.status.busy": "2022-10-14T17:52:47.816478Z",
+     "iopub.status.idle": "2022-10-14T17:52:47.828374Z",
+     "shell.execute_reply": "2022-10-14T17:52:47.827631Z"
     }
    },
    "outputs": [],
@@ -299,7 +299,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "f45b0d7b",
+   "id": "d8097c96",
    "metadata": {},
    "source": [
     "At this point, we have a valid, compiled model. However if we want to be able to tune the optimizer, we should accept `compile_kwargs` as a parameter in `get_clf_model`. `compile_kwargs` will be a dictionary containing valid `kwargs` for `Model.compile`, so we can unpack it directly like `model.compile(**compile_kwargs)`. In this case however, we will only be taking the `optimizer` kwarg."
@@ -308,13 +308,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "ac4ddd3e",
+   "id": "9bed1503",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:03.526974Z",
-     "iopub.status.busy": "2022-10-08T17:26:03.525445Z",
-     "iopub.status.idle": "2022-10-08T17:26:03.534995Z",
-     "shell.execute_reply": "2022-10-08T17:26:03.534040Z"
+     "iopub.execute_input": "2022-10-14T17:52:47.832203Z",
+     "iopub.status.busy": "2022-10-14T17:52:47.831579Z",
+     "iopub.status.idle": "2022-10-14T17:52:47.839277Z",
+     "shell.execute_reply": "2022-10-14T17:52:47.838555Z"
     }
    },
    "outputs": [],
@@ -344,7 +344,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "2e5ac8cf",
+   "id": "e4cbbcc4",
    "metadata": {},
    "source": [
     "### 2.5 Wrapping with SciKeras\n",
@@ -359,13 +359,13 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "aab11119",
+   "id": "c9342b5c",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:03.545366Z",
-     "iopub.status.busy": "2022-10-08T17:26:03.540934Z",
-     "iopub.status.idle": "2022-10-08T17:26:03.559196Z",
-     "shell.execute_reply": "2022-10-08T17:26:03.558172Z"
+     "iopub.execute_input": "2022-10-14T17:52:47.842653Z",
+     "iopub.status.busy": "2022-10-14T17:52:47.842344Z",
+     "iopub.status.idle": "2022-10-14T17:52:47.847382Z",
+     "shell.execute_reply": "2022-10-14T17:52:47.846663Z"
     }
    },
    "outputs": [],
@@ -382,7 +382,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "33e0e405",
+   "id": "1b811d6d",
    "metadata": {},
    "source": [
     "## 3. Testing our classifier\n",
@@ -393,13 +393,13 @@
   {
    "cell_type": "code",
    "execution_count": 11,
-   "id": "52b1211c",
+   "id": "8d65ab8d",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:03.564437Z",
-     "iopub.status.busy": "2022-10-08T17:26:03.564124Z",
-     "iopub.status.idle": "2022-10-08T17:26:05.266127Z",
-     "shell.execute_reply": "2022-10-08T17:26:05.265202Z"
+     "iopub.execute_input": "2022-10-14T17:52:47.850322Z",
+     "iopub.status.busy": "2022-10-14T17:52:47.850106Z",
+     "iopub.status.idle": "2022-10-14T17:52:49.022399Z",
+     "shell.execute_reply": "2022-10-14T17:52:49.020653Z"
     }
    },
    "outputs": [
@@ -425,7 +425,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "e3c92011",
+   "id": "ad891289",
    "metadata": {},
    "source": [
     "We get a score above 0.7, which is reasonable and indicates that our classifier is generally working.\n",
@@ -444,13 +444,13 @@
   {
    "cell_type": "code",
    "execution_count": 12,
-   "id": "e8ba1fba",
+   "id": "9e7c1106",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:05.270636Z",
-     "iopub.status.busy": "2022-10-08T17:26:05.270274Z",
-     "iopub.status.idle": "2022-10-08T17:26:05.282251Z",
-     "shell.execute_reply": "2022-10-08T17:26:05.281197Z"
+     "iopub.execute_input": "2022-10-14T17:52:49.026164Z",
+     "iopub.status.busy": "2022-10-14T17:52:49.025773Z",
+     "iopub.status.idle": "2022-10-14T17:52:49.031979Z",
+     "shell.execute_reply": "2022-10-14T17:52:49.031235Z"
     }
    },
    "outputs": [],
@@ -475,7 +475,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "90185d21",
+   "id": "a2260d97",
    "metadata": {},
    "source": [
     "Next, we will embed our model into `_keras_build_fn`, which takes the place of `get_clf_model`. Note that since this is now an part of the model, we no longer need to accept the any parameters in the function signature. We still accept `compile_kwargs` because we use it to get the optimizer initialized with all of it's parameters."
@@ -484,13 +484,13 @@
   {
    "cell_type": "code",
    "execution_count": 13,
-   "id": "4c09e2bd",
+   "id": "ef4b66bc",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:05.287161Z",
-     "iopub.status.busy": "2022-10-08T17:26:05.286584Z",
-     "iopub.status.idle": "2022-10-08T17:26:05.307774Z",
-     "shell.execute_reply": "2022-10-08T17:26:05.301287Z"
+     "iopub.execute_input": "2022-10-14T17:52:49.035285Z",
+     "iopub.status.busy": "2022-10-14T17:52:49.034963Z",
+     "iopub.status.idle": "2022-10-14T17:52:49.048014Z",
+     "shell.execute_reply": "2022-10-14T17:52:49.047308Z"
     }
    },
    "outputs": [],
@@ -537,7 +537,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "28a87fbb",
+   "id": "5d6d4be4",
    "metadata": {},
    "source": [
     "Let's check that our subclassed model works:"
@@ -546,13 +546,13 @@
   {
    "cell_type": "code",
    "execution_count": 14,
-   "id": "3ab5376c",
+   "id": "cd9f2256",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:05.316595Z",
-     "iopub.status.busy": "2022-10-08T17:26:05.314703Z",
-     "iopub.status.idle": "2022-10-08T17:26:06.538593Z",
-     "shell.execute_reply": "2022-10-08T17:26:06.537334Z"
+     "iopub.execute_input": "2022-10-14T17:52:49.051625Z",
+     "iopub.status.busy": "2022-10-14T17:52:49.051246Z",
+     "iopub.status.idle": "2022-10-14T17:52:49.772986Z",
+     "shell.execute_reply": "2022-10-14T17:52:49.772106Z"
     }
    },
    "outputs": [
@@ -560,7 +560,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "0.98\n"
+      "0.96\n"
      ]
     }
    ],
@@ -573,7 +573,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "f6da9a5b",
+   "id": "34924637",
    "metadata": {},
    "source": [
     "## 5. MLPRegressor\n",
@@ -584,13 +584,13 @@
   {
    "cell_type": "code",
    "execution_count": 15,
-   "id": "90369266",
+   "id": "29666e3f",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:06.543444Z",
-     "iopub.status.busy": "2022-10-08T17:26:06.543128Z",
-     "iopub.status.idle": "2022-10-08T17:26:06.561406Z",
-     "shell.execute_reply": "2022-10-08T17:26:06.560142Z"
+     "iopub.execute_input": "2022-10-14T17:52:49.776802Z",
+     "iopub.status.busy": "2022-10-14T17:52:49.776544Z",
+     "iopub.status.idle": "2022-10-14T17:52:49.790967Z",
+     "shell.execute_reply": "2022-10-14T17:52:49.790183Z"
     },
     "lines_to_next_cell": 2
    },
@@ -629,13 +629,13 @@
   {
    "cell_type": "code",
    "execution_count": 16,
-   "id": "1b84547b",
+   "id": "42024a56",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-08T17:26:06.566274Z",
-     "iopub.status.busy": "2022-10-08T17:26:06.565525Z",
-     "iopub.status.idle": "2022-10-08T17:26:07.587545Z",
-     "shell.execute_reply": "2022-10-08T17:26:07.585528Z"
+     "iopub.execute_input": "2022-10-14T17:52:49.794635Z",
+     "iopub.status.busy": "2022-10-14T17:52:49.794383Z",
+     "iopub.status.idle": "2022-10-14T17:52:50.464256Z",
+     "shell.execute_reply": "2022-10-14T17:52:50.463595Z"
     }
    },
    "outputs": [
@@ -643,7 +643,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "-0.3317628284745642\n"
+      "-0.6261754339354477\n"
      ]
     }
    ],
