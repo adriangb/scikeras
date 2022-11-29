@@ -312,7 +312,7 @@ class TestAdvancedAPIFuncs:
         }
         search = GridSearchCV(estimator, params)
         basic_checks(search, loader)
-        assert search.best_estimator_.model_.optimizer._name.lower() in (
+        assert search.best_estimator_.model_.optimizer.__class__.__name__.lower() in (
             "sgd",
             "adam",
         )

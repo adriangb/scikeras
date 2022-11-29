@@ -154,7 +154,9 @@ def test_sample_weights_fit():
     estimator2.fit(X, y)
     # both estimators should have about the same predictions
     np.testing.assert_allclose(
-        actual=estimator1.predict_proba(X), desired=estimator2.predict_proba(X)
+        actual=estimator1.predict_proba(X),
+        desired=estimator2.predict_proba(X),
+        rtol=1e-5,
     )
 
 
