@@ -47,8 +47,7 @@ class TargetReshaper(BaseEstimator, TransformerMixin):
         self.ndim_ = y.ndim
         return self
 
-    @staticmethod
-    def transform(y: np.ndarray) -> np.ndarray:
+    def transform(self, y: np.ndarray) -> np.ndarray:
         """Makes 1D y 2D.
 
         Parameters
@@ -170,7 +169,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             encoders["multiclass"] = make_pipeline(
                 TargetReshaper(),
                 OneHotEncoder(
-                    sparse=False, dtype=keras_dtype, categories=self.categories
+                    sparse_output=False, dtype=keras_dtype, categories=self.categories
                 ),
             )
         if target_type not in encoders:
