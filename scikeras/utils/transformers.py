@@ -169,7 +169,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             encoders["multiclass"] = make_pipeline(
                 TargetReshaper(),
                 OneHotEncoder(
-                    sparse_output=False, dtype=keras_dtype, categories=self.categories
+                    sparse=False, dtype=keras_dtype, categories=self.categories
                 ),
             )
         if target_type not in encoders:
