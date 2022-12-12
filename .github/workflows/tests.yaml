@@ -8,6 +8,10 @@ on:
     # run every day at midnight
     - cron: "0 0 * * *"
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   Linting:
     runs-on: ubuntu-latest
@@ -152,7 +156,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install and Set Up Poetry
-        shell: bash
         run: |
           pip install --upgrade poetry
           poetry config virtualenvs.in-project true
@@ -166,7 +169,6 @@ jobs:
         run: |
           poetry run pip freeze
           poetry run python -c "import tensorflow as tf;print(tf.__version__)"
-          poetry run python -m pip freeze
           poetry run python -m pytest -v --cov=scikeras --cov-report xml --color=yes
 
       - uses: codecov/codecov-action@v1
