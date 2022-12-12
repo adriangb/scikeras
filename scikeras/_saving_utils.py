@@ -32,12 +32,7 @@ def _get_temp_folder() -> Iterator[str]:
         finally:
             for root, _, filenames in tf_io.gfile.walk(temp_dir):
                 for filename in filenames:
-                    if filename.startswith("ram://"):
-                        # Currently, tf.io.gfile.walk returns
-                        # the entire path for the ram:// filesystem
-                        dest = filename
-                    else:
-                        dest = os.path.join(root, filename)
+                    dest = os.path.join(root, filename)
                     tf_io.gfile.remove(dest)
 
 
@@ -72,12 +67,7 @@ def pack_keras_model(
         with tarfile.open(fileobj=b, mode="w") as archive:
             for root, _, filenames in tf_io.gfile.walk(temp_dir):
                 for filename in filenames:
-                    if filename.startswith("ram://"):
-                        # Currently, tf.io.gfile.walk returns
-                        # the entire path for the ram:// filesystem
-                        dest = filename
-                    else:
-                        dest = os.path.join(root, filename)
+                    dest = os.path.join(root, filename)
                     with tf_io.gfile.GFile(dest, "rb") as f:
                         info = tarfile.TarInfo(name=os.path.relpath(dest, temp_dir))
                         info.size = f.size()
