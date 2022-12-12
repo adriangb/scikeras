@@ -168,6 +168,7 @@ jobs:
       - name: Test with pytest
         run: |
           poetry run pip freeze
+          poetry run python -c "import tensorflow;print(tensorflow.__version__)"
           poetry run python -c "import tensorflow as tf;print(tf.__version__)"
           poetry run python -m pytest -v --cov=scikeras --cov-report xml --color=yes
 
