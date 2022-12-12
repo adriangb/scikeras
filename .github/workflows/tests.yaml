@@ -30,6 +30,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
@@ -62,6 +63,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10"]
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
@@ -139,6 +141,7 @@ jobs:
       matrix:
         os: [MacOS, Windows]  # test all OSs (except Ubuntu, which is already running other tests)
         python-version: ["3.7", "3.10"]  # test only the two extremes of supported Python versions
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
