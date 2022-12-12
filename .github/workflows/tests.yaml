@@ -8,6 +8,10 @@ on:
     # run every day at midnight
     - cron: "0 0 * * *"
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   Linting:
     runs-on: ubuntu-latest
@@ -30,6 +34,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
@@ -56,53 +61,54 @@ jobs:
 
       - uses: codecov/codecov-action@v1
 
-  # TestDev:
-  #   name: Ubuntu / Python ${{ matrix.python-version }} / TensorFlow Nightly / Scikit-Learn Nightly
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       python-version: ["3.10"]
+  TestDev:
+    name: Ubuntu / Python ${{ matrix.python-version }} / TensorFlow Nightly / Scikit-Learn Nightly
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+      fail-fast: false
 
-  #   steps:
-  #     - uses: actions/checkout@v2
+    steps:
+      - uses: actions/checkout@v2
 
-  #     - name: Set up Python ${{ matrix.python-version }}
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
 
-  #     - name: Install and Set Up Poetry
-  #       run: |
-  #         python -m pip install --upgrade poetry
-  #         poetry config virtualenvs.in-project true
-  #         poetry run python -m pip install --upgrade pip
+      - name: Install and Set Up Poetry
+        run: |
+          python -m pip install --upgrade poetry
+          poetry config virtualenvs.in-project true
+          poetry run python -m pip install --upgrade pip
 
-  #     - name: Install Dependencies
-  #       run: |
-  #         poetry remove scikit-learn
-  #         poetry install
+      - name: Install Dependencies
+        run: |
+          poetry remove scikit-learn
+          poetry install
 
-  #     - name: Install Nightly Versions
-  #       if: always()
-  #       run: |
-  #         poetry run python -m pip install -U tf-nightly
-  #         poetry run python -m pip install -U scipy
-  #         poetry run python -m pip install -U --pre --extra-index https://pypi.anaconda.org/scipy-wheels-nightly/simple scikit-learn
+      - name: Install Nightly Versions
+        if: always()
+        run: |
+          poetry run python -m pip install -U tf-nightly
+          poetry run python -m pip install -U scipy
+          poetry run python -m pip install -U --pre --extra-index https://pypi.anaconda.org/scipy-wheels-nightly/simple scikit-learn
 
-  #     - name: Test with pytest
-  #       if: always()
-  #       run: |
-  #         poetry run python -m pip freeze
-  #         poetry run python -m pytest -v --cov=scikeras --cov-report xml --color=yes
+      - name: Test with pytest
+        if: always()
+        run: |
+          poetry run python -m pip freeze
+          poetry run python -m pytest -v --cov=scikeras --cov-report xml --color=yes
 
-  #     - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v1
 
   TestOldest:
     name: Ubuntu / Python ${{ matrix.python-version }} / TF ${{ matrix.tf-version }} / Scikit-Learn ${{ matrix.sklearn-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tf-version: [2.7.0]
+        tf-version: [2.11.0]
         python-version: ["3.7", "3.9"]
         sklearn-version: [1.0.0]
 
@@ -123,7 +129,9 @@ jobs:
       - name: Install Dependencies
         run: |
           poetry install -E tensorflow
-          poetry add "scikit-learn==${{matrix.sklearn-version}}"
+          poetry run pip install \
+            "tensorflow==${{ matrix.tf-version }}" \
+            "scikit-learn==${{matrix.sklearn-version}}"
 
       - name: Test with pytest
         run: |
@@ -139,6 +147,7 @@ jobs:
       matrix:
         os: [MacOS, Windows]  # test all OSs (except Ubuntu, which is already running other tests)
         python-version: ["3.7", "3.10"]  # test only the two extremes of supported Python versions
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
@@ -149,19 +158,24 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install and Set Up Poetry
-        shell: bash
         run: |
           pip install --upgrade poetry
           poetry config virtualenvs.in-project true
           poetry run python -m pip install --upgrade pip
 
       - name: Install Dependencies
+        # TF is sorta dropping support for Windows
+        # At the very least they are no longer suppporting GPU
+        # See https://github.com/tensorflow/tensorflow/releases/tag/v2.11.0
+        # and
+        # https://www.tensorflow.org/install/pip#windows-native
         run: |
-          poetry install -E tensorflow
+          poetry install
+          poetry run pip install -U tensorflow-cpu
 
       - name: Test with pytest
         run: |
-          poetry run python -m pip freeze
+          poetry run pip freeze
           poetry run python -m pytest -v --cov=scikeras --cov-report xml --color=yes
 
       - uses: codecov/codecov-action@v1

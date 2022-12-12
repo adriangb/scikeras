@@ -47,8 +47,7 @@ class TargetReshaper(BaseEstimator, TransformerMixin):
         self.ndim_ = y.ndim
         return self
 
-    @staticmethod
-    def transform(y: np.ndarray) -> np.ndarray:
+    def transform(self, y: np.ndarray) -> np.ndarray:
         """Makes 1D y 2D.
 
         Parameters

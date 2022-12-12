@@ -1,6 +1,6 @@
 import pickle
 
-from typing import Any, Dict
+from typing import Any, Dict, Type
 
 import numpy as np
 import pytest
@@ -238,27 +238,27 @@ def test_pickle_loss(metric):
         keras.optimizers.SGD,
     ],
 )
-def test_pickle_optimizer(opt_cls):
+def test_pickle_optimizer(opt_cls: Type[keras.optimizers.Optimizer]):
     # Minimize a variable subject to two different
     # loss functions
-    opt = opt_cls()
+    opt = opt_cls(name="optimizer")
     var1 = tf.Variable(10.0)
     loss1 = lambda: (var1**2) / 2.0
-    opt.minimize(loss1, [var1]).numpy()
+    opt.minimize(loss1, [var1])
     loss2 = lambda: (var1**2) / 1.0
-    opt.minimize(loss2, [var1]).numpy()
+    opt.minimize(loss2, [var1])
     val_no_pickle = var1.numpy()
     # Do the same with a roundtrip pickle in the middle
     opt = opt_cls()
     var1 = tf.Variable(10.0)
     loss1 = lambda: (var1**2) / 2.0
-    opt.minimize(loss1, [var1]).numpy()
+    opt.minimize(loss1, [var1])
     loss2 = lambda: (var1**2) / 1.0
     opt = pickle.loads(pickle.dumps(opt))
-    opt.minimize(loss2, [var1]).numpy()
+    opt.minimize(loss2, [var1])
     val_pickle = var1.numpy()
     # Check that the final values are the same
-    np.testing.assert_equal(val_no_pickle, val_pickle)
+    np.testing.assert_almost_equal(val_no_pickle, val_pickle, decimal=0.01)
 
 
 def test_pickle_with_callbacks():

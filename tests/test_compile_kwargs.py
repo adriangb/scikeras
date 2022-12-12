@@ -46,7 +46,7 @@ def test_optimizer(optimizer):
     est.fit(X, y)
     est_opt = est.model_.optimizer
     if not isinstance(optimizer, str):
-        assert float(est_opt.momentum.value()) == pytest.approx(0.5)
+        assert float(est_opt.momentum) == pytest.approx(0.5)
         assert float(est_opt.learning_rate) == pytest.approx(0.15, abs=1e-6)
     else:
         est_opt.__class__ == optimizers_module.get(optimizer).__class__
