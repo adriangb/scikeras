@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "c5c4e0ee",
+   "id": "44506683",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "00c78878",
+   "id": "aa640e9e",
    "metadata": {},
    "source": [
     "# Sparse Inputs"
@@ -18,7 +18,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "d7bd9e1e",
+   "id": "b88d92f2",
    "metadata": {},
    "source": [
     "SciKeras supports sparse inputs (`X`/features).\n",
@@ -29,7 +29,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "8a5ccde6",
+   "id": "9f6a545d",
    "metadata": {},
    "source": [
     "## Setup"
@@ -38,13 +38,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "351ac673",
+   "id": "c48b1b5a",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:38:58.964462Z",
-     "iopub.status.busy": "2022-10-14T17:38:58.964147Z",
-     "iopub.status.idle": "2022-10-14T17:39:03.977621Z",
-     "shell.execute_reply": "2022-10-14T17:39:03.976882Z"
+     "iopub.execute_input": "2022-12-12T16:13:41.083993Z",
+     "iopub.status.busy": "2022-12-12T16:13:41.083755Z",
+     "iopub.status.idle": "2022-12-12T16:13:43.896917Z",
+     "shell.execute_reply": "2022-12-12T16:13:43.896227Z"
     }
    },
    "outputs": [
@@ -59,61 +59,8 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "  Downloading memory_profiler-0.60.0.tar.gz (38 kB)\r\n"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "  Preparing metadata (setup.py) ... \u001b[?25l-"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \b\\"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \bdone\r\n",
-      "\u001b[?25hRequirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages (from memory_profiler) (5.9.2)\r\n",
-      "Building wheels for collected packages: memory_profiler\r\n"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "  Building wheel for memory_profiler (setup.py) ... \u001b[?25l-"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \b\\"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \b|"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\b \bdone\r\n",
-      "\u001b[?25h  Created wheel for memory_profiler: filename=memory_profiler-0.60.0-py3-none-any.whl size=31267 sha256=e0fccc72ad0ca2e128ab8922151e83826842e799342aa4180ec7badb4c97da28\r\n",
-      "  Stored in directory: /home/runner/.cache/pip/wheels/01/ca/8b/b518dd2aef69635ad6fcab87069c9c52f355a2e9c5d4c02da9\r\n",
-      "Successfully built memory_profiler\r\n"
+      "  Downloading memory_profiler-0.61.0-py3-none-any.whl (31 kB)\r\n",
+      "Requirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages (from memory_profiler) (5.9.4)\r\n"
      ]
     },
     {
@@ -127,7 +74,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Successfully installed memory_profiler-0.60.0\r\n"
+      "Successfully installed memory_profiler-0.61.0\r\n"
      ]
     }
    ],
@@ -139,13 +86,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "4f25088e",
+   "id": "7e2f5afc",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:39:03.983141Z",
-     "iopub.status.busy": "2022-10-14T17:39:03.981182Z",
-     "iopub.status.idle": "2022-10-14T17:39:06.699402Z",
-     "shell.execute_reply": "2022-10-14T17:39:06.698505Z"
+     "iopub.execute_input": "2022-12-12T16:13:43.902135Z",
+     "iopub.status.busy": "2022-12-12T16:13:43.900846Z",
+     "iopub.status.idle": "2022-12-12T16:13:45.939935Z",
+     "shell.execute_reply": "2022-12-12T16:13:45.939256Z"
     }
    },
    "outputs": [],
@@ -161,13 +108,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "a1eeb8a0",
+   "id": "67f99d9d",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:39:06.704532Z",
-     "iopub.status.busy": "2022-10-14T17:39:06.704055Z",
-     "iopub.status.idle": "2022-10-14T17:39:06.722884Z",
-     "shell.execute_reply": "2022-10-14T17:39:06.722091Z"
+     "iopub.execute_input": "2022-12-12T16:13:45.945512Z",
+     "iopub.status.busy": "2022-12-12T16:13:45.944128Z",
+     "iopub.status.idle": "2022-12-12T16:13:45.960641Z",
+     "shell.execute_reply": "2022-12-12T16:13:45.960039Z"
     }
    },
    "outputs": [],
@@ -181,13 +128,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "662436bd",
+   "id": "61c03dfd",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:39:06.727320Z",
-     "iopub.status.busy": "2022-10-14T17:39:06.727061Z",
-     "iopub.status.idle": "2022-10-14T17:39:07.008974Z",
-     "shell.execute_reply": "2022-10-14T17:39:07.008144Z"
+     "iopub.execute_input": "2022-12-12T16:13:45.963926Z",
+     "iopub.status.busy": "2022-12-12T16:13:45.963537Z",
+     "iopub.status.idle": "2022-12-12T16:13:46.182686Z",
+     "shell.execute_reply": "2022-12-12T16:13:46.181411Z"
     }
    },
    "outputs": [],
@@ -202,7 +149,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "0fb3d108",
+   "id": "94bc8fff",
    "metadata": {},
    "source": [
     "## Data\n",
@@ -215,13 +162,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "eb556926",
+   "id": "46840d62",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:39:07.013825Z",
-     "iopub.status.busy": "2022-10-14T17:39:07.012945Z",
-     "iopub.status.idle": "2022-10-14T17:39:07.021436Z",
-     "shell.execute_reply": "2022-10-14T17:39:07.020653Z"
+     "iopub.execute_input": "2022-12-12T16:13:46.190813Z",
+     "iopub.status.busy": "2022-12-12T16:13:46.190568Z",
+     "iopub.status.idle": "2022-12-12T16:13:46.198114Z",
+     "shell.execute_reply": "2022-12-12T16:13:46.197423Z"
     }
    },
    "outputs": [],
@@ -234,7 +181,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ebf2e09f",
+   "id": "b3aaa6db",
    "metadata": {},
    "source": [
     "## Model\n",
@@ -245,13 +192,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "1a5d4f5d",
+   "id": "92ace339",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:39:07.025234Z",
-     "iopub.status.busy": "2022-10-14T17:39:07.024880Z",
-     "iopub.status.idle": "2022-10-14T17:39:07.029226Z",
-     "shell.execute_reply": "2022-10-14T17:39:07.028640Z"
+     "iopub.execute_input": "2022-12-12T16:13:46.202207Z",
+     "iopub.status.busy": "2022-12-12T16:13:46.201828Z",
+     "iopub.status.idle": "2022-12-12T16:13:46.207176Z",
+     "shell.execute_reply": "2022-12-12T16:13:46.206544Z"
     }
    },
    "outputs": [],
@@ -268,7 +215,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "a519f4af",
+   "id": "1a570a13",
    "metadata": {},
    "source": [
     "## Pipelines\n",
@@ -280,13 +227,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "8ef6fed2",
+   "id": "39bab8e0",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:39:07.032454Z",
-     "iopub.status.busy": "2022-10-14T17:39:07.031947Z",
-     "iopub.status.idle": "2022-10-14T17:39:07.038315Z",
-     "shell.execute_reply": "2022-10-14T17:39:07.037002Z"
+     "iopub.execute_input": "2022-12-12T16:13:46.210477Z",
+     "iopub.status.busy": "2022-12-12T16:13:46.210121Z",
+     "iopub.status.idle": "2022-12-12T16:13:46.215412Z",
+     "shell.execute_reply": "2022-12-12T16:13:46.214806Z"
     }
    },
    "outputs": [],
@@ -308,7 +255,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "51fb670c",
+   "id": "9b3d7e8b",
    "metadata": {},
    "source": [
     "## Benchmark\n",
@@ -319,13 +266,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "ec25127b",
+   "id": "865c5ea6",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:39:07.044040Z",
-     "iopub.status.busy": "2022-10-14T17:39:07.043534Z",
-     "iopub.status.idle": "2022-10-14T17:40:21.067058Z",
-     "shell.execute_reply": "2022-10-14T17:40:21.066126Z"
+     "iopub.execute_input": "2022-12-12T16:13:46.218754Z",
+     "iopub.status.busy": "2022-12-12T16:13:46.218281Z",
+     "iopub.status.idle": "2022-12-12T16:14:37.728011Z",
+     "shell.execute_reply": "2022-12-12T16:14:37.727360Z"
     }
    },
    "outputs": [
@@ -333,7 +280,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 3541.08 MiB, increment: 3151.93 MiB\n"
+      "peak memory: 3548.33 MiB, increment: 3145.17 MiB\n"
      ]
     }
    ],
@@ -344,29 +291,21 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "7c90c3f0",
+   "id": "fd75119e",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:40:21.073166Z",
-     "iopub.status.busy": "2022-10-14T17:40:21.071859Z",
-     "iopub.status.idle": "2022-10-14T17:40:42.210966Z",
-     "shell.execute_reply": "2022-10-14T17:40:42.210159Z"
+     "iopub.execute_input": "2022-12-12T16:14:37.733219Z",
+     "iopub.status.busy": "2022-12-12T16:14:37.732053Z",
+     "iopub.status.idle": "2022-12-12T16:15:01.859859Z",
+     "shell.execute_reply": "2022-12-12T16:15:01.859143Z"
     }
    },
    "outputs": [
     {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(\"gradient_tape/sequential_1/dense_2/embedding_lookup_sparse/Reshape_1:0\", shape=(None,), dtype=int32), values=Tensor(\"gradient_tape/sequential_1/dense_2/embedding_lookup_sparse/Reshape:0\", shape=(None, 100), dtype=float32), dense_shape=Tensor(\"gradient_tape/sequential_1/dense_2/embedding_lookup_sparse/Cast:0\", shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 639.63 MiB, increment: 64.95 MiB\n"
+      "peak memory: 696.99 MiB, increment: 88.61 MiB\n"
      ]
     }
    ],
@@ -376,7 +315,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "c971fdcd",
+   "id": "0b6f6d50",
    "metadata": {},
    "source": [
     "You should see at least 100x more memory consumption **increment** in the dense pipeline."
@@ -384,7 +323,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "7d0030af",
+   "id": "1074bea0",
    "metadata": {},
    "source": [
     "### Runtime\n",
@@ -395,13 +334,13 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "74d88e87",
+   "id": "fdc6b83a",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:40:42.215984Z",
-     "iopub.status.busy": "2022-10-14T17:40:42.215552Z",
-     "iopub.status.idle": "2022-10-14T17:46:31.255841Z",
-     "shell.execute_reply": "2022-10-14T17:46:31.255077Z"
+     "iopub.execute_input": "2022-12-12T16:15:01.863683Z",
+     "iopub.status.busy": "2022-12-12T16:15:01.863446Z",
+     "iopub.status.idle": "2022-12-12T16:20:35.406494Z",
+     "shell.execute_reply": "2022-12-12T16:20:35.405859Z"
     }
    },
    "outputs": [
@@ -409,7 +348,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "43.4 s ± 2.05 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
+      "39.7 s ± 9.74 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
      ]
     }
    ],
@@ -420,85 +359,21 @@
   {
    "cell_type": "code",
    "execution_count": 11,
-   "id": "7d7a14a0",
+   "id": "956c9c39",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:46:31.261579Z",
-     "iopub.status.busy": "2022-10-14T17:46:31.258957Z",
-     "iopub.status.idle": "2022-10-14T17:48:17.708420Z",
-     "shell.execute_reply": "2022-10-14T17:48:17.707559Z"
+     "iopub.execute_input": "2022-12-12T16:20:35.410442Z",
+     "iopub.status.busy": "2022-12-12T16:20:35.410029Z",
+     "iopub.status.idle": "2022-12-12T16:22:19.828468Z",
+     "shell.execute_reply": "2022-12-12T16:22:19.827790Z"
     }
    },
    "outputs": [
     {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(\"gradient_tape/sequential_10/dense_20/embedding_lookup_sparse/Reshape_1:0\", shape=(None,), dtype=int32), values=Tensor(\"gradient_tape/sequential_10/dense_20/embedding_lookup_sparse/Reshape:0\", shape=(None, 100), dtype=float32), dense_shape=Tensor(\"gradient_tape/sequential_10/dense_20/embedding_lookup_sparse/Cast:0\", shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(\"gradient_tape/sequential_11/dense_22/embedding_lookup_sparse/Reshape_1:0\", shape=(None,), dtype=int32), values=Tensor(\"gradient_tape/sequential_11/dense_22/embedding_lookup_sparse/Reshape:0\", shape=(None, 100), dtype=float32), dense_shape=Tensor(\"gradient_tape/sequential_11/dense_22/embedding_lookup_sparse/Cast:0\", shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(\"gradient_tape/sequential_12/dense_24/embedding_lookup_sparse/Reshape_1:0\", shape=(None,), dtype=int32), values=Tensor(\"gradient_tape/sequential_12/dense_24/embedding_lookup_sparse/Reshape:0\", shape=(None, 100), dtype=float32), dense_shape=Tensor(\"gradient_tape/sequential_12/dense_24/embedding_lookup_sparse/Cast:0\", shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(\"gradient_tape/sequential_13/dense_26/embedding_lookup_sparse/Reshape_1:0\", shape=(None,), dtype=int32), values=Tensor(\"gradient_tape/sequential_13/dense_26/embedding_lookup_sparse/Reshape:0\", shape=(None, 100), dtype=float32), dense_shape=Tensor(\"gradient_tape/sequential_13/dense_26/embedding_lookup_sparse/Cast:0\", shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(\"gradient_tape/sequential_14/dense_28/embedding_lookup_sparse/Reshape_1:0\", shape=(None,), dtype=int32), values=Tensor(\"gradient_tape/sequential_14/dense_28/embedding_lookup_sparse/Reshape:0\", shape=(None, 100), dtype=float32), dense_shape=Tensor(\"gradient_tape/sequential_14/dense_28/embedding_lookup_sparse/Cast:0\", shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(\"gradient_tape/sequential_15/dense_30/embedding_lookup_sparse/Reshape_1:0\", shape=(None,), dtype=int32), values=Tensor(\"gradient_tape/sequential_15/dense_30/embedding_lookup_sparse/Reshape:0\", shape=(None, 100), dtype=float32), dense_shape=Tensor(\"gradient_tape/sequential_15/dense_30/embedding_lookup_sparse/Cast:0\", shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(\"gradient_tape/sequential_16/dense_32/embedding_lookup_sparse/Reshape_1:0\", shape=(None,), dtype=int32), values=Tensor(\"gradient_tape/sequential_16/dense_32/embedding_lookup_sparse/Reshape:0\", shape=(None, 100), dtype=float32), dense_shape=Tensor(\"gradient_tape/sequential_16/dense_32/embedding_lookup_sparse/Cast:0\", shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(\"gradient_tape/sequential_17/dense_34/embedding_lookup_sparse/Reshape_1:0\", shape=(None,), dtype=int32), values=Tensor(\"gradient_tape/sequential_17/dense_34/embedding_lookup_sparse/Reshape:0\", shape=(None, 100), dtype=float32), dense_shape=Tensor(\"gradient_tape/sequential_17/dense_34/embedding_lookup_sparse/Cast:0\", shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "13.2 s ± 297 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
+      "13 s ± 2.78 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
      ]
     }
    ],
@@ -508,7 +383,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "3464c09b",
+   "id": "ed0dc993",
    "metadata": {},
    "source": [
     "## Tensorflow Datasets\n",
@@ -525,7 +400,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "d3778a6c",
+   "id": "accbbfd6",
    "metadata": {},
    "source": [
     "## Bonus: dtypes\n",
@@ -536,13 +411,13 @@
   {
    "cell_type": "code",
    "execution_count": 12,
-   "id": "5d9dd9fb",
+   "id": "2a059a70",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:48:17.714391Z",
-     "iopub.status.busy": "2022-10-14T17:48:17.713862Z",
-     "iopub.status.idle": "2022-10-14T17:48:17.718258Z",
-     "shell.execute_reply": "2022-10-14T17:48:17.717506Z"
+     "iopub.execute_input": "2022-12-12T16:22:19.832827Z",
+     "iopub.status.busy": "2022-12-12T16:22:19.832581Z",
+     "iopub.status.idle": "2022-12-12T16:22:19.837394Z",
+     "shell.execute_reply": "2022-12-12T16:22:19.836826Z"
     }
    },
    "outputs": [],
@@ -558,29 +433,21 @@
   {
    "cell_type": "code",
    "execution_count": 13,
-   "id": "694b7781",
+   "id": "fe577486",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-10-14T17:48:17.721511Z",
-     "iopub.status.busy": "2022-10-14T17:48:17.721136Z",
-     "iopub.status.idle": "2022-10-14T17:48:33.635804Z",
-     "shell.execute_reply": "2022-10-14T17:48:33.634715Z"
+     "iopub.execute_input": "2022-12-12T16:22:19.840534Z",
+     "iopub.status.busy": "2022-12-12T16:22:19.840193Z",
+     "iopub.status.idle": "2022-12-12T16:22:31.664240Z",
+     "shell.execute_reply": "2022-12-12T16:22:31.663476Z"
     }
    },
    "outputs": [
     {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(\"gradient_tape/sequential_18/dense_36/embedding_lookup_sparse/Reshape_1:0\", shape=(None,), dtype=int32), values=Tensor(\"gradient_tape/sequential_18/dense_36/embedding_lookup_sparse/Reshape:0\", shape=(None, 100), dtype=float32), dense_shape=Tensor(\"gradient_tape/sequential_18/dense_36/embedding_lookup_sparse/Cast:0\", shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 1016.38 MiB, increment: 4.57 MiB\n"
+      "peak memory: 1078.18 MiB, increment: 0.79 MiB\n"
      ]
     }
    ],
@@ -608,7 +475,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.8.14"
+   "version": "3.8.15"
   }
  },
  "nbformat": 4,

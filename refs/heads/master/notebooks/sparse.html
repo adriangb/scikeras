@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Sparse Inputs &#8212; SciKeras 0.9.0 documentation</title>
+    <title>Sparse Inputs &#8212; SciKeras 0.10.0 documentation</title>
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/insipid.css" />
@@ -240,10 +240,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -407,16 +408,10 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Collecting memory_profiler
-  Downloading memory_profiler-0.60.0.tar.gz (38 kB)
-  Preparing metadata (setup.py) ... - \ done
-Requirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages (from memory_profiler) (5.9.2)
-Building wheels for collected packages: memory_profiler
-  Building wheel for memory_profiler (setup.py) ... - \ | done
-  Created wheel for memory_profiler: filename=memory_profiler-0.60.0-py3-none-any.whl size=31267 sha256=e0fccc72ad0ca2e128ab8922151e83826842e799342aa4180ec7badb4c97da28
-  Stored in directory: /home/runner/.cache/pip/wheels/01/ca/8b/b518dd2aef69635ad6fcab87069c9c52f355a2e9c5d4c02da9
-Successfully built memory_profiler
+  Downloading memory_profiler-0.61.0-py3-none-any.whl (31 kB)
+Requirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages (from memory_profiler) (5.9.4)
 Installing collected packages: memory_profiler
-Successfully installed memory_profiler-0.60.0
+Successfully installed memory_profiler-0.61.0
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -531,7 +526,7 @@ Successfully installed memory_profiler-0.60.0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-peak memory: 3541.08 MiB, increment: 3151.93 MiB
+peak memory: 3548.33 MiB, increment: 3145.17 MiB
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -542,21 +537,12 @@ peak memory: 3541.08 MiB, increment: 3151.93 MiB
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(&#34;gradient_tape/sequential_1/dense_2/embedding_lookup_sparse/Reshape_1:0&#34;, shape=(None,), dtype=int32), values=Tensor(&#34;gradient_tape/sequential_1/dense_2/embedding_lookup_sparse/Reshape:0&#34;, shape=(None, 100), dtype=float32), dense_shape=Tensor(&#34;gradient_tape/sequential_1/dense_2/embedding_lookup_sparse/Cast:0&#34;, shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.
-  warnings.warn(
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-peak memory: 639.63 MiB, increment: 64.95 MiB
+peak memory: 696.99 MiB, increment: 88.61 MiB
 </pre></div></div>
 </div>
 <p>You should see at least 100x more memory consumption <strong>increment</strong> in the dense pipeline.</p>
@@ -576,7 +562,7 @@ peak memory: 639.63 MiB, increment: 64.95 MiB
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-43.4 s ± 2.05 s per loop (mean ± std. dev. of 7 runs, 1 loop each)
+39.7 s ± 9.74 s per loop (mean ± std. dev. of 7 runs, 1 loop each)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -587,35 +573,12 @@ peak memory: 639.63 MiB, increment: 64.95 MiB
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(&#34;gradient_tape/sequential_10/dense_20/embedding_lookup_sparse/Reshape_1:0&#34;, shape=(None,), dtype=int32), values=Tensor(&#34;gradient_tape/sequential_10/dense_20/embedding_lookup_sparse/Reshape:0&#34;, shape=(None, 100), dtype=float32), dense_shape=Tensor(&#34;gradient_tape/sequential_10/dense_20/embedding_lookup_sparse/Cast:0&#34;, shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(&#34;gradient_tape/sequential_11/dense_22/embedding_lookup_sparse/Reshape_1:0&#34;, shape=(None,), dtype=int32), values=Tensor(&#34;gradient_tape/sequential_11/dense_22/embedding_lookup_sparse/Reshape:0&#34;, shape=(None, 100), dtype=float32), dense_shape=Tensor(&#34;gradient_tape/sequential_11/dense_22/embedding_lookup_sparse/Cast:0&#34;, shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(&#34;gradient_tape/sequential_12/dense_24/embedding_lookup_sparse/Reshape_1:0&#34;, shape=(None,), dtype=int32), values=Tensor(&#34;gradient_tape/sequential_12/dense_24/embedding_lookup_sparse/Reshape:0&#34;, shape=(None, 100), dtype=float32), dense_shape=Tensor(&#34;gradient_tape/sequential_12/dense_24/embedding_lookup_sparse/Cast:0&#34;, shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(&#34;gradient_tape/sequential_13/dense_26/embedding_lookup_sparse/Reshape_1:0&#34;, shape=(None,), dtype=int32), values=Tensor(&#34;gradient_tape/sequential_13/dense_26/embedding_lookup_sparse/Reshape:0&#34;, shape=(None, 100), dtype=float32), dense_shape=Tensor(&#34;gradient_tape/sequential_13/dense_26/embedding_lookup_sparse/Cast:0&#34;, shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(&#34;gradient_tape/sequential_14/dense_28/embedding_lookup_sparse/Reshape_1:0&#34;, shape=(None,), dtype=int32), values=Tensor(&#34;gradient_tape/sequential_14/dense_28/embedding_lookup_sparse/Reshape:0&#34;, shape=(None, 100), dtype=float32), dense_shape=Tensor(&#34;gradient_tape/sequential_14/dense_28/embedding_lookup_sparse/Cast:0&#34;, shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(&#34;gradient_tape/sequential_15/dense_30/embedding_lookup_sparse/Reshape_1:0&#34;, shape=(None,), dtype=int32), values=Tensor(&#34;gradient_tape/sequential_15/dense_30/embedding_lookup_sparse/Reshape:0&#34;, shape=(None, 100), dtype=float32), dense_shape=Tensor(&#34;gradient_tape/sequential_15/dense_30/embedding_lookup_sparse/Cast:0&#34;, shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(&#34;gradient_tape/sequential_16/dense_32/embedding_lookup_sparse/Reshape_1:0&#34;, shape=(None,), dtype=int32), values=Tensor(&#34;gradient_tape/sequential_16/dense_32/embedding_lookup_sparse/Reshape:0&#34;, shape=(None, 100), dtype=float32), dense_shape=Tensor(&#34;gradient_tape/sequential_16/dense_32/embedding_lookup_sparse/Cast:0&#34;, shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(&#34;gradient_tape/sequential_17/dense_34/embedding_lookup_sparse/Reshape_1:0&#34;, shape=(None,), dtype=int32), values=Tensor(&#34;gradient_tape/sequential_17/dense_34/embedding_lookup_sparse/Reshape:0&#34;, shape=(None, 100), dtype=float32), dense_shape=Tensor(&#34;gradient_tape/sequential_17/dense_34/embedding_lookup_sparse/Cast:0&#34;, shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.
-  warnings.warn(
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-13.2 s ± 297 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+13 s ± 2.78 s per loop (mean ± std. dev. of 7 runs, 1 loop each)
 </pre></div></div>
 </div>
 </section>
@@ -649,21 +612,12 @@ peak memory: 639.63 MiB, increment: 64.95 MiB
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/tensorflow/python/framework/indexed_slices.py:444: UserWarning: Converting sparse IndexedSlices(IndexedSlices(indices=Tensor(&#34;gradient_tape/sequential_18/dense_36/embedding_lookup_sparse/Reshape_1:0&#34;, shape=(None,), dtype=int32), values=Tensor(&#34;gradient_tape/sequential_18/dense_36/embedding_lookup_sparse/Reshape:0&#34;, shape=(None, 100), dtype=float32), dense_shape=Tensor(&#34;gradient_tape/sequential_18/dense_36/embedding_lookup_sparse/Cast:0&#34;, shape=(2,), dtype=int32))) to a dense Tensor of unknown shape. This may consume a large amount of memory.
-  warnings.warn(
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-peak memory: 1016.38 MiB, increment: 4.57 MiB
+peak memory: 1078.18 MiB, increment: 0.79 MiB
 </pre></div></div>
 </div>
 </section>
@@ -735,7 +689,7 @@ peak memory: 1016.38 MiB, increment: 4.57 MiB
 
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/notebooks/sparse.ipynb.txt" rel="nofollow">Show Source</a>.
     </footer>
