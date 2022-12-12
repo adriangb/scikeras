@@ -164,14 +164,16 @@ jobs:
           poetry run python -m pip install --upgrade pip
 
       - name: Install Dependencies
+        run: |
+          poetry install
         # TF is sorta dropping support for Windows
         # At the very least they are no longer suppporting GPU
         # See https://github.com/tensorflow/tensorflow/releases/tag/v2.11.0
         # and
         # https://www.tensorflow.org/install/pip#windows-native 
-        run: |
-          poetry install
           poetry run pip install -U tensorflow-cpu
+        # https://github.com/grpc/grpc/issues/31492
+          poetry run pip install -U grpcio==1.49.1
 
       - name: Test with pytest
         run: |
