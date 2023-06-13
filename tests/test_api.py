@@ -6,7 +6,7 @@ from typing import Any, Dict
 import numpy as np
 import pytest
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.datasets import fetch_california_housing, load_digits, load_iris
+from sklearn.datasets import load_diabetes, load_digits, load_iris
 from sklearn.ensemble import (
     AdaBoostClassifier,
     AdaBoostRegressor,
@@ -223,7 +223,7 @@ def build_fn_clscf(
 
 CONFIG = {
     "MLPRegressor": (
-        fetch_california_housing,
+        load_diabetes,
         KerasRegressor,
         dynamic_regressor,
         (BaggingRegressor, AdaBoostRegressor),
