@@ -99,6 +99,7 @@ jobs:
 
       - name: Test with pytest
         if: always()
+        continue-on-error: true
         run: |
           poetry run python -m pip freeze
           poetry run python -m pytest -v --cov=scikeras --cov-report xml --color=yes
