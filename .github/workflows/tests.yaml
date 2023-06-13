@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
       fail-fast: false
 
     steps:
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.10", "3.11"]
       fail-fast: false
 
     steps:
@@ -146,7 +146,7 @@ jobs:
     strategy:
       matrix:
         os: [MacOS, Windows]  # test all OSs (except Ubuntu, which is already running other tests)
-        python-version: ["3.7", "3.10"]  # test only the two extremes of supported Python versions
+        python-version: ["3.7", "3.10", "3.11"]  # test only the two extremes of supported Python versions
       fail-fast: false
 
     steps:
@@ -166,7 +166,7 @@ jobs:
       - name: Install Dependencies
         # TF is sorta dropping support for Windows
         # At the very least they are no longer suppporting GPU
-        # See https://github.com/tensorflow/tensorflow/releases/tag/v2.11.0
+        # See https://github.com/tensorflow/tensorflow/releases/tag/v2.12.0
         # and
         # https://www.tensorflow.org/install/pip#windows-native
         run: |
