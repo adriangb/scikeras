@@ -1,34 +1,47 @@
 
 
-:root {
-    --readthedocs-badge-height: 0px;
+#ethical-ad-placement {
+    margin-top: auto;
+    padding-top: 3em;
+    min-height: 200px;
 }
 
-div.sphinxsidebar {
-    bottom: var(--readthedocs-badge-height);
+#readthedocs-embed-flyout, #duplicated-readthedocs-versions {
+    margin-left: -10px;
+    margin-right: -10px;
 }
 
-.injected .rst-versions.rst-badge {
-    left: 0;
-    bottom: 0;
-    width: var(--sidebar-width);
-    max-width: unset;
+#duplicated-readthedocs-versions {
+    margin-bottom: -10px;
 }
 
-#sidebar-checkbox:not(:checked) ~ .injected .rst-versions.rst-badge {
-    left: calc(0px - var(--sidebar-width));
+#duplicated-readthedocs-versions {
+    position: sticky;
+    width: auto;
 }
 
-.injected .rst-versions.shift-up {
-    max-height: calc(100vh - var(--topbar-height));
+#readthedocs-embed-flyout .rst-versions.rst-badge {
+    position: static;
+    max-width: none;
 }
 
-.injected .rst-versions.rst-badge .rst-current-version {
-    text-align: right;
+
+#readthedocs-embed-flyout .rst-versions.shift-up {
+    max-height: none;
 }
 
-.injected .rst-versions.rst-badge .rst-current-version .fa-book {
-    float: left;
+/* We have duplicated this section, so we don't need the second instance: */
+#readthedocs-embed-flyout .rst-versions.rst-badge .rst-current-version {
+    display: none;
+}
+
+#duplicated-readthedocs-versions .rst-current-version {
+    font-size: 0.9rem;
+}
+
+#readthedocs-embed-flyout .rst-versions .rst-other-versions {
+    display: block;
+    font-size: 0.9rem;
 }
 
 #flyout-search-form input {
@@ -47,7 +60,6 @@ div.sphinxsidebar {
     width: unset;
 }
 
-body:not(.sidebar-resizing) .rst-versions.rst-badge,
 body:not(.sidebar-resizing) .ethical-fixedfooter {
     transition: left 0.3s ease-out;
 }

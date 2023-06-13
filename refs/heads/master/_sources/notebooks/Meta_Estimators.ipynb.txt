@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "29c2d95f",
+   "id": "f784b799",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Meta_Estimators.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "2c4789f8",
+   "id": "cba23219",
    "metadata": {},
    "source": [
     "# Meta Estimators in SciKeras\n",
@@ -31,13 +31,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "72aa0c94",
+   "id": "2f9a6f74",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-12-12T16:17:49.713552Z",
-     "iopub.status.busy": "2022-12-12T16:17:49.713320Z",
-     "iopub.status.idle": "2022-12-12T16:17:52.074593Z",
-     "shell.execute_reply": "2022-12-12T16:17:52.073978Z"
+     "iopub.execute_input": "2023-06-13T23:10:57.271015Z",
+     "iopub.status.busy": "2023-06-13T23:10:57.270770Z",
+     "iopub.status.idle": "2023-06-13T23:11:00.175452Z",
+     "shell.execute_reply": "2023-06-13T23:11:00.174729Z"
     }
    },
    "outputs": [],
@@ -50,7 +50,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "9488761a",
+   "id": "2c62a77b",
    "metadata": {},
    "source": [
     "Silence TensorFlow logging to keep output succinct."
@@ -59,13 +59,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "e9aa411b",
+   "id": "62c4a7ca",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-12-12T16:17:52.079060Z",
-     "iopub.status.busy": "2022-12-12T16:17:52.077592Z",
-     "iopub.status.idle": "2022-12-12T16:17:52.085080Z",
-     "shell.execute_reply": "2022-12-12T16:17:52.084546Z"
+     "iopub.execute_input": "2023-06-13T23:11:00.183035Z",
+     "iopub.status.busy": "2023-06-13T23:11:00.178919Z",
+     "iopub.status.idle": "2023-06-13T23:11:00.187747Z",
+     "shell.execute_reply": "2023-06-13T23:11:00.187155Z"
     }
    },
    "outputs": [],
@@ -79,13 +79,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "1683d5e5",
+   "id": "2d2ad2f3",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-12-12T16:17:52.089624Z",
-     "iopub.status.busy": "2022-12-12T16:17:52.088461Z",
-     "iopub.status.idle": "2022-12-12T16:17:52.343326Z",
-     "shell.execute_reply": "2022-12-12T16:17:52.342627Z"
+     "iopub.execute_input": "2023-06-13T23:11:00.192024Z",
+     "iopub.status.busy": "2023-06-13T23:11:00.190863Z",
+     "iopub.status.idle": "2023-06-13T23:11:00.668458Z",
+     "shell.execute_reply": "2023-06-13T23:11:00.667694Z"
     }
    },
    "outputs": [],
@@ -97,7 +97,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "d672cbf4",
+   "id": "a7cab79e",
    "metadata": {},
    "source": [
     "## 2. Defining the Keras Model\n",
@@ -108,13 +108,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "93f5660c",
+   "id": "ba7ac41e",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-12-12T16:17:52.349866Z",
-     "iopub.status.busy": "2022-12-12T16:17:52.347129Z",
-     "iopub.status.idle": "2022-12-12T16:17:52.362135Z",
-     "shell.execute_reply": "2022-12-12T16:17:52.361494Z"
+     "iopub.execute_input": "2023-06-13T23:11:00.672891Z",
+     "iopub.status.busy": "2023-06-13T23:11:00.671801Z",
+     "iopub.status.idle": "2023-06-13T23:11:00.686847Z",
+     "shell.execute_reply": "2023-06-13T23:11:00.683893Z"
     }
    },
    "outputs": [],
@@ -147,7 +147,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "4e83fdcc",
+   "id": "7ddc8728",
    "metadata": {},
    "source": [
     "Next we wrap this Keras model with SciKeras"
@@ -156,13 +156,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "ec23db69",
+   "id": "16bc9f97",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-12-12T16:17:52.369054Z",
-     "iopub.status.busy": "2022-12-12T16:17:52.366485Z",
-     "iopub.status.idle": "2022-12-12T16:17:52.373614Z",
-     "shell.execute_reply": "2022-12-12T16:17:52.373050Z"
+     "iopub.execute_input": "2023-06-13T23:11:00.691717Z",
+     "iopub.status.busy": "2023-06-13T23:11:00.690443Z",
+     "iopub.status.idle": "2023-06-13T23:11:00.698748Z",
+     "shell.execute_reply": "2023-06-13T23:11:00.698177Z"
     }
    },
    "outputs": [],
@@ -179,7 +179,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "fe24765a",
+   "id": "52ad2fe0",
    "metadata": {},
    "source": [
     "### 2.1 Building a boosting ensemble\n",
@@ -190,13 +190,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "f49edcf1",
+   "id": "43bfbf1b",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-12-12T16:17:52.380070Z",
-     "iopub.status.busy": "2022-12-12T16:17:52.378882Z",
-     "iopub.status.idle": "2022-12-12T16:17:52.521712Z",
-     "shell.execute_reply": "2022-12-12T16:17:52.521031Z"
+     "iopub.execute_input": "2023-06-13T23:11:00.703289Z",
+     "iopub.status.busy": "2023-06-13T23:11:00.702093Z",
+     "iopub.status.idle": "2023-06-13T23:11:01.230634Z",
+     "shell.execute_reply": "2023-06-13T23:11:01.229797Z"
     }
    },
    "outputs": [],
@@ -209,7 +209,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "007a1e21",
+   "id": "b4c924df",
    "metadata": {},
    "source": [
     "## 3. Testing with a toy dataset\n",
@@ -220,21 +220,29 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "1c35aa19",
+   "id": "f353507a",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-12-12T16:17:52.526740Z",
-     "iopub.status.busy": "2022-12-12T16:17:52.525444Z",
-     "iopub.status.idle": "2022-12-12T16:18:46.483585Z",
-     "shell.execute_reply": "2022-12-12T16:18:46.481973Z"
+     "iopub.execute_input": "2023-06-13T23:11:01.234612Z",
+     "iopub.status.busy": "2023-06-13T23:11:01.234155Z",
+     "iopub.status.idle": "2023-06-13T23:11:51.942259Z",
+     "shell.execute_reply": "2023-06-13T23:11:51.941573Z"
     }
    },
    "outputs": [
     {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/ensemble/_base.py:166: FutureWarning: `base_estimator` was renamed to `estimator` in version 1.2 and will be removed in 1.4.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Single score: 0.52\n",
+      "Single score: 0.51\n",
       "AdaBoost score: 0.87\n"
      ]
     }
@@ -255,7 +263,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "48072a0b",
+   "id": "f5c45246",
    "metadata": {},
    "source": [
     "We see that the score for the AdaBoost classifier is slightly higher than that of an individual MLPRegressor instance. We can explore the individual classifiers, and see that each one is composed of a Keras Model with it's own individual weights.\n"
@@ -264,13 +272,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "760e00f8",
+   "id": "22a80e2d",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-12-12T16:18:46.486649Z",
-     "iopub.status.busy": "2022-12-12T16:18:46.486414Z",
-     "iopub.status.idle": "2022-12-12T16:18:46.498099Z",
-     "shell.execute_reply": "2022-12-12T16:18:46.497321Z"
+     "iopub.execute_input": "2023-06-13T23:11:51.946961Z",
+     "iopub.status.busy": "2023-06-13T23:11:51.945725Z",
+     "iopub.status.idle": "2023-06-13T23:11:51.959585Z",
+     "shell.execute_reply": "2023-06-13T23:11:51.958980Z"
     }
    },
    "outputs": [
@@ -278,8 +286,8 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "[-0.0093711   0.04669971  0.08664271 -0.204662    0.11090674]\n",
-      "[ 0.2296762   0.20086938  0.21396956  0.03151377 -0.09929872]\n"
+      "[-0.00944326  0.04647597  0.08641932 -0.20478347  0.10892054]\n",
+      "[ 0.2292868   0.2000614   0.2133192   0.03165507 -0.09934272]\n"
      ]
     }
    ],
@@ -290,7 +298,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "76d6ffbe",
+   "id": "6324ebe1",
    "metadata": {},
    "source": [
     "## 4. Bagging ensemble\n",
@@ -301,13 +309,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "68800c90",
+   "id": "20afb888",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2022-12-12T16:18:46.501529Z",
-     "iopub.status.busy": "2022-12-12T16:18:46.501312Z",
-     "iopub.status.idle": "2022-12-12T16:19:12.340887Z",
-     "shell.execute_reply": "2022-12-12T16:19:12.340202Z"
+     "iopub.execute_input": "2023-06-13T23:11:51.964212Z",
+     "iopub.status.busy": "2023-06-13T23:11:51.963019Z",
+     "iopub.status.idle": "2023-06-13T23:12:18.568088Z",
+     "shell.execute_reply": "2023-06-13T23:12:18.567007Z"
     }
    },
    "outputs": [
@@ -315,28 +323,8 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:tensorflow:5 out of the last 9 calls to <function Model.make_train_function.<locals>.train_function at 0x7fb7e6d8b8b0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:tensorflow:5 out of the last 10 calls to <function Model.make_train_function.<locals>.train_function at 0x7f9ba6947820> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/ensemble/_base.py:166: FutureWarning: `base_estimator` was renamed to `estimator` in version 1.2 and will be removed in 1.4.\n",
+      "  warnings.warn(\n"
      ]
     },
     {
@@ -357,7 +345,7 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
+      "WARNING:tensorflow:5 out of the last 9 calls to <function Model.make_train_function.<locals>.train_function at 0x7f328ae81940> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
      ]
     },
     {
@@ -371,7 +359,7 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
+      "WARNING:tensorflow:5 out of the last 10 calls to <function Model.make_train_function.<locals>.train_function at 0x7fb4c0f41e50> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
      ]
     },
     {
@@ -407,12 +395,34 @@
      "output_type": "stream",
      "text": [
       "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n",
+      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n",
+      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
       "WARNING:tensorflow:Detecting that an object or model or tf.train.Checkpoint is being deleted with unrestored values. See the following logs for the specific values in question. To silence these warnings, use `status.expect_partial()`. See https://www.tensorflow.org/api_docs/python/tf/train/Checkpoint#restorefor details about the status object returned by the restore function.\n",
       "WARNING:tensorflow:Detecting that an object or model or tf.train.Checkpoint is being deleted with unrestored values. See the following logs for the specific values in question. To silence these warnings, use `status.expect_partial()`. See https://www.tensorflow.org/api_docs/python/tf/train/Checkpoint#restorefor details about the status object returned by the restore function.\n",
       "WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).keras_api.metrics.0.total\n",
       "WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).keras_api.metrics.0.total\n",
       "WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).keras_api.metrics.0.count\n",
       "WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).keras_api.metrics.0.count\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
      ]
     },
     {
@@ -536,7 +546,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.8.15"
+   "version": "3.8.16"
   }
  },
  "nbformat": 4,

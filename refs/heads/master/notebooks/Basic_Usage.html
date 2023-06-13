@@ -1,20 +1,17 @@
-
 <!DOCTYPE html>
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Basic usage &#8212; SciKeras 0.10.0 documentation</title>
+    <title>Basic usage &#8212; SciKeras 0.11.0 documentation</title>
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/insipid.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -130,263 +127,6 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-
-<style>
-/* CSS for nbsphinx extension */
-
-/* remove conflicting styling from Sphinx themes */
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt *,
-div.nbinput.container div.input_area pre,
-div.nboutput.container div.output_area pre,
-div.nbinput.container div.input_area .highlight,
-div.nboutput.container div.output_area .highlight {
-    border: none;
-    padding: 0;
-    margin: 0;
-    box-shadow: none;
-}
-
-div.nbinput.container > div[class*=highlight],
-div.nboutput.container > div[class*=highlight] {
-    margin: 0;
-}
-
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt * {
-    background: none;
-}
-
-div.nboutput.container div.output_area .highlight,
-div.nboutput.container div.output_area pre {
-    background: unset;
-}
-
-div.nboutput.container div.output_area div.highlight {
-    color: unset;  /* override Pygments text color */
-}
-
-/* avoid gaps between output lines */
-div.nboutput.container div[class*=highlight] pre {
-    line-height: normal;
-}
-
-/* input/output containers */
-div.nbinput.container,
-div.nboutput.container {
-    display: -webkit-flex;
-    display: flex;
-    align-items: flex-start;
-    margin: 0;
-    width: 100%;
-}
-@media (max-width: 540px) {
-    div.nbinput.container,
-    div.nboutput.container {
-        flex-direction: column;
-    }
-}
-
-/* input container */
-div.nbinput.container {
-    padding-top: 5px;
-}
-
-/* last container */
-div.nblast.container {
-    padding-bottom: 5px;
-}
-
-/* input prompt */
-div.nbinput.container div.prompt pre {
-    color: #307FC1;
-}
-
-/* output prompt */
-div.nboutput.container div.prompt pre {
-    color: #BF5B3D;
-}
-
-/* all prompts */
-div.nbinput.container div.prompt,
-div.nboutput.container div.prompt {
-    width: 4.5ex;
-    padding-top: 5px;
-    position: relative;
-    user-select: none;
-}
-
-div.nbinput.container div.prompt > div,
-div.nboutput.container div.prompt > div {
-    position: absolute;
-    right: 0;
-    margin-right: 0.3ex;
-}
-
-@media (max-width: 540px) {
-    div.nbinput.container div.prompt,
-    div.nboutput.container div.prompt {
-        width: unset;
-        text-align: left;
-        padding: 0.4em;
-    }
-    div.nboutput.container div.prompt.empty {
-        padding: 0;
-    }
-
-    div.nbinput.container div.prompt > div,
-    div.nboutput.container div.prompt > div {
-        position: unset;
-    }
-}
-
-/* disable scrollbars and line breaks on prompts */
-div.nbinput.container div.prompt pre,
-div.nboutput.container div.prompt pre {
-    overflow: hidden;
-    white-space: pre;
-}
-
-/* input/output area */
-div.nbinput.container div.input_area,
-div.nboutput.container div.output_area {
-    -webkit-flex: 1;
-    flex: 1;
-    overflow: auto;
-}
-@media (max-width: 540px) {
-    div.nbinput.container div.input_area,
-    div.nboutput.container div.output_area {
-        width: 100%;
-    }
-}
-
-/* input area */
-div.nbinput.container div.input_area {
-    border: 1px solid #e0e0e0;
-    border-radius: 2px;
-    /*background: #f5f5f5;*/
-}
-
-/* override MathJax center alignment in output cells */
-div.nboutput.container div[class*=MathJax] {
-    text-align: left !important;
-}
-
-/* override sphinx.ext.imgmath center alignment in output cells */
-div.nboutput.container div.math p {
-    text-align: left;
-}
-
-/* standard error */
-div.nboutput.container div.output_area.stderr {
-    background: #fdd;
-}
-
-/* ANSI colors */
-.ansi-black-fg { color: #3E424D; }
-.ansi-black-bg { background-color: #3E424D; }
-.ansi-black-intense-fg { color: #282C36; }
-.ansi-black-intense-bg { background-color: #282C36; }
-.ansi-red-fg { color: #E75C58; }
-.ansi-red-bg { background-color: #E75C58; }
-.ansi-red-intense-fg { color: #B22B31; }
-.ansi-red-intense-bg { background-color: #B22B31; }
-.ansi-green-fg { color: #00A250; }
-.ansi-green-bg { background-color: #00A250; }
-.ansi-green-intense-fg { color: #007427; }
-.ansi-green-intense-bg { background-color: #007427; }
-.ansi-yellow-fg { color: #DDB62B; }
-.ansi-yellow-bg { background-color: #DDB62B; }
-.ansi-yellow-intense-fg { color: #B27D12; }
-.ansi-yellow-intense-bg { background-color: #B27D12; }
-.ansi-blue-fg { color: #208FFB; }
-.ansi-blue-bg { background-color: #208FFB; }
-.ansi-blue-intense-fg { color: #0065CA; }
-.ansi-blue-intense-bg { background-color: #0065CA; }
-.ansi-magenta-fg { color: #D160C4; }
-.ansi-magenta-bg { background-color: #D160C4; }
-.ansi-magenta-intense-fg { color: #A03196; }
-.ansi-magenta-intense-bg { background-color: #A03196; }
-.ansi-cyan-fg { color: #60C6C8; }
-.ansi-cyan-bg { background-color: #60C6C8; }
-.ansi-cyan-intense-fg { color: #258F8F; }
-.ansi-cyan-intense-bg { background-color: #258F8F; }
-.ansi-white-fg { color: #C5C1B4; }
-.ansi-white-bg { background-color: #C5C1B4; }
-.ansi-white-intense-fg { color: #A1A6B2; }
-.ansi-white-intense-bg { background-color: #A1A6B2; }
-
-.ansi-default-inverse-fg { color: #FFFFFF; }
-.ansi-default-inverse-bg { background-color: #000000; }
-
-.ansi-bold { font-weight: bold; }
-.ansi-underline { text-decoration: underline; }
-
-
-div.nbinput.container div.input_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight].math,
-div.nboutput.container div.output_area.rendered_html,
-div.nboutput.container div.output_area > div.output_javascript,
-div.nboutput.container div.output_area:not(.rendered_html) > img{
-    padding: 5px;
-    margin: 0;
-}
-
-/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
-div.nbinput.container div.input_area > div[class^='highlight'],
-div.nboutput.container div.output_area > div[class^='highlight']{
-    overflow-y: hidden;
-}
-
-/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt .copybtn {
-    display: none;
-}
-
-/* Some additional styling taken form the Jupyter notebook CSS */
-.jp-RenderedHTMLCommon table,
-div.rendered_html table {
-  border: none;
-  border-collapse: collapse;
-  border-spacing: 0;
-  color: black;
-  font-size: 12px;
-  table-layout: fixed;
-}
-.jp-RenderedHTMLCommon thead,
-div.rendered_html thead {
-  border-bottom: 1px solid black;
-  vertical-align: bottom;
-}
-.jp-RenderedHTMLCommon tr,
-.jp-RenderedHTMLCommon th,
-.jp-RenderedHTMLCommon td,
-div.rendered_html tr,
-div.rendered_html th,
-div.rendered_html td {
-  text-align: right;
-  vertical-align: middle;
-  padding: 0.5em 0.5em;
-  line-height: normal;
-  white-space: normal;
-  max-width: none;
-  border: none;
-}
-.jp-RenderedHTMLCommon th,
-div.rendered_html th {
-  font-weight: bold;
-}
-.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
-div.rendered_html tbody tr:nth-child(odd) {
-  background: #f5f5f5;
-}
-.jp-RenderedHTMLCommon tbody tr:hover,
-div.rendered_html tbody tr:hover {
-  background: rgba(66, 165, 245, 0.2);
-}
-</style>
 <a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Basic_Usage.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a><section id="Basic-usage">
 <h1>Basic usage<a class="headerlink" href="#Basic-usage" title="Permalink to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">SciKeras</span></code> is designed to maximize interoperability between <code class="docutils literal notranslate"><span class="pre">sklearn</span></code> and <code class="docutils literal notranslate"><span class="pre">Keras/TensorFlow</span></code>. The aim is to keep 99% of the flexibility of <code class="docutils literal notranslate"><span class="pre">Keras</span></code> while being able to leverage most features of <code class="docutils literal notranslate"><span class="pre">sklearn</span></code>. Below, we show the basic usage of <code class="docutils literal notranslate"><span class="pre">SciKeras</span></code> and how it can be combined with <code class="docutils literal notranslate"><span class="pre">sklearn</span></code>.</p>
@@ -394,35 +134,35 @@ div.rendered_html tbody tr:hover {
 <section id="Table-of-contents">
 <h2>Table of contents<a class="headerlink" href="#Table-of-contents" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference external" href="#1.-Setup">1. Setup</a></p></li>
-<li><p><a class="reference external" href="#2.-Training-a-classifier-and-making-predictions">2. Training a classifier and making predictions</a></p>
+<li><p><a class="reference internal" href="#1.-Setup"><span class="std std-ref">1. Setup</span></a></p></li>
+<li><p><a class="reference internal" href="#2.-Training-a-classifier-and-making-predictions"><span class="std std-ref">2. Training a classifier and making predictions</span></a></p>
 <ul>
-<li><p><a class="reference external" href="#2.1-A-toy-binary-classification-task">2.1 A toy binary classification task</a></p></li>
-<li><p><a class="reference external" href="#2.2-Definition-of-the-Keras-classification-Model">2.2 Definition of the Keras classification Model</a></p></li>
-<li><p><a class="reference external" href="#2.3-Defining-and-training-the-neural-net-classifier">2.3 Defining and training the neural net classifier</a></p></li>
-<li><p><a class="reference external" href="#2.4-Making-predictions-classification">2.4 Making predictions, classification</a></p></li>
+<li><p><a class="reference internal" href="#2.1-A-toy-binary-classification-task"><span class="std std-ref">2.1 A toy binary classification task</span></a></p></li>
+<li><p><a class="reference internal" href="#2.2-Definition-of-the-Keras-classification-Model"><span class="std std-ref">2.2 Definition of the Keras classification Model</span></a></p></li>
+<li><p><a class="reference internal" href="#2.3-Defining-and-training-the-neural-net-classifier"><span class="std std-ref">2.3 Defining and training the neural net classifier</span></a></p></li>
+<li><p>2.4 Making predictions, classification</p></li>
 </ul>
 </li>
-<li><p><a class="reference external" href="#3.-Training-a-regressor">3 Training a regressor</a></p>
+<li><p>3 Training a regressor</p>
 <ul>
-<li><p><a class="reference external" href="#3.1-A-toy-regression-task">3.1 A toy regression task</a></p></li>
-<li><p><a class="reference external" href="#3.2-Definition-of-the-Keras-regression-Model">3.2 Definition of the Keras regression Model</a></p></li>
-<li><p><a class="reference external" href="#3.3-Defining-and-training-the-neural-net-regressor">3.3 Defining and training the neural net regressor</a></p></li>
-<li><p><a class="reference external" href="#3.4-Making-predictions-regression">3.4 Making predictions, regression</a></p></li>
+<li><p><a class="reference internal" href="#3.1-A-toy-regression-task"><span class="std std-ref">3.1 A toy regression task</span></a></p></li>
+<li><p><a class="reference internal" href="#3.2-Definition-of-the-Keras-regression-Model"><span class="std std-ref">3.2 Definition of the Keras regression Model</span></a></p></li>
+<li><p><a class="reference internal" href="#3.3-Defining-and-training-the-neural-net-regressor"><span class="std std-ref">3.3 Defining and training the neural net regressor</span></a></p></li>
+<li><p>3.4 Making predictions, regression</p></li>
 </ul>
 </li>
-<li><p><a class="reference external" href="#4.-Saving-and-loading-a-model">4. Saving and loading a model</a></p>
+<li><p><a class="reference internal" href="#4.-Saving-and-loading-a-model"><span class="std std-ref">4. Saving and loading a model</span></a></p>
 <ul>
-<li><p><a class="reference external" href="#4.1-Saving-the-whole-model">4.1 Saving the whole model</a></p></li>
-<li><p><a class="reference external" href="#4.2-Saving-using-Keras-saving-methods">4.2 Saving using Keras’ saving methods</a></p></li>
+<li><p><a class="reference internal" href="#4.1-Saving-the-whole-model"><span class="std std-ref">4.1 Saving the whole model</span></a></p></li>
+<li><p>4.2 Saving using Keras’ saving methods</p></li>
 </ul>
 </li>
-<li><p><a class="reference external" href="#5.-Usage-with-an-sklearn-Pipeline">5. Usage with an sklearn Pipeline</a></p></li>
-<li><p><a class="reference external" href="#6.-Callbacks">6. Callbacks</a></p></li>
-<li><p><a class="reference external" href="#7.-Usage-with-sklearn-GridSearchCV">7. Usage with sklearn GridSearchCV</a></p>
+<li><p><a class="reference internal" href="#5.-Usage-with-an-sklearn-Pipeline"><span class="std std-ref">5. Usage with an sklearn Pipeline</span></a></p></li>
+<li><p><a class="reference internal" href="#6.-Callbacks"><span class="std std-ref">6. Callbacks</span></a></p></li>
+<li><p><a class="reference internal" href="#7.-Usage-with-sklearn-GridSearchCV"><span class="std std-ref">7. Usage with sklearn GridSearchCV</span></a></p>
 <ul>
-<li><p><a class="reference external" href="#7.1-Special-prefixes">7.1 Special prefixes</a></p></li>
-<li><p><a class="reference external" href="#7.2-Performing-a-grid-search">7.2 Performing a grid search</a></p></li>
+<li><p><a class="reference internal" href="#7.1-Special-prefixes"><span class="std std-ref">7.1 Special prefixes</span></a></p></li>
+<li><p><a class="reference internal" href="#7.2-Performing-a-grid-search"><span class="std std-ref">7.2 Performing a grid search</span></a></p></li>
 </ul>
 </li>
 </ul>
@@ -436,7 +176,7 @@ div.rendered_html tbody tr:hover {
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">scikeras</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="o">!</span>python -m pip install scikeras
+    <span class="o">!</span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>scikeras
 </pre></div>
 </div>
 </div>
@@ -556,7 +296,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 1s 2ms/step - loss: 0.7812
+32/32 [==============================] - 0s 1ms/step - loss: 0.7510
 </pre></div></div>
 </div>
 <p>Also, as in <code class="docutils literal notranslate"><span class="pre">sklearn</span></code>, you may call <code class="docutils literal notranslate"><span class="pre">predict</span></code> or <code class="docutils literal notranslate"><span class="pre">predict_proba</span></code> on the fitted model.</p>
@@ -577,7 +317,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 77ms/step
+1/1 [==============================] - 0s 66ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -586,7 +326,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([1, 0, 0, 0, 0])
+array([0, 0, 0, 0, 0])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -603,7 +343,7 @@ array([1, 0, 0, 0, 0])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 18ms/step
+1/1 [==============================] - 0s 17ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -612,11 +352,11 @@ array([1, 0, 0, 0, 0])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.40644455, 0.59355545],
-       [0.59307194, 0.40692806],
-       [0.7870858 , 0.21291423],
-       [0.83001894, 0.16998105],
-       [0.80537057, 0.19462946]], dtype=float32)
+array([[0.5996305 , 0.4003695 ],
+       [0.8024043 , 0.19759575],
+       [0.6799076 , 0.32009238],
+       [0.7129779 , 0.28702208],
+       [0.6816654 , 0.31833455]], dtype=float32)
 </pre></div></div>
 </div>
 </section>
@@ -701,7 +441,7 @@ array([[0.40644455, 0.59355545],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 1s 1ms/step - loss: 45044.4336 - r_squared: -0.0224
+32/32 [==============================] - 0s 1ms/step - loss: 45070.6133 - r_squared: -0.0279
 </pre></div></div>
 </div>
 </section>
@@ -722,7 +462,7 @@ array([[0.40644455, 0.59355545],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 50ms/step
+1/1 [==============================] - 0s 38ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -731,7 +471,7 @@ array([[0.40644455, 0.59355545],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([1.7557657 , 0.1879506 , 0.5016647 , 0.9976774 , 0.38153356],
+array([ 0.0570786 , -0.53429705, -0.01224275,  0.09409551, -0.2312446 ],
       dtype=float32)
 </pre></div></div>
 </div>
@@ -774,7 +514,7 @@ WARNING:absl:Found untraced functions such as _update_step_xla while saving (sho
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 94ms/step
+1/1 [==============================] - 0s 39ms/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -783,13 +523,13 @@ WARNING:absl:Found untraced functions such as _update_step_xla while saving (sho
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([1.7557657 , 0.1879506 , 0.5016647 , 0.9976774 , 0.38153356],
+array([ 0.0570786 , -0.53429705, -0.01224275,  0.09409551, -0.2312446 ],
       dtype=float32)
 </pre></div></div>
 </div>
 </section>
-<section id="4.2-Saving-using-Keras’-saving-methods">
-<h3>4.2 Saving using Keras’ saving methods<a class="headerlink" href="#4.2-Saving-using-Keras’-saving-methods" title="Permalink to this heading">¶</a></h3>
+<section id="4.2-Saving-using-Keras'-saving-methods">
+<h3>4.2 Saving using Keras’ saving methods<a class="headerlink" href="#4.2-Saving-using-Keras'-saving-methods" title="Permalink to this heading">¶</a></h3>
 <p>This efficiently and safely saves the model to disk, including trained weights. You should use this method if you plan on sharing your saved models.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
@@ -806,7 +546,7 @@ array([1.7557657 , 0.1879506 , 0.5016647 , 0.9976774 , 0.38153356],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 1ms/step
+32/32 [==============================] - 0s 830us/step
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -838,7 +578,7 @@ WARNING:absl:Found untraced functions such as _update_step_xla while saving (sho
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 2ms/step
+32/32 [==============================] - 0s 1ms/step
 </pre></div></div>
 </div>
 </section>
@@ -869,8 +609,8 @@ WARNING:absl:Found untraced functions such as _update_step_xla while saving (sho
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 1s 1ms/step - loss: 0.6858
-32/32 [==============================] - 0s 932us/step
+32/32 [==============================] - 0s 1ms/step - loss: 0.6634
+32/32 [==============================] - 0s 773us/step
 </pre></div></div>
 </div>
 <p>To save the whole pipeline, including the Keras model, use <code class="docutils literal notranslate"><span class="pre">pickle</span></code>.</p>
@@ -1036,63 +776,63 @@ Fitting 5 folds for each of 8 candidates, totalling 40 fits
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f4bcdff1430&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f4bcdff1430&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f4bcdff1f70&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f4bcdff1f70&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f4bcdf7a9d0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f4bcdf7a9d0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f4bcde54430&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f4bcde54430&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fba54ab3040&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fba54ab3040&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fba54ab3670&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fba54ab3670&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fba547658b0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fba547658b0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fba546661f0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fba546661f0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fa109f23a60&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fa109f23a60&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fa109f43820&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fa109f43820&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f98b034aa60&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f98b034aa60&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f98b036a820&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f98b036a820&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fa109e0f310&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fa109e0f310&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fa109e0fd30&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fa109e0fd30&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f98b0235310&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f98b0235310&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f98b0235d30&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f98b0235d30&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1100,10 +840,10 @@ WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the 
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.67 {&#39;model__dropout&#39;: 0.5, &#39;model__hidden_layer_sizes&#39;: (100,), &#39;optimizer__lr&#39;: 0.1}
+0.63 {&#39;model__dropout&#39;: 0, &#39;model__hidden_layer_sizes&#39;: (50, 50), &#39;optimizer__lr&#39;: 0.1}
 </pre></div></div>
 </div>
-<p>Of course, we could further nest the <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> within an <code class="docutils literal notranslate"><span class="pre">sklearn.pipeline.Pipeline</span></code>, in which case we just prefix the parameter by the name of the net (e.g. <code class="docutils literal notranslate"><span class="pre">clf__model__hidden_layer_sizes</span></code>).</p>
+<p>Of course, we could further nest the <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> within an <code class="docutils literal notranslate"><span class="pre">sklearn.pipeline.Pipeline</span></code>, in which case we just prefix the parameter by the name of the net (e.g. <code class="docutils literal notranslate"><span class="pre">clf__model__hidden_layer_sizes</span></code>).</p>
 </section>
 </section>
 </section>
@@ -1136,7 +876,7 @@ WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the 
 <li class="toctree-l1"><a class="reference internal" href="../api.html">SciKeras API</a></li>
 </ul>
 
-<hr class="docutils" />
+<div><hr class="docutils"></div>
 <ul>
   <li class="toctree-l1"><a class="reference internal" href="../genindex.html" accesskey="I">General Index</a></li>
   <li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
@@ -1174,7 +914,7 @@ WARNING:absl:`lr` is deprecated, please use `learning_rate` instead, or use the 
 
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/notebooks/Basic_Usage.ipynb.txt" rel="nofollow">Show Source</a>.
     </footer>

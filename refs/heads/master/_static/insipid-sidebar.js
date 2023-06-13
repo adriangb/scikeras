@@ -245,11 +245,12 @@
     if (current.length === 1 && current[0].childElementCount === 1 && small_screen.matches) {
         hide();
     }
+    const bottom_space = 0;
 
     if (current.length) {
         const top = current[0].getBoundingClientRect().top;
         const bottom = current[current.length - 1].getBoundingClientRect().bottom;
-        if (top < topbar.offsetHeight || bottom > sidebar.offsetHeight) {
+        if (top < topbar.offsetHeight || bottom > (sidebar.offsetHeight - bottom_space)) {
             current[0].scrollIntoView(true);
         }
     }
@@ -301,7 +302,7 @@
             if (small_screen.matches) {
                 hide();
             }
-        })
+        });
     });
 });
 

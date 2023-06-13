@@ -1,20 +1,16 @@
-
 <!DOCTYPE html>
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Migrating from tf.keras.wrappers.scikit_learn &#8212; SciKeras 0.10.0 documentation</title>
+    <title>Migrating from tf.keras.wrappers.scikit_learn &#8212; SciKeras 0.11.0 documentation</title>
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/insipid.css" />
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -64,7 +60,7 @@
             </button>
           </div>
           <div class="title">
-            <a class="parent" href="index.html" accesskey="U">SciKeras 0.10.0 documentation</a>
+            <a class="parent" href="index.html" accesskey="U">SciKeras 0.11.0 documentation</a>
             <a class="top" href="#">Migrating from <code class="docutils literal notranslate"><span class="pre">tf.keras.wrappers.scikit_learn</span></code></a>
           </div>
           <div class="buttons">
@@ -163,8 +159,8 @@
 <section id="changes-to-your-code">
 <h2><a class="toc-backref" href="#id2" role="doc-backlink">Changes to your code</a><a class="headerlink" href="#changes-to-your-code" title="Permalink to this heading">¶</a></h2>
 <p>SciKeras is largely backwards compatible with the existing wrappers. For most cases, you can just change your import statement from:</p>
-<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor</span><span class="w"></span>
-<span class="gi">+ from scikeras.wrappers import KerasClassifier, KerasRegressor</span><span class="w"></span>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor</span>
+<span class="gi">+ from scikeras.wrappers import KerasClassifier, KerasRegressor</span>
 </pre></div>
 </div>
 <p>SciKeras does however have some backward incompatible changes:</p>
@@ -175,16 +171,16 @@ a dictionary with loss and metric names as keys and lists of recorded values for
 However, in SciKeras, <code class="docutils literal notranslate"><span class="pre">fit</span></code> now returns and instance of the estimator itself in order to conform to the Scikit-Learn API.
 Instead, the history is saved in the <code class="docutils literal notranslate"><span class="pre">history_</span></code> attribute.
 Calling <code class="docutils literal notranslate"><span class="pre">fit</span></code> resets this attribute, calling <code class="docutils literal notranslate"><span class="pre">partial_fit</span></code> on the other hand extends it.</p>
-<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="w">def get_model():</span>
-<span class="w"> </span>  ...<span class="w"></span>
-<span class="w"> </span>  model.compile(loss=&quot;mse&quot;, metrics=[&quot;mae&quot;])<span class="w"></span>
-<span class="w"> </span>  return model<span class="w"></span>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span>def get_model():
+<span class="w"> </span>  ...
+<span class="w"> </span>  model.compile(loss=&quot;mse&quot;, metrics=[&quot;mae&quot;])
+<span class="w"> </span>  return model
 
-<span class="w">clf = KerasClassifier(get_model)</span>
-<span class="gd">- hist = clf.fit(...).history</span><span class="w"></span>
-<span class="gd">- losses = hist[&quot;mae&quot;]</span><span class="w"></span>
-<span class="gi">+ hist = clf.fit(...).history_</span><span class="w"></span>
-<span class="gi">+ losses = hist[&quot;mean_absolute_error&quot;]</span><span class="w"></span>
+clf = KerasClassifier(get_model)
+<span class="gd">- hist = clf.fit(...).history</span>
+<span class="gd">- losses = hist[&quot;mae&quot;]</span>
+<span class="gi">+ hist = clf.fit(...).history_</span>
+<span class="gi">+ losses = hist[&quot;mean_absolute_error&quot;]</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -214,10 +210,10 @@ Scikit-Learn on the other hand does not support these arguments, and using them 
 As a compromise, SciKeras supports these arguments, but we recommended that you set parameters using the constructor
 or <code class="docutils literal notranslate"><span class="pre">set_params</span></code> for first-class SciKeras support.</p>
 <p>For example, to declare <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> in the constructor:</p>
-<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- clf = KerasClassifier(...)</span><span class="w"></span>
-<span class="gd">- clf.fit(..., batch_size=32)</span><span class="w"></span>
-<span class="gi">+ clf = KerasClassifier(..., batch_size=32)</span><span class="w"></span>
-<span class="gi">+ clf.fit(...)</span><span class="w"></span>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- clf = KerasClassifier(...)</span>
+<span class="gd">- clf.fit(..., batch_size=32)</span>
+<span class="gi">+ clf = KerasClassifier(..., batch_size=32)</span>
+<span class="gi">+ clf.fit(...)</span>
 </pre></div>
 </div>
 <p>Or to declare separate values for <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">predict</span></code>:</p>
@@ -239,8 +235,8 @@ In fact, this is what Scikti-Learn does in the background for hyperparameter tun
 <p>SciKeras renamed the constructor argument <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> to <code class="docutils literal notranslate"><span class="pre">model</span></code>. In a future release,
 passing <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> as a _keyword_ argument will raise a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>. Passing it as a positional
 argument remains unchanged. You can make the following change to future proof your code:</p>
-<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- clf = KerasClassifier(build_fn=...)</span><span class="w"></span>
-<span class="gi">+ clf = KerasClassifier(model=...)</span><span class="w"></span>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- clf = KerasClassifier(build_fn=...)</span>
+<span class="gi">+ clf = KerasClassifier(model=...)</span>
 </pre></div>
 </div>
 </section>
@@ -250,14 +246,14 @@ argument remains unchanged. You can make the following change to future proof yo
 (the behavior for parameters like <code class="docutils literal notranslate"><span class="pre">optimizer</span></code> is unchanged).
 You must now “declare” them as keyword arguments to the constructor if you want them to be
 tunable parameters (i.e. settable via <code class="docutils literal notranslate"><span class="pre">set_params</span></code>):</p>
-<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- def get_model(my_param=123):</span><span class="w"></span>
-<span class="gi">+ def get_model(my_param):  # You can optionally remove the default here</span><span class="w"></span>
-<span class="w"> </span>  ...<span class="w"></span>
-<span class="w"> </span>  return model<span class="w"></span>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- def get_model(my_param=123):</span>
+<span class="gi">+ def get_model(my_param):  # You can optionally remove the default here</span>
+<span class="w"> </span>  ...
+<span class="w"> </span>  return model
 
-<span class="gd">- clf = KerasClassifier(get_model)</span><span class="w"></span>
-<span class="gi">+ clf = KerasClassifier(get_model, my_param=123)  # option 1</span><span class="w"></span>
-<span class="gi">+ clf = KerasClassifier(get_model, model__my_param=123)  # option 2</span><span class="w"></span>
+<span class="gd">- clf = KerasClassifier(get_model)</span>
+<span class="gi">+ clf = KerasClassifier(get_model, my_param=123)  # option 1</span>
+<span class="gi">+ clf = KerasClassifier(get_model, model__my_param=123)  # option 2</span>
 </pre></div>
 </div>
 <p>That said, if you do not need them to work with <code class="docutils literal notranslate"><span class="pre">set_params</span></code> (which is only really
@@ -295,7 +291,7 @@ Instead, you will have to convert your inputs to a numpy array, Pandas dataframe
 <li class="toctree-l1"><a class="reference internal" href="api.html">SciKeras API</a></li>
 </ul>
 
-<hr class="docutils" />
+<div><hr class="docutils"></div>
 <ul>
   <li class="toctree-l1"><a class="reference internal" href="genindex.html" accesskey="I">General Index</a></li>
   <li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
@@ -333,7 +329,7 @@ Instead, you will have to convert your inputs to a numpy array, Pandas dataframe
 
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="_sources/migration.rst.txt" rel="nofollow">Show Source</a>.
     </footer>
