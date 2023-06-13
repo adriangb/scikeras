@@ -4,7 +4,6 @@ import os
 import pytest
 import tensorflow as tf
 
-
 # Force data conversion warnings to be come errors
 pytestmark = pytest.mark.filterwarnings(
     "error::sklearn.exceptions.DataConversionWarning"

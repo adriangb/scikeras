@@ -58,25 +58,24 @@ pytest = ">=7.1.2"
 pytest-cov = ">=3.0.0"
 sphinx = ">=5.0.2"
 
-[tool.isort]
-atomic = true
-filter_files = true
-include_trailing_comma = true
-known_first_party = "scikeras"
-known_third_party = [
-  "tensorflow",
-  "sklearn",
+[tool.ruff]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
 ]
-line_length = 88
-lines_after_imports = 2
-lines_between_types = 1
-multi_line_output = 3
-skip_glob = ["*/setup.py"]
-use_parentheses = true
+ignore = [
+    "E501",  # line too long, handled by black
+    "C901",  # too complex
+    "B905",  # strict argument to zip
+]
 
 [tool.black]
 line-length = 88
-target-version = ['py36', 'py38']
+target-version = ['py38']
 
 [tool.coverage.run]
 source = ["scikeras/"]

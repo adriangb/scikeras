@@ -1,15 +1,12 @@
 import os
 import random
-
 from contextlib import contextmanager
 from typing import Generator
 
 import numpy as np
 import tensorflow as tf
-
 from tensorflow.python.eager import context
 from tensorflow.python.framework import config, ops
-
 
 DIGITS = frozenset(str(i) for i in range(10))
 

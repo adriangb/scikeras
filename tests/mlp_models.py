@@ -3,8 +3,6 @@ from typing import Any, Dict, Optional
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
 
-from scikeras.wrappers import KerasRegressor
-
 
 def dynamic_classifier(
     hidden_layer_sizes=(10,),

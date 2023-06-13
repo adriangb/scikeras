@@ -1,6 +1,4 @@
-import numpy as np
 import pytest
-
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
 
@@ -51,7 +49,7 @@ def test_metric_invariance(obj):
     assert metric_name(obj) == "categorical_crossentropy"
 
 
-@pytest.mark.parametrize("loss", [object(), object, list()])
+@pytest.mark.parametrize("loss", [object(), object, []])
 def test_loss_types(loss):
     with pytest.raises(TypeError, match="``loss`` must be a"):
         loss_name(loss)
@@ -62,7 +60,7 @@ def test_unknown_loss_raises():
         loss_name("unknown_loss")
 
 
-@pytest.mark.parametrize("obj", [object(), object, list()])
+@pytest.mark.parametrize("obj", [object(), object, []])
 def test_metric_types(obj):
     with pytest.raises(TypeError, match="``metric`` must be a"):
         metric_name(obj)

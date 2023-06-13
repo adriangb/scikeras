@@ -1,11 +1,9 @@
 import pickle
-
 from typing import Any, Dict, Type
 
 import numpy as np
 import pytest
 import tensorflow as tf
-
 from sklearn.base import clone
 from sklearn.datasets import fetch_california_housing, make_regression
 from tensorflow import keras
@@ -221,7 +219,7 @@ def test_pickle_loss(loss):
         keras.metrics.MeanAbsoluteError(),
     ],
 )
-def test_pickle_loss(metric):
+def test_pickle_metric(metric):
     y1 = np.random.randint(0, 2, size=(100,)).astype(np.float32)
     y2 = np.random.randint(0, 2, size=(100,)).astype(np.float32)
     v1 = metric(y1, y2)
@@ -243,17 +241,29 @@ def test_pickle_optimizer(opt_cls: Type[keras.optimizers.Optimizer]):
     # loss functions
     opt = opt_cls(name="optimizer")
     var1 = tf.Variable(10.0)
-    loss1 = lambda: (var1**2) / 2.0
+
+    def loss1():
+        return var1**2 / 2.0
+
     opt.minimize(loss1, [var1])
-    loss2 = lambda: (var1**2) / 1.0
+
+    def loss2():
+        return var1**2 / 1.0
+
     opt.minimize(loss2, [var1])
     val_no_pickle = var1.numpy()
     # Do the same with a roundtrip pickle in the middle
     opt = opt_cls()
     var1 = tf.Variable(10.0)
-    loss1 = lambda: (var1**2) / 2.0
+
+    def loss1():
+        return var1**2 / 2.0
+
     opt.minimize(loss1, [var1])
-    loss2 = lambda: (var1**2) / 1.0
+
+    def loss2():
+        return var1**2 / 1.0
+
     opt = pickle.loads(pickle.dumps(opt))
     opt.minimize(loss2, [var1])
     val_pickle = var1.numpy()

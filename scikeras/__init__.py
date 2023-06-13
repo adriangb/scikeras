@@ -13,21 +13,19 @@ __version__ = importlib_metadata.version("scikeras")
 MIN_TF_VERSION = "2.7.0"
 TF_VERSION_ERR = f"SciKeras requires TensorFlow >= {MIN_TF_VERSION}."
 
-from packaging import version
-
+from packaging import version  # noqa: E402
 
 try:
     from tensorflow import __version__ as tf_version
 except ImportError:  # pragma: no cover
-    raise ImportError("TensorFlow is not installed. " + TF_VERSION_ERR)
+    raise ImportError("TensorFlow is not installed. " + TF_VERSION_ERR) from None
 else:
     if version.parse(tf_version) < version.parse(MIN_TF_VERSION):  # pragma: no cover
-        raise ImportError(TF_VERSION_ERR)
+        raise ImportError(TF_VERSION_ERR) from None
 
-import tensorflow.keras as _keras
+import tensorflow.keras as _keras  # noqa: E402
 
-from scikeras import _saving_utils
-
+from scikeras import _saving_utils  # noqa: E402
 
 _keras.Model.__reduce__ = _saving_utils.pack_keras_model
 _keras.Model.__deepcopy__ = _saving_utils.deepcopy_model

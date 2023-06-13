@@ -2,15 +2,13 @@ import os
 import shutil
 import tarfile
 import tempfile
-
 from contextlib import contextmanager
 from io import BytesIO
-from typing import Any, Callable, ContextManager, Dict, Hashable, Iterator, List, Tuple
+from typing import Any, Callable, Dict, Hashable, Iterator, List, Tuple
 from uuid import uuid4
 
 import numpy as np
 import tensorflow.keras as keras
-
 from tensorflow import io as tf_io
 from tensorflow.keras.models import load_model
 

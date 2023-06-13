@@ -2,7 +2,6 @@
 
 import numpy as np
 import pytest
-
 from sklearn.exceptions import NotFittedError
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model

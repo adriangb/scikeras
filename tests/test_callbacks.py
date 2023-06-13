@@ -2,7 +2,6 @@ from collections import defaultdict
 from typing import Any, DefaultDict, Dict
 
 import pytest
-
 from tensorflow import keras
 from tensorflow.keras.callbacks import Callback
 
@@ -61,26 +60,28 @@ def test_callbacks_prefixes():
 @pytest.mark.parametrize(
     "callback_kwargs",
     [
-        dict(
-            callbacks=[keras.callbacks.EarlyStopping],
-            callbacks__0__monitor="acc",
-            callbacks__0__min_delta=1,
-        ),
-        dict(
-            callbacks={"es": keras.callbacks.EarlyStopping},
-            callbacks__es__monitor="acc",
-            callbacks__es__min_delta=1,
-        ),
-        dict(
-            callbacks=keras.callbacks.EarlyStopping,
-            callbacks__monitor="acc",
-            callbacks__min_delta=1,
-        ),
-        dict(callbacks=[keras.callbacks.EarlyStopping(monitor="acc", min_delta=1)]),
-        dict(
-            callbacks={"es": keras.callbacks.EarlyStopping(monitor="acc", min_delta=1)}
-        ),
-        dict(callbacks=keras.callbacks.EarlyStopping(monitor="acc", min_delta=1)),
+        {
+            "callbacks": [keras.callbacks.EarlyStopping],
+            "callbacks__0__monitor": "acc",
+            "callbacks__0__min_delta": 1,
+        },
+        {
+            "callbacks": {"es": keras.callbacks.EarlyStopping},
+            "callbacks__es__monitor": "acc",
+            "callbacks__es__min_delta": 1,
+        },
+        {
+            "callbacks": keras.callbacks.EarlyStopping,
+            "callbacks__monitor": "acc",
+            "callbacks__min_delta": 1,
+        },
+        {"callbacks": [keras.callbacks.EarlyStopping(monitor="acc", min_delta=1)]},
+        {
+            "callbacks": {
+                "es": keras.callbacks.EarlyStopping(monitor="acc", min_delta=1)
+            }
+        },
+        {"callbacks": keras.callbacks.EarlyStopping(monitor="acc", min_delta=1)},
     ],
     ids=[
         "class list syntax",

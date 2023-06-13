@@ -2,14 +2,12 @@ import inspect
 
 import numpy as np
 import pytest
-
 from tensorflow.keras import Model, Sequential
 from tensorflow.keras import layers as layers_mod
 
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
 from .mlp_models import dynamic_classifier, dynamic_regressor
-
 
 keras_classifier_base_meta_set = {
     "X_dtype_",

@@ -1,12 +1,10 @@
 """Tests for Scikit-learn API wrapper."""
 import pickle
-
 from functools import partial
 from typing import Any, Dict
 
 import numpy as np
 import pytest
-
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.datasets import fetch_california_housing, load_digits, load_iris
 from sklearn.ensemble import (
@@ -780,7 +778,9 @@ def test_compile_model_from_params():
 
     # The ValueError should appear even if the default is != None
     class DefaultLossNotNone(KerasRegressor):
-        def __init__(self, *args, loss=losses_module.CosineSimilarity(), **kwargs):
+        def __init__(
+            self, *args, loss=losses_module.CosineSimilarity(), **kwargs
+        ):  # noqa: B008
             super().__init__(*args, **kwargs, loss=loss)
 
     loss_obj = other_loss()

@@ -3,13 +3,11 @@
 import functools
 import inspect
 import warnings
-
 from collections import defaultdict
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Type, Union
 
 import numpy as np
 import tensorflow as tf
-
 from scipy.sparse import isspmatrix, lil_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.exceptions import NotFittedError
@@ -219,7 +217,6 @@ class BaseWrapper(BaseEstimator):
         epochs: int = 1,
         **kwargs,
     ):
-
         # Parse hardcoded params
         self.model = model
         self.build_fn = build_fn
@@ -300,7 +297,8 @@ class BaseWrapper(BaseEstimator):
             model = build_fn
             warnings.warn(
                 "``build_fn`` will be renamed to ``model`` in a future release,"
-                " at which point use of ``build_fn`` will raise an Error instead."
+                " at which point use of ``build_fn`` will raise an Error instead.",
+                stacklevel=4,
             )
         if model is None:
             # no model, use this class' _keras_build_fn
@@ -515,7 +513,7 @@ class BaseWrapper(BaseEstimator):
                     except AttributeError:
                         raise ValueError(
                             f"`{bs_kwarg}=-1` requires that `X` implement `shape`"
-                        )
+                        ) from None
         fit_args = {k: v for k, v in fit_args.items() if not k.startswith("callbacks")}
         fit_args["callbacks"] = self._fit_callbacks
 
@@ -828,7 +826,6 @@ class BaseWrapper(BaseEstimator):
     def _initialize(
         self, X: np.ndarray, y: Union[np.ndarray, None] = None
     ) -> Tuple[np.ndarray, np.ndarray]:
-
         # Handle random state
         if isinstance(self.random_state, np.random.RandomState):
             # Keras needs an integer
@@ -1016,7 +1013,7 @@ class BaseWrapper(BaseEstimator):
                 except AttributeError:
                     raise ValueError(
                         "`batch_size=-1` requires that `X` implement `shape`"
-                    )
+                    ) from None
 
         # predict with Keras model
         y_pred = self.model_.predict(x=X, **pred_args)
