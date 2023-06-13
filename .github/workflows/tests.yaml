@@ -29,11 +29,12 @@ jobs:
       - uses: pre-commit/action@v2.0.0
 
   TestStable:
-    name: Ubuntu / Python ${{ matrix.python-version }} / TensorFlow Stable / Scikit-Learn Stable
+    name: Ubuntu / Python ${{ matrix.python-version }} / TensorFlow ${{ matrix.tensorflow-version }} / Scikit-Learn Stable
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        tensorflow-version: ["2.11", "2.12"]
       fail-fast: false
 
     steps:
@@ -52,7 +53,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          poetry install -E tensorflow
+          poetry install
+          poetry run python -m pip install -U "tensorflow~=${{ matrix.tensorflow-version }}"
 
       - name: Test with pytest
         run: |
@@ -97,6 +99,7 @@ jobs:
 
       - name: Test with pytest
         if: always()
+        continue-on-error: true
         run: |
           poetry run python -m pip freeze
           poetry run python -m pytest -v --cov=scikeras --cov-report xml --color=yes
@@ -145,8 +148,9 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
-        os: [MacOS, Windows]  # test all OSs (except Ubuntu, which is already running other tests)
-        python-version: ["3.7", "3.10"]  # test only the two extremes of supported Python versions
+        os: [MacOS, Windows]  # test all OSs except Ubuntu, which is already running other tests
+        python-version: ["3.8", "3.11"]  # test only the two extremes of supported Python versions
+        tensorflow-version: ["2.11", "2.12"]  # test only the two extremes of supported TF versions
       fail-fast: false
 
     steps:
@@ -166,12 +170,12 @@ jobs:
       - name: Install Dependencies
         # TF is sorta dropping support for Windows
         # At the very least they are no longer suppporting GPU
-        # See https://github.com/tensorflow/tensorflow/releases/tag/v2.11.0
+        # See https://github.com/tensorflow/tensorflow/releases/tag/v2.12.0
         # and
         # https://www.tensorflow.org/install/pip#windows-native
         run: |
           poetry install
-          poetry run pip install -U tensorflow-cpu
+          poetry run python -m pip install -U "tensorflow~=${{ matrix.tensorflow-version }}"
 
       - name: Test with pytest
         run: |

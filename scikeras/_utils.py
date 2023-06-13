@@ -1,12 +1,10 @@
 import inspect
-
 from types import FunctionType
 from typing import Any, Callable, Dict, Iterable, Mapping, Sequence, Type, Union
 
 from tensorflow.keras import losses as losses_mod
 from tensorflow.keras import metrics as metrics_mod
 from tensorflow.keras import optimizers as optimizers_mod
-
 
 DIGITS = frozenset(str(i) for i in range(10))
 
@@ -37,7 +35,7 @@ def route_params(
     Dict[str, Any]
         Filtered parameters, with any routing prefixes removed.
     """
-    res = dict()
+    res = {}
     routed = {k: v for k, v in params.items() if "__" in k}
     non_routed = {k: params[k] for k in (params.keys() - routed.keys())}
     for key, val in non_routed.items():
@@ -92,7 +90,7 @@ def unflatten_params(items, params, base_params=None):
     if inspect.isclass(items):
         item = items
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
-        base_params = base_params or dict()
+        base_params = base_params or {}
         args_and_kwargs = {**base_params, **new_base_params}
         for p, v in args_and_kwargs.items():
             args_and_kwargs[p] = unflatten_params(
@@ -110,7 +108,7 @@ def unflatten_params(items, params, base_params=None):
         return item(*args, **kwargs)
     if isinstance(items, (list, tuple)):
         iter_type_ = type(items)
-        res = list()
+        res = []
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for idx, item in enumerate(items):
             item_params = route_params(
@@ -126,7 +124,7 @@ def unflatten_params(items, params, base_params=None):
             )
         return iter_type_(res)
     if isinstance(items, (dict,)):
-        res = dict()
+        res = {}
         new_base_params = {p: v for p, v in params.items() if "__" not in p}
         for key, item in items.items():
             item_params = route_params(
@@ -144,7 +142,7 @@ def unflatten_params(items, params, base_params=None):
     # non-compilable item, check if it has any routed parameters
     item = items
     new_base_params = {p: v for p, v in params.items() if "__" not in p}
-    base_params = base_params or dict()
+    base_params = base_params or {}
     kwargs = {**base_params, **new_base_params}
     if kwargs:
         raise TypeError(

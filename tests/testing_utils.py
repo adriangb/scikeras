@@ -1,11 +1,8 @@
 import pickle
-import re
-
 from functools import partial
 
 import numpy as np
 import pytest
-
 from sklearn.utils.estimator_checks import (
     parametrize_with_checks as _parametrize_with_checks,
 )

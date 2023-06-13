@@ -59,7 +59,9 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     fn_or_cls = keras_loss_get(loss)
     if isinstance(fn_or_cls, Loss):
         return _camel2snake(fn_or_cls.__class__.__name__)
-    return fn_or_cls.__name__
+    if hasattr(fn_or_cls, "__name__"):
+        return fn_or_cls.__name__
+    return fn_or_cls
 
 
 def metric_name(metric: Union[str, Metric, Callable]) -> str:
@@ -109,4 +111,6 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
     fn_or_cls = keras_metric_get(metric)
     if isinstance(fn_or_cls, Metric):
         return _camel2snake(fn_or_cls.__class__.__name__)
-    return fn_or_cls.__name__
+    if hasattr(fn_or_cls, "__name__"):
+        return fn_or_cls.__name__
+    return fn_or_cls

@@ -13,12 +13,11 @@
 import os
 import sys
 
-
 sys.path.insert(0, "../../scikeras")
 
 # -- Project information -----------------------------------------------------
 
-from scikeras import __version__
+from scikeras import __version__  # noqa: 402
 
 
 project = "SciKeras"
@@ -109,11 +108,9 @@ html_context = {
 
 # Functionality to build github source URI, taken from sklearn.
 
-import inspect
-import subprocess
-
-from operator import attrgetter
-
+import inspect  # noqa: 402
+import subprocess  # noqa: 402
+from operator import attrgetter  # noqa: E402
 
 REVISION_CMD = "git rev-parse --short HEAD"
 

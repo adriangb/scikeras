@@ -4,7 +4,6 @@ from contextlib import contextmanager
 from typing import Any, Dict
 
 import pytest
-
 from sklearn.datasets import load_iris
 from sklearn.utils.estimator_checks import check_no_attributes_set_in_init
 from tensorflow.keras import Model, Sequential, layers
@@ -15,7 +14,6 @@ from scikeras.wrappers import KerasClassifier, KerasRegressor
 from .mlp_models import dynamic_classifier, dynamic_regressor
 from .multi_output_models import MultiOutputClassifier
 from .testing_utils import basic_checks, parametrize_with_checks
-
 
 higher_precision = (
     "check_classifiers_classes",

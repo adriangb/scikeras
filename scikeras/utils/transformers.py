@@ -2,7 +2,6 @@ from typing import Any, Dict, List, Union
 
 import numpy as np
 import tensorflow as tf
-
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.pipeline import make_pipeline

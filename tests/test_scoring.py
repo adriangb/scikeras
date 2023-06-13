@@ -1,5 +1,4 @@
 import numpy as np
-
 from sklearn.metrics import r2_score as sklearn_r2_score
 from tensorflow import convert_to_tensor
 
@@ -26,7 +25,7 @@ def test_kerasregressor_r2_correctness():
         y_pred = convert_to_tensor(y_pred)
         return KerasRegressor.r_squared(y_true, y_pred).numpy()
 
-    for (y_true, y_pred) in datasets:
+    for y_true, y_pred in datasets:
         np.testing.assert_almost_equal(
             keras_backend_r2(y_true, y_pred),
             sklearn_r2_score(y_true, y_pred),

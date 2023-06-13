@@ -1,14 +1,12 @@
 """Tests for Scikit-learn API wrapper."""
 import pickle
-
 from functools import partial
 from typing import Any, Dict
 
 import numpy as np
 import pytest
-
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.datasets import fetch_california_housing, load_digits, load_iris
+from sklearn.datasets import load_diabetes, load_digits, load_iris
 from sklearn.ensemble import (
     AdaBoostClassifier,
     AdaBoostRegressor,
@@ -122,7 +120,7 @@ class TestBasicAPI:
     def test_regression_build_fn(self):
         """Tests for errors using KerasRegressor."""
         reg = KerasRegressor(model=build_fn_reg, hidden_dim=5)
-        basic_checks(reg, fetch_california_housing)
+        basic_checks(reg, load_diabetes)
 
     def test_regression_inherit_class_build_fn(self):
         """Tests for errors using KerasRegressor inherited."""
@@ -131,7 +129,7 @@ class TestBasicAPI:
             model=None,
             hidden_dim=5,
         )
-        basic_checks(reg, fetch_california_housing)
+        basic_checks(reg, load_diabetes)
 
 
 def load_digits8x8():
@@ -225,7 +223,7 @@ def build_fn_clscf(
 
 CONFIG = {
     "MLPRegressor": (
-        fetch_california_housing,
+        load_diabetes,
         KerasRegressor,
         dynamic_regressor,
         (BaggingRegressor, AdaBoostRegressor),
@@ -437,7 +435,7 @@ class TestPrebuiltModel:
 def test_warm_start():
     """Test the warm start parameter."""
     # Load data
-    data = fetch_california_housing()
+    data = load_diabetes()
     X, y = data.data[:100], data.target[:100]
     # Initial fit
     estimator = KerasRegressor(
@@ -469,7 +467,7 @@ class CustomMetric(metrics_module.MeanAbsoluteError):
 
 class TestPartialFit:
     def test_partial_fit(self):
-        data = fetch_california_housing()
+        data = load_diabetes()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
             model=dynamic_regressor,
@@ -489,7 +487,7 @@ class TestPartialFit:
         assert estimator.model_ is model, "Model memory address should remain constant"
 
     def test_partial_fit_history_metric_names(self):
-        data = fetch_california_housing()
+        data = load_diabetes()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
             model=dynamic_regressor,
@@ -516,7 +514,7 @@ class TestPartialFit:
         # into the history is added
         # As per https://github.com/keras-team/keras/issues/1766,
         # there is no direct measure of epochs
-        data = fetch_california_housing()
+        data = load_diabetes()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
             model=dynamic_regressor,
@@ -538,7 +536,7 @@ class TestPartialFit:
         """Test that partial_fit trains for a single epoch,
         independently of what epoch value is passed to the constructor.
         """
-        data = fetch_california_housing()
+        data = load_diabetes()
         X, y = data.data[:100], data.target[:100]
         epochs = 9
         partial_fit_iter = 4
@@ -574,7 +572,7 @@ class TestPartialFit:
         behavior. It is tested because the epochs
         param has special handling within param routing.
         """
-        data = fetch_california_housing()
+        data = load_diabetes()
         X, y = data.data[:10], data.target[:10]
         epochs = 2
         partial_fit_iter = 3
@@ -690,7 +688,7 @@ def force_compile_shorthand(hidden_layer_sizes, meta, compile_kwargs, params):
 class TestHistory:
     def test_history(self):
         """Test that history_'s keys are strings and values are lists."""
-        data = fetch_california_housing()
+        data = load_diabetes()
         X, y = data.data[:100], data.target[:100]
         estimator = KerasRegressor(
             model=dynamic_regressor, model__hidden_layer_sizes=[]
@@ -712,7 +710,7 @@ class TestHistory:
             model__hidden_layer_sizes=(100,),
             metrics=["mae"],  # shorthand
         )
-        X, y = fetch_california_housing(return_X_y=True)
+        X, y = load_diabetes(return_X_y=True)
         X = X[:100]
         y = y[:100]
         est.fit(X, y)
@@ -726,7 +724,7 @@ def test_compile_model_from_params():
     it is not re-compiled.
     """
     # Load data
-    data = fetch_california_housing()
+    data = load_diabetes()
     X, y = data.data[:100], data.target[:100]
 
     other_loss = losses_module.MeanAbsoluteError
@@ -780,7 +778,9 @@ def test_compile_model_from_params():
 
     # The ValueError should appear even if the default is != None
     class DefaultLossNotNone(KerasRegressor):
-        def __init__(self, *args, loss=losses_module.CosineSimilarity(), **kwargs):
+        def __init__(
+            self, *args, loss=losses_module.CosineSimilarity(), **kwargs  # noqa: B008
+        ):
             super().__init__(*args, **kwargs, loss=loss)
 
     loss_obj = other_loss()

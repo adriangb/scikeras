@@ -1,7 +1,6 @@
 from typing import List
 
 import numpy as np
-
 from sklearn.utils.multiclass import type_of_target
 from tensorflow.keras.backend import floatx as tf_floatx
 

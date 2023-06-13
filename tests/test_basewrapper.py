@@ -1,7 +1,6 @@
 """Test that BaseWrapper for uses other than KerasClassifier and KerasRegressor.
 """
 import numpy as np
-
 from sklearn.base import TransformerMixin
 from sklearn.metrics import mean_squared_error
 from tensorflow import keras

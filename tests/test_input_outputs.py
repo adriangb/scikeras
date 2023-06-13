@@ -6,8 +6,6 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 import tensorflow as tf
-
-from scipy.sparse import coo_matrix
 from sklearn.base import BaseEstimator
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
@@ -185,7 +183,9 @@ def test_incompatible_output_dimensions():
 
 
 def create_model(activation, n_units):
-    def get_model(meta: Dict[str, Any], hidden_layer_sizes=[200]) -> Model:
+    def get_model(
+        meta: Dict[str, Any], hidden_layer_sizes=[200]  # noqa: B006
+    ) -> Model:
         # get params
         n_features_in_ = meta["n_features_in_"]
         inp = Input((n_features_in_,))

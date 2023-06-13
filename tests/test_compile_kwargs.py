@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from sklearn.datasets import make_classification
 from tensorflow.keras import losses as losses_module
 from tensorflow.keras import metrics as metrics_module
@@ -49,7 +48,7 @@ def test_optimizer(optimizer):
         assert float(est_opt.momentum) == pytest.approx(0.5)
         assert float(est_opt.learning_rate) == pytest.approx(0.15, abs=1e-6)
     else:
-        est_opt.__class__ == optimizers_module.get(optimizer).__class__
+        assert est_opt.__class__ == optimizers_module.get(optimizer).__class__
 
 
 def test_optimizer_invalid_string():
@@ -78,7 +77,7 @@ def test_compiling_of_routed_parameters():
     X, y = make_classification()
 
     class Foo:
-        got = dict()
+        got = {}
 
         def __init__(self, foo_kwarg="foo_kwarg_default"):
             self.foo_kwarg = foo_kwarg
@@ -196,7 +195,7 @@ def test_loss_routed_params_iterable(loss, n_outputs_):
         loss__0__from_logits=False,  # should override above
     )
     est.fit(X, y)
-    assert est.model_.loss[0].from_logits == False
+    assert est.model_.loss[0].from_logits is False
 
 
 @pytest.mark.parametrize(
@@ -223,7 +222,7 @@ def test_loss_routed_params_dict(loss, n_outputs_):
         loss__from_logits=True,  # default is False
     )
     est.fit(X, y)
-    assert est.model_.loss["out1"].from_logits == True
+    assert est.model_.loss["out1"].from_logits is True
 
     # Test dict with key-based routed param
     est = MultiOutputClassifier(
@@ -233,7 +232,7 @@ def test_loss_routed_params_dict(loss, n_outputs_):
         loss__out1__from_logits=False,  # should override above
     )
     est.fit(X, y)
-    assert est.model_.loss["out1"].from_logits == False
+    assert est.model_.loss["out1"].from_logits is False
 
 
 @pytest.mark.parametrize("metrics", ["binary_accuracy", metrics_module.BinaryAccuracy])

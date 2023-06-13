@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from sklearn.exceptions import NotFittedError
 
 from scikeras.utils.transformers import ClassifierLabelEncoder, TargetReshaper
