@@ -184,8 +184,8 @@ def test_incompatible_output_dimensions():
 
 def create_model(activation, n_units):
     def get_model(
-        meta: Dict[str, Any], hidden_layer_sizes=[200]
-    ) -> Model:  # noqa: B006
+        meta: Dict[str, Any], hidden_layer_sizes=[200]  # noqa: B006
+    ) -> Model:
         # get params
         n_features_in_ = meta["n_features_in_"]
         inp = Input((n_features_in_,))

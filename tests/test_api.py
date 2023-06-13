@@ -779,8 +779,8 @@ def test_compile_model_from_params():
     # The ValueError should appear even if the default is != None
     class DefaultLossNotNone(KerasRegressor):
         def __init__(
-            self, *args, loss=losses_module.CosineSimilarity(), **kwargs
-        ):  # noqa: B008
+            self, *args, loss=losses_module.CosineSimilarity(), **kwargs  # noqa: B008
+        ):
             super().__init__(*args, **kwargs, loss=loss)
 
     loss_obj = other_loss()
