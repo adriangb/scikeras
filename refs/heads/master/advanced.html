@@ -164,7 +164,7 @@ estimator. The finished code could look something like this:</p>
 <li><p>wraps <code class="docutils literal notranslate"><span class="pre">tensorflow.keras.Model</span></code> in an sklearn interface</p></li>
 <li><p>handles encoding and decoding of the target <code class="docutils literal notranslate"><span class="pre">y</span></code></p></li>
 <li><p>compiles the <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code> (unless you do it yourself in <code class="docutils literal notranslate"><span class="pre">model_build_fn</span></code>)</p></li>
-<li><p>makes all <code class="docutils literal notranslate"><span class="pre">Keras</span></code> objects serializable so that they can be used with <a class="reference external" href="https://scikit-learn.org/stable/modules/classes.html#module-sklearn.model_selection" title="(in scikit-learn v1.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_selection</span></code></a>.</p></li>
+<li><p>makes all <code class="docutils literal notranslate"><span class="pre">Keras</span></code> objects serializable so that they can be used with <a class="reference external" href="https://scikit-learn.org/stable/modules/classes.html#module-sklearn.model_selection" title="(in scikit-learn v1.3)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_selection</span></code></a>.</p></li>
 </ul>
 <p>SciKeras abstracts away the incompatibilities and data conversions,
 letting you focus on defining your architecture and
@@ -178,7 +178,7 @@ extended with ease, getting out of your way as much as possible.</p>
 These arguments are stored unmodified. For instance, the <code class="docutils literal notranslate"><span class="pre">model</span></code> will
 remain uninstantiated. This is to make sure that the arguments you
 pass are not touched afterwards, which makes it possible to clone the
-wrapper instance, for example in a <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html#sklearn.model_selection.GridSearchCV" title="(in scikit-learn v1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridSearchCV</span></code></a>.</p>
+wrapper instance, for example in a <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html#sklearn.model_selection.GridSearchCV" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridSearchCV</span></code></a>.</p>
 <p>Only when the <a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper.fit" title="scikeras.wrappers.BaseWrapper.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> or
 <a class="reference internal" href="generated/scikeras.wrappers.BaseWrapper.html#scikeras.wrappers.BaseWrapper.initialize" title="scikeras.wrappers.BaseWrapper.initialize"><code class="xref py py-func docutils literal notranslate"><span class="pre">initialize()</span></code></a> methods are called, are the
 different attributes of the wrapper, such as <code class="docutils literal notranslate"><span class="pre">model_</span></code>, initialized.
@@ -287,7 +287,7 @@ array containing the number of tokens of each sample. SciKeras has you
 covered here as well.</p>
 <p>Scikit-Learn natively supports multiple outputs, although it technically
 requires them to be arrays of equal length
-(see docs for Scikit-Learn’s <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.multioutput.MultiOutputClassifier.html#sklearn.multioutput.MultiOutputClassifier" title="(in scikit-learn v1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiOutputClassifier</span></code></a>).
+(see docs for Scikit-Learn’s <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.multioutput.MultiOutputClassifier.html#sklearn.multioutput.MultiOutputClassifier" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiOutputClassifier</span></code></a>).
 Scikit-Learn has no support for multiple inputs.
 To work around this issue, SciKeras implements a data conversion
 abstraction in the form of Scikit-Learn style transformers,
@@ -297,7 +297,7 @@ for <code class="xref py py-class docutils literal notranslate"><span class="pre
 To override the default transformers, simply override
 <code class="xref py py-func docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrappers.target_encoder()</span></code> or
 <code class="xref py py-func docutils literal notranslate"><span class="pre">scikeras.wrappers.BaseWrappers.feature_encoder()</span></code> for <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">X</span></code> respectively.</p>
-<p>SciKeras uses <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html#sklearn.utils.multiclass.type_of_target" title="(in scikit-learn v1.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.utils.multiclass.type_of_target()</span></code></a> to categorize the target
+<p>SciKeras uses <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.utils.multiclass.type_of_target.html#sklearn.utils.multiclass.type_of_target" title="(in scikit-learn v1.3)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.utils.multiclass.type_of_target()</span></code></a> to categorize the target
 type, and implements basic handling of the following cases out of the box:</p>
 <table class="docutils align-default">
 <thead>
@@ -562,7 +562,7 @@ which tells SciKeras to pass that parameter as an positional argument instead of
 </section>
 <section id="custom-scorers">
 <h2>Custom Scorers<a class="headerlink" href="#custom-scorers" title="Permalink to this heading">¶</a></h2>
-<p>SciKeras uses <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html#sklearn.metrics.accuracy_score" title="(in scikit-learn v1.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.accuracy_score()</span></code></a> and <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html#sklearn.metrics.accuracy_score" title="(in scikit-learn v1.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.accuracy_score()</span></code></a>
+<p>SciKeras uses <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html#sklearn.metrics.accuracy_score" title="(in scikit-learn v1.3)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.accuracy_score()</span></code></a> and <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html#sklearn.metrics.accuracy_score" title="(in scikit-learn v1.3)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.accuracy_score()</span></code></a>
 as the scoring functions for <a class="reference internal" href="generated/scikeras.wrappers.KerasClassifier.html#scikeras.wrappers.KerasClassifier" title="scikeras.wrappers.KerasClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.KerasClassifier</span></code></a>
 and <a class="reference internal" href="generated/scikeras.wrappers.KerasRegressor.html#scikeras.wrappers.KerasRegressor" title="scikeras.wrappers.KerasRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">scikeras.wrappers.KerasRegressor</span></code></a> respectively. To override these scoring functions,</p>
 </section>
