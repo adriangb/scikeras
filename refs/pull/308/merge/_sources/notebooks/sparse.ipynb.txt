@@ -1,0 +1,635 @@
+{
+ "cells": [
+  {
+   "cell_type": "raw",
+   "id": "2a209d1a",
+   "metadata": {},
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "03385ae4",
+   "metadata": {},
+   "source": [
+    "# Sparse Inputs"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8493b780",
+   "metadata": {},
+   "source": [
+    "SciKeras supports sparse inputs (`X`/features).\n",
+    "You don't have to do anything special for this to work, you can just pass a sparse matrix to `fit()`.\n",
+    "\n",
+    "In this notebook, we'll demonstrate how this works and compare memory consumption of sparse inputs to dense inputs."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "84ee38f3",
+   "metadata": {},
+   "source": [
+    "## Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "7a733b18",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:41:27.604763Z",
+     "iopub.status.busy": "2023-10-05T20:41:27.604545Z",
+     "iopub.status.idle": "2023-10-05T20:41:31.460354Z",
+     "shell.execute_reply": "2023-10-05T20:41:31.459378Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting memory_profiler\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Downloading memory_profiler-0.61.0-py3-none-any.whl (31 kB)\r\n",
+      "Requirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages (from memory_profiler) (5.9.5)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Installing collected packages: memory_profiler\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Successfully installed memory_profiler-0.61.0\r\n"
+     ]
+    }
+   ],
+   "source": [
+    "!pip install memory_profiler\n",
+    "%load_ext memory_profiler"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "e2fcb3a4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:41:31.464079Z",
+     "iopub.status.busy": "2023-10-05T20:41:31.463821Z",
+     "iopub.status.idle": "2023-10-05T20:41:33.506359Z",
+     "shell.execute_reply": "2023-10-05T20:41:33.505542Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "import os\n",
+    "os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'\n",
+    "from tensorflow import get_logger\n",
+    "get_logger().setLevel('ERROR')\n",
+    "warnings.filterwarnings(\"ignore\", message=\"Setting the random state for TF\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "f74062f4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:41:33.510613Z",
+     "iopub.status.busy": "2023-10-05T20:41:33.509669Z",
+     "iopub.status.idle": "2023-10-05T20:41:33.528750Z",
+     "shell.execute_reply": "2023-10-05T20:41:33.527968Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "try:\n",
+    "    import scikeras\n",
+    "except ImportError:\n",
+    "    !python -m pip install scikeras"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "4ab9bbfe",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:41:33.532578Z",
+     "iopub.status.busy": "2023-10-05T20:41:33.532312Z",
+     "iopub.status.idle": "2023-10-05T20:41:33.846865Z",
+     "shell.execute_reply": "2023-10-05T20:41:33.846141Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import scipy\n",
+    "import numpy as np\n",
+    "from scikeras.wrappers import KerasRegressor\n",
+    "from sklearn.preprocessing import OneHotEncoder\n",
+    "from sklearn.pipeline import Pipeline\n",
+    "from tensorflow import keras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4b210950",
+   "metadata": {},
+   "source": [
+    "## Data\n",
+    "\n",
+    "The dataset we'll be using is designed to demostrate a worst-case/best-case scenario for dense and sparse input features respectively.\n",
+    "It consists of a single categorical feature with equal number of categories as rows.\n",
+    "This means the one-hot encoded representation will require as many columns as it does rows, making it very ineffienct to store as a dense matrix but very efficient to store as a sparse matrix."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "aee692f6",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:41:33.851831Z",
+     "iopub.status.busy": "2023-10-05T20:41:33.850491Z",
+     "iopub.status.idle": "2023-10-05T20:41:33.866030Z",
+     "shell.execute_reply": "2023-10-05T20:41:33.864563Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "N_SAMPLES = 20_000  # hand tuned to be ~4GB peak\n",
+    "\n",
+    "X = np.arange(0, N_SAMPLES).reshape(-1, 1)\n",
+    "y = np.random.uniform(0, 1, size=(X.shape[0],))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "34b136f5",
+   "metadata": {},
+   "source": [
+    "## Model\n",
+    "\n",
+    "The model here is nothing special, just a basic multilayer perceptron with one hidden layer."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "2b5c219e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:41:33.870555Z",
+     "iopub.status.busy": "2023-10-05T20:41:33.870294Z",
+     "iopub.status.idle": "2023-10-05T20:41:33.877433Z",
+     "shell.execute_reply": "2023-10-05T20:41:33.876677Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def get_clf(meta) -> keras.Model:\n",
+    "    n_features_in_ = meta[\"n_features_in_\"]\n",
+    "    model = keras.models.Sequential()\n",
+    "    model.add(keras.layers.Input(shape=(n_features_in_,)))\n",
+    "    # a single hidden layer\n",
+    "    model.add(keras.layers.Dense(100, activation=\"relu\"))\n",
+    "    model.add(keras.layers.Dense(1))\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e3d266f3",
+   "metadata": {},
+   "source": [
+    "## Pipelines\n",
+    "\n",
+    "Here is where it gets interesting.\n",
+    "We make two Scikit-Learn pipelines that use `OneHotEncoder`: one that uses `sparse=False` to force a dense matrix as the output and another that uses `sparse=True` (the default)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "73766db4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:41:33.883809Z",
+     "iopub.status.busy": "2023-10-05T20:41:33.880863Z",
+     "iopub.status.idle": "2023-10-05T20:41:33.892130Z",
+     "shell.execute_reply": "2023-10-05T20:41:33.891085Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "dense_pipeline = Pipeline(\n",
+    "    [\n",
+    "        (\"encoder\", OneHotEncoder(sparse=False)),\n",
+    "        (\"model\", KerasRegressor(get_clf, loss=\"mse\", epochs=5, verbose=False))\n",
+    "    ]\n",
+    ")\n",
+    "\n",
+    "sparse_pipeline = Pipeline(\n",
+    "    [\n",
+    "        (\"encoder\", OneHotEncoder(sparse=True)),\n",
+    "        (\"model\", KerasRegressor(get_clf, loss=\"mse\", epochs=5, verbose=False))\n",
+    "    ]\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cc331a86",
+   "metadata": {},
+   "source": [
+    "## Benchmark\n",
+    "\n",
+    "Our benchmark will be to just train each one of these pipelines and measure peak memory consumption."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "88dfa41d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:41:33.895679Z",
+     "iopub.status.busy": "2023-10-05T20:41:33.895427Z",
+     "iopub.status.idle": "2023-10-05T20:42:36.016524Z",
+     "shell.execute_reply": "2023-10-05T20:42:36.015801Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "peak memory: 3556.83 MiB, increment: 3150.56 MiB\n"
+     ]
+    }
+   ],
+   "source": [
+    "%memit dense_pipeline.fit(X, y)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "6f92b307",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:42:36.020402Z",
+     "iopub.status.busy": "2023-10-05T20:42:36.020146Z",
+     "iopub.status.idle": "2023-10-05T20:42:57.975236Z",
+     "shell.execute_reply": "2023-10-05T20:42:57.974530Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "peak memory: 712.59 MiB, increment: 62.32 MiB\n"
+     ]
+    }
+   ],
+   "source": [
+    "%memit sparse_pipeline.fit(X, y)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "61f617ff",
+   "metadata": {},
+   "source": [
+    "You should see at least 100x more memory consumption **increment** in the dense pipeline."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e3657028",
+   "metadata": {},
+   "source": [
+    "### Runtime\n",
+    "\n",
+    "Using sparse inputs can have a drastic impact on memory usage, but it often (not always) hurts overall runtime."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "9d0957de",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:42:57.978870Z",
+     "iopub.status.busy": "2023-10-05T20:42:57.978613Z",
+     "iopub.status.idle": "2023-10-05T20:49:12.331612Z",
+     "shell.execute_reply": "2023-10-05T20:49:12.330939Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "45.3 s ± 11.9 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
+     ]
+    }
+   ],
+   "source": [
+    "%timeit dense_pipeline.fit(X, y)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "d3af76ba",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:49:12.337117Z",
+     "iopub.status.busy": "2023-10-05T20:49:12.335990Z",
+     "iopub.status.idle": "2023-10-05T20:51:10.216006Z",
+     "shell.execute_reply": "2023-10-05T20:51:10.215309Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "14 s ± 2.03 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
+     ]
+    }
+   ],
+   "source": [
+    "%timeit sparse_pipeline.fit(X, y)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a11668d5",
+   "metadata": {},
+   "source": [
+    "## Tensorflow Datasets\n",
+    "\n",
+    "Tensorflow provides a whole suite of functionality around the [Dataset].\n",
+    "Datasets are lazily evaluated, can be sparse and minimize the transformations required to feed data into the model.\n",
+    "They are _a lot_ more performant and efficient at scale than using numpy datastructures, even sparse ones.\n",
+    "\n",
+    "SciKeras does not (and cannot) support Datasets directly because Scikit-Learn itself does not support them and SciKeras' outwards API is Scikit-Learn's API.\n",
+    "You may want to explore breaking out of SciKeras and just using TensorFlow/Keras directly to see if Datasets can have a large impact for your use case.\n",
+    "\n",
+    "[Dataset]: https://www.tensorflow.org/api_docs/python/tf/data/Dataset"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "982ffbb7",
+   "metadata": {},
+   "source": [
+    "## Bonus: dtypes\n",
+    "\n",
+    "You might be able to save even more memory by changing the output dtype of `OneHotEncoder`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "3765a5a2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:51:10.222288Z",
+     "iopub.status.busy": "2023-10-05T20:51:10.221778Z",
+     "iopub.status.idle": "2023-10-05T20:51:10.226885Z",
+     "shell.execute_reply": "2023-10-05T20:51:10.226262Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "sparse_pipline_uint8 = Pipeline(\n",
+    "    [\n",
+    "        (\"encoder\", OneHotEncoder(sparse=True, dtype=np.uint8)),\n",
+    "        (\"model\", KerasRegressor(get_clf, loss=\"mse\", epochs=5, verbose=False))\n",
+    "    ]\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "b637a2f4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2023-10-05T20:51:10.229891Z",
+     "iopub.status.busy": "2023-10-05T20:51:10.229343Z",
+     "iopub.status.idle": "2023-10-05T20:51:23.820718Z",
+     "shell.execute_reply": "2023-10-05T20:51:23.819929Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "peak memory: 1021.55 MiB, increment: 0.12 MiB\n"
+     ]
+    }
+   ],
+   "source": [
+    "%memit sparse_pipline_uint8.fit(X, y)"
+   ]
+  }
+ ],
+ "metadata": {
+  "jupytext": {
+   "formats": "ipynb,md"
+  },
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.18"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
