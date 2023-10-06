@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "85610ec4",
+   "id": "9ba1d978",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Meta_Estimators.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "eac3bcb3",
+   "id": "29551b5c",
    "metadata": {},
    "source": [
     "# Meta Estimators in SciKeras\n",
@@ -31,13 +31,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "9f1a2dca",
+   "id": "ef31de8e",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-05T20:40:01.419060Z",
-     "iopub.status.busy": "2023-10-05T20:40:01.418828Z",
-     "iopub.status.idle": "2023-10-05T20:40:03.772193Z",
-     "shell.execute_reply": "2023-10-05T20:40:03.768103Z"
+     "iopub.execute_input": "2023-10-06T22:09:27.851358Z",
+     "iopub.status.busy": "2023-10-06T22:09:27.851130Z",
+     "iopub.status.idle": "2023-10-06T22:09:30.239840Z",
+     "shell.execute_reply": "2023-10-06T22:09:30.234557Z"
     }
    },
    "outputs": [],
@@ -50,7 +50,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "491bc1f7",
+   "id": "3a50b1d4",
    "metadata": {},
    "source": [
     "Silence TensorFlow logging to keep output succinct."
@@ -59,13 +59,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "522ae760",
+   "id": "eb32efea",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-05T20:40:03.784824Z",
-     "iopub.status.busy": "2023-10-05T20:40:03.784398Z",
-     "iopub.status.idle": "2023-10-05T20:40:03.789915Z",
-     "shell.execute_reply": "2023-10-05T20:40:03.789166Z"
+     "iopub.execute_input": "2023-10-06T22:09:30.244662Z",
+     "iopub.status.busy": "2023-10-06T22:09:30.243296Z",
+     "iopub.status.idle": "2023-10-06T22:09:30.250098Z",
+     "shell.execute_reply": "2023-10-06T22:09:30.248705Z"
     }
    },
    "outputs": [],
@@ -79,13 +79,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "f550717f",
+   "id": "53591459",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-05T20:40:03.793236Z",
-     "iopub.status.busy": "2023-10-05T20:40:03.793007Z",
-     "iopub.status.idle": "2023-10-05T20:40:04.259400Z",
-     "shell.execute_reply": "2023-10-05T20:40:04.258618Z"
+     "iopub.execute_input": "2023-10-06T22:09:30.255105Z",
+     "iopub.status.busy": "2023-10-06T22:09:30.253965Z",
+     "iopub.status.idle": "2023-10-06T22:09:30.761514Z",
+     "shell.execute_reply": "2023-10-06T22:09:30.760578Z"
     }
    },
    "outputs": [],
@@ -97,7 +97,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "38ebe4ad",
+   "id": "97c6b26a",
    "metadata": {},
    "source": [
     "## 2. Defining the Keras Model\n",
@@ -108,13 +108,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "e24830ea",
+   "id": "e9b72348",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-05T20:40:04.266122Z",
-     "iopub.status.busy": "2023-10-05T20:40:04.264489Z",
-     "iopub.status.idle": "2023-10-05T20:40:04.272833Z",
-     "shell.execute_reply": "2023-10-05T20:40:04.272267Z"
+     "iopub.execute_input": "2023-10-06T22:09:30.766616Z",
+     "iopub.status.busy": "2023-10-06T22:09:30.765239Z",
+     "iopub.status.idle": "2023-10-06T22:09:30.775316Z",
+     "shell.execute_reply": "2023-10-06T22:09:30.773707Z"
     }
    },
    "outputs": [],
@@ -147,7 +147,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "e2bd5e58",
+   "id": "9d7bed7e",
    "metadata": {},
    "source": [
     "Next we wrap this Keras model with SciKeras"
@@ -156,13 +156,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "f7e9732b",
+   "id": "1af631a9",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-05T20:40:04.277255Z",
-     "iopub.status.busy": "2023-10-05T20:40:04.275927Z",
-     "iopub.status.idle": "2023-10-05T20:40:04.284884Z",
-     "shell.execute_reply": "2023-10-05T20:40:04.284195Z"
+     "iopub.execute_input": "2023-10-06T22:09:30.781140Z",
+     "iopub.status.busy": "2023-10-06T22:09:30.779218Z",
+     "iopub.status.idle": "2023-10-06T22:09:30.791735Z",
+     "shell.execute_reply": "2023-10-06T22:09:30.790972Z"
     }
    },
    "outputs": [],
@@ -179,7 +179,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "aae371fb",
+   "id": "c299497a",
    "metadata": {},
    "source": [
     "### 2.1 Building a boosting ensemble\n",
@@ -190,13 +190,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "c8f39dc4",
+   "id": "36814f62",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-05T20:40:04.288154Z",
-     "iopub.status.busy": "2023-10-05T20:40:04.287786Z",
-     "iopub.status.idle": "2023-10-05T20:40:04.842858Z",
-     "shell.execute_reply": "2023-10-05T20:40:04.834668Z"
+     "iopub.execute_input": "2023-10-06T22:09:30.795251Z",
+     "iopub.status.busy": "2023-10-06T22:09:30.794921Z",
+     "iopub.status.idle": "2023-10-06T22:09:31.330952Z",
+     "shell.execute_reply": "2023-10-06T22:09:31.323357Z"
     }
    },
    "outputs": [],
@@ -209,7 +209,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "07ec20ca",
+   "id": "725edbec",
    "metadata": {},
    "source": [
     "## 3. Testing with a toy dataset\n",
@@ -220,13 +220,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "10229df7",
+   "id": "6334d44a",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-05T20:40:04.846749Z",
-     "iopub.status.busy": "2023-10-05T20:40:04.846273Z",
-     "iopub.status.idle": "2023-10-05T20:40:54.929244Z",
-     "shell.execute_reply": "2023-10-05T20:40:54.927796Z"
+     "iopub.execute_input": "2023-10-06T22:09:31.338464Z",
+     "iopub.status.busy": "2023-10-06T22:09:31.337136Z",
+     "iopub.status.idle": "2023-10-06T22:10:15.395358Z",
+     "shell.execute_reply": "2023-10-06T22:10:15.394644Z"
     }
    },
    "outputs": [
@@ -242,7 +242,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Single score: 0.53\n",
+      "Single score: 0.52\n",
       "AdaBoost score: 0.87\n"
      ]
     }
@@ -263,7 +263,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "58a9da48",
+   "id": "2653058d",
    "metadata": {},
    "source": [
     "We see that the score for the AdaBoost classifier is slightly higher than that of an individual MLPRegressor instance. We can explore the individual classifiers, and see that each one is composed of a Keras Model with it's own individual weights.\n"
@@ -272,13 +272,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "3e3b1f22",
+   "id": "ab3e7e09",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-05T20:40:54.932868Z",
-     "iopub.status.busy": "2023-10-05T20:40:54.932511Z",
-     "iopub.status.idle": "2023-10-05T20:40:54.950977Z",
-     "shell.execute_reply": "2023-10-05T20:40:54.949799Z"
+     "iopub.execute_input": "2023-10-06T22:10:15.398982Z",
+     "iopub.status.busy": "2023-10-06T22:10:15.398502Z",
+     "iopub.status.idle": "2023-10-06T22:10:15.409897Z",
+     "shell.execute_reply": "2023-10-06T22:10:15.409295Z"
     }
    },
    "outputs": [
@@ -286,8 +286,8 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "[-0.00937586  0.04673085  0.08664322 -0.20463426  0.1110301 ]\n",
-      "[ 0.23012722  0.2013653   0.21449883  0.03200283 -0.0992407 ]\n"
+      "[-0.00959846  0.04682814  0.08669366 -0.20457058  0.11140648]\n",
+      "[ 0.2290431   0.20039107  0.21337177  0.03108241 -0.09935436]\n"
      ]
     }
    ],
@@ -298,7 +298,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "d721be79",
+   "id": "d89b249d",
    "metadata": {},
    "source": [
     "## 4. Bagging ensemble\n",
@@ -309,13 +309,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "3e553a8a",
+   "id": "4cb825d6",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-05T20:40:54.954241Z",
-     "iopub.status.busy": "2023-10-05T20:40:54.953891Z",
-     "iopub.status.idle": "2023-10-05T20:41:22.147108Z",
-     "shell.execute_reply": "2023-10-05T20:41:22.146334Z"
+     "iopub.execute_input": "2023-10-06T22:10:15.414350Z",
+     "iopub.status.busy": "2023-10-06T22:10:15.413191Z",
+     "iopub.status.idle": "2023-10-06T22:10:38.291449Z",
+     "shell.execute_reply": "2023-10-06T22:10:38.290749Z"
     }
    },
    "outputs": [
@@ -331,79 +331,14 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
+      "WARNING:tensorflow:5 out of the last 9 calls to <function Model.make_train_function.<locals>.train_function at 0x7fcd16f44e50> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
      ]
     },
     {
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:tensorflow:5 out of the last 9 calls to <function Model.make_train_function.<locals>.train_function at 0x7f360a3c9700> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:tensorflow:5 out of the last 10 calls to <function Model.make_train_function.<locals>.train_function at 0x7f73d6d9f700> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n",
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n",
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
+      "WARNING:tensorflow:5 out of the last 10 calls to <function Model.make_train_function.<locals>.train_function at 0x7f3b849a7940> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
      ]
     },
     {
@@ -422,89 +357,12 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
       "WARNING:tensorflow:Detecting that an object or model or tf.train.Checkpoint is being deleted with unrestored values. See the following logs for the specific values in question. To silence these warnings, use `status.expect_partial()`. See https://www.tensorflow.org/api_docs/python/tf/train/Checkpoint#restorefor details about the status object returned by the restore function.\n",
       "WARNING:tensorflow:Detecting that an object or model or tf.train.Checkpoint is being deleted with unrestored values. See the following logs for the specific values in question. To silence these warnings, use `status.expect_partial()`. See https://www.tensorflow.org/api_docs/python/tf/train/Checkpoint#restorefor details about the status object returned by the restore function.\n",
       "WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).keras_api.metrics.0.total\n",
       "WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).keras_api.metrics.0.total\n",
       "WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).keras_api.metrics.0.count\n",
       "WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).keras_api.metrics.0.count\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.\n"
      ]
     },
     {
