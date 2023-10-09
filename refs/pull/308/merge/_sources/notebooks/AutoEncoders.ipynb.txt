@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "648a2a2c",
+   "id": "e2f570f0",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "67e28aad",
+   "id": "84d40397",
    "metadata": {},
    "source": [
     "# Autoencoders in SciKeras\n",
@@ -34,13 +34,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "e3ac4dd6",
+   "id": "5b0505c4",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:54:52.592833Z",
-     "iopub.status.busy": "2023-10-09T14:54:52.592199Z",
-     "iopub.status.idle": "2023-10-09T14:54:56.628678Z",
-     "shell.execute_reply": "2023-10-09T14:54:56.627567Z"
+     "iopub.execute_input": "2023-10-09T17:19:55.534047Z",
+     "iopub.status.busy": "2023-10-09T17:19:55.532417Z",
+     "iopub.status.idle": "2023-10-09T17:19:58.744409Z",
+     "shell.execute_reply": "2023-10-09T17:19:58.743474Z"
     }
    },
    "outputs": [],
@@ -53,7 +53,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "e5693b7a",
+   "id": "e8f547b4",
    "metadata": {},
    "source": [
     "Silence TensorFlow logging to keep output succinct."
@@ -62,13 +62,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "0533c789",
+   "id": "d58a88f3",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:54:56.635776Z",
-     "iopub.status.busy": "2023-10-09T14:54:56.633407Z",
-     "iopub.status.idle": "2023-10-09T14:54:56.645148Z",
-     "shell.execute_reply": "2023-10-09T14:54:56.643801Z"
+     "iopub.execute_input": "2023-10-09T17:19:58.749017Z",
+     "iopub.status.busy": "2023-10-09T17:19:58.747931Z",
+     "iopub.status.idle": "2023-10-09T17:19:58.755349Z",
+     "shell.execute_reply": "2023-10-09T17:19:58.752679Z"
     }
    },
    "outputs": [],
@@ -82,13 +82,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "1420d675",
+   "id": "bb47892b",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:54:56.650003Z",
-     "iopub.status.busy": "2023-10-09T14:54:56.649326Z",
-     "iopub.status.idle": "2023-10-09T14:54:57.136338Z",
-     "shell.execute_reply": "2023-10-09T14:54:57.130191Z"
+     "iopub.execute_input": "2023-10-09T17:19:58.761046Z",
+     "iopub.status.busy": "2023-10-09T17:19:58.759705Z",
+     "iopub.status.idle": "2023-10-09T17:19:59.236989Z",
+     "shell.execute_reply": "2023-10-09T17:19:59.231297Z"
     }
    },
    "outputs": [],
@@ -100,7 +100,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ce741ec5",
+   "id": "ec40bd86",
    "metadata": {},
    "source": [
     "## 2. Data\n",
@@ -111,13 +111,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "b2c36b19",
+   "id": "61ac362f",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:54:57.143890Z",
-     "iopub.status.busy": "2023-10-09T14:54:57.141947Z",
-     "iopub.status.idle": "2023-10-09T14:54:57.747362Z",
-     "shell.execute_reply": "2023-10-09T14:54:57.746278Z"
+     "iopub.execute_input": "2023-10-09T17:19:59.244161Z",
+     "iopub.status.busy": "2023-10-09T17:19:59.241843Z",
+     "iopub.status.idle": "2023-10-09T17:19:59.790618Z",
+     "shell.execute_reply": "2023-10-09T17:19:59.784316Z"
     }
    },
    "outputs": [
@@ -146,7 +146,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "41fbdb64",
+   "id": "85f8d075",
    "metadata": {},
    "source": [
     "## 3. Define Keras Model\n",
@@ -169,13 +169,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "a29d70a9",
+   "id": "c3c945cd",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:54:57.752270Z",
-     "iopub.status.busy": "2023-10-09T14:54:57.751635Z",
-     "iopub.status.idle": "2023-10-09T14:54:57.776536Z",
-     "shell.execute_reply": "2023-10-09T14:54:57.775397Z"
+     "iopub.execute_input": "2023-10-09T17:19:59.795390Z",
+     "iopub.status.busy": "2023-10-09T17:19:59.795067Z",
+     "iopub.status.idle": "2023-10-09T17:19:59.822903Z",
+     "shell.execute_reply": "2023-10-09T17:19:59.821963Z"
     }
    },
    "outputs": [],
@@ -252,7 +252,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "90d22a40",
+   "id": "13846f01",
    "metadata": {},
    "source": [
     "Next, we wrap the Keras Model with Scikeras. Note that for our encoder/decoder estimators, we do not need to provide a loss function since no training will be done.\n",
@@ -262,13 +262,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "22c55075",
+   "id": "196c4725",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:54:57.783789Z",
-     "iopub.status.busy": "2023-10-09T14:54:57.781693Z",
-     "iopub.status.idle": "2023-10-09T14:54:57.796160Z",
-     "shell.execute_reply": "2023-10-09T14:54:57.794923Z"
+     "iopub.execute_input": "2023-10-09T17:19:59.828945Z",
+     "iopub.status.busy": "2023-10-09T17:19:59.827451Z",
+     "iopub.status.idle": "2023-10-09T17:19:59.833455Z",
+     "shell.execute_reply": "2023-10-09T17:19:59.832752Z"
     }
    },
    "outputs": [],
@@ -285,7 +285,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "bf7de076",
+   "id": "a5208311",
    "metadata": {},
    "source": [
     "## 4. Training\n",
@@ -298,13 +298,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "7c3cf0b6",
+   "id": "4cb22976",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:54:57.803172Z",
-     "iopub.status.busy": "2023-10-09T14:54:57.801372Z",
-     "iopub.status.idle": "2023-10-09T14:55:49.200768Z",
-     "shell.execute_reply": "2023-10-09T14:55:49.199414Z"
+     "iopub.execute_input": "2023-10-09T17:19:59.840991Z",
+     "iopub.status.busy": "2023-10-09T17:19:59.839575Z",
+     "iopub.status.idle": "2023-10-09T17:20:33.662629Z",
+     "shell.execute_reply": "2023-10-09T17:20:33.661619Z"
     }
    },
    "outputs": [],
@@ -314,7 +314,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "488ae165",
+   "id": "0411d3bb",
    "metadata": {},
    "source": [
     "Next, we round trip the test dataset and explore the performance of the autoencoder."
@@ -323,13 +323,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "3c1ea0be",
+   "id": "9689d959",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:55:49.207707Z",
-     "iopub.status.busy": "2023-10-09T14:55:49.206171Z",
-     "iopub.status.idle": "2023-10-09T14:55:51.161521Z",
-     "shell.execute_reply": "2023-10-09T14:55:51.160252Z"
+     "iopub.execute_input": "2023-10-09T17:20:33.668340Z",
+     "iopub.status.busy": "2023-10-09T17:20:33.666737Z",
+     "iopub.status.idle": "2023-10-09T17:20:34.937710Z",
+     "shell.execute_reply": "2023-10-09T17:20:34.936825Z"
     }
    },
    "outputs": [],
@@ -339,7 +339,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "03a934aa",
+   "id": "d674dd15",
    "metadata": {},
    "source": [
     "## 5. Explore Results\n",
@@ -350,13 +350,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "1ecff55b",
+   "id": "71246c2b",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:55:51.166832Z",
-     "iopub.status.busy": "2023-10-09T14:55:51.166438Z",
-     "iopub.status.idle": "2023-10-09T14:55:56.037433Z",
-     "shell.execute_reply": "2023-10-09T14:55:56.036149Z"
+     "iopub.execute_input": "2023-10-09T17:20:34.943376Z",
+     "iopub.status.busy": "2023-10-09T17:20:34.943030Z",
+     "iopub.status.idle": "2023-10-09T17:20:40.302311Z",
+     "shell.execute_reply": "2023-10-09T17:20:40.301252Z"
     }
    },
    "outputs": [
@@ -396,7 +396,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "18f8941c",
+   "id": "e2b811aa",
    "metadata": {},
    "source": [
     "What about the compression? Let's check the sizes of the arrays."
@@ -405,13 +405,13 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "a12293a1",
+   "id": "ca4ef12c",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:55:56.043280Z",
-     "iopub.status.busy": "2023-10-09T14:55:56.042091Z",
-     "iopub.status.idle": "2023-10-09T14:55:57.449566Z",
-     "shell.execute_reply": "2023-10-09T14:55:57.447336Z"
+     "iopub.execute_input": "2023-10-09T17:20:40.309281Z",
+     "iopub.status.busy": "2023-10-09T17:20:40.308538Z",
+     "iopub.status.idle": "2023-10-09T17:20:41.042558Z",
+     "shell.execute_reply": "2023-10-09T17:20:41.041520Z"
     }
    },
    "outputs": [
@@ -435,7 +435,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "7866213a",
+   "id": "028d79c0",
    "metadata": {},
    "source": [
     "## 6. Deep AutoEncoder"
@@ -443,7 +443,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "783734af",
+   "id": "43a4589f",
    "metadata": {},
    "source": [
     "We can easily expand our model to be a deep autoencoder by adding some hidden layers. All we have to do is add a parameter `hidden_layer_sizes` and use it in `_keras_build_fn` to build hidden layers.\n",
@@ -453,13 +453,13 @@
   {
    "cell_type": "code",
    "execution_count": 11,
-   "id": "a006feba",
+   "id": "8d398112",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:55:57.457115Z",
-     "iopub.status.busy": "2023-10-09T14:55:57.456297Z",
-     "iopub.status.idle": "2023-10-09T14:55:57.483926Z",
-     "shell.execute_reply": "2023-10-09T14:55:57.482304Z"
+     "iopub.execute_input": "2023-10-09T17:20:41.047160Z",
+     "iopub.status.busy": "2023-10-09T17:20:41.046389Z",
+     "iopub.status.idle": "2023-10-09T17:20:41.064281Z",
+     "shell.execute_reply": "2023-10-09T17:20:41.063210Z"
     }
    },
    "outputs": [],
@@ -503,13 +503,13 @@
   {
    "cell_type": "code",
    "execution_count": 12,
-   "id": "6b98b1f2",
+   "id": "a4252ab3",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:55:57.489525Z",
-     "iopub.status.busy": "2023-10-09T14:55:57.488861Z",
-     "iopub.status.idle": "2023-10-09T14:57:30.209806Z",
-     "shell.execute_reply": "2023-10-09T14:57:30.208743Z"
+     "iopub.execute_input": "2023-10-09T17:20:41.068717Z",
+     "iopub.status.busy": "2023-10-09T17:20:41.068197Z",
+     "iopub.status.idle": "2023-10-09T17:22:15.481456Z",
+     "shell.execute_reply": "2023-10-09T17:22:15.480495Z"
     }
    },
    "outputs": [],
@@ -529,13 +529,13 @@
   {
    "cell_type": "code",
    "execution_count": 13,
-   "id": "de38586c",
+   "id": "25e892b3",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-09T14:57:30.217425Z",
-     "iopub.status.busy": "2023-10-09T14:57:30.216086Z",
-     "iopub.status.idle": "2023-10-09T14:57:32.596421Z",
-     "shell.execute_reply": "2023-10-09T14:57:32.595219Z"
+     "iopub.execute_input": "2023-10-09T17:22:15.488967Z",
+     "iopub.status.busy": "2023-10-09T17:22:15.488293Z",
+     "iopub.status.idle": "2023-10-09T17:22:17.189800Z",
+     "shell.execute_reply": "2023-10-09T17:22:17.187885Z"
     }
    },
    "outputs": [
@@ -573,7 +573,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "e77028aa",
+   "id": "8f641e97",
    "metadata": {},
    "source": [
     "Suprisingly, our score got worse. It's possible that that because of the extra trainable variables, our deep model trains slower than our simple model.\n",
