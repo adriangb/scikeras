@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data Transformers &#8212; SciKeras 0.11.0 documentation</title>
+    <title>Data Transformers &#8212; SciKeras 0.12.0 documentation</title>
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../_static/insipid.css?v=b2d00be7" />
     <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=38e1c863"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=95b1b8af"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -368,7 +368,7 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-4/4 [==============================] - 0s 4ms/step
+4/4 [==============================] - 0s 2ms/step
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -384,8 +384,8 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.46610662]
- [0.4776264 ]]
+[[0.5522649]
+ [0.518515 ]]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -401,8 +401,8 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.27206933 0.20118478 0.18362702 0.17552808 0.16759083]
- [0.28843257 0.20870228 0.20092407 0.13032235 0.17161864]]
+[[0.16683777 0.26650146 0.15284486 0.23853612 0.17527987]
+ [0.16921666 0.24500282 0.20009765 0.22484016 0.16084264]]
 </pre></div></div>
 </div>
 <p>As you can see, our <code class="docutils literal notranslate"><span class="pre">predict</span></code> output is also a list of arrays, except it contains probabilities instead of the class predictions.</p>
@@ -492,7 +492,7 @@ docs</a>.</p>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 `y`, as will be passed to Keras:
-[array([0, 1, 0, 1]), array([3, 0, 3, 0])]
+[array([1, 1, 0, 1]), array([0, 2, 2, 1])]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -519,11 +519,11 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0, 0],
-       [0, 0],
-       [0, 0],
-       [0, 0],
-       [0, 0]])
+array([[1, 1],
+       [1, 1],
+       [0, 1],
+       [1, 1],
+       [0, 1]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -596,7 +596,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.54
+0.5549999999999999
 </pre></div></div>
 </div>
 </section>
@@ -690,7 +690,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--4.788469805424131
+-2.602915889561571
 </pre></div></div>
 </div>
 <p>Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.</p>
@@ -737,7 +737,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--3.541517387798587
+-2.371985727361659
 </pre></div></div>
 </div>
 </section>
@@ -920,25 +920,25 @@ Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-dataset
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/10
-422/422 [==============================] - 44s 101ms/step - loss: 0.3390 - val_loss: 0.0827
+422/422 [==============================] - 50s 115ms/step - loss: 0.3393 - val_loss: 0.0832
 Epoch 2/10
-422/422 [==============================] - 40s 95ms/step - loss: 0.1120 - val_loss: 0.0685
+422/422 [==============================] - 44s 104ms/step - loss: 0.1124 - val_loss: 0.0693
 Epoch 3/10
-422/422 [==============================] - 44s 103ms/step - loss: 0.0832 - val_loss: 0.0484
+422/422 [==============================] - 48s 114ms/step - loss: 0.0835 - val_loss: 0.0483
 Epoch 4/10
-422/422 [==============================] - 40s 94ms/step - loss: 0.0713 - val_loss: 0.0416
+422/422 [==============================] - 45s 108ms/step - loss: 0.0713 - val_loss: 0.0418
 Epoch 5/10
-422/422 [==============================] - 47s 111ms/step - loss: 0.0628 - val_loss: 0.0384
+422/422 [==============================] - 57s 136ms/step - loss: 0.0630 - val_loss: 0.0389
 Epoch 6/10
-422/422 [==============================] - 43s 103ms/step - loss: 0.0561 - val_loss: 0.0343
+422/422 [==============================] - 48s 113ms/step - loss: 0.0562 - val_loss: 0.0346
 Epoch 7/10
-422/422 [==============================] - 39s 92ms/step - loss: 0.0529 - val_loss: 0.0377
+422/422 [==============================] - 55s 131ms/step - loss: 0.0529 - val_loss: 0.0375
 Epoch 8/10
-422/422 [==============================] - 47s 111ms/step - loss: 0.0485 - val_loss: 0.0336
+422/422 [==============================] - 55s 131ms/step - loss: 0.0485 - val_loss: 0.0333
 Epoch 9/10
-422/422 [==============================] - 47s 111ms/step - loss: 0.0461 - val_loss: 0.0303
+422/422 [==============================] - 55s 130ms/step - loss: 0.0458 - val_loss: 0.0307
 Epoch 10/10
-422/422 [==============================] - 46s 110ms/step - loss: 0.0462 - val_loss: 0.0319
+422/422 [==============================] - 51s 121ms/step - loss: 0.0462 - val_loss: 0.0316
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -947,7 +947,7 @@ Epoch 10/10
 </div>
 <div class="output_area rendered_html docutils container">
 <style>#sk-container-id-1 {color: black;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>MultiDimensionalClassifier(
-    model=&lt;function get_model at 0x7f61e5e47ca0&gt;
+    model=&lt;function get_model at 0x7f0d7cb86b80&gt;
     build_fn=None
     warm_start=False
     random_state=0
@@ -964,7 +964,7 @@ Epoch 10/10
     epochs=10
     class_weight=None
 )</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox" checked><label for="sk-estimator-id-1" class="sk-toggleable__label sk-toggleable__label-arrow">MultiDimensionalClassifier</label><div class="sk-toggleable__content"><pre>MultiDimensionalClassifier(
-    model=&lt;function get_model at 0x7f61e5e47ca0&gt;
+    model=&lt;function get_model at 0x7f0d7cb86b80&gt;
     build_fn=None
     warm_start=False
     random_state=0
@@ -996,7 +996,7 @@ Epoch 10/10
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-79/79 [==============================] - 2s 24ms/step
+79/79 [==============================] - 3s 31ms/step
 Test score (accuracy): 0.99
 </pre></div></div>
 </div>
