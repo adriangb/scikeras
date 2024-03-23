@@ -2,8 +2,8 @@ from collections import defaultdict
 from typing import Any, DefaultDict, Dict
 
 import pytest
-from tensorflow import keras
-from tensorflow.keras.callbacks import Callback
+import keras
+from keras.callbacks import Callback
 
 from scikeras.wrappers import KerasClassifier
 

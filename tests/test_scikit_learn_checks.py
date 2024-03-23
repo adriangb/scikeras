@@ -6,8 +6,8 @@ from typing import Any, Dict
 import pytest
 from sklearn.datasets import load_iris
 from sklearn.utils.estimator_checks import check_no_attributes_set_in_init
-from tensorflow.keras import Model, Sequential, layers
-from tensorflow.keras.backend import floatx, set_floatx
+from keras import Model, Sequential, layers
+from keras.backend import floatx, set_floatx
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 

@@ -50,7 +50,7 @@ warnings.filterwarnings("ignore", message="Setting the random state for TF")
 ```python
 import numpy as np
 from scikeras.wrappers import KerasClassifier, KerasRegressor
-from tensorflow import keras
+import keras
 ```
 
 ## 2. Defining the Keras Model

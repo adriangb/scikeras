@@ -17,13 +17,13 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from tensorflow import keras
-from tensorflow.keras import backend as K
-from tensorflow.keras import losses as losses_module
-from tensorflow.keras import metrics as metrics_module
-from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
-from tensorflow.keras.models import Model, Sequential
-from tensorflow.keras.utils import register_keras_serializable, to_categorical
+import keras
+from keras import backend as K
+from keras import losses as losses_module
+from keras import metrics as metrics_module
+from keras.layers import Conv2D, Dense, Flatten, Input
+from keras.models import Model, Sequential
+from keras.utils import to_categorical
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
@@ -460,7 +460,6 @@ def test_warm_start():
         model = estimator.model_
 
 
-@register_keras_serializable(name="CustomMetric")
 class CustomMetric(metrics_module.MeanAbsoluteError):
     pass
 

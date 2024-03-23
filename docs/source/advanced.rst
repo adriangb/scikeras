@@ -112,7 +112,7 @@ offer an easy way to compile and tune compilation parameters. Examples:
 
 .. code:: python
 
-    from tensorflow.keras.optimizers import Adam
+    from keras.optimizers import Adam
 
     def model_build_fn():
         model = Model(...)
@@ -280,7 +280,7 @@ Optimizer
 .. code:: python
 
     from scikeras.wrappers import KerasClassifier
-    from tensorflow import keras
+    import keras
 
     clf = KerasClassifier(
         model=model_build_fn,
@@ -305,7 +305,7 @@ Losses
 
 .. code:: python
 
-    from tensorflow.keras.losses import BinaryCrossentropy, CategoricalCrossentropy
+    from keras.losses import BinaryCrossentropy, CategoricalCrossentropy
 
     clf = KerasClassifier(
         ...,
@@ -322,7 +322,7 @@ Additionally, SciKeras supports routed parameters to each individual loss, or to
 
 .. code:: python
 
-    from tensorflow.keras.losses import BinaryCrossentropy, CategoricalCrossentropy
+    from keras.losses import BinaryCrossentropy, CategoricalCrossentropy
 
     clf = KerasClassifier(
         ...,
@@ -348,7 +348,7 @@ Here are several support use cases:
 
 .. code:: python
 
-    from tensorflow.keras.metrics import BinaryAccuracy, AUC
+    from keras.metrics import BinaryAccuracy, AUC
 
     clf = KerasClassifier(
         ...,
@@ -388,7 +388,7 @@ SciKeras can route parameters to callbacks.
 
     clf = KerasClassifier(
         ...,
-        callbacks=tf.keras.callbacks.EarlyStopping
+        callbacks=keras.callbacks.EarlyStopping
         callbacks__monitor="loss",
     )
 
@@ -399,13 +399,13 @@ Just like metrics and losses, callbacks support several syntaxes to compile them
     # for multiple callbacks using dict syntax
     clf = KerasClassifier(
         ...,
-        callbacks={"bl": tf.keras.callbacks.BaseLogger, "es": tf.keras.callbacks.EarlyStopping}
+        callbacks={"bl": keras.callbacks.BaseLogger, "es": keras.callbacks.EarlyStopping}
         callbacks__es__monitor="loss",
     )
     # or using list sytnax
     clf = KerasClassifier(
         ...,
-        callbacks=[tf.keras.callbacks.BaseLogger, tf.keras.callbacks.EarlyStopping]
+        callbacks=[keras.callbacks.BaseLogger, keras.callbacks.EarlyStopping]
         callbacks__1__monitor="loss",  # EarlyStopping(monitor="loss")
     )
 
@@ -413,7 +413,7 @@ Keras callbacks are event based, and are triggered depending on the methods they
 For example:
 
 .. code:: python
-    from tensorflow import keras
+    import keras
 
     class MyCallback(keras.callbacks.Callback):
 
@@ -433,9 +433,9 @@ simply use the ``fit__`` or ``predict__`` routing prefixes on your callback:
 
     clf = KerasClassifier(
         ...,
-        callbacks=tf.keras.callbacks.Callback,  # called from both fit and predict
-        fit__callbacks=tf.keras.callbacks.Callback,  # called only from fit
-        predict__callbacks=tf.keras.callbacks.Callback,  # called only from predict
+        callbacks=keras.callbacks.Callback,  # called from both fit and predict
+        fit__callbacks=keras.callbacks.Callback,  # called only from fit
+        predict__callbacks=keras.callbacks.Callback,  # called only from predict
     )
 
 Any routed constructor parameters must also use the corresponding prefix to get routed correctly.
@@ -449,7 +449,7 @@ which tells SciKeras to pass that parameter as an positional argument instead of
 
 .. code:: python
 
-   from tensorflow import keras
+   import keras
 
     class Schedule:
         """Exponential decay lr scheduler.

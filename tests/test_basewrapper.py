@@ -3,8 +3,8 @@
 import numpy as np
 from sklearn.base import TransformerMixin
 from sklearn.metrics import mean_squared_error
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 from scikeras.wrappers import BaseWrapper
 

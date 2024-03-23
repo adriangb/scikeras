@@ -2,9 +2,9 @@ import inspect
 from types import FunctionType
 from typing import Any, Callable, Dict, Iterable, Mapping, Sequence, Type, Union
 
-from tensorflow.keras import losses as losses_mod
-from tensorflow.keras import metrics as metrics_mod
-from tensorflow.keras import optimizers as optimizers_mod
+from keras import losses as losses_mod
+from keras import metrics as metrics_mod
+from keras import optimizers as optimizers_mod
 
 DIGITS = frozenset(str(i) for i in range(10))
 

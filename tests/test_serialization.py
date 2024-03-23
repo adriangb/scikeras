@@ -6,9 +6,10 @@ import pytest
 import tensorflow as tf
 from sklearn.base import clone
 from sklearn.datasets import fetch_california_housing, make_regression
-from tensorflow import keras
-from tensorflow.keras.layers import Dense, Input
-from tensorflow.keras.models import Model
+import keras
+import keras.metrics
+from keras.layers import Dense, Input
+from keras.models import Model
 
 from scikeras.wrappers import KerasRegressor
 
@@ -40,7 +41,6 @@ def check_pickle(estimator, loader):
 # ---------------------- Custom Loss Test ----------------------
 
 
-@keras.utils.register_keras_serializable()
 class CustomLoss(keras.losses.MeanSquaredError):
     """Dummy custom loss."""
 
@@ -66,7 +66,6 @@ def build_fn_custom_model_registered(
 ) -> Model:
     """Dummy custom Model subclass that is registered to be serializable."""
 
-    @keras.utils.register_keras_serializable()
     class CustomModelRegistered(Model):
         pass
 
@@ -213,9 +212,7 @@ def test_pickle_loss(loss):
 @pytest.mark.parametrize(
     "metric",
     [
-        keras.metrics.binary_crossentropy,
         keras.metrics.BinaryCrossentropy(),
-        keras.metrics.mean_absolute_error,
         keras.metrics.MeanAbsoluteError(),
     ],
 )

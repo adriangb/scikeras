@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
 from sklearn.datasets import make_classification
-from tensorflow.keras import losses as losses_module
-from tensorflow.keras import metrics as metrics_module
-from tensorflow.keras import optimizers as optimizers_module
-from tensorflow.keras.layers import Dense, Input
-from tensorflow.keras.models import Model
+from keras import losses as losses_module
+from keras import metrics as metrics_module
+from keras import optimizers as optimizers_module
+from keras.layers import Dense, Input
+from keras.models import Model
 
 from scikeras.wrappers import KerasClassifier
 from tests.multi_output_models import MultiOutputClassifier

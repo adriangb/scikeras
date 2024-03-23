@@ -6,8 +6,11 @@ import warnings
 from collections import defaultdict
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Type, Union
 
+import keras
 import numpy as np
 import tensorflow as tf
+from keras import losses as losses_module
+from keras.models import Model
 from scipy.sparse import isspmatrix, lil_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.exceptions import NotFittedError
@@ -17,9 +20,6 @@ from sklearn.preprocessing import FunctionTransformer
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
-from tensorflow.keras import losses as losses_module
-from tensorflow.keras.models import Model
-from tensorflow.keras.utils import register_keras_serializable
 
 from scikeras._utils import (
     accepts_kwargs,
@@ -40,25 +40,25 @@ class BaseWrapper(BaseEstimator):
     """Implementation of the scikit-learn classifier API for Keras.
 
     Below are a list of SciKeras specific parameters. For details on other parameters,
-    please see the see the `tf.keras.Model documentation <https://www.tensorflow.org/api_docs/python/tf/keras/Model>`_.
+    please see the see the `keras.Model documentation <https://www.tensorflow.org/api_docs/python/tf/keras/Model>`_.
 
     Parameters
     ----------
-    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+    model : Union[None, Callable[..., keras.Model], keras.Model], default None
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
         If None, you must implement ``_keras_build_fn``.
-    optimizer : Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]], default "rmsprop"
+    optimizer : Union[str, keras.optimizers.Optimizer, Type[keras.optimizers.Optimizer]], default "rmsprop"
         This can be a string for Keras' built in optimizers,
-        an instance of tf.keras.optimizers.Optimizer
-        or a class inheriting from tf.keras.optimizers.Optimizer.
+        an instance of keras.optimizers.Optimizer
+        or a class inheriting from keras.optimizers.Optimizer.
         Only strings and classes support parameter routing.
-    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+    loss : Union[Union[str, keras.losses.Loss, Type[keras.losses.Loss], Callable], None], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
-        an instance of tf.keras.losses.Loss
-        or a class inheriting from tf.keras.losses.Loss .
+        an instance of keras.losses.Loss
+        or a class inheriting from keras.losses.Loss .
         Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None
         Set the Tensorflow random number generators to a
@@ -79,7 +79,7 @@ class BaseWrapper(BaseEstimator):
 
     Attributes
     ----------
-    model_ : tf.keras.Model
+    model_ : keras.Model
         The instantiated and compiled Keras Model. For pre-built models, this
         will just be a reference to the passed Model instance.
     history_ : Dict[str, List[Any]]
@@ -180,25 +180,25 @@ class BaseWrapper(BaseEstimator):
 
     def __init__(
         self,
-        model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
+        model: Union[None, Callable[..., keras.Model], keras.Model] = None,
         *,
         build_fn: Union[
-            None, Callable[..., tf.keras.Model], tf.keras.Model
+            None, Callable[..., keras.Model], keras.Model
         ] = None,  # for backwards compatibility
         warm_start: bool = False,
         random_state: Union[int, np.random.RandomState, None] = None,
         optimizer: Union[
-            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
+            str, keras.optimizers.Optimizer, Type[keras.optimizers.Optimizer]
         ] = "rmsprop",
         loss: Union[
-            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
+            Union[str, keras.losses.Loss, Type[keras.losses.Loss], Callable], None
         ] = None,
         metrics: Union[
             List[
                 Union[
                     str,
-                    tf.keras.metrics.Metric,
-                    Type[tf.keras.metrics.Metric],
+                    keras.metrics.Metric,
+                    Type[keras.metrics.Metric],
                     Callable,
                 ]
             ],
@@ -208,7 +208,7 @@ class BaseWrapper(BaseEstimator):
         validation_batch_size: Union[int, None] = None,
         verbose: int = 1,
         callbacks: Union[
-            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
+            List[Union[keras.callbacks.Callback, Type[keras.callbacks.Callback]]],
             None,
         ] = None,
         validation_split: float = 0.0,
@@ -266,7 +266,7 @@ class BaseWrapper(BaseEstimator):
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Validate that the passed sample_weight and ensure it is a Numpy array."""
         sample_weight = _check_sample_weight(
-            sample_weight, X, dtype=np.dtype(tf.keras.backend.floatx())
+            sample_weight, X, dtype=np.dtype(keras.backend.floatx())
         )
         if np.all(sample_weight == 0):
             raise ValueError(
@@ -451,9 +451,9 @@ class BaseWrapper(BaseEstimator):
         Parameters
         ----------
         X : Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]]
-            Training samples, as accepted by tf.keras.Model
+            Training samples, as accepted by keras.Model
         y : Union[np.ndarray, List[np.ndarray], Dict[str, np.ndarray]]
-            Target data, as accepted by tf.keras.Model
+            Target data, as accepted by keras.Model
         sample_weight : Union[np.ndarray, None]
             Sample weights. Ignored by Keras if None.
         warm_start : bool
@@ -527,13 +527,9 @@ class BaseWrapper(BaseEstimator):
             self.history_ = defaultdict(list)
 
         for key, val in hist.history.items():
-            try:
-                key = metric_name(key)
-            except ValueError as e:
-                # Keras puts keys like "val_accuracy" and "loss" and
-                # "val_loss" in hist.history
-                if "Unknown metric function" not in str(e):
-                    raise e
+            if key == "loss" or key[:4] == "val_":
+                continue
+            key = metric_name(key)
             self.history_[key] += val
 
     def _check_model_compatibility(self, y: np.ndarray) -> None:
@@ -610,7 +606,7 @@ class BaseWrapper(BaseEstimator):
             else:
                 # default to TFs backend float type
                 # instead of float64 (sklearn's default)
-                return tf.keras.backend.floatx()
+                return keras.backend.floatx()
 
         if X is not None and y is not None:
             X, y = check_X_y(
@@ -794,7 +790,7 @@ class BaseWrapper(BaseEstimator):
                 if isinstance(callbacks, Mapping):
                     # Keras does not officially support dicts, convert to a list
                     callbacks = list(callbacks.values())
-                elif isinstance(callbacks, tf.keras.callbacks.Callback):
+                elif isinstance(callbacks, keras.callbacks.Callback):
                     # a single instance, not officially supported so wrap in a list
                     callbacks = [callbacks]
                 err = False
@@ -803,9 +799,9 @@ class BaseWrapper(BaseEstimator):
                 for cb in callbacks:
                     if isinstance(cb, List):
                         for nested_cb in cb:
-                            if not isinstance(nested_cb, tf.keras.callbacks.Callback):
+                            if not isinstance(nested_cb, keras.callbacks.Callback):
                                 err = True
-                    elif not isinstance(cb, tf.keras.callbacks.Callback):
+                    elif not isinstance(cb, keras.callbacks.Callback):
                         err = True
                 if err:
                     raise TypeError(
@@ -813,7 +809,7 @@ class BaseWrapper(BaseEstimator):
                         "\n - A dict of string keys with callbacks or lists of callbacks as values"
                         "\n - A list of callbacks or lists of callbacks"
                         "\n - A single callback"
-                        "\nWhere each callback can be a instance of `tf.keras.callbacks.Callback` or a sublass of it to be compiled by SciKeras"
+                        "\nWhere each callback can be a instance of `keras.callbacks.Callback` or a sublass of it to be compiled by SciKeras"
                     )
             else:
                 callbacks = []
@@ -1200,25 +1196,25 @@ class KerasClassifier(BaseWrapper, ClassifierMixin):
     """Implementation of the scikit-learn classifier API for Keras.
 
     Below are a list of SciKeras specific parameters. For details on other parameters,
-    please see the see the `tf.keras.Model documentation <https://www.tensorflow.org/api_docs/python/tf/keras/Model>`_.
+    please see the see the `keras.Model documentation <https://www.tensorflow.org/api_docs/python/tf/keras/Model>`_.
 
     Parameters
     ----------
-    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+    model : Union[None, Callable[..., keras.Model], keras.Model], default None
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
         If None, you must implement ``_keras_build_fn``.
-    optimizer : Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]], default "rmsprop"
+    optimizer : Union[str, keras.optimizers.Optimizer, Type[keras.optimizers.Optimizer]], default "rmsprop"
         This can be a string for Keras' built in optimizers,
-        an instance of tf.keras.optimizers.Optimizer
-        or a class inheriting from tf.keras.optimizers.Optimizer.
+        an instance of keras.optimizers.Optimizer
+        or a class inheriting from keras.optimizers.Optimizer.
         Only strings and classes support parameter routing.
-    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+    loss : Union[Union[str, keras.losses.Loss, Type[keras.losses.Loss], Callable], None], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
-        an instance of tf.keras.losses.Loss
-        or a class inheriting from tf.keras.losses.Loss .
+        an instance of keras.losses.Loss
+        or a class inheriting from keras.losses.Loss .
         Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None
         Set the Tensorflow random number generators to a
@@ -1247,7 +1243,7 @@ class KerasClassifier(BaseWrapper, ClassifierMixin):
 
     Attributes
     ----------
-    model_ : tf.keras.Model
+    model_ : keras.Model
         The instantiated and compiled Keras Model. For pre-built models, this
         will just be a reference to the passed Model instance.
     history_ : Dict[str, List[Any]]
@@ -1315,25 +1311,25 @@ class KerasClassifier(BaseWrapper, ClassifierMixin):
 
     def __init__(
         self,
-        model: Union[None, Callable[..., tf.keras.Model], tf.keras.Model] = None,
+        model: Union[None, Callable[..., keras.Model], keras.Model] = None,
         *,
         build_fn: Union[
-            None, Callable[..., tf.keras.Model], tf.keras.Model
+            None, Callable[..., keras.Model], keras.Model
         ] = None,  # for backwards compatibility
         warm_start: bool = False,
         random_state: Union[int, np.random.RandomState, None] = None,
         optimizer: Union[
-            str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]
+            str, keras.optimizers.Optimizer, Type[keras.optimizers.Optimizer]
         ] = "rmsprop",
         loss: Union[
-            Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None
+            Union[str, keras.losses.Loss, Type[keras.losses.Loss], Callable], None
         ] = None,
         metrics: Union[
             List[
                 Union[
                     str,
-                    tf.keras.metrics.Metric,
-                    Type[tf.keras.metrics.Metric],
+                    keras.metrics.Metric,
+                    Type[keras.metrics.Metric],
                     Callable,
                 ]
             ],
@@ -1343,7 +1339,7 @@ class KerasClassifier(BaseWrapper, ClassifierMixin):
         validation_batch_size: Union[int, None] = None,
         verbose: int = 1,
         callbacks: Union[
-            List[Union[tf.keras.callbacks.Callback, Type[tf.keras.callbacks.Callback]]],
+            List[Union[keras.callbacks.Callback, Type[keras.callbacks.Callback]]],
             None,
         ] = None,
         validation_split: float = 0.0,
@@ -1573,26 +1569,26 @@ class KerasRegressor(BaseWrapper, RegressorMixin):
     """Implementation of the scikit-learn classifier API for Keras.
 
     Below are a list of SciKeras specific parameters. For details on other parameters,
-    please see the see the `tf.keras.Model documentation <https://www.tensorflow.org/api_docs/python/tf/keras/Model>`_.
+    please see the see the `keras.Model documentation <https://www.tensorflow.org/api_docs/python/tf/keras/Model>`_.
 
     Parameters
     ----------
 
-    model : Union[None, Callable[..., tf.keras.Model], tf.keras.Model], default None
+    model : Union[None, Callable[..., keras.Model], keras.Model], default None
         Used to build the Keras Model. When called,
         must return a compiled instance of a Keras Model
         to be used by `fit`, `predict`, etc.
         If None, you must implement ``_keras_build_fn``.
-    optimizer : Union[str, tf.keras.optimizers.Optimizer, Type[tf.keras.optimizers.Optimizer]], default "rmsprop"
+    optimizer : Union[str, keras.optimizers.Optimizer, Type[keras.optimizers.Optimizer]], default "rmsprop"
         This can be a string for Keras' built in optimizers,
-        an instance of tf.keras.optimizers.Optimizer
-        or a class inheriting from tf.keras.optimizers.Optimizer.
+        an instance of keras.optimizers.Optimizer
+        or a class inheriting from keras.optimizers.Optimizer.
         Only strings and classes support parameter routing.
-    loss : Union[Union[str, tf.keras.losses.Loss, Type[tf.keras.losses.Loss], Callable], None], default None
+    loss : Union[Union[str, keras.losses.Loss, Type[keras.losses.Loss], Callable], None], default None
         The loss function to use for training.
         This can be a string for Keras' built in losses,
-        an instance of tf.keras.losses.Loss
-        or a class inheriting from tf.keras.losses.Loss .
+        an instance of keras.losses.Loss
+        or a class inheriting from keras.losses.Loss .
         Only strings and classes support parameter routing.
     random_state : Union[int, np.random.RandomState, None], default None
         Set the Tensorflow random number generators to a
@@ -1614,7 +1610,7 @@ class KerasRegressor(BaseWrapper, RegressorMixin):
     Attributes
     ----------
 
-    model_ : tf.keras.Model
+    model_ : keras.Model
         The instantiated and compiled Keras Model. For pre-built models, this
         will just be a reference to the passed Model instance.
 
@@ -1740,7 +1736,6 @@ class KerasRegressor(BaseWrapper, RegressorMixin):
         return RegressorTargetEncoder()
 
     @staticmethod
-    @register_keras_serializable()
     def r_squared(y_true, y_pred):
         """A simple Keras implementation of R^2 that can be used as a Keras
         metric function.
@@ -1755,13 +1750,13 @@ class KerasRegressor(BaseWrapper, RegressorMixin):
             Predicted labels.
         """
         # Ensure input dytpes match
-        y_true = tf.cast(y_true, dtype=y_pred.dtype)
+        y_true = keras.ops.cast(y_true, dtype=y_pred.dtype)
         # Calculate R^2
-        ss_res = tf.math.reduce_sum(tf.math.squared_difference(y_true, y_pred), axis=0)
-        ss_tot = tf.math.reduce_sum(
-            tf.math.squared_difference(y_true, tf.math.reduce_mean(y_true, axis=0)),
+        ss_res = keras.ops.sum(keras.ops.square(y_true, y_pred), axis=0)
+        ss_tot = keras.ops.sum(
+            keras.ops.square(y_true, tf.math.reduce_mean(y_true, axis=0)),
             axis=0,
         )
         return tf.math.reduce_mean(
-            1 - ss_res / (ss_tot + tf.keras.backend.epsilon()), axis=-1
+            1 - ss_res / (ss_tot + keras.backend.epsilon()), axis=-1
         )

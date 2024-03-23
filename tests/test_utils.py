@@ -1,6 +1,6 @@
 import pytest
-from tensorflow.keras import losses as losses_module
-from tensorflow.keras import metrics as metrics_module
+from keras import losses as losses_module
+from keras import metrics as metrics_module
 
 from scikeras.utils import loss_name, metric_name
 
@@ -39,7 +39,6 @@ def test_custom_loss(obj):
     [
         "categorical_crossentropy",
         "CategoricalCrossentropy",
-        metrics_module.categorical_crossentropy,
         metrics_module.CategoricalCrossentropy,
         metrics_module.CategoricalCrossentropy(),
     ],

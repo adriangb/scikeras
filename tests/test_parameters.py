@@ -6,8 +6,8 @@ import pytest
 from sklearn.base import clone
 from sklearn.datasets import make_classification
 from sklearn.preprocessing import FunctionTransformer
-from tensorflow.keras import Sequential
-from tensorflow.keras import layers as layers_mod
+from keras import Sequential
+from keras import layers as layers_mod
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 

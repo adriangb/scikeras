@@ -1,55 +1,17 @@
-import os
-import shutil
-import tarfile
-import tempfile
-from contextlib import contextmanager
 from io import BytesIO
-from typing import Any, Callable, Dict, Hashable, Iterator, List, Tuple
-from uuid import uuid4
+from typing import Any, Callable, Dict, Hashable, List, Tuple
 
+import keras as keras
 import numpy as np
-import tensorflow.keras as keras
-from tensorflow import io as tf_io
-from tensorflow.keras.models import load_model
-
-
-@contextmanager
-def _get_temp_folder() -> Iterator[str]:
-    if os.name == "nt":
-        # the RAM-based filesystem is not fully supported on
-        # Windows yet, we save to a temp folder on disk instead
-        tmp_dir = tempfile.mkdtemp()
-        try:
-            yield tmp_dir
-        finally:
-            shutil.rmtree(tmp_dir, ignore_errors=True)
-    else:
-        temp_dir = f"ram://{uuid4().hex}"
-        try:
-            yield temp_dir
-        finally:
-            for root, _, filenames in tf_io.gfile.walk(temp_dir):
-                for filename in filenames:
-                    dest = os.path.join(root, filename)
-                    tf_io.gfile.remove(dest)
+from keras.saving.saving_lib import load_model, save_model
 
 
 def unpack_keras_model(
     packed_keras_model: np.ndarray,
 ):
     """Reconstruct a model from the result of __reduce__"""
-    with _get_temp_folder() as temp_dir:
-        b = BytesIO(packed_keras_model)
-        with tarfile.open(fileobj=b, mode="r") as archive:
-            for fname in archive.getnames():
-                dest = os.path.join(temp_dir, fname)
-                tf_io.gfile.makedirs(os.path.dirname(dest))
-                with tf_io.gfile.GFile(dest, "wb") as f:
-                    f.write(archive.extractfile(fname).read())
-        model: keras.Model = load_model(temp_dir)
-        model.load_weights(temp_dir)
-        model.optimizer.build(model.trainable_variables)
-        return model
+    b = BytesIO(packed_keras_model)
+    return load_model(b, compile=True)
 
 
 def pack_keras_model(
@@ -59,21 +21,10 @@ def pack_keras_model(
     Tuple[np.ndarray, List[np.ndarray]],
 ]:
     """Support for Pythons's Pickle protocol."""
-    with _get_temp_folder() as temp_dir:
-        model.save(temp_dir)
-        b = BytesIO()
-        with tarfile.open(fileobj=b, mode="w") as archive:
-            for root, _, filenames in tf_io.gfile.walk(temp_dir):
-                for filename in filenames:
-                    dest = os.path.join(root, filename)
-                    with tf_io.gfile.GFile(dest, "rb") as f:
-                        info = tarfile.TarInfo(name=os.path.relpath(dest, temp_dir))
-                        info.size = f.size()
-                        archive.addfile(tarinfo=info, fileobj=f)
-                    tf_io.gfile.remove(dest)
-        b.seek(0)
-        model_bytes = np.asarray(memoryview(b.read()))
-        return (unpack_keras_model, (model_bytes,))
+    out = BytesIO()
+    save_model(model, out)
+    model_bytes = np.asarray(memoryview(out.getvalue()))
+    return (unpack_keras_model, (model_bytes,))
 
 
 def deepcopy_model(model: keras.Model, memo: Dict[Hashable, Any]) -> keras.Model:

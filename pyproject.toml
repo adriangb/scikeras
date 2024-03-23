@@ -31,24 +31,18 @@ version = "0.12.0"
 
 [tool.poetry.dependencies]
 importlib-metadata = {version = ">=3", python = "<3.8"}
-python = ">=3.8.0,<3.12.0"
-scikit-learn = ">=1.0.0"
-packaging = ">=0.21"
-tensorflow = {version = ">=2.12.0,<2.13.0", optional = true}
-tensorflow-cpu = {version = ">=2.12.0,<2.13.0", optional = true}
-tensorflow-metal = {markers = "sys_platform == \"darwin\" and platform_machine == \"arm64\"", version = "^1.1.0"}
+python = ">=3.9.0,<4"
+scikit-learn = ">=1.4.1.post1"
+keras = { git = "https://github.com/keras-team/keras.git", rev = "master" }
+tensorflow = { version = ">=2.16.0", optional = true }
+tensorflow-cpu = { version = ">=2.16.0", optional = true }
 
 [tool.poetry.extras]
-tensorflow = ["tensorflow"]
 tensorflow-cpu = ["tensorflow-cpu"]
-
-[tool.poetry.dependencies.tensorflow-io-gcs-filesystem]
-# see https://github.com/tensorflow/tensorflow/issues/60202
-version = ">=0.23.1,<0.32"
-markers = "sys_platform == 'win32'"
+tensorflow = ["tensorflow"]
+test = ["tensorflow"]
 
 [tool.poetry.dev-dependencies]
-tensorflow = ">=2.12.0,<2.13.0"
 coverage = {extras = ["toml"], version = ">=6.4.2"}
 insipid-sphinx-theme = ">=0.3.2"
 ipykernel = ">=6.15.1"
