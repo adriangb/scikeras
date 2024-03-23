@@ -321,7 +321,7 @@ class TestAdvancedAPIFuncs:
         loader, model, build_fn, ensembles = CONFIG[config]
         base_estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         for ensemble in ensembles:
-            estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
+            estimator = ensemble(estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
 
     @pytest.mark.parametrize("config", ["MLPClassifier"])
@@ -428,7 +428,7 @@ class TestPrebuiltModel:
 
         base_estimator = model(model=keras_model)
         for ensemble in ensembles:
-            estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
+            estimator = ensemble(estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
 
 
