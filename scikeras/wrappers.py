@@ -6,11 +6,9 @@ import warnings
 from collections import defaultdict
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Type, Union
 
-import keras
 import numpy as np
 import tensorflow as tf
-from keras import losses as losses_module
-from keras.models import Model
+import keras
 from scipy.sparse import isspmatrix, lil_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.exceptions import NotFittedError
@@ -20,6 +18,8 @@ from sklearn.preprocessing import FunctionTransformer
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
+from keras import losses as losses_module
+from keras.models import Model
 
 from scikeras._utils import (
     accepts_kwargs,
@@ -381,9 +381,12 @@ class BaseWrapper(BaseEstimator):
                 strict=False,
             ),
         )
+        if compile_kwargs["metrics"] is not None and not isinstance(compile_kwargs['metrics'], (dict, list)):
+            # Keras expects a list or dict of metrics, not a single metric
+            compile_kwargs["metrics"] = [compile_kwargs["metrics"]]
         return compile_kwargs
 
-    def _build_keras_model(self):
+    def _build_keras_model(self) -> keras.Model:
         """Build the Keras model.
 
         This method will process all arguments and call the model building
@@ -391,7 +394,7 @@ class BaseWrapper(BaseEstimator):
 
         Returns
         -------
-        tensorflow.keras.Model
+        keras.Model
             Instantiated and compiled keras Model.
         """
         # dynamically build model, i.e. final_build_fn builds a Keras model
@@ -432,9 +435,16 @@ class BaseWrapper(BaseEstimator):
 
     def _ensure_compiled_model(self) -> None:
         # compile model if user gave us an un-compiled model
-        if not (hasattr(self.model_, "loss") and hasattr(self.model_, "optimizer")):
+        if not self.model_.compiled:
             kw = self._get_compile_kwargs()
             self.model_.compile(**kw)
+        # check that the model has been properly compiled, which at the very least means it
+        # has an optimizer and a loss
+        # the errors keras would give are not very helpful, wrap them here in something a bit better
+        if not getattr(self.model_, "loss", None):
+            raise ValueError("You must provide a loss or a compiled model")
+        if not getattr(self.model_, "optimizer", None):
+            raise ValueError("You must provide an optimizer or a compiled model")
 
     def _fit_keras_model(
         self,
@@ -527,9 +537,12 @@ class BaseWrapper(BaseEstimator):
             self.history_ = defaultdict(list)
 
         for key, val in hist.history.items():
-            if key == "loss" or key[:4] == "val_":
-                continue
-            key = metric_name(key)
+            if not (key == 'loss' or key[:4] == 'val_'):
+                try:
+                    key = metric_name(key)
+                except ValueError:
+                    # unknown metric, e.g. custom metric
+                    pass
             self.history_[key] += val
 
     def _check_model_compatibility(self, y: np.ndarray) -> None:
@@ -1734,29 +1747,3 @@ class KerasRegressor(BaseWrapper, RegressorMixin):
             interface.
         """
         return RegressorTargetEncoder()
-
-    @staticmethod
-    def r_squared(y_true, y_pred):
-        """A simple Keras implementation of R^2 that can be used as a Keras
-        metric function.
-
-        Larger values indicate a better fit, with 1.0 representing a perfect fit.
-
-        Parameters
-        ----------
-        y_true : array-like of shape (n_samples,) or (n_samples, n_outputs)
-            True labels.
-        y_pred : array-like of shape (n_samples,) or (n_samples, n_outputs)
-            Predicted labels.
-        """
-        # Ensure input dytpes match
-        y_true = keras.ops.cast(y_true, dtype=y_pred.dtype)
-        # Calculate R^2
-        ss_res = keras.ops.sum(keras.ops.square(y_true, y_pred), axis=0)
-        ss_tot = keras.ops.sum(
-            keras.ops.square(y_true, tf.math.reduce_mean(y_true, axis=0)),
-            axis=0,
-        )
-        return tf.math.reduce_mean(
-            1 - ss_res / (ss_tot + keras.backend.epsilon()), axis=-1
-        )

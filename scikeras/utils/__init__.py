@@ -60,7 +60,7 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     if isinstance(fn_or_cls, Loss):
         return _camel2snake(fn_or_cls.__class__.__name__)
     if hasattr(fn_or_cls, "__name__"):
-        return fn_or_cls.__name__
+        return _camel2snake(fn_or_cls.__name__)
     return fn_or_cls
 
 

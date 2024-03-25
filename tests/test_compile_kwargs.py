@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from sklearn.datasets import make_classification
+from keras.backend.common.variables import KerasVariable
 from keras import losses as losses_module
 from keras import metrics as metrics_module
 from keras import optimizers as optimizers_module
@@ -45,8 +46,14 @@ def test_optimizer(optimizer):
     est.fit(X, y)
     est_opt = est.model_.optimizer
     if not isinstance(optimizer, str):
-        assert float(est_opt.momentum) == pytest.approx(0.5)
-        assert float(est_opt.learning_rate) == pytest.approx(0.15, abs=1e-6)
+        momentum = est_opt.momentum
+        if isinstance(momentum, KerasVariable):
+            momentum = momentum.numpy()
+        assert float(momentum) == pytest.approx(0.5)
+        lr = est_opt.learning_rate
+        if isinstance(lr, KerasVariable):
+            lr = lr.numpy()
+        assert lr == pytest.approx(0.15, abs=1e-6)
     else:
         assert est_opt.__class__ == optimizers_module.get(optimizer).__class__
 
@@ -65,7 +72,7 @@ def test_optimizer_invalid_string():
         optimizer=optimizer,
         loss="binary_crossentropy",
     )
-    with pytest.raises(ValueError, match="Unknown optimizer"):
+    with pytest.raises(ValueError, match="Could not interpret optimizer"):
         est.fit(X, y)
 
 
@@ -137,7 +144,7 @@ def test_loss_invalid_string():
         num_hidden=20,
         loss=loss,
     )
-    with pytest.raises(ValueError, match="Unknown loss function"):
+    with pytest.raises(ValueError, match="Could not interpret loss"):
         est.fit(X, y)
 
 
@@ -254,16 +261,18 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     else:
         expected_name = metrics().name
 
-    # List of metrics
-    est = MultiOutputClassifier(
-        model=get_model,
-        loss="binary_crossentropy",
-        metrics=[
-            metrics if not isinstance(metrics, metrics_module.Metric) else metrics()
-        ],
-    )
-    est.fit(X, y)
-    assert est.model_.metrics[metric_idx].name == prefix + expected_name
+    if n_outputs_ == 1:
+        # List of metrics, not supported for multiple outputs where each output is required to get
+        # its own metrics if passing metrics as a list
+        est = MultiOutputClassifier(
+            model=get_model,
+            loss="binary_crossentropy",
+            metrics=[
+                metrics if not isinstance(metrics, metrics_module.Metric) else metrics()
+            ],
+        )
+        est.fit(X, y)
+        assert est.model_.metrics[metric_idx].name == prefix + expected_name
 
     # List of lists of metrics
     est = MultiOutputClassifier(
@@ -471,7 +480,7 @@ def test_metrics_invalid_string():
         loss="binary_crossentropy",
         metrics=metrics,
     )
-    with pytest.raises(ValueError, match="Unknown metric function"):
+    with pytest.raises(ValueError, match="Could not interpret metric identifier"):
         est.fit(X, y)
 
 

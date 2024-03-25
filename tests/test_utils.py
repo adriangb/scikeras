@@ -55,7 +55,7 @@ def test_loss_types(loss):
 
 
 def test_unknown_loss_raises():
-    with pytest.raises(ValueError, match="Unknown loss function"):
+    with pytest.raises(ValueError, match="Could not interpret loss identifier"):
         loss_name("unknown_loss")
 
 
@@ -66,7 +66,7 @@ def test_metric_types(obj):
 
 
 def test_unknown_metric():
-    with pytest.raises(ValueError, match="Unknown metric function"):
+    with pytest.raises(ValueError, match="Could not interpret metric identifier"):
         metric_name("unknown_metric")
 
 

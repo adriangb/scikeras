@@ -182,16 +182,17 @@ def get_reg(meta, hidden_layer_sizes, dropout):
 
 ### 3.3 Defining and training the neural net regressor
 
-Training a regressor has nearly the same data flow as training a classifier. The differences include using `KerasRegressor` instead of `KerasClassifier` and adding `KerasRegressor.r_squared` as a metric. Most of the Scikit-learn regressors use the coefficient of determination or R^2 as a metric function, which measures correlation between the true labels and predicted labels.
+Training a regressor has nearly the same data flow as training a classifier. The differences include using `KerasRegressor` instead of `KerasClassifier` and adding `keras.metrics.R2Score` as a metric. Most of the Scikit-learn regressors use the coefficient of determination or R^2 as a metric function, which measures correlation between the true labels and predicted labels.
 
 ```python
+import keras
 from scikeras.wrappers import KerasRegressor
 
 
 reg = KerasRegressor(
     model=get_reg,
     loss="mse",
-    metrics=[KerasRegressor.r_squared],
+    metrics=[keras.metrics.R2Score],
     hidden_layer_sizes=(100,),
     dropout=0.5,
 )

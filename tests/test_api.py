@@ -331,7 +331,7 @@ class TestAdvancedAPIFuncs:
         base_estimator = KerasClassifier(
             build_fn, epochs=1, model__hidden_layer_sizes=[]
         )
-        estimator = CalibratedClassifierCV(base_estimator=base_estimator, cv=5)
+        estimator = CalibratedClassifierCV(estimator=base_estimator, cv=5)
         basic_checks(estimator, loader)
 
 
@@ -851,11 +851,8 @@ class TestInitialize:
         y_pred_keras = y_pred_keras.reshape(
             -1,
         )
-        # Extract the weights into a copy of the model
-        weights = m1.get_weights()
-        m2 = keras.models.clone_model(m1)
-        m2.set_weights(weights)
-        m2.compile()  # No loss, inference models shouldn't need a loss!
+        # Make a copy of the model to make sure we don't modify the original
+        m2 = pickle.loads(pickle.dumps(m1))
         # Wrap with SciKeras
         est = wrapper(model=m2)
         # Without calling initialize, a NotFittedError is raised
