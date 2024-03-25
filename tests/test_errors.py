@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
-from tensorflow.keras.layers import Dense, Input
-from tensorflow.keras.models import Model
+from keras.layers import Dense, Input
+from keras.models import Model
 
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
@@ -151,7 +151,7 @@ def test_no_loss(loss, compile):
         return model
 
     est = KerasRegressor(model=get_model, loss=loss, compile=compile)
-    with pytest.raises(ValueError, match="must provide a loss function"):
+    with pytest.raises(ValueError, match=r".*(?:provide a loss)|(?:Provide a `loss`).*"):
         est.fit([[0], [1]], [0, 1])
 
 
@@ -175,9 +175,7 @@ def test_no_optimizer(compile):
         compile=compile,
         optimizer=None,
     )
-    with pytest.raises(
-        ValueError, match="Could not interpret optimizer identifier"  # Keras error
-    ):
+    with pytest.raises(ValueError, match="You must provide an optimizer"):
         est.fit([[0], [1]], [0, 1])
 
 

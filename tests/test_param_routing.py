@@ -2,8 +2,8 @@ import inspect
 
 import numpy as np
 import pytest
-from tensorflow.keras import Model, Sequential
-from tensorflow.keras import layers as layers_mod
+from keras import Model, Sequential
+from keras import layers as layers_mod
 
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 

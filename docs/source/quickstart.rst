@@ -13,7 +13,7 @@ it on a toy classification dataset using SciKeras
 
     import numpy as np
     from sklearn.datasets import make_classification
-    from tensorflow import keras
+    import keras
 
     from scikeras.wrappers import KerasClassifier
 

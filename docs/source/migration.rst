@@ -1,7 +1,7 @@
 .. _Migration:
 
 =================================================
-Migrating from ``tf.keras.wrappers.scikit_learn``
+Migrating from ``keras.wrappers.scikit_learn``
 =================================================
 
 .. contents::
@@ -10,7 +10,7 @@ Migrating from ``tf.keras.wrappers.scikit_learn``
 
 Why switch to SciKeras
 ----------------------
-SciKeras has several advantages over ``tf.keras.wrappers.scikit_learn``:
+SciKeras has several advantages over ``keras.wrappers.scikit_learn``:
 
 * Full compatibility with the Scikit-Learn API, including grid searches, ensembles, transformers, etc.
 * Support for Functional and Subclassed Keras Models.
@@ -29,7 +29,7 @@ SciKeras is largely backwards compatible with the existing wrappers. For most ca
 
 .. code:: diff
 
-   - from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+   - from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
    + from scikeras.wrappers import KerasClassifier, KerasRegressor
 
 

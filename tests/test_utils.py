@@ -1,6 +1,6 @@
 import pytest
-from tensorflow.keras import losses as losses_module
-from tensorflow.keras import metrics as metrics_module
+from keras import losses as losses_module
+from keras import metrics as metrics_module
 
 from scikeras.utils import loss_name, metric_name
 
@@ -39,7 +39,6 @@ def test_custom_loss(obj):
     [
         "categorical_crossentropy",
         "CategoricalCrossentropy",
-        metrics_module.categorical_crossentropy,
         metrics_module.CategoricalCrossentropy,
         metrics_module.CategoricalCrossentropy(),
     ],
@@ -56,7 +55,7 @@ def test_loss_types(loss):
 
 
 def test_unknown_loss_raises():
-    with pytest.raises(ValueError, match="Unknown loss function"):
+    with pytest.raises(ValueError, match="Could not interpret loss identifier"):
         loss_name("unknown_loss")
 
 
@@ -67,7 +66,7 @@ def test_metric_types(obj):
 
 
 def test_unknown_metric():
-    with pytest.raises(ValueError, match="Unknown metric function"):
+    with pytest.raises(ValueError, match="Could not interpret metric identifier"):
         metric_name("unknown_metric")
 
 

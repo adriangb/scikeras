@@ -53,7 +53,7 @@ warnings.filterwarnings("ignore", message="Setting the random state for TF")
 ```python
 import numpy as np
 from scikeras.wrappers import KerasClassifier, KerasRegressor
-from tensorflow import keras
+import keras
 ```
 
 ## 2. Data
@@ -61,7 +61,7 @@ from tensorflow import keras
 We load the dataset from the Keras tutorial. The dataset consists of images of cats and dogs.
 
 ```python
-from tensorflow.keras.datasets import mnist
+from keras.datasets import mnist
 import numpy as np
 
 

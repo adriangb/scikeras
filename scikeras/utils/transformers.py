@@ -1,17 +1,17 @@
 from typing import Any, Dict, List, Union
 
+import keras
 import numpy as np
-import tensorflow as tf
+from keras.losses import (
+    CategoricalCrossentropy,
+    Loss,
+    categorical_crossentropy,
+)
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder
 from sklearn.utils.multiclass import type_of_target
-from tensorflow.keras.losses import (
-    CategoricalCrossentropy,
-    Loss,
-    categorical_crossentropy,
-)
 
 
 def _is_categorical_crossentropy(loss):
@@ -150,7 +150,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             A reference to the current instance of ClassifierLabelEncoder.
         """
         target_type = self._type_of_target(y)
-        keras_dtype = np.dtype(tf.keras.backend.floatx())
+        keras_dtype = np.dtype(keras.backend.floatx())
         self._y_shape = y.shape
         encoders = {
             "binary": make_pipeline(
@@ -168,7 +168,7 @@ class ClassifierLabelEncoder(BaseEstimator, TransformerMixin):
             encoders["multiclass"] = make_pipeline(
                 TargetReshaper(),
                 OneHotEncoder(
-                    sparse=False, dtype=keras_dtype, categories=self.categories
+                    sparse_output=False, dtype=keras_dtype, categories=self.categories
                 ),
             )
         if target_type not in encoders:

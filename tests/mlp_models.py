@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
-from tensorflow.keras.layers import Dense, Input
-from tensorflow.keras.models import Model
+from keras.layers import Dense, Input
+from keras.models import Model
 
 
 def dynamic_classifier(
