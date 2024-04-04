@@ -2,9 +2,9 @@
 
 import numpy as np
 import pytest
-from sklearn.exceptions import NotFittedError
 from keras.layers import Dense, Input
 from keras.models import Model
+from sklearn.exceptions import NotFittedError
 
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
@@ -151,7 +151,9 @@ def test_no_loss(loss, compile):
         return model
 
     est = KerasRegressor(model=get_model, loss=loss, compile=compile)
-    with pytest.raises(ValueError, match=r".*(?:provide a loss)|(?:Provide a `loss`).*"):
+    with pytest.raises(
+        ValueError, match=r".*(?:provide a loss)|(?:Provide a `loss`).*"
+    ):
         est.fit([[0], [1]], [0, 1])
 
 

@@ -1,8 +1,8 @@
 from collections import defaultdict
 from typing import Any, DefaultDict, Dict
 
-import pytest
 import keras
+import pytest
 from keras.callbacks import Callback
 
 from scikeras.wrappers import KerasClassifier

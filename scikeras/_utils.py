@@ -1,5 +1,4 @@
 import inspect
-from types import FunctionType
 from typing import Any, Callable, Dict, Iterable, Mapping, Sequence, Type, Union
 
 from keras import losses as losses_mod

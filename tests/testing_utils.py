@@ -7,6 +7,8 @@ from sklearn.utils.estimator_checks import (
     parametrize_with_checks as _parametrize_with_checks,
 )
 
+from scikeras.wrappers import BaseWrapper
+
 
 def basic_checks(estimator, loader):
     """Run basic checks (fit, score, pickle) on estimator."""
@@ -60,3 +62,9 @@ def parametrize_with_checks(estimators):
     ids = partial(_get_check_estimator_ids, estimator_ids=estimator_ids)
 
     return pytest.mark.parametrize("estimator, check", checks_generator, ids=ids)
+
+
+def get_metric_names(estimator: BaseWrapper) -> list[str]:
+    """Get the names of the metrics used by the estimator."""
+    # metrics[1] is a CompileMetrics which contains the user defined metrics
+    return [metric.name for metric in estimator.model_.metrics[1].metrics]

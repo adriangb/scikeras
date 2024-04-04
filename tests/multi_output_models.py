@@ -1,8 +1,8 @@
 from typing import List
 
 import numpy as np
-from sklearn.utils.multiclass import type_of_target
 from keras.backend import floatx as tf_floatx
+from sklearn.utils.multiclass import type_of_target
 
 from scikeras.utils.transformers import ClassifierLabelEncoder
 from scikeras.wrappers import KerasClassifier

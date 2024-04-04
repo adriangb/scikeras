@@ -1,13 +1,14 @@
 import os
 from unittest import mock
 
+import keras.backend
 import numpy as np
 import pytest
+from keras import Sequential
+from keras import layers as layers_mod
 from sklearn.base import clone
 from sklearn.datasets import make_classification
 from sklearn.preprocessing import FunctionTransformer
-from keras import Sequential
-from keras import layers as layers_mod
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
@@ -117,44 +118,49 @@ def test_sample_weights_fit():
     """Checks that the `sample_weight` parameter when passed to `fit`
     has the intended effect.
     """
-    # build estimator
-    estimator = KerasClassifier(
-        model=dynamic_classifier,
-        model__hidden_layer_sizes=(100,),
-        epochs=10,
-        random_state=0,
-    )
-    estimator1 = clone(estimator)
-    estimator2 = clone(estimator)
+    with keras.backend.set_floatx("float64"):
+        # build estimator
+        estimator = KerasClassifier(
+            model=dynamic_classifier,
+            model__hidden_layer_sizes=(100,),
+            epochs=10,
+            random_state=0,
+        )
+        estimator1 = clone(estimator)
+        estimator2 = clone(estimator)
 
-    # we create 20 points
-    X = np.array([1] * 10000).reshape(-1, 1)
-    y = [1] * 5000 + [-1] * 5000
+        # we create 20 points
+        X = np.array([1] * 10000).reshape(-1, 1)
+        y = [1] * 5000 + [-1] * 5000
 
-    # heavily weight towards y=1 points
-    sw_first_class = [0.8] * 5000 + [0.2] * 5000
-    # train estimator 1 with weights
-    estimator1.fit(X, y, sample_weight=sw_first_class)
-    # train estimator 2 without weights
-    estimator2.fit(X, y)
-    # estimator1 should tilt towards y=1
-    # estimator2 should predict about equally
-    average_diff_pred_prob_1 = np.average(np.diff(estimator1.predict_proba(X), axis=1))
-    average_diff_pred_prob_2 = np.average(np.diff(estimator2.predict_proba(X), axis=1))
-    assert average_diff_pred_prob_2 < average_diff_pred_prob_1
+        # heavily weight towards y=1 points
+        sw_first_class = [0.8] * 5000 + [0.2] * 5000
+        # train estimator 1 with weights
+        estimator1.fit(X, y, sample_weight=sw_first_class)
+        # train estimator 2 without weights
+        estimator2.fit(X, y)
+        # estimator1 should tilt towards y=1
+        # estimator2 should predict about equally
+        average_diff_pred_prob_1 = np.average(
+            np.diff(estimator1.predict_proba(X), axis=1)
+        )
+        average_diff_pred_prob_2 = np.average(
+            np.diff(estimator2.predict_proba(X), axis=1)
+        )
+        assert average_diff_pred_prob_2 < average_diff_pred_prob_1
 
-    # equal weighting
-    sw_equal = [0.5] * 5000 + [0.5] * 5000
-    # train estimator 1 with weights
-    estimator1.fit(X, y, sample_weight=sw_equal)
-    # train estimator 2 without weights
-    estimator2.fit(X, y)
-    # both estimators should have about the same predictions
-    np.testing.assert_allclose(
-        actual=estimator1.predict_proba(X),
-        desired=estimator2.predict_proba(X),
-        rtol=1e-4,
-    )
+        # equal weighting
+        sw_equal = [0.5] * 5000 + [0.5] * 5000
+        # train estimator 1 with weights
+        estimator1.fit(X, y, sample_weight=sw_equal)
+        # train estimator 2 without weights
+        estimator2.fit(X, y)
+        # both estimators should have about the same predictions
+        np.testing.assert_allclose(
+            actual=estimator1.predict_proba(X),
+            desired=estimator2.predict_proba(X),
+            rtol=1e-4,
+        )
 
 
 def test_sample_weights_score():
@@ -271,7 +277,9 @@ def test_kwargs(wrapper, builder):
     kwarg_epochs = (
         2  # epochs is a special case for fit since SciKeras also uses it internally
     )
-    extra_kwargs = {"verbose": True}  # chosen because it is not a SciKeras hardcoded param
+    extra_kwargs = {
+        "verbose": True
+    }  # chosen because it is not a SciKeras hardcoded param
     est = wrapper(
         model=builder,
         model__hidden_layer_sizes=(100,),
@@ -313,7 +321,7 @@ def test_kwargs(wrapper, builder):
     # check that params were restored and extra_kwargs were not stored
     for param_name in ("batch_size", "fit__batch_size", "predict__batch_size"):
         assert getattr(est, param_name) == original_batch_size
-    assert est.verbose == False
+    assert est.verbose is False
 
 
 @pytest.mark.parametrize("kwargs", ({"epochs": 1}, {"initial_epoch": 1}))

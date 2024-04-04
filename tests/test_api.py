@@ -3,8 +3,15 @@ import pickle
 from functools import partial
 from typing import Any, Dict
 
+import keras
 import numpy as np
 import pytest
+from keras import backend as K
+from keras import losses as losses_module
+from keras import metrics as metrics_module
+from keras.layers import Conv2D, Dense, Flatten, Input
+from keras.models import Model, Sequential
+from keras.utils import to_categorical
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.datasets import load_diabetes, load_digits, load_iris
 from sklearn.ensemble import (
@@ -17,13 +24,6 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-import keras
-from keras import backend as K
-from keras import losses as losses_module
-from keras import metrics as metrics_module
-from keras.layers import Conv2D, Dense, Flatten, Input
-from keras.models import Model, Sequential
-from keras.utils import to_categorical
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 

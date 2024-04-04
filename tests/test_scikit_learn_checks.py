@@ -4,10 +4,10 @@ from contextlib import contextmanager
 from typing import Any, Dict
 
 import pytest
-from sklearn.datasets import load_iris
-from sklearn.utils.estimator_checks import check_no_attributes_set_in_init
 from keras import Model, Sequential, layers
 from keras.backend import floatx, set_floatx
+from sklearn.datasets import load_iris
+from sklearn.utils.estimator_checks import check_no_attributes_set_in_init
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
@@ -95,7 +95,7 @@ def test_fully_compliant_estimators_high_precision(estimator, check):
         pytest.skip(
             "This test is run as part of test_fully_compliant_estimators_low_precision."
         )
-    with use_floatx("float64"):
+    with set_floatx("float64"):
         check(estimator)
 
 

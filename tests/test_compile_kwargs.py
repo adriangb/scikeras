@@ -1,15 +1,18 @@
+from __future__ import annotations
+
 import numpy as np
 import pytest
-from sklearn.datasets import make_classification
-from keras.backend.common.variables import KerasVariable
 from keras import losses as losses_module
 from keras import metrics as metrics_module
 from keras import optimizers as optimizers_module
+from keras.backend.common.variables import KerasVariable
 from keras.layers import Dense, Input
 from keras.models import Model
+from sklearn.datasets import make_classification
 
 from scikeras.wrappers import KerasClassifier
 from tests.multi_output_models import MultiOutputClassifier
+from tests.testing_utils import get_metric_names
 
 
 def get_model(num_hidden=10, meta=None, compile_kwargs=None):
@@ -242,9 +245,18 @@ def test_loss_routed_params_dict(loss, n_outputs_):
     assert est.model_.loss["out1"].from_logits is False
 
 
-@pytest.mark.parametrize("metrics", ["binary_accuracy", metrics_module.BinaryAccuracy])
+@pytest.mark.parametrize(
+    "metric",
+    [
+        "binary_accuracy",
+        metrics_module.BinaryAccuracy,
+        metrics_module.BinaryAccuracy(name="custom_name"),
+    ],
+)
 @pytest.mark.parametrize("n_outputs_", (1, 2))
-def test_metrics_single_metric_per_output(metrics, n_outputs_):
+def test_metrics_single_metric_per_output(
+    metric: str | metrics_module.Metric | type[metrics_module.Metric], n_outputs_: int
+):
     """Test a single metric per output using vanilla
     Keras sytnax and without any routed paramters.
     """
@@ -252,14 +264,14 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
     X, y = make_classification()
     y = np.column_stack([y for _ in range(n_outputs_)]).squeeze()
 
-    # loss functions for each output and joined show up as metrics
-    metric_idx = 1 + (n_outputs_ if n_outputs_ > 1 else 0)
-    prefix = "out1_" if n_outputs_ > 1 else ""
+    metric_value = (
+        metric if isinstance(metric, (metrics_module.Metric, str)) else metric()
+    )
 
-    if isinstance(metrics, str):
-        expected_name = metrics
+    if isinstance(metric_value, str):
+        expected_name = metric
     else:
-        expected_name = metrics().name
+        expected_name = metric_value.name
 
     if n_outputs_ == 1:
         # List of metrics, not supported for multiple outputs where each output is required to get
@@ -267,56 +279,41 @@ def test_metrics_single_metric_per_output(metrics, n_outputs_):
         est = MultiOutputClassifier(
             model=get_model,
             loss="binary_crossentropy",
-            metrics=[
-                metrics if not isinstance(metrics, metrics_module.Metric) else metrics()
-            ],
+            metrics=[metric_value],
         )
         est.fit(X, y)
-        assert est.model_.metrics[metric_idx].name == prefix + expected_name
-
-    # List of lists of metrics
-    est = MultiOutputClassifier(
-        model=get_model,
-        loss="binary_crossentropy",
-        metrics=[
-            [metrics if not isinstance(metrics, metrics_module.Metric) else metrics()]
-            for _ in range(n_outputs_)
-        ],
-    )
-    est.fit(X, y)
-    assert prefix + expected_name == est.model_.metrics[metric_idx].name
+        assert get_metric_names(est) == [expected_name]
+    else:
+        # List of lists of metrics, only supported if we have multiple outputs
+        est = MultiOutputClassifier(
+            model=get_model,
+            loss="binary_crossentropy",
+            metrics=[[metric_value]] * n_outputs_,
+        )
+        est.fit(X, y)
+        assert get_metric_names(est) == [expected_name] * n_outputs_
 
     # Dict of metrics
     est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
-        metrics={
-            f"out{i+1}": metrics
-            if not isinstance(metrics, metrics_module.Metric)
-            else metrics()
-            for i in range(n_outputs_)
-        },
+        metrics={f"out{i+1}": metric_value for i in range(n_outputs_)},
     )
     est.fit(X, y)
-    assert prefix + expected_name == est.model_.metrics[metric_idx].name
+    assert get_metric_names(est) == [expected_name] * n_outputs_
 
     # Dict of lists
     est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
-        metrics={
-            f"out{i+1}": metrics
-            if not isinstance(metrics, metrics_module.Metric)
-            else metrics()
-            for i in range(n_outputs_)
-        },
+        metrics={f"out{i+1}": [metric_value] for i in range(n_outputs_)},
     )
     est.fit(X, y)
-    assert prefix + expected_name == est.model_.metrics[metric_idx].name
+    assert get_metric_names(est) == [expected_name] * n_outputs_
 
 
 @pytest.mark.parametrize("n_outputs_", (1, 2))
-def test_metrics_two_metric_per_output(n_outputs_):
+def test_metrics_two_metric_per_output(n_outputs_: int):
     """Metrics without the ("name", metric, "output")
     syntax should ignore all routed and custom options.
 
@@ -328,101 +325,59 @@ def test_metrics_two_metric_per_output(n_outputs_):
 
     metric_class = metrics_module.BinaryAccuracy
 
-    # loss functions for each output and joined show up as metrics
-    metric_idx = 1 + (n_outputs_ if n_outputs_ > 1 else 0)
-
-    # List of lists of metrics
-    if n_outputs_ == 1:
-        metrics_ = [metric_class(name="1"), metric_class(name="2")]
-    else:
-        metrics_ = [
-            [metric_class(name="1"), metric_class(name="2")] for _ in range(n_outputs_)
-        ]
+    metrics_value = [metric_class(name="1"), metric_class(name="2")]
 
     est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
-        metrics=metrics_,
+        metrics=metrics_value if n_outputs_ == 1 else [metrics_value] * n_outputs_,
     )
     est.fit(X, y)
-    if n_outputs_ == 1:
-        assert est.model_.metrics[metric_idx].name == "1"
-    else:
-        # For multi-output models, Keras pre-appends the output name
-        assert est.model_.metrics[metric_idx].name == "out1_1"
-
-    # List of lists of metrics
-    if n_outputs_ == 1:
-        metrics_ = {"out1": [metric_class(name="1"), metric_class(name="2")]}
-    else:
-        metrics_ = {
-            f"out{i+1}": [metric_class(name="1"), metric_class(name="2")]
-            for i in range(n_outputs_)
-        }
+    assert get_metric_names(est) == ["1", "2"] * n_outputs_
 
     # Dict of metrics
     est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
-        metrics=metrics_,
+        metrics={f"out{i+1}": metrics_value for i in range(n_outputs_)},
     )
     est.fit(X, y)
-    if n_outputs_ == 1:
-        assert est.model_.metrics[metric_idx].name == "1"
-    else:
-        # For multi-output models, Keras pre-appends the output name
-        assert est.model_.metrics[metric_idx].name == "out1_1"
+    assert get_metric_names(est) == ["1", "2"] * n_outputs_
 
 
 @pytest.mark.parametrize("n_outputs_", (1, 2))
-def test_metrics_routed_params_iterable(n_outputs_):
-    """Tests compiling metrics with routed parameters
-    when they are passed as an iterable.
-    """
+def test_metrics_routed_params_iterable(n_outputs_: int):
+    """Tests compiling metrics with routed parameters when they are passed as an iterable."""
 
     metrics = metrics_module.BinaryAccuracy
 
     X, y = make_classification()
     y = np.column_stack([y for _ in range(n_outputs_)]).squeeze()
 
-    # loss functions for each output and joined show up as metrics
-    metric_idx = 1 + (n_outputs_ if n_outputs_ > 1 else 0)
-
     est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
-        metrics=[metrics],
+        metrics=[metrics] * n_outputs_,
         metrics__0__name="custom_name",
     )
     est.fit(X, y)
-    compiled_metrics = est.model_.metrics
-    if n_outputs_ == 1:
-        assert compiled_metrics[metric_idx].name == "custom_name"
-    else:
-        assert compiled_metrics[metric_idx].name == "out1_custom_name"
+    expected = (
+        ["custom_name", "binary_accuracy"] if n_outputs_ == 2 else ["custom_name"]
+    )
+    assert get_metric_names(est) == expected
 
-    if n_outputs_ == 1:
-        metrics_ = [
-            metrics,
-        ]
-    else:
-        metrics_ = [metrics for _ in range(n_outputs_)]
     est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
-        metrics=metrics_,
+        metrics=[metrics] * n_outputs_,
         metrics__name="name_all_metrics",  # ends up in index 1 only
         metrics__0__name="custom_name",  # ends up in index 0 only
     )
     est.fit(X, y)
-    compiled_metrics = est.model_.metrics
-    if n_outputs_ == 1:
-        assert compiled_metrics[metric_idx].name == "custom_name"
-    else:
-        assert compiled_metrics[metric_idx].name == "out1_custom_name"
-        assert compiled_metrics[metric_idx + 1].name == "out1_name_all_metrics"
-        assert compiled_metrics[metric_idx + 2].name == "out2_custom_name"
-        assert compiled_metrics[metric_idx + 3].name == "out2_name_all_metrics"
+    expected = (
+        ["custom_name", "name_all_metrics"] if n_outputs_ == 2 else ["custom_name"]
+    )
+    assert get_metric_names(est) == expected, get_metric_names(est)
 
 
 def test_metrics_routed_params_dict():
@@ -436,17 +391,15 @@ def test_metrics_routed_params_dict():
     X, y = make_classification()
     y = np.column_stack([y for _ in range(n_outputs_)]).squeeze()
 
-    # loss functions for each output and joined show up as metrics
-    metric_idx = 1 + n_outputs_
-
     est = MultiOutputClassifier(
         model=get_model,
         loss="binary_crossentropy",
-        metrics={"out1": metrics},
-        metrics__out1__name="custom_name",
+        metrics={"out1": metrics, "out2": metrics},
+        metrics__out1__name="custom_name1",
+        metrics__out2__name="custom_name2",
     )
     est.fit(X, y)
-    assert est.model_.metrics[metric_idx].name == "out1_custom_name"
+    assert get_metric_names(est) == ["custom_name1", "custom_name2"]
 
     if n_outputs_ == 1:
         metrics_ = ({"out1": metrics},)
@@ -460,8 +413,7 @@ def test_metrics_routed_params_dict():
         metrics__out1__name="custom_name",  # ends up in out1 only
     )
     est.fit(X, y)
-    assert est.model_.metrics[metric_idx].name == "out1_custom_name"
-    assert est.model_.metrics[metric_idx + 1].name == "out2_name_all_metrics"
+    assert get_metric_names(est) == ["custom_name", "name_all_metrics"]
 
 
 def test_metrics_invalid_string():

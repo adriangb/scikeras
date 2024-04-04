@@ -26,8 +26,8 @@ def pack_keras_model(
     tp = type(model)
     out = BytesIO()
     if tp not in keras.saving.object_registration.GLOBAL_CUSTOM_OBJECTS:
-        module = '.'.join(tp.__qualname__.split('.')[:-1])
-        name = tp.__qualname__.split('.')[-1]
+        module = ".".join(tp.__qualname__.split(".")[:-1])
+        name = tp.__qualname__.split(".")[-1]
         keras.saving.register_keras_serializable(module, name)(tp)
     save_model(model, out)
     model_bytes = np.asarray(memoryview(out.getvalue()))

@@ -3,9 +3,11 @@ from itertools import chain
 from typing import Any, Callable, Dict
 from unittest.mock import patch
 
+import keras
 import numpy as np
 import pytest
-import tensorflow as tf
+from keras.layers import Concatenate, Dense, Input
+from keras.models import Model
 from sklearn.base import BaseEstimator
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
@@ -14,9 +16,6 @@ from sklearn.multioutput import (
 )
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
-import keras
-from keras.layers import Concatenate, Dense, Input
-from keras.models import Model
 
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 

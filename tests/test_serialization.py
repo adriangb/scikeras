@@ -1,16 +1,16 @@
 import pickle
 from typing import Any, Dict, Type
 
+import keras
+import keras.metrics
+import keras.saving
 import numpy as np
 import pytest
 import tensorflow as tf
-from sklearn.base import clone
-from sklearn.datasets import fetch_california_housing, make_regression
-import keras
-import keras.saving
-import keras.metrics
 from keras.layers import Dense, Input
 from keras.models import Model
+from sklearn.base import clone
+from sklearn.datasets import fetch_california_housing, make_regression
 
 from scikeras.wrappers import KerasRegressor
 
@@ -244,11 +244,11 @@ def test_pickle_optimizer(opt_cls: Type[keras.optimizers.Optimizer]):
 
     opt.build([var1])
 
-    grad1 = var1 ** 2 / 2.0
+    grad1 = var1**2 / 2.0
 
     opt.apply([grad1])
 
-    grad2 = var1 ** 2 / 1.0
+    grad2 = var1**2 / 1.0
     opt.apply([grad2])
 
     val_no_pickle = var1.numpy()
@@ -258,13 +258,13 @@ def test_pickle_optimizer(opt_cls: Type[keras.optimizers.Optimizer]):
 
     opt.build([var1])
 
-    grad1 = var1 ** 2 / 2.0
+    grad1 = var1**2 / 2.0
 
     opt.apply([grad1])
 
     opt = pickle.loads(pickle.dumps(opt))
 
-    grad2 = var1 ** 2 / 1.0
+    grad2 = var1**2 / 1.0
     opt.apply([grad2])
 
     val_pickle = var1.numpy()

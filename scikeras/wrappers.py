@@ -6,9 +6,10 @@ import warnings
 from collections import defaultdict
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Set, Tuple, Type, Union
 
-import numpy as np
-import tensorflow as tf
 import keras
+import numpy as np
+from keras import losses as losses_module
+from keras.models import Model
 from scipy.sparse import isspmatrix, lil_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.exceptions import NotFittedError
@@ -18,8 +19,6 @@ from sklearn.preprocessing import FunctionTransformer
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import _check_sample_weight, check_array, check_X_y
-from keras import losses as losses_module
-from keras.models import Model
 
 from scikeras._utils import (
     accepts_kwargs,
@@ -381,7 +380,9 @@ class BaseWrapper(BaseEstimator):
                 strict=False,
             ),
         )
-        if compile_kwargs["metrics"] is not None and not isinstance(compile_kwargs['metrics'], (dict, list)):
+        if compile_kwargs["metrics"] is not None and not isinstance(
+            compile_kwargs["metrics"], (dict, list)
+        ):
             # Keras expects a list or dict of metrics, not a single metric
             compile_kwargs["metrics"] = [compile_kwargs["metrics"]]
         return compile_kwargs
@@ -537,7 +538,7 @@ class BaseWrapper(BaseEstimator):
             self.history_ = defaultdict(list)
 
         for key, val in hist.history.items():
-            if not (key == 'loss' or key[:4] == 'val_'):
+            if not (key == "loss" or key[:4] == "val_"):
                 try:
                     key = metric_name(key)
                 except ValueError:
