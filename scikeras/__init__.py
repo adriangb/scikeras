@@ -2,10 +2,7 @@
 
 __author__ = """Adrian Garcia Badaracco"""
 
-try:
-    import importlib.metadata as importlib_metadata
-except ModuleNotFoundError:
-    import importlib_metadata  # type: ignore  # python <3.8
+import importlib.metadata as importlib_metadata
 
 __version__ = importlib_metadata.version("scikeras")  # type: ignore
 
