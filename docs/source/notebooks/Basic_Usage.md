@@ -356,7 +356,7 @@ This is exactly the same logic that allows to access estimator parameters in `sk
 
 This feature is useful in several ways. For one, it allows to set those parameters in the model definition. Furthermore, it allows you to set parameters in an `sklearn GridSearchCV` as shown below.
 
-To differentiate paramters like `callbacks` which are accepted by both `kerasModel.fit` and `kerasModel.predict` you can add a `fit__` or `predict__` routing suffix respectively. Similar, the `model__` prefix may be used to specify that a paramter is destined only for `get_clf`/`get_reg` (or whatever callable you pass as your `model` argument).
+To differentiate paramters like `callbacks` which are accepted by both `keras.Model.fit` and `keras.Model.predict` you can add a `fit__` or `predict__` routing suffix respectively. Similar, the `model__` prefix may be used to specify that a paramter is destined only for `get_clf`/`get_reg` (or whatever callable you pass as your `model` argument).
 
 For more information on parameter routing with special prefixes, see the [Advanced Usage Docs](https://www.adriangb.com/scikeras/stable/advanced.html#routed-parameters)
 
