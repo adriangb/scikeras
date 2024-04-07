@@ -38,7 +38,7 @@ def loss_name(loss: Union[str, Loss, Callable]) -> str:
     'binary_crossentropy'
     >>> loss_name("binary_crossentropy")
     'binary_crossentropy'
-    >>> import tensorflow.keras.losses as losses
+    >>> import keras.losses as losses
     >>> loss_name(losses.BinaryCrossentropy)
     'binary_crossentropy'
     >>> loss_name(losses.binary_crossentropy)
@@ -88,7 +88,7 @@ def metric_name(metric: Union[str, Metric, Callable]) -> str:
     'BinaryCrossentropy'
     >>> metric_name("binary_crossentropy")
     'binary_crossentropy'
-    >>> import tensorflow.keras.metrics as metrics
+    >>> import keras.metrics as metrics
     >>> metric_name(metrics.BinaryCrossentropy)
     'BinaryCrossentropy'
     >>> metric_name(metrics.binary_crossentropy)
