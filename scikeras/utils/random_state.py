@@ -1,7 +1,7 @@
 import os
 import random
 from contextlib import contextmanager
-from typing import Generator
+from typing import Generator, Iterator
 
 import numpy as np
 
@@ -13,7 +13,7 @@ try:
     def tf_set_seed(seed: int) -> None:
         tf.random.set_seed(seed)
 
-    def tf_get_seed() -> int:
+    def tf_get_seed() -> Iterator[int]:
         if context.executing_eagerly():
             return context.global_seed()
         else:
@@ -48,23 +48,23 @@ def tensorflow_random_state(seed: int) -> Generator[None, None, None]:
     orig_random_state = random.getstate()
     orig_np_random_state = np.random.get_state()
     tf_random_seed = tf_get_seed()
-    determism_enabled = tf_enable_op_determinism()
-
-    # Set values
-    os.environ["TF_DETERMINISTIC_OPS"] = "1"
-    random.seed(seed)
-    np.random.seed(seed)
-    tf_set_seed(seed)
-
-    yield
-
-    # Reset values
-    if origin_gpu_det is not None:
-        os.environ["TF_DETERMINISTIC_OPS"] = origin_gpu_det
-    else:
-        os.environ.pop("TF_DETERMINISTIC_OPS")
-    random.setstate(orig_random_state)
-    np.random.set_state(orig_np_random_state)
-    tf_set_seed(tf_random_seed)
-    if determism_enabled:
-        tf_disable_op_determinism()
+    determinism_enabled = None
+    try:
+        # Set values
+        os.environ["TF_DETERMINISTIC_OPS"] = "1"
+        random.seed(seed)
+        np.random.seed(seed)
+        tf_set_seed(seed)
+        determinism_enabled = tf_enable_op_determinism()
+        yield
+    finally:
+        # Reset values
+        if origin_gpu_det is not None:
+            os.environ["TF_DETERMINISTIC_OPS"] = origin_gpu_det
+        else:
+            os.environ.pop("TF_DETERMINISTIC_OPS")
+        random.setstate(orig_random_state)
+        np.random.set_state(orig_np_random_state)
+        tf_set_seed(tf_random_seed)
+        if determinism_enabled is False:
+            tf_disable_op_determinism()

@@ -88,6 +88,7 @@ def test_fully_compliant_estimators_low_precision(estimator, check):
         ),
     ],
 )
+@pytest.mark.parametrize("set_floatx_and_backend_config", ["float64"], indirect=True)
 def test_fully_compliant_estimators_high_precision(estimator, check):
     """Checks that require higher training epochs."""
     check_name = check.func.__name__
@@ -95,8 +96,7 @@ def test_fully_compliant_estimators_high_precision(estimator, check):
         pytest.skip(
             "This test is run as part of test_fully_compliant_estimators_low_precision."
         )
-    with set_floatx("float64"):
-        check(estimator)
+    check(estimator)
 
 
 class SubclassedClassifier(KerasClassifier):

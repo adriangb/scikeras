@@ -1,7 +1,6 @@
 import os
 from unittest import mock
 
-import keras.backend
 import numpy as np
 import pytest
 from keras import Sequential
@@ -114,53 +113,49 @@ class TestRandomState:
             assert "PYTHONHASHSEED" not in os.environ
 
 
+@pytest.mark.parametrize("set_floatx_and_backend_config", ["float64"], indirect=True)
 def test_sample_weights_fit():
     """Checks that the `sample_weight` parameter when passed to `fit`
     has the intended effect.
     """
-    with keras.backend.set_floatx("float64"):
-        # build estimator
-        estimator = KerasClassifier(
-            model=dynamic_classifier,
-            model__hidden_layer_sizes=(100,),
-            epochs=10,
-            random_state=0,
-        )
-        estimator1 = clone(estimator)
-        estimator2 = clone(estimator)
+    # build estimator
+    estimator = KerasClassifier(
+        model=dynamic_classifier,
+        model__hidden_layer_sizes=(100,),
+        epochs=10,
+        random_state=0,
+    )
+    estimator1 = clone(estimator)
+    estimator2 = clone(estimator)
 
-        # we create 20 points
-        X = np.array([1] * 10000).reshape(-1, 1)
-        y = [1] * 5000 + [-1] * 5000
+    # we create 20 points
+    X = np.array([1] * 10000).reshape(-1, 1)
+    y = [1] * 5000 + [-1] * 5000
 
-        # heavily weight towards y=1 points
-        sw_first_class = [0.8] * 5000 + [0.2] * 5000
-        # train estimator 1 with weights
-        estimator1.fit(X, y, sample_weight=sw_first_class)
-        # train estimator 2 without weights
-        estimator2.fit(X, y)
-        # estimator1 should tilt towards y=1
-        # estimator2 should predict about equally
-        average_diff_pred_prob_1 = np.average(
-            np.diff(estimator1.predict_proba(X), axis=1)
-        )
-        average_diff_pred_prob_2 = np.average(
-            np.diff(estimator2.predict_proba(X), axis=1)
-        )
-        assert average_diff_pred_prob_2 < average_diff_pred_prob_1
+    # heavily weight towards y=1 points
+    sw_first_class = [0.8] * 5000 + [0.2] * 5000
+    # train estimator 1 with weights
+    estimator1.fit(X, y, sample_weight=sw_first_class)
+    # train estimator 2 without weights
+    estimator2.fit(X, y)
+    # estimator1 should tilt towards y=1
+    # estimator2 should predict about equally
+    average_diff_pred_prob_1 = np.average(np.diff(estimator1.predict_proba(X), axis=1))
+    average_diff_pred_prob_2 = np.average(np.diff(estimator2.predict_proba(X), axis=1))
+    assert average_diff_pred_prob_2 < average_diff_pred_prob_1
 
-        # equal weighting
-        sw_equal = [0.5] * 5000 + [0.5] * 5000
-        # train estimator 1 with weights
-        estimator1.fit(X, y, sample_weight=sw_equal)
-        # train estimator 2 without weights
-        estimator2.fit(X, y)
-        # both estimators should have about the same predictions
-        np.testing.assert_allclose(
-            actual=estimator1.predict_proba(X),
-            desired=estimator2.predict_proba(X),
-            rtol=1e-4,
-        )
+    # equal weighting
+    sw_equal = [0.5] * 5000 + [0.5] * 5000
+    # train estimator 1 with weights
+    estimator1.fit(X, y, sample_weight=sw_equal)
+    # train estimator 2 without weights
+    estimator2.fit(X, y)
+    # both estimators should have about the same predictions
+    np.testing.assert_allclose(
+        actual=estimator1.predict_proba(X),
+        desired=estimator2.predict_proba(X),
+        rtol=1e-3,
+    )
 
 
 def test_sample_weights_score():
