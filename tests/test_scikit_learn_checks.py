@@ -89,7 +89,9 @@ def test_fully_compliant_estimators_low_precision(estimator, check):
     ],
 )
 @pytest.mark.parametrize("set_floatx_and_backend_config", ["float64"], indirect=True)
-def test_fully_compliant_estimators_high_precision(estimator, check):
+def test_fully_compliant_estimators_high_precision(
+    estimator, check, set_floatx_and_backend_config
+):
     """Checks that require higher training epochs."""
     check_name = check.func.__name__
     if check_name not in higher_precision:

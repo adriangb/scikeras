@@ -114,7 +114,7 @@ class TestRandomState:
 
 
 @pytest.mark.parametrize("set_floatx_and_backend_config", ["float64"], indirect=True)
-def test_sample_weights_fit():
+def test_sample_weights_fit(set_floatx_and_backend_config):
     """Checks that the `sample_weight` parameter when passed to `fit`
     has the intended effect.
     """
