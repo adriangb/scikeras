@@ -28,7 +28,7 @@ and is offered just for convenience. You can also install just SciKeras with
 `pip install scikeras`, but you will need a version of tensorflow installed at
 runtime or SciKeras will throw an error when you try to import it.
 
-The current version of SciKeras depends on `scikit-learn>=1.4.1post1` and `TensorFlow>=2.16.0`.
+The current version of SciKeras depends on `scikit-learn>=1.4.1post1` and `Keras>=3.2.0`.
 
 ### Migrating from `keras.wrappers.scikit_learn`
 

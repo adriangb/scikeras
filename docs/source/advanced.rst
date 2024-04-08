@@ -478,6 +478,6 @@ as the scoring functions for :class:`scikeras.wrappers.KerasClassifier`
 and :class:`scikeras.wrappers.KerasRegressor` respectively. To override these scoring functions,
 
 
-.. _Keras Callbacks docs: https://www.tensorflow.org/api_docs/python/tf/keras/callbacks
+.. _Keras Callbacks docs: https://keras.io/api/callbacks/
 
-.. _Keras Metrics docs: https://www.tensorflow.org/api_docs/python/tf/keras/metrics
+.. _Keras Metrics docs: https://keras.io/api/metrics/
