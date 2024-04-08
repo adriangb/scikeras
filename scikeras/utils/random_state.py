@@ -24,10 +24,8 @@ try:
         config.enable_op_determinism()
         return was_enabled
 
-    def tf_disable_op_determinism() -> bool:
-        was_enabled = config.is_op_determinism_enabled()
+    def tf_disable_op_determinism() -> None:
         config.disable_op_determinism()
-        return was_enabled
 
 except ImportError:
 
@@ -39,6 +37,9 @@ except ImportError:
 
     def tf_enable_op_determinism() -> bool:
         return False
+
+    def tf_disable_op_determinism() -> None:
+        return None
 
 
 @contextmanager
