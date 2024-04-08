@@ -8,10 +8,9 @@ Scikit-Learn compatible wrappers for Keras Models.
 
 ## Why SciKeras
 
-SciKeras is derived from and API compatible with `keras.wrappers.scikit_learn`. The original TensorFlow (TF) wrappers are not actively maintained,
-and [will be removed](https://github.com/tensorflow/tensorflow/pull/36137#issuecomment-726271760) in a future release.
+SciKeras is derived from and API compatible with the now deprecated / removed `tf.keras.wrappers.scikit_learn`.
 
-An overview of the advantages and differences as compared to the TF wrappers can be found in our
+An overview of the differences as compared to the TF wrappers can be found in our
 [migration](https://www.adriangb.com/scikeras/stable/migration.html) guide.
 
 ## Installation
