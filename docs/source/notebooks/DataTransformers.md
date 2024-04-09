@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.11.4
+      jupytext_version: 1.16.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -181,7 +181,7 @@ Here we define a simple perceptron that has two outputs, corresponding to one bi
 
 ```python
 def get_clf_model(meta):
-    inp = keras.layers.Input(shape=(meta["n_features_in_"]))
+    inp = keras.layers.Input(shape=(meta["n_features_in_"],))
     x1 = keras.layers.Dense(100, activation="relu")(inp)
     out_bin = keras.layers.Dense(1, activation="sigmoid")(x1)
     out_cat = keras.layers.Dense(meta["n_classes_"][1], activation="softmax")(x1)

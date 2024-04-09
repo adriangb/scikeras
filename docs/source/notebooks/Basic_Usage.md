@@ -240,12 +240,12 @@ You should use this method if you plan on sharing your saved models.
 ```python
 # Save to disk
 pred_old = reg.predict(X_regr)
-reg.model_.save("/tmp/my_model")  # saves just the Keras model
+reg.model_.save("/tmp/my_model.keras")  # saves just the Keras model
 ```
 
 ```python
 # Load the model back into memory
-new_reg_model = keras.models.load_model("/tmp/my_model")
+new_reg_model = keras.models.load_model("/tmp/my_model.keras")
 # Now we need to instantiate a new SciKeras object
 # since we only saved the Keras model
 reg_new = KerasRegressor(new_reg_model)

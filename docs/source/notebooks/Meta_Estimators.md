@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.11.4
+      jupytext_version: 1.16.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -63,7 +63,7 @@ from typing import Dict, Iterable, Any
 
 def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any], compile_kwargs: Dict[str, Any]):
     model = keras.Sequential()
-    inp = keras.layers.Input(shape=(meta["n_features_in_"]))
+    inp = keras.layers.Input(shape=(meta["n_features_in_"],))
     model.add(inp)
     for hidden_layer_size in hidden_layer_sizes:
         layer = keras.layers.Dense(hidden_layer_size, activation="relu")
