@@ -245,7 +245,7 @@ reg.model_.save("/tmp/my_model.keras")  # saves just the Keras model
 
 ```python
 # Load the model back into memory
-new_reg_model = keras.models.load_model("/tmp/my_model.keras")
+new_reg_model = keras.saving.load_model("/tmp/my_model.keras")
 # Now we need to instantiate a new SciKeras object
 # since we only saved the Keras model
 reg_new = KerasRegressor(new_reg_model)
