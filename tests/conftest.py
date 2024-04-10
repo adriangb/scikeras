@@ -3,8 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Iterator
 
 import pytest
-from keras.backend import config as backend_config
-from keras.backend import set_floatx
+from keras import backend
 
 if TYPE_CHECKING:
     from _pytest.fixtures import FixtureRequest
@@ -12,10 +11,10 @@ if TYPE_CHECKING:
 
 @pytest.fixture(autouse=True)
 def set_floatx_and_backend_config(request: FixtureRequest) -> Iterator[None]:
-    current = backend_config.floatx()
+    current = backend.floatx()
     floatx = getattr(request, "param", "float32")
-    set_floatx(floatx)
+    backend.set_floatx(floatx)
     try:
         yield
     finally:
-        set_floatx(current)
+        backend.set_floatx(current)
