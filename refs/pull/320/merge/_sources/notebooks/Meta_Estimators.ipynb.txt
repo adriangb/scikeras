@@ -1,0 +1,376 @@
+{
+ "cells": [
+  {
+   "cell_type": "raw",
+   "id": "3676e20f",
+   "metadata": {},
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Meta_Estimators.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b2937192",
+   "metadata": {},
+   "source": [
+    "# Meta Estimators in SciKeras\n",
+    "\n",
+    "In this notebook, we implement sklearn ensemble and tree meta-estimators backed by a Keras MLP model.\n",
+    "\n",
+    "## Table of contents\n",
+    "\n",
+    "* [1. Setup](#1.-Setup)\n",
+    "* [2. Defining the Keras Model](#2.-Defining-the-Keras-Model)\n",
+    "  * [2.1 Building a boosting ensemble](#2.1-Building-a-boosting-ensemble)\n",
+    "* [3. Testing with a toy dataset](#3.-Testing-with-a-toy-dataset)\n",
+    "* [4. Bagging ensemble](#4.-Bagging-ensemble)\n",
+    "\n",
+    "## 1. Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "b41b0617",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T20:56:41.484385Z",
+     "iopub.status.busy": "2024-04-10T20:56:41.483871Z",
+     "iopub.status.idle": "2024-04-10T20:56:48.871882Z",
+     "shell.execute_reply": "2024-04-10T20:56:48.871214Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "try:\n",
+    "    import scikeras\n",
+    "except ImportError:\n",
+    "    !python -m pip install scikeras[tensorflow]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "dc8e547d",
+   "metadata": {},
+   "source": [
+    "Silence TensorFlow logging to keep output succinct."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "4c8e5a7c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T20:56:48.875868Z",
+     "iopub.status.busy": "2024-04-10T20:56:48.875081Z",
+     "iopub.status.idle": "2024-04-10T20:56:48.880039Z",
+     "shell.execute_reply": "2024-04-10T20:56:48.879327Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "from tensorflow import get_logger\n",
+    "get_logger().setLevel('ERROR')\n",
+    "warnings.filterwarnings(\"ignore\", message=\"Setting the random state for TF\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "8e3b7497",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T20:56:48.882320Z",
+     "iopub.status.busy": "2024-04-10T20:56:48.882086Z",
+     "iopub.status.idle": "2024-04-10T20:56:50.228772Z",
+     "shell.execute_reply": "2024-04-10T20:56:50.228058Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from scikeras.wrappers import KerasClassifier, KerasRegressor\n",
+    "import keras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "052a849f",
+   "metadata": {},
+   "source": [
+    "## 2. Defining the Keras Model\n",
+    "\n",
+    "We borrow our MLPClassifier implementation from the [MLPClassifier notebook](https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MLPClassifier_and_MLPRegressor.ipynb)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "eddfc33e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T20:56:50.231892Z",
+     "iopub.status.busy": "2024-04-10T20:56:50.231244Z",
+     "iopub.status.idle": "2024-04-10T20:56:50.237617Z",
+     "shell.execute_reply": "2024-04-10T20:56:50.237049Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from typing import Dict, Iterable, Any\n",
+    "\n",
+    "\n",
+    "def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any], compile_kwargs: Dict[str, Any]):\n",
+    "    model = keras.Sequential()\n",
+    "    inp = keras.layers.Input(shape=(meta[\"n_features_in_\"],))\n",
+    "    model.add(inp)\n",
+    "    for hidden_layer_size in hidden_layer_sizes:\n",
+    "        layer = keras.layers.Dense(hidden_layer_size, activation=\"relu\")\n",
+    "        model.add(layer)\n",
+    "    if meta[\"target_type_\"] == \"binary\":\n",
+    "        n_output_units = 1\n",
+    "        output_activation = \"sigmoid\"\n",
+    "        loss = \"binary_crossentropy\"\n",
+    "    elif meta[\"target_type_\"] == \"multiclass\":\n",
+    "        n_output_units = meta[\"n_classes_\"]\n",
+    "        output_activation = \"softmax\"\n",
+    "        loss = \"sparse_categorical_crossentropy\"\n",
+    "    else:\n",
+    "        raise NotImplementedError(f\"Unsupported task type: {meta['target_type_']}\")\n",
+    "    out = keras.layers.Dense(n_output_units, activation=output_activation)\n",
+    "    model.add(out)\n",
+    "    model.compile(loss=loss, optimizer=compile_kwargs[\"optimizer\"])\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d1edbb84",
+   "metadata": {},
+   "source": [
+    "Next we wrap this Keras model with SciKeras"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "5665eb02",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T20:56:50.240047Z",
+     "iopub.status.busy": "2024-04-10T20:56:50.239620Z",
+     "iopub.status.idle": "2024-04-10T20:56:50.242735Z",
+     "shell.execute_reply": "2024-04-10T20:56:50.242186Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "clf = KerasClassifier(\n",
+    "    model=get_clf_model,\n",
+    "    hidden_layer_sizes=(100, ),\n",
+    "    optimizer=\"adam\",\n",
+    "    optimizer__learning_rate=0.001,\n",
+    "    verbose=0,\n",
+    "    random_state=0,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "232a5fde",
+   "metadata": {},
+   "source": [
+    "### 2.1 Building a boosting ensemble\n",
+    "\n",
+    "Because SciKeras estimators are fully compliant with the Scikit-Learn API, we can make use of Scikit-Learn's built in utilities. In particular example, we will use `AdaBoostClassifier` from `sklearn.ensemble.AdaBoostClassifier`, but the process is the same for most Scikit-Learn meta-estimators.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "db190178",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T20:56:50.245039Z",
+     "iopub.status.busy": "2024-04-10T20:56:50.244678Z",
+     "iopub.status.idle": "2024-04-10T20:56:50.561709Z",
+     "shell.execute_reply": "2024-04-10T20:56:50.561082Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.ensemble import AdaBoostClassifier\n",
+    "\n",
+    "\n",
+    "adaboost = AdaBoostClassifier(estimator=clf, random_state=0)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1ea0bd05",
+   "metadata": {},
+   "source": [
+    "## 3. Testing with a toy dataset\n",
+    "\n",
+    "Before continouing, we will run a small test to make sure we get somewhat reasonable results.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "4a617af3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T20:56:50.565218Z",
+     "iopub.status.busy": "2024-04-10T20:56:50.564466Z",
+     "iopub.status.idle": "2024-04-10T20:57:50.244911Z",
+     "shell.execute_reply": "2024-04-10T20:57:50.244289Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages/sklearn/ensemble/_weight_boosting.py:519: FutureWarning: The SAMME.R algorithm (the default) is deprecated and will be removed in 1.6. Use the SAMME algorithm to circumvent this warning.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Single score: 0.52\n",
+      "AdaBoost score: 0.87\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.datasets import make_moons\n",
+    "\n",
+    "\n",
+    "X, y = make_moons()\n",
+    "\n",
+    "single_score = clf.fit(X, y).score(X, y)\n",
+    "\n",
+    "adaboost_score = adaboost.fit(X, y).score(X, y)\n",
+    "\n",
+    "print(f\"Single score: {single_score:.2f}\")\n",
+    "print(f\"AdaBoost score: {adaboost_score:.2f}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1b7bb466",
+   "metadata": {},
+   "source": [
+    "We see that the score for the AdaBoost classifier is slightly higher than that of an individual MLPRegressor instance. We can explore the individual classifiers, and see that each one is composed of a Keras Model with it's own individual weights.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "b4fc400a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T20:57:50.247818Z",
+     "iopub.status.busy": "2024-04-10T20:57:50.247180Z",
+     "iopub.status.idle": "2024-04-10T20:57:50.255925Z",
+     "shell.execute_reply": "2024-04-10T20:57:50.255356Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[-0.00941263  0.04685469  0.08667289 -0.2046065   0.11120768]\n",
+      "[ 0.22925234  0.20067021  0.2136241   0.0308869  -0.09871531]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(adaboost.estimators_[0].model_.get_weights()[0][0, :5])  # first sub-estimator\n",
+    "print(adaboost.estimators_[1].model_.get_weights()[0][0, :5])  # second sub-estimator"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "55189df9",
+   "metadata": {},
+   "source": [
+    "## 4. Bagging ensemble\n",
+    "\n",
+    "For comparison, we run the same test with an ensemble built using `sklearn.ensemble.BaggingClassifier`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "7c72edb1",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T20:57:50.258482Z",
+     "iopub.status.busy": "2024-04-10T20:57:50.258071Z",
+     "iopub.status.idle": "2024-04-10T20:57:59.491093Z",
+     "shell.execute_reply": "2024-04-10T20:57:59.490271Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Bagging score: 0.73\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "WARNING:tensorflow:5 out of the last 9 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7f8dc8ed8ea0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n",
+      "WARNING:tensorflow:6 out of the last 12 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7f8dc8ed8ea0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n",
+      "WARNING:tensorflow:5 out of the last 9 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7f0f845c1620> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n",
+      "WARNING:tensorflow:6 out of the last 12 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7f0f845c1620> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.ensemble import BaggingClassifier\n",
+    "\n",
+    "\n",
+    "bagging = BaggingClassifier(estimator=clf, random_state=0, n_jobs=-1)\n",
+    "\n",
+    "bagging_score = bagging.fit(X, y).score(X, y)\n",
+    "\n",
+    "print(f\"Bagging score: {bagging_score:.2f}\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "jupytext": {
+   "formats": "ipynb,md"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.2"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
