@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "f4150897",
+   "id": "faec5a77",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "4db56e94",
+   "id": "4bc9e19f",
    "metadata": {},
    "source": [
     "# Sparse Inputs"
@@ -18,7 +18,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "4fcacc71",
+   "id": "fd06fcbb",
    "metadata": {},
    "source": [
     "SciKeras supports sparse inputs (`X`/features).\n",
@@ -29,7 +29,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "90d91a22",
+   "id": "6712217a",
    "metadata": {},
    "source": [
     "## Setup"
@@ -38,13 +38,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "a3df6946",
+   "id": "3e76c93e",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T15:46:18.531260Z",
-     "iopub.status.busy": "2023-10-10T15:46:18.530709Z",
-     "iopub.status.idle": "2023-10-10T15:46:23.832376Z",
-     "shell.execute_reply": "2023-10-10T15:46:23.831089Z"
+     "iopub.execute_input": "2024-04-10T01:20:05.294052Z",
+     "iopub.status.busy": "2024-04-10T01:20:05.293739Z",
+     "iopub.status.idle": "2024-04-10T01:20:08.536948Z",
+     "shell.execute_reply": "2024-04-10T01:20:08.536097Z"
     }
    },
    "outputs": [
@@ -59,14 +59,15 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "  Downloading memory_profiler-0.61.0-py3-none-any.whl (31 kB)\r\n"
+      "  Downloading memory_profiler-0.61.0-py3-none-any.whl.metadata (20 kB)\r\n",
+      "Requirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from memory_profiler) (5.9.8)\r\n"
      ]
     },
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Requirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages (from memory_profiler) (5.9.5)\r\n"
+      "Downloading memory_profiler-0.61.0-py3-none-any.whl (31 kB)\r\n"
      ]
     },
     {
@@ -92,13 +93,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "5d4137bd",
+   "id": "73f581d9",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T15:46:23.838442Z",
-     "iopub.status.busy": "2023-10-10T15:46:23.837981Z",
-     "iopub.status.idle": "2023-10-10T15:46:27.314440Z",
-     "shell.execute_reply": "2023-10-10T15:46:27.309417Z"
+     "iopub.execute_input": "2024-04-10T01:20:08.541053Z",
+     "iopub.status.busy": "2024-04-10T01:20:08.540457Z",
+     "iopub.status.idle": "2024-04-10T01:20:10.809250Z",
+     "shell.execute_reply": "2024-04-10T01:20:10.808575Z"
     }
    },
    "outputs": [],
@@ -114,13 +115,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "0f32be14",
+   "id": "185bd96a",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T15:46:27.320262Z",
-     "iopub.status.busy": "2023-10-10T15:46:27.318685Z",
-     "iopub.status.idle": "2023-10-10T15:46:27.331559Z",
-     "shell.execute_reply": "2023-10-10T15:46:27.328564Z"
+     "iopub.execute_input": "2024-04-10T01:20:10.813221Z",
+     "iopub.status.busy": "2024-04-10T01:20:10.812541Z",
+     "iopub.status.idle": "2024-04-10T01:20:10.818135Z",
+     "shell.execute_reply": "2024-04-10T01:20:10.817512Z"
     }
    },
    "outputs": [],
@@ -134,13 +135,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "53e9d085",
+   "id": "1406aacc",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T15:46:27.337163Z",
-     "iopub.status.busy": "2023-10-10T15:46:27.335775Z",
-     "iopub.status.idle": "2023-10-10T15:46:27.754600Z",
-     "shell.execute_reply": "2023-10-10T15:46:27.753602Z"
+     "iopub.execute_input": "2024-04-10T01:20:10.821097Z",
+     "iopub.status.busy": "2024-04-10T01:20:10.820551Z",
+     "iopub.status.idle": "2024-04-10T01:20:11.193960Z",
+     "shell.execute_reply": "2024-04-10T01:20:11.193206Z"
     }
    },
    "outputs": [],
@@ -150,12 +151,12 @@
     "from scikeras.wrappers import KerasRegressor\n",
     "from sklearn.preprocessing import OneHotEncoder\n",
     "from sklearn.pipeline import Pipeline\n",
-    "from tensorflow import keras"
+    "import keras"
    ]
   },
   {
    "cell_type": "markdown",
-   "id": "788e392a",
+   "id": "cf14426c",
    "metadata": {},
    "source": [
     "## Data\n",
@@ -168,13 +169,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "46a8cc80",
+   "id": "5e77f3ff",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T15:46:27.760799Z",
-     "iopub.status.busy": "2023-10-10T15:46:27.759115Z",
-     "iopub.status.idle": "2023-10-10T15:46:27.775797Z",
-     "shell.execute_reply": "2023-10-10T15:46:27.774655Z"
+     "iopub.execute_input": "2024-04-10T01:20:11.196881Z",
+     "iopub.status.busy": "2024-04-10T01:20:11.196469Z",
+     "iopub.status.idle": "2024-04-10T01:20:11.200730Z",
+     "shell.execute_reply": "2024-04-10T01:20:11.200125Z"
     }
    },
    "outputs": [],
@@ -187,7 +188,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "0e695416",
+   "id": "5b6f0a57",
    "metadata": {},
    "source": [
     "## Model\n",
@@ -198,13 +199,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "e9bb92dc",
+   "id": "7cdcf283",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T15:46:27.780470Z",
-     "iopub.status.busy": "2023-10-10T15:46:27.780009Z",
-     "iopub.status.idle": "2023-10-10T15:46:27.792590Z",
-     "shell.execute_reply": "2023-10-10T15:46:27.791594Z"
+     "iopub.execute_input": "2024-04-10T01:20:11.203648Z",
+     "iopub.status.busy": "2024-04-10T01:20:11.203175Z",
+     "iopub.status.idle": "2024-04-10T01:20:11.208358Z",
+     "shell.execute_reply": "2024-04-10T01:20:11.207713Z"
     }
    },
    "outputs": [],
@@ -221,39 +222,39 @@
   },
   {
    "cell_type": "markdown",
-   "id": "4c17e998",
+   "id": "8d484f3c",
    "metadata": {},
    "source": [
     "## Pipelines\n",
     "\n",
     "Here is where it gets interesting.\n",
-    "We make two Scikit-Learn pipelines that use `OneHotEncoder`: one that uses `sparse=False` to force a dense matrix as the output and another that uses `sparse=True` (the default)."
+    "We make two Scikit-Learn pipelines that use `OneHotEncoder`: one that uses `sparse_output=False` to force a dense matrix as the output and another that uses `sparse_output=True` (the default)."
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "a95a69ae",
+   "id": "0be9194e",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T15:46:27.799412Z",
-     "iopub.status.busy": "2023-10-10T15:46:27.797725Z",
-     "iopub.status.idle": "2023-10-10T15:46:27.809169Z",
-     "shell.execute_reply": "2023-10-10T15:46:27.805709Z"
+     "iopub.execute_input": "2024-04-10T01:20:11.211343Z",
+     "iopub.status.busy": "2024-04-10T01:20:11.210773Z",
+     "iopub.status.idle": "2024-04-10T01:20:11.215599Z",
+     "shell.execute_reply": "2024-04-10T01:20:11.215032Z"
     }
    },
    "outputs": [],
    "source": [
     "dense_pipeline = Pipeline(\n",
     "    [\n",
-    "        (\"encoder\", OneHotEncoder(sparse=False)),\n",
+    "        (\"encoder\", OneHotEncoder(sparse_output=False)),\n",
     "        (\"model\", KerasRegressor(get_clf, loss=\"mse\", epochs=5, verbose=False))\n",
     "    ]\n",
     ")\n",
     "\n",
     "sparse_pipeline = Pipeline(\n",
     "    [\n",
-    "        (\"encoder\", OneHotEncoder(sparse=True)),\n",
+    "        (\"encoder\", OneHotEncoder(sparse_output=True)),\n",
     "        (\"model\", KerasRegressor(get_clf, loss=\"mse\", epochs=5, verbose=False))\n",
     "    ]\n",
     ")"
@@ -261,7 +262,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "c33f0640",
+   "id": "3ed6136e",
    "metadata": {},
    "source": [
     "## Benchmark\n",
@@ -272,29 +273,21 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "21d96cbb",
+   "id": "42b6259a",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T15:46:27.813650Z",
-     "iopub.status.busy": "2023-10-10T15:46:27.813144Z",
-     "iopub.status.idle": "2023-10-10T15:47:47.667148Z",
-     "shell.execute_reply": "2023-10-10T15:47:47.666027Z"
+     "iopub.execute_input": "2024-04-10T01:20:11.218014Z",
+     "iopub.status.busy": "2024-04-10T01:20:11.217795Z",
+     "iopub.status.idle": "2024-04-10T01:20:45.799837Z",
+     "shell.execute_reply": "2024-04-10T01:20:45.799138Z"
     }
    },
    "outputs": [
     {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 3566.34 MiB, increment: 3145.67 MiB\n"
+      "peak memory: 5189.37 MiB, increment: 4669.04 MiB\n"
      ]
     }
    ],
@@ -305,29 +298,21 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "13b6bcb8",
+   "id": "df00d7e4",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T15:47:47.675548Z",
-     "iopub.status.busy": "2023-10-10T15:47:47.675192Z",
-     "iopub.status.idle": "2023-10-10T15:48:27.372230Z",
-     "shell.execute_reply": "2023-10-10T15:48:27.371101Z"
+     "iopub.execute_input": "2024-04-10T01:20:45.802427Z",
+     "iopub.status.busy": "2024-04-10T01:20:45.801962Z",
+     "iopub.status.idle": "2024-04-10T01:21:02.933141Z",
+     "shell.execute_reply": "2024-04-10T01:21:02.932375Z"
     }
    },
    "outputs": [
     {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 673.56 MiB, increment: 89.82 MiB\n"
+      "peak memory: 992.88 MiB, increment: 33.56 MiB\n"
      ]
     }
    ],
@@ -337,7 +322,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "8f34d0f2",
+   "id": "bc4f695d",
    "metadata": {},
    "source": [
     "You should see at least 100x more memory consumption **increment** in the dense pipeline."
@@ -345,7 +330,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "f13ccd8b",
+   "id": "00df36b2",
    "metadata": {},
    "source": [
     "### Runtime\n",
@@ -356,85 +341,21 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "51a55508",
+   "id": "4a1ff92b",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T15:48:27.378001Z",
-     "iopub.status.busy": "2023-10-10T15:48:27.376915Z",
-     "iopub.status.idle": "2023-10-10T15:57:22.099670Z",
-     "shell.execute_reply": "2023-10-10T15:57:22.098767Z"
+     "iopub.execute_input": "2024-04-10T01:21:02.936131Z",
+     "iopub.status.busy": "2024-04-10T01:21:02.935592Z",
+     "iopub.status.idle": "2024-04-10T01:25:49.290465Z",
+     "shell.execute_reply": "2024-04-10T01:25:49.289719Z"
     }
    },
    "outputs": [
     {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "1min 4s ± 16.1 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
+      "34.8 s ± 9.56 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
      ]
     }
    ],
@@ -445,85 +366,21 @@
   {
    "cell_type": "code",
    "execution_count": 11,
-   "id": "86db4dea",
+   "id": "be280ac3",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T15:57:22.156456Z",
-     "iopub.status.busy": "2023-10-10T15:57:22.155631Z",
-     "iopub.status.idle": "2023-10-10T16:00:35.284834Z",
-     "shell.execute_reply": "2023-10-10T16:00:35.283727Z"
+     "iopub.execute_input": "2024-04-10T01:25:49.294364Z",
+     "iopub.status.busy": "2024-04-10T01:25:49.293893Z",
+     "iopub.status.idle": "2024-04-10T01:27:33.425707Z",
+     "shell.execute_reply": "2024-04-10T01:27:33.425127Z"
     }
    },
    "outputs": [
     {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "24.4 s ± 3.02 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
+      "13 s ± 1.41 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
      ]
     }
    ],
@@ -533,7 +390,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "9709280f",
+   "id": "e7311f47",
    "metadata": {},
    "source": [
     "## Tensorflow Datasets\n",
@@ -550,7 +407,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "1519dac8",
+   "id": "a837c2d7",
    "metadata": {},
    "source": [
     "## Bonus: dtypes\n",
@@ -561,20 +418,20 @@
   {
    "cell_type": "code",
    "execution_count": 12,
-   "id": "564e68f0",
+   "id": "5832202f",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T16:00:35.294187Z",
-     "iopub.status.busy": "2023-10-10T16:00:35.293635Z",
-     "iopub.status.idle": "2023-10-10T16:00:35.299300Z",
-     "shell.execute_reply": "2023-10-10T16:00:35.298019Z"
+     "iopub.execute_input": "2024-04-10T01:27:33.428283Z",
+     "iopub.status.busy": "2024-04-10T01:27:33.427902Z",
+     "iopub.status.idle": "2024-04-10T01:27:33.431187Z",
+     "shell.execute_reply": "2024-04-10T01:27:33.430633Z"
     }
    },
    "outputs": [],
    "source": [
     "sparse_pipline_uint8 = Pipeline(\n",
     "    [\n",
-    "        (\"encoder\", OneHotEncoder(sparse=True, dtype=np.uint8)),\n",
+    "        (\"encoder\", OneHotEncoder(sparse_output=True, dtype=np.uint8)),\n",
     "        (\"model\", KerasRegressor(get_clf, loss=\"mse\", epochs=5, verbose=False))\n",
     "    ]\n",
     ")"
@@ -583,29 +440,21 @@
   {
    "cell_type": "code",
    "execution_count": 13,
-   "id": "28709c6a",
+   "id": "d09c035f",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2023-10-10T16:00:35.303925Z",
-     "iopub.status.busy": "2023-10-10T16:00:35.303243Z",
-     "iopub.status.idle": "2023-10-10T16:00:59.163741Z",
-     "shell.execute_reply": "2023-10-10T16:00:59.162592Z"
+     "iopub.execute_input": "2024-04-10T01:27:33.433310Z",
+     "iopub.status.busy": "2024-04-10T01:27:33.432898Z",
+     "iopub.status.idle": "2024-04-10T01:27:46.315882Z",
+     "shell.execute_reply": "2024-04-10T01:27:46.315319Z"
     }
    },
    "outputs": [
     {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 921.83 MiB, increment: 55.99 MiB\n"
+      "peak memory: 1087.63 MiB, increment: 15.85 MiB\n"
      ]
     }
    ],
@@ -633,7 +482,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.8.18"
+   "version": "3.12.2"
   }
  },
  "nbformat": 4,

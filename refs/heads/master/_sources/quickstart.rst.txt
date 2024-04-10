@@ -5,7 +5,7 @@ Quickstart
 Training a model
 ----------------
 
-Below, we define our own Keras :class:`~tensorflow.keras.Sequential` and train
+Below, we define our own Keras :class:`~keras.Sequential` and train
 it on a toy classification dataset using SciKeras
 :class:`.KerasClassifier`:
 
@@ -13,7 +13,7 @@ it on a toy classification dataset using SciKeras
 
     import numpy as np
     from sklearn.datasets import make_classification
-    from tensorflow import keras
+    import keras
 
     from scikeras.wrappers import KerasClassifier
 

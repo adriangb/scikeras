@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Basic usage &#8212; SciKeras 0.12.0 documentation</title>
+    <title>Basic usage &#8212; SciKeras 0.13.0 documentation</title>
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../_static/insipid.css?v=b2d00be7" />
     <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=95b1b8af"></script>
+    <script src="../_static/documentation_options.js?v=d304bea3"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -128,11 +128,11 @@
           <div class="body" role="main">
             
 <a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Basic_Usage.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a><section id="Basic-usage">
-<h1>Basic usage<a class="headerlink" href="#Basic-usage" title="Permalink to this heading">¶</a></h1>
+<h1>Basic usage<a class="headerlink" href="#Basic-usage" title="Link to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">SciKeras</span></code> is designed to maximize interoperability between <code class="docutils literal notranslate"><span class="pre">sklearn</span></code> and <code class="docutils literal notranslate"><span class="pre">Keras/TensorFlow</span></code>. The aim is to keep 99% of the flexibility of <code class="docutils literal notranslate"><span class="pre">Keras</span></code> while being able to leverage most features of <code class="docutils literal notranslate"><span class="pre">sklearn</span></code>. Below, we show the basic usage of <code class="docutils literal notranslate"><span class="pre">SciKeras</span></code> and how it can be combined with <code class="docutils literal notranslate"><span class="pre">sklearn</span></code>.</p>
 <p>This notebook shows you how to use the basic functionality of <code class="docutils literal notranslate"><span class="pre">SciKeras</span></code>.</p>
 <section id="Table-of-contents">
-<h2>Table of contents<a class="headerlink" href="#Table-of-contents" title="Permalink to this heading">¶</a></h2>
+<h2>Table of contents<a class="headerlink" href="#Table-of-contents" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="#1.-Setup"><span class="std std-ref">1. Setup</span></a></p></li>
 <li><p><a class="reference internal" href="#2.-Training-a-classifier-and-making-predictions"><span class="std std-ref">2. Training a classifier and making predictions</span></a></p>
@@ -168,7 +168,7 @@
 </ul>
 </section>
 <section id="1.-Setup">
-<h2>1. Setup<a class="headerlink" href="#1.-Setup" title="Permalink to this heading">¶</a></h2>
+<h2>1. Setup<a class="headerlink" href="#1.-Setup" title="Link to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -198,15 +198,15 @@
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scikeras.wrappers</span> <span class="kn">import</span> <span class="n">KerasClassifier</span><span class="p">,</span> <span class="n">KerasRegressor</span>
-<span class="kn">from</span> <span class="nn">tensorflow</span> <span class="kn">import</span> <span class="n">keras</span>
+<span class="kn">import</span> <span class="nn">keras</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="2.-Training-a-classifier-and-making-predictions">
-<h2>2. Training a classifier and making predictions<a class="headerlink" href="#2.-Training-a-classifier-and-making-predictions" title="Permalink to this heading">¶</a></h2>
+<h2>2. Training a classifier and making predictions<a class="headerlink" href="#2.-Training-a-classifier-and-making-predictions" title="Link to this heading">¶</a></h2>
 <section id="2.1-A-toy-binary-classification-task">
-<h3>2.1 A toy binary classification task<a class="headerlink" href="#2.1-A-toy-binary-classification-task" title="Permalink to this heading">¶</a></h3>
+<h3>2.1 A toy binary classification task<a class="headerlink" href="#2.1-A-toy-binary-classification-task" title="Link to this heading">¶</a></h3>
 <p>We load a toy classification task from <code class="docutils literal notranslate"><span class="pre">sklearn</span></code>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -233,7 +233,7 @@
 </div>
 </section>
 <section id="2.2-Definition-of-the-Keras-classification-Model">
-<h3>2.2 Definition of the Keras classification Model<a class="headerlink" href="#2.2-Definition-of-the-Keras-classification-Model" title="Permalink to this heading">¶</a></h3>
+<h3>2.2 Definition of the Keras classification Model<a class="headerlink" href="#2.2-Definition-of-the-Keras-classification-Model" title="Link to this heading">¶</a></h3>
 <p>We define a vanilla neural network with.</p>
 <p>Because we are dealing with 2 classes, the output layer can be constructed in two different ways:</p>
 <ol class="arabic simple">
@@ -245,7 +245,7 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow</span> <span class="kn">import</span> <span class="n">keras</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">keras</span>
 
 
 <span class="k">def</span> <span class="nf">get_clf</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">hidden_layer_sizes</span><span class="p">,</span> <span class="n">dropout</span><span class="p">):</span>
@@ -263,7 +263,7 @@
 </div>
 </section>
 <section id="2.3-Defining-and-training-the-neural-net-classifier">
-<h3>2.3 Defining and training the neural net classifier<a class="headerlink" href="#2.3-Defining-and-training-the-neural-net-classifier" title="Permalink to this heading">¶</a></h3>
+<h3>2.3 Defining and training the neural net classifier<a class="headerlink" href="#2.3-Defining-and-training-the-neural-net-classifier" title="Link to this heading">¶</a></h3>
 <p>We use <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> because we’re dealing with a classifcation task. The first argument should be a callable returning a <code class="docutils literal notranslate"><span class="pre">Keras.Model</span></code>, in this case, <code class="docutils literal notranslate"><span class="pre">get_clf</span></code>. As additional arguments, we pass the number of loss function (required) and the optimizer, but the later is optional. We must also pass all of the arguments to <code class="docutils literal notranslate"><span class="pre">get_clf</span></code> as keyword arguments to <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> if they don’t have a default value in <code class="docutils literal notranslate"><span class="pre">get_clf</span></code>. Note that if you do not pass an argument to
 <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code>, it will not be avilable for hyperparameter tuning. Finally, we also pass <code class="docutils literal notranslate"><span class="pre">random_state=0</span></code> for reproducible results.</p>
 <div class="nbinput nblast docutils container">
@@ -291,18 +291,45 @@
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt; 1/32&lt;/span&gt; &lt;span class=”ansi-white-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;14s&lt;/span&gt; 483ms/step - loss: 1.0241</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{ 1/32} textcolor{ansi-white}{━━━━━━━━━━━━━━━━━━━━} textbf{14s} 483ms/step - loss: 1.0241</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m 1/32[0m [37m━━━━━━━━━━━━━━━━━━━━[0m [1m14s[0m 483ms/step - loss: 1.0241</p>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 1s 2ms/step - loss: 0.7226
-</pre></div></div>
+</div></div>
 </div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;32/32&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;1s&lt;/span&gt; 1ms/step - loss: 0.8276</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{32/32} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{1s} 1ms/step - loss: 0.8276</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m32/32[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 1ms/step - loss: 0.8276</p>
 <p>Also, as in <code class="docutils literal notranslate"><span class="pre">sklearn</span></code>, you may call <code class="docutils literal notranslate"><span class="pre">predict</span></code> or <code class="docutils literal notranslate"><span class="pre">predict_proba</span></code> on the fitted model.</p>
 </section>
 <section id="2.4-Making-predictions,-classification">
-<h3>2.4 Making predictions, classification<a class="headerlink" href="#2.4-Making-predictions,-classification" title="Permalink to this heading">¶</a></h3>
+<h3>2.4 Making predictions, classification<a class="headerlink" href="#2.4-Making-predictions,-classification" title="Link to this heading">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -316,17 +343,44 @@
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-1/1 [==============================] - 0s 115ms/step
-</pre></div></div>
+<div class="highlight"><pre></div></div>
 </div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;1/1&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 28ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{1/1} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 28ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 28ms/step</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+</div></div>
+</div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;1/1&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 29ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{1/1} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 29ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 29ms/step</p>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([0, 0, 0, 0, 0])
+array([0, 0, 0, 0, 1])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -342,29 +396,56 @@ array([0, 0, 0, 0, 0])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-1/1 [==============================] - 0s 24ms/step
-</pre></div></div>
+<div class="highlight"><pre></div></div>
 </div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;1/1&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 12ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{1/1} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 12ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 12ms/step</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+</div></div>
+</div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;1/1&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 13ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{1/1} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 13ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 13ms/step</p>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.65700656, 0.34299344],
-       [0.8111136 , 0.18888639],
-       [0.84136397, 0.15863602],
-       [0.82831264, 0.17168733],
-       [0.73239434, 0.2676057 ]], dtype=float32)
+array([[0.5187464 , 0.4812536 ],
+       [0.92429256, 0.07570746],
+       [0.72809464, 0.27190536],
+       [0.74796045, 0.25203955],
+       [0.4596368 , 0.5403632 ]], dtype=float32)
 </pre></div></div>
 </div>
 </section>
 </section>
 <section id="3-Training-a-regressor">
-<h2>3 Training a regressor<a class="headerlink" href="#3-Training-a-regressor" title="Permalink to this heading">¶</a></h2>
+<h2>3 Training a regressor<a class="headerlink" href="#3-Training-a-regressor" title="Link to this heading">¶</a></h2>
 <section id="3.1-A-toy-regression-task">
-<h3>3.1 A toy regression task<a class="headerlink" href="#3.1-A-toy-regression-task" title="Permalink to this heading">¶</a></h3>
+<h3>3.1 A toy regression task<a class="headerlink" href="#3.1-A-toy-regression-task" title="Link to this heading">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -389,7 +470,7 @@ array([[0.65700656, 0.34299344],
 </div>
 </section>
 <section id="3.2-Definition-of-the-Keras-regression-Model">
-<h3>3.2 Definition of the Keras regression Model<a class="headerlink" href="#3.2-Definition-of-the-Keras-regression-Model" title="Permalink to this heading">¶</a></h3>
+<h3>3.2 Definition of the Keras regression Model<a class="headerlink" href="#3.2-Definition-of-the-Keras-regression-Model" title="Link to this heading">¶</a></h3>
 <p>Again, define a vanilla neural network. The main difference is that the output layer always has a single unit and does not apply any nonlinearity.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
@@ -409,19 +490,21 @@ array([[0.65700656, 0.34299344],
 </div>
 </section>
 <section id="3.3-Defining-and-training-the-neural-net-regressor">
-<h3>3.3 Defining and training the neural net regressor<a class="headerlink" href="#3.3-Defining-and-training-the-neural-net-regressor" title="Permalink to this heading">¶</a></h3>
-<p>Training a regressor has nearly the same data flow as training a classifier. The differences include using <code class="docutils literal notranslate"><span class="pre">KerasRegressor</span></code> instead of <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> and adding <code class="docutils literal notranslate"><span class="pre">KerasRegressor.r_squared</span></code> as a metric. Most of the Scikit-learn regressors use the coefficient of determination or R^2 as a metric function, which measures correlation between the true labels and predicted labels.</p>
+<h3>3.3 Defining and training the neural net regressor<a class="headerlink" href="#3.3-Defining-and-training-the-neural-net-regressor" title="Link to this heading">¶</a></h3>
+<p>Training a regressor has nearly the same data flow as training a classifier. The differences include using <code class="docutils literal notranslate"><span class="pre">KerasRegressor</span></code> instead of <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> and adding <code class="docutils literal notranslate"><span class="pre">keras.metrics.R2Score</span></code> as a metric. Most of the Scikit-learn regressors use the coefficient of determination or R^2 as a metric function, which measures correlation between the true labels and predicted labels.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scikeras.wrappers</span> <span class="kn">import</span> <span class="n">KerasRegressor</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">import</span> <span class="nn">keras.models</span>
+<span class="kn">from</span> <span class="nn">scikeras.wrappers</span> <span class="kn">import</span> <span class="n">KerasRegressor</span>
 
 
 <span class="n">reg</span> <span class="o">=</span> <span class="n">KerasRegressor</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">get_reg</span><span class="p">,</span>
     <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">KerasRegressor</span><span class="o">.</span><span class="n">r_squared</span><span class="p">],</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">keras</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">R2Score</span><span class="p">],</span>
     <span class="n">hidden_layer_sizes</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,),</span>
     <span class="n">dropout</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
 <span class="p">)</span>
@@ -436,17 +519,44 @@ array([[0.65700656, 0.34299344],
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt; 1/32&lt;/span&gt; &lt;span class=”ansi-white-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;17s&lt;/span&gt; 566ms/step - loss: 33051.9492 - r2_score: -0.0444</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{ 1/32} textcolor{ansi-white}{━━━━━━━━━━━━━━━━━━━━} textbf{17s} 566ms/step - loss: 33051.9492 - r2_score: -0.0444</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m 1/32[0m [37m━━━━━━━━━━━━━━━━━━━━[0m [1m17s[0m 566ms/step - loss: 33051.9492 - r2_score: -0.0444</p>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 1s 2ms/step - loss: 45035.0000 - r_squared: -0.0654
-</pre></div></div>
+</div></div>
 </div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;32/32&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;1s&lt;/span&gt; 936us/step - loss: 45326.4727 - r2_score: -0.0044</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{32/32} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{1s} 936us/step - loss: 45326.4727 - r2_score: -0.0044</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m32/32[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 936us/step - loss: 45326.4727 - r2_score: -0.0044</p>
 </section>
 <section id="3.4-Making-predictions,-regression">
-<h3>3.4 Making predictions, regression<a class="headerlink" href="#3.4-Making-predictions,-regression" title="Permalink to this heading">¶</a></h3>
+<h3>3.4 Making predictions, regression<a class="headerlink" href="#3.4-Making-predictions,-regression" title="Link to this heading">¶</a></h3>
 <p>You may call <code class="docutils literal notranslate"><span class="pre">predict</span></code> or <code class="docutils literal notranslate"><span class="pre">predict_proba</span></code> on the fitted model. For regressions, both methods return the same value.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
@@ -461,24 +571,51 @@ array([[0.65700656, 0.34299344],
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-1/1 [==============================] - 0s 54ms/step
-</pre></div></div>
+<div class="highlight"><pre></div></div>
 </div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;1/1&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 28ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{1/1} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 28ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 28ms/step</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+</div></div>
+</div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;1/1&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 29ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{1/1} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 29ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 29ms/step</p>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([ 0.61392313, -0.9834194 , -0.45910716,  0.00430795, -0.53553396],
+array([-0.10957876, -1.0690885 ,  0.0862806 , -0.38353688, -0.11362437],
       dtype=float32)
 </pre></div></div>
 </div>
 </section>
 </section>
 <section id="4.-Saving-and-loading-a-model">
-<h2>4. Saving and loading a model<a class="headerlink" href="#4.-Saving-and-loading-a-model" title="Permalink to this heading">¶</a></h2>
+<h2>4. Saving and loading a model<a class="headerlink" href="#4.-Saving-and-loading-a-model" title="Link to this heading">¶</a></h2>
 <p>Save and load either the whole model by using pickle, or use Keras’ specialized save methods on the <code class="docutils literal notranslate"><span class="pre">KerasClassifier.model_</span></code> or <code class="docutils literal notranslate"><span class="pre">KerasRegressor.model_</span></code> attribute that is created after fitting. You will want to use Keras’ model saving utilities if any of the following apply:</p>
 <ol class="arabic simple">
 <li><p>You wish to save only the weights or only the training configuration of your model.</p></li>
@@ -487,7 +624,7 @@ array([ 0.61392313, -0.9834194 , -0.45910716,  0.00430795, -0.53553396],
 </ol>
 <p>For more information, see Keras’ <a class="reference external" href="https://www.tensorflow.org/guide/keras/save_and_serialize">saving documentation</a>.</p>
 <section id="4.1-Saving-the-whole-model">
-<h3>4.1 Saving the whole model<a class="headerlink" href="#4.1-Saving-the-whole-model" title="Permalink to this heading">¶</a></h3>
+<h3>4.1 Saving the whole model<a class="headerlink" href="#4.1-Saving-the-whole-model" title="Link to this heading">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
@@ -504,32 +641,51 @@ array([ 0.61392313, -0.9834194 , -0.45910716,  0.00430795, -0.53553396],
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.
-</pre></div></div>
+<div class="output_area docutils container">
+<div class="highlight"><pre></div></div>
 </div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;1/1&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 26ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{1/1} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 26ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 26ms/step</p>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1/1 [==============================] - 0s 56ms/step
-</pre></div></div>
+</div></div>
 </div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;1/1&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 27ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{1/1} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 27ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 27ms/step</p>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([ 0.61392313, -0.9834194 , -0.45910716,  0.00430795, -0.53553396],
+array([-0.10957876, -1.0690885 ,  0.0862806 , -0.38353688, -0.11362437],
       dtype=float32)
 </pre></div></div>
 </div>
 </section>
 <section id="4.2-Saving-using-Keras'-saving-methods">
-<h3>4.2 Saving using Keras’ saving methods<a class="headerlink" href="#4.2-Saving-using-Keras'-saving-methods" title="Permalink to this heading">¶</a></h3>
+<h3>4.2 Saving using Keras’ saving methods<a class="headerlink" href="#4.2-Saving-using-Keras'-saving-methods" title="Link to this heading">¶</a></h3>
 <p>This efficiently and safely saves the model to disk, including trained weights. You should use this method if you plan on sharing your saved models.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
@@ -537,7 +693,7 @@ array([ 0.61392313, -0.9834194 , -0.45910716,  0.00430795, -0.53553396],
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save to disk</span>
 <span class="n">pred_old</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_regr</span><span class="p">)</span>
-<span class="n">reg</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;/tmp/my_model&quot;</span><span class="p">)</span>  <span class="c1"># saves just the Keras model</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">model_</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;/tmp/my_model.keras&quot;</span><span class="p">)</span>  <span class="c1"># saves just the Keras model</span>
 </pre></div>
 </div>
 </div>
@@ -545,24 +701,43 @@ array([ 0.61392313, -0.9834194 , -0.45910716,  0.00430795, -0.53553396],
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-32/32 [==============================] - 0s 2ms/step
-</pre></div></div>
+<div class="highlight"><pre></div></div>
 </div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt; 1/32&lt;/span&gt; &lt;span class=”ansi-white-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 27ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{ 1/32} textcolor{ansi-white}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 27ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m 1/32[0m [37m━━━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 27ms/step</p>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area stderr docutils container">
+<div class="output_area docutils container">
 <div class="highlight"><pre>
-WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.
-</pre></div></div>
+</div></div>
 </div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;32/32&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 630us/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{32/32} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 630us/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m32/32[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 630us/step</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the model back into memory</span>
-<span class="n">new_reg_model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;/tmp/my_model&quot;</span><span class="p">)</span>
+<span class="n">new_reg_model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;/tmp/my_model.keras&quot;</span><span class="p">)</span>
 <span class="c1"># Now we need to instantiate a new SciKeras object</span>
 <span class="c1"># since we only saved the Keras model</span>
 <span class="n">reg_new</span> <span class="o">=</span> <span class="n">KerasRegressor</span><span class="p">(</span><span class="n">new_reg_model</span><span class="p">)</span>
@@ -573,18 +748,45 @@ WARNING:absl:Found untraced functions such as _update_step_xla while saving (sho
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt; 1/32&lt;/span&gt; &lt;span class=”ansi-white-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 28ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{ 1/32} textcolor{ansi-white}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 28ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m 1/32[0m [37m━━━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 28ms/step</p>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 0s 1ms/step
-</pre></div></div>
+</div></div>
 </div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;32/32&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 1ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{32/32} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 1ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m32/32[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 1ms/step</p>
 </section>
 </section>
 <section id="5.-Usage-with-an-sklearn-Pipeline">
-<h2>5. Usage with an sklearn Pipeline<a class="headerlink" href="#5.-Usage-with-an-sklearn-Pipeline" title="Permalink to this heading">¶</a></h2>
+<h2>5. Usage with an sklearn Pipeline<a class="headerlink" href="#5.-Usage-with-an-sklearn-Pipeline" title="Link to this heading">¶</a></h2>
 <p>It is possible to put the <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> inside an <code class="docutils literal notranslate"><span class="pre">sklearn</span> <span class="pre">Pipeline</span></code>, as you would with any <code class="docutils literal notranslate"><span class="pre">sklearn</span></code> classifier.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
@@ -604,19 +806,80 @@ WARNING:absl:Found untraced functions such as _update_step_xla while saving (sho
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt; 1/32&lt;/span&gt; &lt;span class=”ansi-white-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;19s&lt;/span&gt; 627ms/step - loss: 0.8366</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{ 1/32} textcolor{ansi-white}{━━━━━━━━━━━━━━━━━━━━} textbf{19s} 627ms/step - loss: 0.8366</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m 1/32[0m [37m━━━━━━━━━━━━━━━━━━━━[0m [1m19s[0m 627ms/step - loss: 0.8366</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+</div></div>
+</div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;32/32&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;1s&lt;/span&gt; 849us/step - loss: 0.7269</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{32/32} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{1s} 849us/step - loss: 0.7269</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m32/32[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 849us/step - loss: 0.7269</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt; 1/32&lt;/span&gt; &lt;span class=”ansi-white-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 28ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{ 1/32} textcolor{ansi-white}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 28ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m 1/32[0m [37m━━━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 28ms/step</p>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-32/32 [==============================] - 1s 2ms/step - loss: 0.7393
-32/32 [==============================] - 0s 1ms/step
-</pre></div></div>
+</div></div>
 </div>
+<dl>
+<dt>&lt;span class=”ansi-bold”&gt;32/32&lt;/span&gt; &lt;span class=”ansi-green-fg”&gt;━━━━━━━━━━━━━━━━━━━━&lt;/span&gt; &lt;span class=”ansi-bold”&gt;0s&lt;/span&gt; 1ms/step</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>textbf{32/32} textcolor{ansi-green}{━━━━━━━━━━━━━━━━━━━━} textbf{0s} 1ms/step</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>[1m32/32[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 1ms/step</p>
 <p>To save the whole pipeline, including the Keras model, use <code class="docutils literal notranslate"><span class="pre">pickle</span></code>.</p>
 </section>
 <section id="6.-Callbacks">
-<h2>6. Callbacks<a class="headerlink" href="#6.-Callbacks" title="Permalink to this heading">¶</a></h2>
+<h2>6. Callbacks<a class="headerlink" href="#6.-Callbacks" title="Link to this heading">¶</a></h2>
 <p>Adding a new callback to the model is straightforward. Below we define a threashold callback to avoid training past a certain accuracy. This a rudimentary for of <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/EarlyStopping">early stopping</a>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
@@ -706,25 +969,25 @@ Final accuracy: 0.8999999761581421
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Threashold reached; stopping training
-Trained 3 epochs
-Final accuracy: 0.949999988079071
+Trained 4 epochs
+Final accuracy: 0.8999999761581421
 </pre></div></div>
 </div>
 <p>For information on how to write custom callbacks, have a look at the <a class="reference external" href="https://nbviewer.jupyter.org/github/adriangb/scikeras/blob/master/notebooks/Advanced_Usage.ipynb">Advanced Usage</a> notebook.</p>
 </section>
 <section id="7.-Usage-with-sklearn-GridSearchCV">
-<h2>7. Usage with sklearn GridSearchCV<a class="headerlink" href="#7.-Usage-with-sklearn-GridSearchCV" title="Permalink to this heading">¶</a></h2>
+<h2>7. Usage with sklearn GridSearchCV<a class="headerlink" href="#7.-Usage-with-sklearn-GridSearchCV" title="Link to this heading">¶</a></h2>
 <section id="7.1-Special-prefixes">
-<h3>7.1 Special prefixes<a class="headerlink" href="#7.1-Special-prefixes" title="Permalink to this heading">¶</a></h3>
+<h3>7.1 Special prefixes<a class="headerlink" href="#7.1-Special-prefixes" title="Link to this heading">¶</a></h3>
 <p>SciKeras allows to direct access to all parameters passed to the wrapper constructors, including deeply nested routed parameters. This allows tunning of paramters like <code class="docutils literal notranslate"><span class="pre">hidden_layer_sizes</span></code> as well as <code class="docutils literal notranslate"><span class="pre">optimizer__learning_rate</span></code>.</p>
 <p>This is exactly the same logic that allows to access estimator parameters in <code class="docutils literal notranslate"><span class="pre">sklearn</span> <span class="pre">Pipeline</span></code>s and <code class="docutils literal notranslate"><span class="pre">FeatureUnion</span></code>s.</p>
 <p>This feature is useful in several ways. For one, it allows to set those parameters in the model definition. Furthermore, it allows you to set parameters in an <code class="docutils literal notranslate"><span class="pre">sklearn</span> <span class="pre">GridSearchCV</span></code> as shown below.</p>
-<p>To differentiate paramters like <code class="docutils literal notranslate"><span class="pre">callbacks</span></code> which are accepted by both <code class="docutils literal notranslate"><span class="pre">tf.keras.Model.fit</span></code> and <code class="docutils literal notranslate"><span class="pre">tf.keras.Model.predict</span></code> you can add a <code class="docutils literal notranslate"><span class="pre">fit__</span></code> or <code class="docutils literal notranslate"><span class="pre">predict__</span></code> routing suffix respectively. Similar, the <code class="docutils literal notranslate"><span class="pre">model__</span></code> prefix may be used to specify that a paramter is destined only for <code class="docutils literal notranslate"><span class="pre">get_clf</span></code>/<code class="docutils literal notranslate"><span class="pre">get_reg</span></code> (or whatever callable you pass as your <code class="docutils literal notranslate"><span class="pre">model</span></code> argument).</p>
+<p>To differentiate paramters like <code class="docutils literal notranslate"><span class="pre">callbacks</span></code> which are accepted by both <code class="docutils literal notranslate"><span class="pre">keras.Model.fit</span></code> and <code class="docutils literal notranslate"><span class="pre">keras.Model.predict</span></code> you can add a <code class="docutils literal notranslate"><span class="pre">fit__</span></code> or <code class="docutils literal notranslate"><span class="pre">predict__</span></code> routing suffix respectively. Similar, the <code class="docutils literal notranslate"><span class="pre">model__</span></code> prefix may be used to specify that a paramter is destined only for <code class="docutils literal notranslate"><span class="pre">get_clf</span></code>/<code class="docutils literal notranslate"><span class="pre">get_reg</span></code> (or whatever callable you pass as your <code class="docutils literal notranslate"><span class="pre">model</span></code> argument).</p>
 <p>For more information on parameter routing with special prefixes, see the <a class="reference external" href="https://www.adriangb.com/scikeras/stable/advanced.html#routed-parameters">Advanced Usage Docs</a></p>
 </section>
 <section id="7.2-Performing-a-grid-search">
-<h3>7.2 Performing a grid search<a class="headerlink" href="#7.2-Performing-a-grid-search" title="Permalink to this heading">¶</a></h3>
-<p>Below we show how to perform a grid search over the learning rate (<code class="docutils literal notranslate"><span class="pre">optimizer__lr</span></code>), the model’s number of hidden layers (<code class="docutils literal notranslate"><span class="pre">model__hidden_layer_sizes</span></code>), the model’s dropout rate (<code class="docutils literal notranslate"><span class="pre">model__dropout</span></code>).</p>
+<h3>7.2 Performing a grid search<a class="headerlink" href="#7.2-Performing-a-grid-search" title="Link to this heading">¶</a></h3>
+<p>Below we show how to perform a grid search over the learning rate (<code class="docutils literal notranslate"><span class="pre">optimizer__learning_rate</span></code>), the model’s number of hidden layers (<code class="docutils literal notranslate"><span class="pre">model__hidden_layer_sizes</span></code>), the model’s dropout rate (<code class="docutils literal notranslate"><span class="pre">model__dropout</span></code>).</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
@@ -736,7 +999,7 @@ Final accuracy: 0.949999988079071
     <span class="n">model</span><span class="o">=</span><span class="n">get_clf</span><span class="p">,</span>
     <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;binary_crossentropy&quot;</span><span class="p">,</span>
     <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;adam&quot;</span><span class="p">,</span>
-    <span class="n">optimizer__lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">optimizer__learning_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
     <span class="n">model__hidden_layer_sizes</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,),</span>
     <span class="n">model__dropout</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -750,7 +1013,7 @@ Final accuracy: 0.949999988079071
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;optimizer__lr&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
+    <span class="s1">&#39;optimizer__learning_rate&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
     <span class="s1">&#39;model__hidden_layer_sizes&#39;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">100</span><span class="p">,</span> <span class="p">),</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="p">)],</span>
     <span class="s1">&#39;model__dropout&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
 <span class="p">}</span>
@@ -776,63 +1039,85 @@ Fitting 5 folds for each of 8 candidates, totalling 40 fits
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fb6a5d994c0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fb6a5d994c0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fb6a5d99f70&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fb6a5d99f70&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f877dd564c0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f877dd564c0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f877dd56f70&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 5 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f877dd56f70&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fb6a5d28a60&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7fb6a5d28a60&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fb6a5c075e0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7fb6a5c075e0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f877dce5a60&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:5 out of the last 13 calls to &lt;function Model.make_train_function.&lt;locals&gt;.train_function at 0x7f877dce5a60&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f877dbc45e0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:tensorflow:6 out of the last 6 calls to &lt;function Model.make_predict_function.&lt;locals&gt;.predict_function at 0x7f877dbc45e0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
-WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` or use the legacy optimizer, e.g.,tf.keras.optimizers.legacy.Adam.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function TensorFlowTrainer.make_train_function.&lt;locals&gt;.one_step_on_iterator at 0x7f6056079a80&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function TensorFlowTrainer.make_predict_function.&lt;locals&gt;.one_step_on_data_distributed at 0x7f6055fdc180&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function TensorFlowTrainer.make_train_function.&lt;locals&gt;.one_step_on_iterator at 0x7f5959020720&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function TensorFlowTrainer.make_predict_function.&lt;locals&gt;.one_step_on_data_distributed at 0x7f59590c72e0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function TensorFlowTrainer.make_train_function.&lt;locals&gt;.one_step_on_iterator at 0x7f3aee6a1a80&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function TensorFlowTrainer.make_predict_function.&lt;locals&gt;.one_step_on_data_distributed at 0x7f3aee408180&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function TensorFlowTrainer.make_train_function.&lt;locals&gt;.one_step_on_iterator at 0x7fb578e18720&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function TensorFlowTrainer.make_train_function.&lt;locals&gt;.one_step_on_iterator at 0x7f6055e80ae0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:tensorflow:5 out of the last 5 calls to &lt;function TensorFlowTrainer.make_predict_function.&lt;locals&gt;.one_step_on_data_distributed at 0x7fb578ebf2e0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function TensorFlowTrainer.make_predict_function.&lt;locals&gt;.one_step_on_data_distributed at 0x7f6055d311c0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function TensorFlowTrainer.make_train_function.&lt;locals&gt;.one_step_on_iterator at 0x7f5958e0fc40&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function TensorFlowTrainer.make_predict_function.&lt;locals&gt;.one_step_on_data_distributed at 0x7f5958cf9120&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function TensorFlowTrainer.make_train_function.&lt;locals&gt;.one_step_on_iterator at 0x7f3aee4a8ae0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function TensorFlowTrainer.make_predict_function.&lt;locals&gt;.one_step_on_data_distributed at 0x7f3aee3591c0&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:tensorflow:5 out of the last 13 calls to &lt;function TensorFlowTrainer.make_train_function.&lt;locals&gt;.one_step_on_iterator at 0x7fb578c03c40&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:6 out of the last 6 calls to &lt;function TensorFlowTrainer.make_predict_function.&lt;locals&gt;.one_step_on_data_distributed at 0x7fb578ced120&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -840,7 +1125,7 @@ WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` o
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.72 {&#39;model__dropout&#39;: 0.5, &#39;model__hidden_layer_sizes&#39;: (50, 50), &#39;optimizer__lr&#39;: 0.1}
+0.85 {&#39;model__dropout&#39;: 0.5, &#39;model__hidden_layer_sizes&#39;: (50, 50), &#39;optimizer__learning_rate&#39;: 0.1}
 </pre></div></div>
 </div>
 <p>Of course, we could further nest the <code class="docutils literal notranslate"><span class="pre">KerasClassifier</span></code> within an <code class="docutils literal notranslate"><span class="pre">sklearn.pipeline.Pipeline</span></code>, in which case we just prefix the parameter by the name of the net (e.g. <code class="docutils literal notranslate"><span class="pre">clf__model__hidden_layer_sizes</span></code>).</p>
@@ -861,7 +1146,7 @@ WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` o
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../migration.html">Migrating from <code class="docutils literal notranslate"><span class="pre">tf.keras.wrappers.scikit_learn</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration.html">Migrating from <code class="docutils literal notranslate"><span class="pre">keras.wrappers.scikit_learn</span></code></a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Basic usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MLPClassifier_MLPRegressor.html">MLPClassifier and MLPRegressor in SciKeras</a></li>
@@ -914,7 +1199,7 @@ WARNING:absl:`lr` is deprecated in Keras optimizer, please use `learning_rate` o
 
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/notebooks/Basic_Usage.ipynb.txt" rel="nofollow">Show Source</a>.
     </footer>

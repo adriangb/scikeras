@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Migrating from tf.keras.wrappers.scikit_learn &#8212; SciKeras 0.12.0 documentation</title>
+    <title>Migrating from keras.wrappers.scikit_learn &#8212; SciKeras 0.13.0 documentation</title>
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/insipid.css?v=b2d00be7" />
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=95b1b8af"></script>
+    <script src="_static/documentation_options.js?v=d304bea3"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script defer src="_static/insipid.js"></script>
     <script defer src="_static/insipid-sidebar.js"></script>
@@ -60,8 +60,8 @@
             </button>
           </div>
           <div class="title">
-            <a class="parent" href="index.html" accesskey="U">SciKeras 0.12.0 documentation</a>
-            <a class="top" href="#">Migrating from <code class="docutils literal notranslate"><span class="pre">tf.keras.wrappers.scikit_learn</span></code></a>
+            <a class="parent" href="index.html" accesskey="U">SciKeras 0.13.0 documentation</a>
+            <a class="top" href="#">Migrating from <code class="docutils literal notranslate"><span class="pre">keras.wrappers.scikit_learn</span></code></a>
           </div>
           <div class="buttons">
             <button id="fullscreen-button" type="button" aria-hidden="true">
@@ -124,8 +124,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-<section id="migrating-from-tf-keras-wrappers-scikit-learn">
-<span id="migration"></span><h1>Migrating from <code class="docutils literal notranslate"><span class="pre">tf.keras.wrappers.scikit_learn</span></code><a class="headerlink" href="#migrating-from-tf-keras-wrappers-scikit-learn" title="Permalink to this heading">¶</a></h1>
+<section id="migrating-from-keras-wrappers-scikit-learn">
+<span id="migration"></span><h1>Migrating from <code class="docutils literal notranslate"><span class="pre">keras.wrappers.scikit_learn</span></code><a class="headerlink" href="#migrating-from-keras-wrappers-scikit-learn" title="Link to this heading">¶</a></h1>
 <nav class="contents local" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#why-switch-to-scikeras" id="id1">Why switch to SciKeras</a></p></li>
@@ -143,8 +143,8 @@
 </ul>
 </nav>
 <section id="why-switch-to-scikeras">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">Why switch to SciKeras</a><a class="headerlink" href="#why-switch-to-scikeras" title="Permalink to this heading">¶</a></h2>
-<p>SciKeras has several advantages over <code class="docutils literal notranslate"><span class="pre">tf.keras.wrappers.scikit_learn</span></code>:</p>
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Why switch to SciKeras</a><a class="headerlink" href="#why-switch-to-scikeras" title="Link to this heading">¶</a></h2>
+<p>SciKeras has several advantages over <code class="docutils literal notranslate"><span class="pre">keras.wrappers.scikit_learn</span></code>:</p>
 <ul class="simple">
 <li><p>Full compatibility with the Scikit-Learn API, including grid searches, ensembles, transformers, etc.</p></li>
 <li><p>Support for Functional and Subclassed Keras Models.</p></li>
@@ -157,15 +157,15 @@
 </ul>
 </section>
 <section id="changes-to-your-code">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">Changes to your code</a><a class="headerlink" href="#changes-to-your-code" title="Permalink to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Changes to your code</a><a class="headerlink" href="#changes-to-your-code" title="Link to this heading">¶</a></h2>
 <p>SciKeras is largely backwards compatible with the existing wrappers. For most cases, you can just change your import statement from:</p>
-<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- from tensorflow.keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor</span>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor</span>
 <span class="gi">+ from scikeras.wrappers import KerasClassifier, KerasRegressor</span>
 </pre></div>
 </div>
 <p>SciKeras does however have some backward incompatible changes:</p>
 <section id="fit-returns-self">
-<h3><a class="toc-backref" href="#id3" role="doc-backlink">Fit returns <code class="docutils literal notranslate"><span class="pre">self</span></code></a><a class="headerlink" href="#fit-returns-self" title="Permalink to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Fit returns <code class="docutils literal notranslate"><span class="pre">self</span></code></a><a class="headerlink" href="#fit-returns-self" title="Link to this heading">¶</a></h3>
 <p>In TensorFlow calling <code class="docutils literal notranslate"><span class="pre">fit</span></code> on wrappers returned a Keras <code class="docutils literal notranslate"><span class="pre">History</span></code> object, which held an attribute called <code class="docutils literal notranslate"><span class="pre">history</span></code> that is
 a dictionary with loss and metric names as keys and lists of recorded values for each epoch as the dictionary values.
 However, in SciKeras, <code class="docutils literal notranslate"><span class="pre">fit</span></code> now returns and instance of the estimator itself in order to conform to the Scikit-Learn API.
@@ -189,13 +189,13 @@ clf = KerasClassifier(get_model)
 </div>
 </section>
 <section id="score-return-r-2-by-default-for-regressors">
-<h3><a class="toc-backref" href="#id4" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">score()</span></code> return R^2 by default for regressors</a><a class="headerlink" href="#score-return-r-2-by-default-for-regressors" title="Permalink to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id4" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">score()</span></code> return R^2 by default for regressors</a><a class="headerlink" href="#score-return-r-2-by-default-for-regressors" title="Link to this heading">¶</a></h3>
 <p>Keras returns your model’s mean loss when <code class="docutils literal notranslate"><span class="pre">KerasRegressor.score()</span></code> is called.
 SciKeras, like most Scikit-Learn estimators, returns the coefficient of determination of the prediction (also known as R^2 score).
 This is however customizable.</p>
 </section>
 <section id="one-hot-encoding-of-targets-for-categorical-crossentropy-losses">
-<h3><a class="toc-backref" href="#id5" role="doc-backlink">One-hot encoding of targets for categorical crossentropy losses</a><a class="headerlink" href="#one-hot-encoding-of-targets-for-categorical-crossentropy-losses" title="Permalink to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">One-hot encoding of targets for categorical crossentropy losses</a><a class="headerlink" href="#one-hot-encoding-of-targets-for-categorical-crossentropy-losses" title="Link to this heading">¶</a></h3>
 <p>SciKeras will not longer implicitly inspect your Model’s loss function to determine if
 it needs to one-hot encode your target to match the loss function. Instead, you must explicitly
 pass your loss function to the constructor:</p>
@@ -204,7 +204,7 @@ pass your loss function to the constructor:</p>
 </div>
 </section>
 <section id="variable-keyword-arguments-in-fit-and-predict">
-<h3><a class="toc-backref" href="#id6" role="doc-backlink">Variable keyword arguments in fit and predict</a><a class="headerlink" href="#variable-keyword-arguments-in-fit-and-predict" title="Permalink to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Variable keyword arguments in fit and predict</a><a class="headerlink" href="#variable-keyword-arguments-in-fit-and-predict" title="Link to this heading">¶</a></h3>
 <p>Keras supports a variable keyword arguments (commonly referred to as <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>) for <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">predict</span></code>.
 Scikit-Learn on the other hand does not support these arguments, and using them is largely incompatible with the Scikit-Learn ecosystem.
 As a compromise, SciKeras supports these arguments, but we recommended that you set parameters using the constructor
@@ -231,7 +231,7 @@ This is much more compatible with the Scikit-Learn API.
 In fact, this is what Scikti-Learn does in the background for hyperparameter tuning.</p>
 </section>
 <section id="renaming-of-build-fn-to-model">
-<h3><a class="toc-backref" href="#id7" role="doc-backlink">Renaming of <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> to <code class="docutils literal notranslate"><span class="pre">model</span></code></a><a class="headerlink" href="#renaming-of-build-fn-to-model" title="Permalink to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Renaming of <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> to <code class="docutils literal notranslate"><span class="pre">model</span></code></a><a class="headerlink" href="#renaming-of-build-fn-to-model" title="Link to this heading">¶</a></h3>
 <p>SciKeras renamed the constructor argument <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> to <code class="docutils literal notranslate"><span class="pre">model</span></code>. In a future release,
 passing <code class="docutils literal notranslate"><span class="pre">build_fn</span></code> as a _keyword_ argument will raise a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>. Passing it as a positional
 argument remains unchanged. You can make the following change to future proof your code:</p>
@@ -241,7 +241,7 @@ argument remains unchanged. You can make the following change to future proof yo
 </div>
 </section>
 <section id="default-arguments-in-build-fn-model">
-<h3><a class="toc-backref" href="#id8" role="doc-backlink">Default arguments in build_fn/model</a><a class="headerlink" href="#default-arguments-in-build-fn-model" title="Permalink to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Default arguments in build_fn/model</a><a class="headerlink" href="#default-arguments-in-build-fn-model" title="Link to this heading">¶</a></h3>
 <p>SciKeras will no longer introspect your callable <cite>model</cite> for <em>user defined</em> parameters
 (the behavior for parameters like <code class="docutils literal notranslate"><span class="pre">optimizer</span></code> is unchanged).
 You must now “declare” them as keyword arguments to the constructor if you want them to be
@@ -260,7 +260,7 @@ tunable parameters (i.e. settable via <code class="docutils literal notranslate"
 necessary if you are doing hyperparameter tuning), you do not need to make any changes.</p>
 </section>
 <section id="only-scikit-learn-compatible-inputs-are-supported">
-<h3><a class="toc-backref" href="#id9" role="doc-backlink">Only Scikit-Learn compatible inputs are supported</a><a class="headerlink" href="#only-scikit-learn-compatible-inputs-are-supported" title="Permalink to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Only Scikit-Learn compatible inputs are supported</a><a class="headerlink" href="#only-scikit-learn-compatible-inputs-are-supported" title="Link to this heading">¶</a></h3>
 <p>In order to be compatible with all of the features of Scikit-Learn, SciKeras has to make some assumptions about the inputs.
 The main implication of this is that <strong>TensorFlow Dataset inputs are not supported</strong>.
 Instead, you will have to convert your inputs to a numpy array, Pandas dataframe or lists before passing them into SciKeras (or a Scikit-Learn pipeline/hyperparameter tuner wrapping it).</p>
@@ -281,7 +281,7 @@ Instead, you will have to convert your inputs to a numpy array, Pandas dataframe
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Migrating from <code class="docutils literal notranslate"><span class="pre">tf.keras.wrappers.scikit_learn</span></code></a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Migrating from <code class="docutils literal notranslate"><span class="pre">keras.wrappers.scikit_learn</span></code></a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#why-switch-to-scikeras">Why switch to SciKeras</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#changes-to-your-code">Changes to your code</a></li>
 </ul>
@@ -329,7 +329,7 @@ Instead, you will have to convert your inputs to a numpy array, Pandas dataframe
 
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="_sources/migration.rst.txt" rel="nofollow">Show Source</a>.
     </footer>

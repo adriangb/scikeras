@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Sparse Inputs &#8212; SciKeras 0.12.0 documentation</title>
+    <title>Sparse Inputs &#8212; SciKeras 0.13.0 documentation</title>
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../_static/insipid.css?v=b2d00be7" />
     <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=95b1b8af"></script>
+    <script src="../_static/documentation_options.js?v=d304bea3"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -128,11 +128,11 @@
           <div class="body" role="main">
             
 <a href="https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png">Run in Google Colab</a><section id="Sparse-Inputs">
-<h1>Sparse Inputs<a class="headerlink" href="#Sparse-Inputs" title="Permalink to this heading">¶</a></h1>
+<h1>Sparse Inputs<a class="headerlink" href="#Sparse-Inputs" title="Link to this heading">¶</a></h1>
 <p>SciKeras supports sparse inputs (<code class="docutils literal notranslate"><span class="pre">X</span></code>/features). You don’t have to do anything special for this to work, you can just pass a sparse matrix to <code class="docutils literal notranslate"><span class="pre">fit()</span></code>.</p>
 <p>In this notebook, we’ll demonstrate how this works and compare memory consumption of sparse inputs to dense inputs.</p>
 <section id="Setup">
-<h2>Setup<a class="headerlink" href="#Setup" title="Permalink to this heading">¶</a></h2>
+<h2>Setup<a class="headerlink" href="#Setup" title="Link to this heading">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -142,15 +142,44 @@
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Collecting memory_profiler
-  Downloading memory_profiler-0.61.0-py3-none-any.whl (31 kB)
-Requirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages (from memory_profiler) (5.9.5)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+  Downloading memory_profiler-0.61.0-py3-none-any.whl.metadata (20 kB)
+Requirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from memory_profiler) (5.9.8)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Downloading memory_profiler-0.61.0-py3-none-any.whl (31 kB)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
 Installing collected packages: memory_profiler
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
 Successfully installed memory_profiler-0.61.0
 </pre></div></div>
 </div>
@@ -187,13 +216,13 @@ Successfully installed memory_profiler-0.61.0
 <span class="kn">from</span> <span class="nn">scikeras.wrappers</span> <span class="kn">import</span> <span class="n">KerasRegressor</span>
 <span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">OneHotEncoder</span>
 <span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
-<span class="kn">from</span> <span class="nn">tensorflow</span> <span class="kn">import</span> <span class="n">keras</span>
+<span class="kn">import</span> <span class="nn">keras</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="Data">
-<h2>Data<a class="headerlink" href="#Data" title="Permalink to this heading">¶</a></h2>
+<h2>Data<a class="headerlink" href="#Data" title="Link to this heading">¶</a></h2>
 <p>The dataset we’ll be using is designed to demostrate a worst-case/best-case scenario for dense and sparse input features respectively. It consists of a single categorical feature with equal number of categories as rows. This means the one-hot encoded representation will require as many columns as it does rows, making it very ineffienct to store as a dense matrix but very efficient to store as a sparse matrix.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -208,7 +237,7 @@ Successfully installed memory_profiler-0.61.0
 </div>
 </section>
 <section id="Model">
-<h2>Model<a class="headerlink" href="#Model" title="Permalink to this heading">¶</a></h2>
+<h2>Model<a class="headerlink" href="#Model" title="Link to this heading">¶</a></h2>
 <p>The model here is nothing special, just a basic multilayer perceptron with one hidden layer.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
@@ -227,22 +256,22 @@ Successfully installed memory_profiler-0.61.0
 </div>
 </section>
 <section id="Pipelines">
-<h2>Pipelines<a class="headerlink" href="#Pipelines" title="Permalink to this heading">¶</a></h2>
-<p>Here is where it gets interesting. We make two Scikit-Learn pipelines that use <code class="docutils literal notranslate"><span class="pre">OneHotEncoder</span></code>: one that uses <code class="docutils literal notranslate"><span class="pre">sparse=False</span></code> to force a dense matrix as the output and another that uses <code class="docutils literal notranslate"><span class="pre">sparse=True</span></code> (the default).</p>
+<h2>Pipelines<a class="headerlink" href="#Pipelines" title="Link to this heading">¶</a></h2>
+<p>Here is where it gets interesting. We make two Scikit-Learn pipelines that use <code class="docutils literal notranslate"><span class="pre">OneHotEncoder</span></code>: one that uses <code class="docutils literal notranslate"><span class="pre">sparse_output=False</span></code> to force a dense matrix as the output and another that uses <code class="docutils literal notranslate"><span class="pre">sparse_output=True</span></code> (the default).</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dense_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span>
     <span class="p">[</span>
-        <span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">sparse_output</span><span class="o">=</span><span class="kc">False</span><span class="p">)),</span>
         <span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="n">KerasRegressor</span><span class="p">(</span><span class="n">get_clf</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
     <span class="p">]</span>
 <span class="p">)</span>
 
 <span class="n">sparse_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span>
     <span class="p">[</span>
-        <span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">sparse_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)),</span>
         <span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="n">KerasRegressor</span><span class="p">(</span><span class="n">get_clf</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
     <span class="p">]</span>
 <span class="p">)</span>
@@ -251,7 +280,7 @@ Successfully installed memory_profiler-0.61.0
 </div>
 </section>
 <section id="Benchmark">
-<h2>Benchmark<a class="headerlink" href="#Benchmark" title="Permalink to this heading">¶</a></h2>
+<h2>Benchmark<a class="headerlink" href="#Benchmark" title="Link to this heading">¶</a></h2>
 <p>Our benchmark will be to just train each one of these pipelines and measure peak memory consumption.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
@@ -261,21 +290,12 @@ Successfully installed memory_profiler-0.61.0
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-peak memory: 3566.34 MiB, increment: 3145.67 MiB
+peak memory: 5189.37 MiB, increment: 4669.04 MiB
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -286,26 +306,17 @@ peak memory: 3566.34 MiB, increment: 3145.67 MiB
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-peak memory: 673.56 MiB, increment: 89.82 MiB
+peak memory: 992.88 MiB, increment: 33.56 MiB
 </pre></div></div>
 </div>
 <p>You should see at least 100x more memory consumption <strong>increment</strong> in the dense pipeline.</p>
 <section id="Runtime">
-<h3>Runtime<a class="headerlink" href="#Runtime" title="Permalink to this heading">¶</a></h3>
+<h3>Runtime<a class="headerlink" href="#Runtime" title="Link to this heading">¶</a></h3>
 <p>Using sparse inputs can have a drastic impact on memory usage, but it often (not always) hurts overall runtime.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
@@ -315,35 +326,12 @@ peak memory: 673.56 MiB, increment: 89.82 MiB
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-1min 4s ± 16.1 s per loop (mean ± std. dev. of 7 runs, 1 loop each)
+34.8 s ± 9.56 s per loop (mean ± std. dev. of 7 runs, 1 loop each)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -354,46 +342,23 @@ peak memory: 673.56 MiB, increment: 89.82 MiB
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-24.4 s ± 3.02 s per loop (mean ± std. dev. of 7 runs, 1 loop each)
+13 s ± 1.41 s per loop (mean ± std. dev. of 7 runs, 1 loop each)
 </pre></div></div>
 </div>
 </section>
 </section>
 <section id="Tensorflow-Datasets">
-<h2>Tensorflow Datasets<a class="headerlink" href="#Tensorflow-Datasets" title="Permalink to this heading">¶</a></h2>
+<h2>Tensorflow Datasets<a class="headerlink" href="#Tensorflow-Datasets" title="Link to this heading">¶</a></h2>
 <p>Tensorflow provides a whole suite of functionality around the <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/data/Dataset">Dataset</a>. Datasets are lazily evaluated, can be sparse and minimize the transformations required to feed data into the model. They are <em>a lot</em> more performant and efficient at scale than using numpy datastructures, even sparse ones.</p>
 <p>SciKeras does not (and cannot) support Datasets directly because Scikit-Learn itself does not support them and SciKeras’ outwards API is Scikit-Learn’s API. You may want to explore breaking out of SciKeras and just using TensorFlow/Keras directly to see if Datasets can have a large impact for your use case.</p>
 </section>
 <section id="Bonus:-dtypes">
-<h2>Bonus: dtypes<a class="headerlink" href="#Bonus:-dtypes" title="Permalink to this heading">¶</a></h2>
+<h2>Bonus: dtypes<a class="headerlink" href="#Bonus:-dtypes" title="Link to this heading">¶</a></h2>
 <p>You might be able to save even more memory by changing the output dtype of <code class="docutils literal notranslate"><span class="pre">OneHotEncoder</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
@@ -401,7 +366,7 @@ peak memory: 673.56 MiB, increment: 89.82 MiB
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sparse_pipline_uint8</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span>
     <span class="p">[</span>
-        <span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">,</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">sparse_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)),</span>
         <span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="n">KerasRegressor</span><span class="p">(</span><span class="n">get_clf</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
     <span class="p">]</span>
 <span class="p">)</span>
@@ -416,21 +381,12 @@ peak memory: 673.56 MiB, increment: 89.82 MiB
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/runner/work/scikeras/scikeras/.venv/lib/python3.8/site-packages/sklearn/preprocessing/_encoders.py:975: FutureWarning: `sparse` was renamed to `sparse_output` in version 1.2 and will be removed in 1.4. `sparse_output` is ignored unless you leave `sparse` to its default value.
-  warnings.warn(
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-peak memory: 921.83 MiB, increment: 55.99 MiB
+peak memory: 1087.63 MiB, increment: 15.85 MiB
 </pre></div></div>
 </div>
 </section>
@@ -449,7 +405,7 @@ peak memory: 921.83 MiB, increment: 55.99 MiB
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../migration.html">Migrating from <code class="docutils literal notranslate"><span class="pre">tf.keras.wrappers.scikit_learn</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration.html">Migrating from <code class="docutils literal notranslate"><span class="pre">keras.wrappers.scikit_learn</span></code></a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Basic_Usage.html">Basic usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MLPClassifier_MLPRegressor.html">MLPClassifier and MLPRegressor in SciKeras</a></li>
@@ -502,7 +458,7 @@ peak memory: 921.83 MiB, increment: 55.99 MiB
 
     <footer role="contentinfo">
       &#169; Copyright 2020, SciKeras Developers.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/notebooks/sparse.ipynb.txt" rel="nofollow">Show Source</a>.
     </footer>
