@@ -1,0 +1,2581 @@
+{
+ "cells": [
+  {
+   "cell_type": "raw",
+   "id": "f09d373a",
+   "metadata": {},
+   "source": [
+    "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Benchmarks.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "58b86c86",
+   "metadata": {},
+   "source": [
+    "# SciKeras Benchmarks\n",
+    "\n",
+    "SciKeras wraps Keras Models, but does not alter their performance since all of the heavy lifting still happens within Keras/Tensorflow. In this notebook, we compare the performance and accuracy of a pure-Keras Model to the same model wrapped in SciKeras.\n",
+    "\n",
+    "## Table of contents\n",
+    "\n",
+    "* [1. Setup](#1.-Setup)\n",
+    "* [2. Dataset](#2.-Dataset)\n",
+    "* [3. Define Keras Model](#3.-Define-Keras-Model)\n",
+    "* [4. Keras benchmarks](#4.-Keras-benchmarks)\n",
+    "* [5. SciKeras benchmark](#5.-SciKeras-benchmark)\n",
+    "\n",
+    "## 1. Setup"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "fcd48d08",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T00:35:34.431535Z",
+     "iopub.status.busy": "2024-04-10T00:35:34.430918Z",
+     "iopub.status.idle": "2024-04-10T00:36:19.596930Z",
+     "shell.execute_reply": "2024-04-10T00:36:19.596136Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: scikeras[tensorflow] in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (0.13.0)\r\n",
+      "Collecting keras@ git+https://github.com/keras-team/keras.git@master (from scikeras[tensorflow])\r\n",
+      "  Cloning https://github.com/keras-team/keras.git (to revision master) to /tmp/pip-install-0w2bek3u/keras_54e12500f5b1440f9b43c336b55db983\r\n",
+      "  Running command git clone --filter=blob:none --quiet https://github.com/keras-team/keras.git /tmp/pip-install-0w2bek3u/keras_54e12500f5b1440f9b43c336b55db983\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Resolved https://github.com/keras-team/keras.git to commit 8961e3f20f6d879ecb2ed2699a6fff14688b4129\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Installing build dependencies ... \u001b[?25l-"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b \b\\"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b \b|"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b \bdone\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[?25h  Getting requirements to build wheel ... \u001b[?25l-\b \bdone\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[?25h  Installing backend dependencies ... \u001b[?25l-"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b \b\\"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b \bdone\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[?25h  Preparing metadata (pyproject.toml) ... \u001b[?25l-"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b \bdone\r\n",
+      "\u001b[?25hRequirement already satisfied: scikit-learn>=1.4.1.post1 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from scikeras[tensorflow]) (1.4.2)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting tensorflow>=2.16.1 (from scikeras[tensorflow])\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Downloading tensorflow-2.16.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.3 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: numpy>=1.19.5 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from scikit-learn>=1.4.1.post1->scikeras[tensorflow]) (1.26.4)\r\n",
+      "Requirement already satisfied: scipy>=1.6.0 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from scikit-learn>=1.4.1.post1->scikeras[tensorflow]) (1.13.0)\r\n",
+      "Requirement already satisfied: joblib>=1.2.0 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from scikit-learn>=1.4.1.post1->scikeras[tensorflow]) (1.4.0)\r\n",
+      "Requirement already satisfied: threadpoolctl>=2.0.0 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from scikit-learn>=1.4.1.post1->scikeras[tensorflow]) (3.4.0)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: absl-py>=1.0.0 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from tensorflow>=2.16.1->scikeras[tensorflow]) (2.1.0)\r\n",
+      "Collecting astunparse>=1.6.0 (from tensorflow>=2.16.1->scikeras[tensorflow])\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Downloading astunparse-1.6.3-py2.py3-none-any.whl.metadata (4.4 kB)\r\n",
+      "Collecting flatbuffers>=23.5.26 (from tensorflow>=2.16.1->scikeras[tensorflow])\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Downloading flatbuffers-24.3.25-py2.py3-none-any.whl.metadata (850 bytes)\r\n",
+      "Collecting gast!=0.5.0,!=0.5.1,!=0.5.2,>=0.2.1 (from tensorflow>=2.16.1->scikeras[tensorflow])\r\n",
+      "  Downloading gast-0.5.4-py3-none-any.whl.metadata (1.3 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting google-pasta>=0.1.1 (from tensorflow>=2.16.1->scikeras[tensorflow])\r\n",
+      "  Downloading google_pasta-0.2.0-py3-none-any.whl.metadata (814 bytes)\r\n",
+      "Requirement already satisfied: h5py>=3.10.0 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from tensorflow>=2.16.1->scikeras[tensorflow]) (3.10.0)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting libclang>=13.0.0 (from tensorflow>=2.16.1->scikeras[tensorflow])\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Downloading libclang-18.1.1-py2.py3-none-manylinux2010_x86_64.whl.metadata (5.2 kB)\r\n",
+      "Requirement already satisfied: ml-dtypes~=0.3.1 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from tensorflow>=2.16.1->scikeras[tensorflow]) (0.3.2)\r\n",
+      "Collecting opt-einsum>=2.3.2 (from tensorflow>=2.16.1->scikeras[tensorflow])\r\n",
+      "  Downloading opt_einsum-3.3.0-py3-none-any.whl.metadata (6.5 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: packaging in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from tensorflow>=2.16.1->scikeras[tensorflow]) (24.0)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting protobuf!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5,<5.0.0dev,>=3.20.3 (from tensorflow>=2.16.1->scikeras[tensorflow])\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Downloading protobuf-4.25.3-cp37-abi3-manylinux2014_x86_64.whl.metadata (541 bytes)\r\n",
+      "Requirement already satisfied: requests<3,>=2.21.0 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from tensorflow>=2.16.1->scikeras[tensorflow]) (2.31.0)\r\n",
+      "Requirement already satisfied: setuptools in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from tensorflow>=2.16.1->scikeras[tensorflow]) (69.2.0)\r\n",
+      "Requirement already satisfied: six>=1.12.0 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from tensorflow>=2.16.1->scikeras[tensorflow]) (1.16.0)\r\n",
+      "Collecting termcolor>=1.1.0 (from tensorflow>=2.16.1->scikeras[tensorflow])\r\n",
+      "  Downloading termcolor-2.4.0-py3-none-any.whl.metadata (6.1 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: typing-extensions>=3.6.6 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from tensorflow>=2.16.1->scikeras[tensorflow]) (4.11.0)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting wrapt>=1.11.0 (from tensorflow>=2.16.1->scikeras[tensorflow])\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Downloading wrapt-1.16.0-cp312-cp312-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting grpcio<2.0,>=1.24.3 (from tensorflow>=2.16.1->scikeras[tensorflow])\r\n",
+      "  Downloading grpcio-1.62.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.0 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting tensorboard<2.17,>=2.16 (from tensorflow>=2.16.1->scikeras[tensorflow])\r\n",
+      "  Downloading tensorboard-2.16.2-py3-none-any.whl.metadata (1.6 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: rich in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from keras@ git+https://github.com/keras-team/keras.git@master->scikeras[tensorflow]) (13.7.1)\r\n",
+      "Requirement already satisfied: namex in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from keras@ git+https://github.com/keras-team/keras.git@master->scikeras[tensorflow]) (0.0.7)\r\n",
+      "Requirement already satisfied: optree in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from keras@ git+https://github.com/keras-team/keras.git@master->scikeras[tensorflow]) (0.11.0)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting wheel<1.0,>=0.23.0 (from astunparse>=1.6.0->tensorflow>=2.16.1->scikeras[tensorflow])\r\n",
+      "  Using cached wheel-0.43.0-py3-none-any.whl.metadata (2.2 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: charset-normalizer<4,>=2 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from requests<3,>=2.21.0->tensorflow>=2.16.1->scikeras[tensorflow]) (3.3.2)\r\n",
+      "Requirement already satisfied: idna<4,>=2.5 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from requests<3,>=2.21.0->tensorflow>=2.16.1->scikeras[tensorflow]) (3.6)\r\n",
+      "Requirement already satisfied: urllib3<3,>=1.21.1 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from requests<3,>=2.21.0->tensorflow>=2.16.1->scikeras[tensorflow]) (2.2.1)\r\n",
+      "Requirement already satisfied: certifi>=2017.4.17 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from requests<3,>=2.21.0->tensorflow>=2.16.1->scikeras[tensorflow]) (2024.2.2)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting markdown>=2.6.8 (from tensorboard<2.17,>=2.16->tensorflow>=2.16.1->scikeras[tensorflow])\r\n",
+      "  Downloading Markdown-3.6-py3-none-any.whl.metadata (7.0 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting tensorboard-data-server<0.8.0,>=0.7.0 (from tensorboard<2.17,>=2.16->tensorflow>=2.16.1->scikeras[tensorflow])\r\n",
+      "  Downloading tensorboard_data_server-0.7.2-py3-none-manylinux_2_31_x86_64.whl.metadata (1.1 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting werkzeug>=1.0.1 (from tensorboard<2.17,>=2.16->tensorflow>=2.16.1->scikeras[tensorflow])\r\n",
+      "  Downloading werkzeug-3.0.2-py3-none-any.whl.metadata (4.1 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: markdown-it-py>=2.2.0 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from rich->keras@ git+https://github.com/keras-team/keras.git@master->scikeras[tensorflow]) (3.0.0)\r\n",
+      "Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from rich->keras@ git+https://github.com/keras-team/keras.git@master->scikeras[tensorflow]) (2.17.2)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: mdurl~=0.1 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from markdown-it-py>=2.2.0->rich->keras@ git+https://github.com/keras-team/keras.git@master->scikeras[tensorflow]) (0.1.2)\r\n",
+      "Requirement already satisfied: MarkupSafe>=2.1.1 in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from werkzeug>=1.0.1->tensorboard<2.17,>=2.16->tensorflow>=2.16.1->scikeras[tensorflow]) (2.1.5)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading tensorflow-2.16.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (589.9 MB)\r\n",
+      "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/589.9 MB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.1/589.9 MB\u001b[0m \u001b[31m4.1 MB/s\u001b[0m eta \u001b[36m0:02:26\u001b[0m\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.7/589.9 MB\u001b[0m \u001b[31m9.6 MB/s\u001b[0m eta \u001b[36m0:01:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m2.7/589.9 MB\u001b[0m \u001b[31m25.5 MB/s\u001b[0m eta \u001b[36m0:00:24\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m4.9/589.9 MB\u001b[0m \u001b[31m35.2 MB/s\u001b[0m eta \u001b[36m0:00:17\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m8.7/589.9 MB\u001b[0m \u001b[31m49.8 MB/s\u001b[0m eta \u001b[36m0:00:12\u001b[0m\r",
+      "\u001b[2K   \u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m13.2/589.9 MB\u001b[0m \u001b[31m102.5 MB/s\u001b[0m eta \u001b[36m0:00:06\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m16.5/589.9 MB\u001b[0m \u001b[31m109.5 MB/s\u001b[0m eta \u001b[36m0:00:06\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m20.0/589.9 MB\u001b[0m \u001b[31m106.3 MB/s\u001b[0m eta \u001b[36m0:00:06\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m23.7/589.9 MB\u001b[0m \u001b[31m99.9 MB/s\u001b[0m eta \u001b[36m0:00:06\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m27.2/589.9 MB\u001b[0m \u001b[31m101.4 MB/s\u001b[0m eta \u001b[36m0:00:06\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m31.5/589.9 MB\u001b[0m \u001b[31m108.3 MB/s\u001b[0m eta \u001b[36m0:00:06\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m35.9/589.9 MB\u001b[0m \u001b[31m122.9 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m40.8/589.9 MB\u001b[0m \u001b[31m127.4 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m45.3/589.9 MB\u001b[0m \u001b[31m129.5 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m49.8/589.9 MB\u001b[0m \u001b[31m130.1 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m53.9/589.9 MB\u001b[0m \u001b[31m121.5 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m58.6/589.9 MB\u001b[0m \u001b[31m126.4 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m62.5/589.9 MB\u001b[0m \u001b[31m119.7 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m67.3/589.9 MB\u001b[0m \u001b[31m126.3 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m72.9/589.9 MB\u001b[0m \u001b[31m148.2 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m77.8/589.9 MB\u001b[0m \u001b[31m149.5 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m81.7/589.9 MB\u001b[0m \u001b[31m126.9 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m86.1/589.9 MB\u001b[0m \u001b[31m115.3 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m90.9/589.9 MB\u001b[0m \u001b[31m128.1 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m93.9/589.9 MB\u001b[0m \u001b[31m113.5 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m97.6/589.9 MB\u001b[0m \u001b[31m107.7 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m102.3/589.9 MB\u001b[0m \u001b[31m121.0 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m107.2/589.9 MB\u001b[0m \u001b[31m138.4 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m112.4/589.9 MB\u001b[0m \u001b[31m141.6 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m117.9/589.9 MB\u001b[0m \u001b[31m154.0 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m123.1/589.9 MB\u001b[0m \u001b[31m152.2 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m128.8/589.9 MB\u001b[0m \u001b[31m155.6 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m134.2/589.9 MB\u001b[0m \u001b[31m159.2 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m139.9/589.9 MB\u001b[0m \u001b[31m159.5 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m144.8/589.9 MB\u001b[0m \u001b[31m152.2 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m147.7/589.9 MB\u001b[0m \u001b[31m118.1 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m150.8/589.9 MB\u001b[0m \u001b[31m100.5 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m153.9/589.9 MB\u001b[0m \u001b[31m85.8 MB/s\u001b[0m eta \u001b[36m0:00:06\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m159.4/589.9 MB\u001b[0m \u001b[31m117.5 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m163.9/589.9 MB\u001b[0m \u001b[31m138.7 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m167.3/589.9 MB\u001b[0m \u001b[31m119.1 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m171.7/589.9 MB\u001b[0m \u001b[31m110.0 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m176.6/589.9 MB\u001b[0m \u001b[31m123.0 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m181.4/589.9 MB\u001b[0m \u001b[31m136.0 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m184.8/589.9 MB\u001b[0m \u001b[31m119.8 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m188.1/589.9 MB\u001b[0m \u001b[31m104.4 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m191.6/589.9 MB\u001b[0m \u001b[31m96.1 MB/s\u001b[0m eta \u001b[36m0:00:05\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m195.8/589.9 MB\u001b[0m \u001b[31m105.8 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m200.2/589.9 MB\u001b[0m \u001b[31m120.2 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m204.5/589.9 MB\u001b[0m \u001b[31m120.9 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m208.9/589.9 MB\u001b[0m \u001b[31m120.6 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m213.1/589.9 MB\u001b[0m \u001b[31m119.5 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m216.8/589.9 MB\u001b[0m \u001b[31m112.3 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m221.1/589.9 MB\u001b[0m \u001b[31m110.6 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m226.6/589.9 MB\u001b[0m \u001b[31m131.4 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m232.2/589.9 MB\u001b[0m \u001b[31m162.6 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m237.5/589.9 MB\u001b[0m \u001b[31m158.4 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m242.6/589.9 MB\u001b[0m \u001b[31m151.8 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m247.7/589.9 MB\u001b[0m \u001b[31m146.1 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m251.5/589.9 MB\u001b[0m \u001b[31m127.8 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m255.4/589.9 MB\u001b[0m \u001b[31m115.7 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m258.9/589.9 MB\u001b[0m \u001b[31m103.1 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m262.4/589.9 MB\u001b[0m \u001b[31m105.1 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m268.2/589.9 MB\u001b[0m \u001b[31m130.0 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m272.5/589.9 MB\u001b[0m \u001b[31m140.6 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m275.4/589.9 MB\u001b[0m \u001b[31m111.4 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m279.9/589.9 MB\u001b[0m \u001b[31m109.7 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m284.7/589.9 MB\u001b[0m \u001b[31m127.7 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m290.1/589.9 MB\u001b[0m \u001b[31m146.0 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m295.5/589.9 MB\u001b[0m \u001b[31m158.8 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m300.9/589.9 MB\u001b[0m \u001b[31m158.4 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m305.0/589.9 MB\u001b[0m \u001b[31m138.0 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m307.6/589.9 MB\u001b[0m \u001b[31m108.9 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m310.6/589.9 MB\u001b[0m \u001b[31m93.6 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m314.2/589.9 MB\u001b[0m \u001b[31m89.7 MB/s\u001b[0m eta \u001b[36m0:00:04\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m318.2/589.9 MB\u001b[0m \u001b[31m101.8 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m321.6/589.9 MB\u001b[0m \u001b[31m103.2 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m324.7/589.9 MB\u001b[0m \u001b[31m99.3 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m328.2/589.9 MB\u001b[0m \u001b[31m93.0 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m332.5/589.9 MB\u001b[0m \u001b[31m101.5 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m337.4/589.9 MB\u001b[0m \u001b[31m125.7 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m341.2/589.9 MB\u001b[0m \u001b[31m128.8 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m345.4/589.9 MB\u001b[0m \u001b[31m115.3 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━\u001b[0m \u001b[32m351.2/589.9 MB\u001b[0m \u001b[31m138.9 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━\u001b[0m \u001b[32m356.4/589.9 MB\u001b[0m \u001b[31m161.2 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━\u001b[0m \u001b[32m360.9/589.9 MB\u001b[0m \u001b[31m140.7 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━\u001b[0m \u001b[32m366.6/589.9 MB\u001b[0m \u001b[31m144.9 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━\u001b[0m \u001b[32m371.7/589.9 MB\u001b[0m \u001b[31m156.1 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━\u001b[0m \u001b[32m376.7/589.9 MB\u001b[0m \u001b[31m145.6 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━\u001b[0m \u001b[32m382.1/589.9 MB\u001b[0m \u001b[31m152.8 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━\u001b[0m \u001b[32m385.4/589.9 MB\u001b[0m \u001b[31m127.8 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━\u001b[0m \u001b[32m389.1/589.9 MB\u001b[0m \u001b[31m111.4 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━\u001b[0m \u001b[32m392.0/589.9 MB\u001b[0m \u001b[31m95.0 MB/s\u001b[0m eta \u001b[36m0:00:03\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━\u001b[0m \u001b[32m396.2/589.9 MB\u001b[0m \u001b[31m104.3 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━\u001b[0m \u001b[32m399.8/589.9 MB\u001b[0m \u001b[31m103.2 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━\u001b[0m \u001b[32m403.8/589.9 MB\u001b[0m \u001b[31m109.8 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━\u001b[0m \u001b[32m409.4/589.9 MB\u001b[0m \u001b[31m129.7 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━\u001b[0m \u001b[32m414.5/589.9 MB\u001b[0m \u001b[31m151.0 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━\u001b[0m \u001b[32m418.3/589.9 MB\u001b[0m \u001b[31m122.4 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━\u001b[0m \u001b[32m423.4/589.9 MB\u001b[0m \u001b[31m123.9 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━\u001b[0m \u001b[32m426.6/589.9 MB\u001b[0m \u001b[31m114.1 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━\u001b[0m \u001b[32m431.7/589.9 MB\u001b[0m \u001b[31m115.4 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━\u001b[0m \u001b[32m436.5/589.9 MB\u001b[0m \u001b[31m139.1 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━\u001b[0m \u001b[32m441.2/589.9 MB\u001b[0m \u001b[31m138.4 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━\u001b[0m \u001b[32m445.5/589.9 MB\u001b[0m \u001b[31m124.5 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━\u001b[0m \u001b[32m450.9/589.9 MB\u001b[0m \u001b[31m135.3 MB/s\u001b[0m eta \u001b[36m0:00:02\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━\u001b[0m \u001b[32m456.2/589.9 MB\u001b[0m \u001b[31m156.3 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━\u001b[0m \u001b[32m461.7/589.9 MB\u001b[0m \u001b[31m158.0 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━\u001b[0m \u001b[32m467.2/589.9 MB\u001b[0m \u001b[31m161.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━\u001b[0m \u001b[32m472.7/589.9 MB\u001b[0m \u001b[31m160.1 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━\u001b[0m \u001b[32m478.2/589.9 MB\u001b[0m \u001b[31m162.6 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━\u001b[0m \u001b[32m481.9/589.9 MB\u001b[0m \u001b[31m134.8 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━\u001b[0m \u001b[32m487.1/589.9 MB\u001b[0m \u001b[31m130.3 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━\u001b[0m \u001b[32m492.7/589.9 MB\u001b[0m \u001b[31m152.1 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━\u001b[0m \u001b[32m497.1/589.9 MB\u001b[0m \u001b[31m135.3 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━\u001b[0m \u001b[32m501.3/589.9 MB\u001b[0m \u001b[31m124.7 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━\u001b[0m \u001b[32m505.2/589.9 MB\u001b[0m \u001b[31m121.4 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━\u001b[0m \u001b[32m510.0/589.9 MB\u001b[0m \u001b[31m124.8 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━\u001b[0m \u001b[32m515.2/589.9 MB\u001b[0m \u001b[31m139.7 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━\u001b[0m \u001b[32m519.9/589.9 MB\u001b[0m \u001b[31m139.2 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━\u001b[0m \u001b[32m524.1/589.9 MB\u001b[0m \u001b[31m127.9 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━\u001b[0m \u001b[32m529.6/589.9 MB\u001b[0m \u001b[31m140.8 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━\u001b[0m \u001b[32m535.2/589.9 MB\u001b[0m \u001b[31m162.8 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━\u001b[0m \u001b[32m540.8/589.9 MB\u001b[0m \u001b[31m165.6 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━\u001b[0m \u001b[32m546.4/589.9 MB\u001b[0m \u001b[31m165.2 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━\u001b[0m \u001b[32m552.0/589.9 MB\u001b[0m \u001b[31m167.0 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━\u001b[0m \u001b[32m557.6/589.9 MB\u001b[0m \u001b[31m164.3 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━\u001b[0m \u001b[32m561.6/589.9 MB\u001b[0m \u001b[31m138.3 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━\u001b[0m \u001b[32m566.5/589.9 MB\u001b[0m \u001b[31m132.2 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━\u001b[0m \u001b[32m571.9/589.9 MB\u001b[0m \u001b[31m151.1 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m \u001b[32m577.2/589.9 MB\u001b[0m \u001b[31m155.8 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m582.4/589.9 MB\u001b[0m \u001b[31m155.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m585.0/589.9 MB\u001b[0m \u001b[31m151.4 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m585.0/589.9 MB\u001b[0m \u001b[31m151.4 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m585.5/589.9 MB\u001b[0m \u001b[31m67.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m69.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m589.9/589.9 MB\u001b[0m \u001b[31m1.9 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25h"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading astunparse-1.6.3-py2.py3-none-any.whl (12 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading flatbuffers-24.3.25-py2.py3-none-any.whl (26 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading gast-0.5.4-py3-none-any.whl (19 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading google_pasta-0.2.0-py3-none-any.whl (57 kB)\r\n",
+      "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/57.5 kB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m57.5/57.5 kB\u001b[0m \u001b[31m18.9 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25hDownloading grpcio-1.62.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (5.5 MB)\r\n",
+      "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/5.5 MB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m1.9/5.5 MB\u001b[0m \u001b[31m57.7 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m5.5/5.5 MB\u001b[0m \u001b[31m88.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m5.5/5.5 MB\u001b[0m \u001b[31m64.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25hDownloading libclang-18.1.1-py2.py3-none-manylinux2010_x86_64.whl (24.5 MB)\r\n",
+      "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/24.5 MB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m4.5/24.5 MB\u001b[0m \u001b[31m134.4 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m8.5/24.5 MB\u001b[0m \u001b[31m124.9 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m\u001b[90m━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m13.5/24.5 MB\u001b[0m \u001b[31m136.5 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━\u001b[0m \u001b[32m17.1/24.5 MB\u001b[0m \u001b[31m126.2 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━\u001b[0m \u001b[32m20.0/24.5 MB\u001b[0m \u001b[31m107.9 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m24.3/24.5 MB\u001b[0m \u001b[31m104.7 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m24.5/24.5 MB\u001b[0m \u001b[31m101.9 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m24.5/24.5 MB\u001b[0m \u001b[31m101.9 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m24.5/24.5 MB\u001b[0m \u001b[31m60.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25hDownloading opt_einsum-3.3.0-py3-none-any.whl (65 kB)\r\n",
+      "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/65.5 kB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m65.5/65.5 kB\u001b[0m \u001b[31m2.1 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25hDownloading protobuf-4.25.3-cp37-abi3-manylinux2014_x86_64.whl (294 kB)\r\n",
+      "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/294.6 kB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m294.6/294.6 kB\u001b[0m \u001b[31m61.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25h"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading tensorboard-2.16.2-py3-none-any.whl (5.5 MB)\r\n",
+      "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/5.5 MB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━\u001b[0m \u001b[32m5.1/5.5 MB\u001b[0m \u001b[31m163.2 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m5.5/5.5 MB\u001b[0m \u001b[31m102.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25hDownloading termcolor-2.4.0-py3-none-any.whl (7.7 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading wrapt-1.16.0-cp312-cp312-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (87 kB)\r\n",
+      "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/87.3 kB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m87.3/87.3 kB\u001b[0m \u001b[31m27.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25hDownloading Markdown-3.6-py3-none-any.whl (105 kB)\r\n",
+      "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/105.4 kB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m105.4/105.4 kB\u001b[0m \u001b[31m31.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25h"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading tensorboard_data_server-0.7.2-py3-none-manylinux_2_31_x86_64.whl (6.6 MB)\r\n",
+      "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/6.6 MB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m\u001b[90m━━━━━━━━━━━━━\u001b[0m \u001b[32m4.4/6.6 MB\u001b[0m \u001b[31m132.0 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[91m╸\u001b[0m \u001b[32m6.6/6.6 MB\u001b[0m \u001b[31m124.7 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m6.6/6.6 MB\u001b[0m \u001b[31m91.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25h"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading werkzeug-3.0.2-py3-none-any.whl (226 kB)\r\n",
+      "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/226.8 kB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m\r",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m226.8/226.8 kB\u001b[0m \u001b[31m48.1 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25hUsing cached wheel-0.43.0-py3-none-any.whl (65 kB)\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Installing collected packages: libclang, flatbuffers, wrapt, wheel, werkzeug, termcolor, tensorboard-data-server, protobuf, opt-einsum, markdown, grpcio, google-pasta, gast, tensorboard, astunparse, tensorflow\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Successfully installed astunparse-1.6.3 flatbuffers-24.3.25 gast-0.5.4 google-pasta-0.2.0 grpcio-1.62.1 libclang-18.1.1 markdown-3.6 opt-einsum-3.3.0 protobuf-4.25.3 tensorboard-2.16.2 tensorboard-data-server-0.7.2 tensorflow-2.16.1 termcolor-2.4.0 werkzeug-3.0.2 wheel-0.43.0 wrapt-1.16.0\r\n"
+     ]
+    }
+   ],
+   "source": [
+    "try:\n",
+    "    import scikeras\n",
+    "except ImportError:\n",
+    "    !python -m pip install scikeras[tensorflow]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4dc10707",
+   "metadata": {},
+   "source": [
+    "Silence TensorFlow logging to keep output succinct."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "080605e4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T00:36:19.600376Z",
+     "iopub.status.busy": "2024-04-10T00:36:19.599798Z",
+     "iopub.status.idle": "2024-04-10T00:36:21.782984Z",
+     "shell.execute_reply": "2024-04-10T00:36:21.782181Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "from tensorflow import get_logger\n",
+    "get_logger().setLevel('ERROR')\n",
+    "warnings.filterwarnings(\"ignore\", message=\"Setting the random state for TF\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "6732b1ff",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T00:36:21.786739Z",
+     "iopub.status.busy": "2024-04-10T00:36:21.786058Z",
+     "iopub.status.idle": "2024-04-10T00:36:23.031181Z",
+     "shell.execute_reply": "2024-04-10T00:36:23.030495Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from scikeras.wrappers import KerasClassifier, KerasRegressor\n",
+    "import keras"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8b8e1dc7",
+   "metadata": {},
+   "source": [
+    "## 2. Dataset\n",
+    "\n",
+    "We will be using the MNIST dataset available within Keras."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "1dfa67c0",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T00:36:23.034363Z",
+     "iopub.status.busy": "2024-04-10T00:36:23.034011Z",
+     "iopub.status.idle": "2024-04-10T00:36:23.501955Z",
+     "shell.execute_reply": "2024-04-10T00:36:23.501263Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "\u001b[1m       0/11490434\u001b[0m \u001b[37m━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[1m0s\u001b[0m 0s/step"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "\u001b[1m 6291456/11490434\u001b[0m \u001b[32m━━━━━━━━━━\u001b[0m\u001b[37m━━━━━━━━━━\u001b[0m \u001b[1m0s\u001b[0m 0us/step"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "\u001b[1m11490434/11490434\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 0us/step\n"
+     ]
+    }
+   ],
+   "source": [
+    "(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()\n",
+    "# Scale images to the [0, 1] range\n",
+    "x_train = x_train.astype(\"float32\") / 255\n",
+    "x_test = x_test.astype(\"float32\") / 255\n",
+    "# Make sure images have shape (28, 28, 1)\n",
+    "x_train = np.expand_dims(x_train, -1)\n",
+    "x_test = np.expand_dims(x_test, -1)\n",
+    "# Reduce dataset size for faster benchmarks\n",
+    "x_train, y_train = x_train[:2000], y_train[:2000]\n",
+    "x_test, y_test = x_test[:500], y_test[:500]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b6a53f9b",
+   "metadata": {},
+   "source": [
+    "## 3. Define Keras Model\n",
+    "\n",
+    "Next we will define our Keras model (adapted from [keras.io](https://keras.io/examples/vision/mnist_convnet/)):"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "d9c62736",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T00:36:23.504719Z",
+     "iopub.status.busy": "2024-04-10T00:36:23.504492Z",
+     "iopub.status.idle": "2024-04-10T00:36:23.509054Z",
+     "shell.execute_reply": "2024-04-10T00:36:23.508412Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "num_classes = 10\n",
+    "input_shape = (28, 28, 1)\n",
+    "\n",
+    "\n",
+    "def get_model():\n",
+    "    model = keras.Sequential(\n",
+    "        [\n",
+    "            keras.Input(input_shape),\n",
+    "            keras.layers.Conv2D(32, kernel_size=(3, 3), activation=\"relu\"),\n",
+    "            keras.layers.MaxPooling2D(pool_size=(2, 2)),\n",
+    "            keras.layers.Conv2D(64, kernel_size=(3, 3), activation=\"relu\"),\n",
+    "            keras.layers.MaxPooling2D(pool_size=(2, 2)),\n",
+    "            keras.layers.Flatten(),\n",
+    "            keras.layers.Dropout(0.5),\n",
+    "            keras.layers.Dense(num_classes, activation=\"softmax\"),\n",
+    "        ]\n",
+    "    )\n",
+    "    model.compile(\n",
+    "        loss=\"sparse_categorical_crossentropy\", optimizer=\"adam\"\n",
+    "    )\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e7d18d1a",
+   "metadata": {},
+   "source": [
+    "## 4. Keras benchmarks"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "f086f12e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T00:36:23.511701Z",
+     "iopub.status.busy": "2024-04-10T00:36:23.511509Z",
+     "iopub.status.idle": "2024-04-10T00:36:23.514662Z",
+     "shell.execute_reply": "2024-04-10T00:36:23.514021Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "fit_kwargs = {\"batch_size\": 128, \"validation_split\": 0.1, \"verbose\": 0, \"epochs\": 5}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "b1fad08a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T00:36:23.517261Z",
+     "iopub.status.busy": "2024-04-10T00:36:23.516711Z",
+     "iopub.status.idle": "2024-04-10T00:36:23.520058Z",
+     "shell.execute_reply": "2024-04-10T00:36:23.519480Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.metrics import accuracy_score\n",
+    "from scikeras.utils.random_state import tensorflow_random_state"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "9336a926",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T00:36:23.522207Z",
+     "iopub.status.busy": "2024-04-10T00:36:23.522013Z",
+     "iopub.status.idle": "2024-04-10T00:36:27.582897Z",
+     "shell.execute_reply": "2024-04-10T00:36:27.582202Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Training time: 3.82\n",
+      "\r",
+      "\u001b[1m 1/16\u001b[0m \u001b[32m━\u001b[0m\u001b[37m━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[1m1s\u001b[0m 71ms/step"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "\u001b[1m16/16\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 5ms/step "
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\r",
+      "\u001b[1m16/16\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 5ms/step\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Accuracy: 0.89\n"
+     ]
+    }
+   ],
+   "source": [
+    "from time import time\n",
+    "\n",
+    "with tensorflow_random_state(seed=0):  # we force a TF random state to be able to compare accuracy\n",
+    "    model = get_model()\n",
+    "    start = time()\n",
+    "    model.fit(x_train, y_train, **fit_kwargs)\n",
+    "    print(f\"Training time: {time()-start:.2f}\")\n",
+    "    y_pred = np.argmax(model.predict(x_test), axis=1)\n",
+    "print(f\"Accuracy: {accuracy_score(y_test, y_pred)}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8458aae3",
+   "metadata": {},
+   "source": [
+    "## 5. SciKeras benchmark"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "28e91a11",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T00:36:27.585280Z",
+     "iopub.status.busy": "2024-04-10T00:36:27.585045Z",
+     "iopub.status.idle": "2024-04-10T00:36:27.588302Z",
+     "shell.execute_reply": "2024-04-10T00:36:27.587649Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "clf = KerasClassifier(\n",
+    "    model=get_model,\n",
+    "    random_state=0,\n",
+    "    **fit_kwargs\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "58e9e0bb",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-04-10T00:36:27.590476Z",
+     "iopub.status.busy": "2024-04-10T00:36:27.590285Z",
+     "iopub.status.idle": "2024-04-10T00:36:31.693041Z",
+     "shell.execute_reply": "2024-04-10T00:36:31.692447Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Training time: 3.93\n",
+      "Accuracy: 0.89\n"
+     ]
+    }
+   ],
+   "source": [
+    "start = time()\n",
+    "clf.fit(x_train, y_train)\n",
+    "print(f\"Training time: {time()-start:.2f}\")\n",
+    "y_pred = clf.predict(x_test)\n",
+    "print(f\"Accuracy: {accuracy_score(y_test, y_pred)}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7fa015d9",
+   "metadata": {},
+   "source": [
+    "As you can see, the overhead for SciKeras is <1 sec, and the accuracy is identical."
+   ]
+  }
+ ],
+ "metadata": {
+  "jupytext": {
+   "formats": "ipynb,md"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.2"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
