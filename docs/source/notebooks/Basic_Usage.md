@@ -186,6 +186,7 @@ Training a regressor has nearly the same data flow as training a classifier. The
 
 ```python
 import keras
+import keras.models
 from scikeras.wrappers import KerasRegressor
 
 
@@ -362,7 +363,7 @@ For more information on parameter routing with special prefixes, see the [Advanc
 
 ### 7.2 Performing a grid search
 
-Below we show how to perform a grid search over the learning rate (`optimizer__lr`), the model's number of hidden layers (`model__hidden_layer_sizes`), the model's dropout rate (`model__dropout`).
+Below we show how to perform a grid search over the learning rate (`optimizer__learning_rate`), the model's number of hidden layers (`model__hidden_layer_sizes`), the model's dropout rate (`model__dropout`).
 
 ```python
 from sklearn.model_selection import GridSearchCV
@@ -372,7 +373,7 @@ clf = KerasClassifier(
     model=get_clf,
     loss="binary_crossentropy",
     optimizer="adam",
-    optimizer__lr=0.1,
+    optimizer__learning_rate=0.1,
     model__hidden_layer_sizes=(100,),
     model__dropout=0.5,
     verbose=False,
@@ -383,7 +384,7 @@ clf = KerasClassifier(
 
 ```python
 params = {
-    'optimizer__lr': [0.05, 0.1],
+    'optimizer__learning_rate': [0.05, 0.1],
     'model__hidden_layer_sizes': [(100, ), (50, 50, )],
     'model__dropout': [0, 0.5],
 }
