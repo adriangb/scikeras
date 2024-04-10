@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.11.4
+      jupytext_version: 1.16.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -50,7 +50,7 @@ warnings.filterwarnings("ignore", message="Setting the random state for TF")
 ```python
 import numpy as np
 from scikeras.wrappers import KerasClassifier, KerasRegressor
-from tensorflow import keras
+import keras
 ```
 
 ## 2. Dataset

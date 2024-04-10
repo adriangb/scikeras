@@ -3,7 +3,7 @@ Welcome to SciKeras's documentation!
 
 The goal of scikeras is to make it possible to use Keras/TensorFlow with sklearn. 
 This is achieved by providing a wrapper around Keras that has an Scikit-Learn interface.
-SciKeras is the successor to ``tf.keras.wrappers.scikit_learn``, and offers many
+SciKeras is the successor to ``keras.wrappers.scikit_learn``, and offers many
 improvements over the TensorFlow version of the wrappers. See :ref:`Migration<Migration>` for a more details.
 
 SciKeras tries to make things easy for you while staying out of your way.

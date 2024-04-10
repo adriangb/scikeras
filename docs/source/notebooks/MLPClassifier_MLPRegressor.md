@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.11.4
+      jupytext_version: 1.16.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -58,7 +58,7 @@ warnings.filterwarnings("ignore", message="Setting the random state for TF")
 ```python
 import numpy as np
 from scikeras.wrappers import KerasClassifier, KerasRegressor
-from tensorflow import keras
+import keras
 ```
 
 ## 2. Defining the Keras Model
@@ -81,7 +81,7 @@ from typing import Dict, Iterable, Any
 
 def get_clf_model(meta: Dict[str, Any]):
     model = keras.Sequential()
-    inp = keras.layers.Input(shape=(meta["n_features_in_"]))
+    inp = keras.layers.Input(shape=(meta["n_features_in_"],))
     model.add(inp)
     return model
 ```
@@ -93,7 +93,7 @@ Multilayer perceptrons are generally composed of an input layer, an output layer
 ```python
 def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any]):
     model = keras.Sequential()
-    inp = keras.layers.Input(shape=(meta["n_features_in_"]))
+    inp = keras.layers.Input(shape=(meta["n_features_in_"],))
     model.add(inp)
     for hidden_layer_size in hidden_layer_sizes:
         layer = keras.layers.Dense(hidden_layer_size, activation="relu")
@@ -112,7 +112,7 @@ The main complication arises from determining which one to use. Like with the in
 ```python
 def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any]):
     model = keras.Sequential()
-    inp = keras.layers.Input(shape=(meta["n_features_in_"]))
+    inp = keras.layers.Input(shape=(meta["n_features_in_"],))
     model.add(inp)
     for hidden_layer_size in hidden_layer_sizes:
         layer = keras.layers.Dense(hidden_layer_size, activation="relu")
@@ -139,7 +139,7 @@ Like the output layer, the loss must match the type of classification task. Gene
 ```python
 def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any]):
     model = keras.Sequential()
-    inp = keras.layers.Input(shape=(meta["n_features_in_"]))
+    inp = keras.layers.Input(shape=(meta["n_features_in_"],))
     model.add(inp)
     for hidden_layer_size in hidden_layer_sizes:
         layer = keras.layers.Dense(hidden_layer_size, activation="relu")
@@ -165,7 +165,7 @@ At this point, we have a valid, compiled model. However if we want to be able to
 ```python
 def get_clf_model(hidden_layer_sizes: Iterable[int], meta: Dict[str, Any], compile_kwargs: Dict[str, Any]):
     model = keras.Sequential()
-    inp = keras.layers.Input(shape=(meta["n_features_in_"]))
+    inp = keras.layers.Input(shape=(meta["n_features_in_"],))
     model.add(inp)
     for hidden_layer_size in hidden_layer_sizes:
         layer = keras.layers.Dense(hidden_layer_size, activation="relu")
@@ -274,7 +274,7 @@ class MLPClassifier(KerasClassifier):
 
     def _keras_build_fn(self, compile_kwargs: Dict[str, Any]):
         model = keras.Sequential()
-        inp = keras.layers.Input(shape=(self.n_features_in_))
+        inp = keras.layers.Input(shape=(self.n_features_in_,))
         model.add(inp)
         for hidden_layer_size in self.hidden_layer_sizes:
             layer = keras.layers.Dense(hidden_layer_size, activation="relu")
@@ -328,7 +328,7 @@ class MLPRegressor(KerasRegressor):
 
     def _keras_build_fn(self, compile_kwargs: Dict[str, Any]):
         model = keras.Sequential()
-        inp = keras.layers.Input(shape=(self.n_features_in_))
+        inp = keras.layers.Input(shape=(self.n_features_in_,))
         model.add(inp)
         for hidden_layer_size in self.hidden_layer_sizes:
             layer = keras.layers.Dense(hidden_layer_size, activation="relu")

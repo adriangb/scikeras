@@ -1,10 +1,9 @@
 import inspect
-from types import FunctionType
 from typing import Any, Callable, Dict, Iterable, Mapping, Sequence, Type, Union
 
-from tensorflow.keras import losses as losses_mod
-from tensorflow.keras import metrics as metrics_mod
-from tensorflow.keras import optimizers as optimizers_mod
+from keras import losses as losses_mod
+from keras import metrics as metrics_mod
+from keras import optimizers as optimizers_mod
 
 DIGITS = frozenset(str(i) for i in range(10))
 
@@ -105,7 +104,10 @@ def unflatten_params(items, params, base_params=None):
         kwargs = {k: v for k, v in args_and_kwargs.items() if k[0] not in DIGITS}
         args = [(int(k), v) for k, v in args_and_kwargs.items() if k not in kwargs]
         args = (v for _, v in sorted(args))  # sorts by key / arg num
-        return item(*args, **kwargs)
+        try:
+            return item(*args, **kwargs)
+        except Exception as e:
+            raise e
     if isinstance(items, (list, tuple)):
         iter_type_ = type(items)
         res = []
@@ -173,10 +175,7 @@ def get_metric_class(
 
 
 def get_loss_class_function_or_string(loss: str) -> Union[losses_mod.Loss, Callable]:
-    got = losses_mod.get(loss)
-    if type(got) == FunctionType:
-        return got
-    return type(got)  # a class, e.g. if loss="BinaryCrossentropy"
+    return losses_mod.get(loss)
 
 
 def try_to_convert_strings_to_classes(

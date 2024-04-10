@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
 
       - name: Update packages
         run: |
@@ -33,15 +33,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
-        tensorflow-version: ["2.12.0"]
+        python-version: ["3.9", "3.10", "3.11"]
+        tensorflow-version: ["2.16.1"]
       fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -75,7 +75,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -93,8 +93,8 @@ jobs:
       - name: Install Nightly Versions
         if: always()
         run: |
-          poetry run python -m pip install -U tf-nightly
           poetry run python -m pip install -U scipy
+          poetry run python -m pip install -U git+https://github.com/keras-team/keras.git
           poetry run python -m pip install -U --pre --extra-index https://pypi.anaconda.org/scipy-wheels-nightly/simple scikit-learn
 
       - name: Test with pytest
@@ -111,15 +111,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tf-version: [2.12.0]
-        python-version: ["3.8", "3.9"]
-        sklearn-version: [1.0.0]
+        tf-version: ["2.16.1"]
+        python-version: ["3.9"]
+        sklearn-version: ["1.4.1.post1"]
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -149,15 +149,15 @@ jobs:
     strategy:
       matrix:
         os: [MacOS, Windows]  # test all OSs except Ubuntu, which is already running other tests
-        python-version: ["3.8", "3.11"]  # test only the two extremes of supported Python versions
-        tensorflow-version: ["2.12.0"]  # test only the two extremes of supported TF versions
+        python-version: ["3.9", "3.11"]  # test only the two extremes of supported Python versions
+        tensorflow-version: ["2.16.1"]  # test only the two extremes of supported TF versions
       fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 

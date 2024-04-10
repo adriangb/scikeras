@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.14.0
+      jupytext_version: 1.16.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -55,7 +55,7 @@ import numpy as np
 from scikeras.wrappers import KerasRegressor
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import Pipeline
-from tensorflow import keras
+import keras
 ```
 
 ## Data
@@ -89,19 +89,19 @@ def get_clf(meta) -> keras.Model:
 ## Pipelines
 
 Here is where it gets interesting.
-We make two Scikit-Learn pipelines that use `OneHotEncoder`: one that uses `sparse=False` to force a dense matrix as the output and another that uses `sparse=True` (the default).
+We make two Scikit-Learn pipelines that use `OneHotEncoder`: one that uses `sparse_output=False` to force a dense matrix as the output and another that uses `sparse_output=True` (the default).
 
 ```python
 dense_pipeline = Pipeline(
     [
-        ("encoder", OneHotEncoder(sparse=False)),
+        ("encoder", OneHotEncoder(sparse_output=False)),
         ("model", KerasRegressor(get_clf, loss="mse", epochs=5, verbose=False))
     ]
 )
 
 sparse_pipeline = Pipeline(
     [
-        ("encoder", OneHotEncoder(sparse=True)),
+        ("encoder", OneHotEncoder(sparse_output=True)),
         ("model", KerasRegressor(get_clf, loss="mse", epochs=5, verbose=False))
     ]
 )
@@ -153,7 +153,7 @@ You might be able to save even more memory by changing the output dtype of `OneH
 ```python
 sparse_pipline_uint8 = Pipeline(
     [
-        ("encoder", OneHotEncoder(sparse=True, dtype=np.uint8)),
+        ("encoder", OneHotEncoder(sparse_output=True, dtype=np.uint8)),
         ("model", KerasRegressor(get_clf, loss="mse", epochs=5, verbose=False))
     ]
 )

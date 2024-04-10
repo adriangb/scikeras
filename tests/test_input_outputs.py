@@ -3,9 +3,11 @@ from itertools import chain
 from typing import Any, Callable, Dict
 from unittest.mock import patch
 
+import keras
 import numpy as np
 import pytest
-import tensorflow as tf
+from keras.layers import Concatenate, Dense, Input
+from keras.models import Model
 from sklearn.base import BaseEstimator
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
@@ -14,8 +16,6 @@ from sklearn.multioutput import (
 )
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
-from tensorflow.keras.layers import Concatenate, Dense, Input
-from tensorflow.keras.models import Model
 
 from scikeras.wrappers import BaseWrapper, KerasClassifier, KerasRegressor
 
@@ -230,7 +230,7 @@ def single_output_binary_sigmoid():
             X=X,
             y=y_,
             X_expected_dtype_keras=X.dtype,
-            y_expected_dtype_keras=tf.keras.backend.floatx(),
+            y_expected_dtype_keras=keras.backend.floatx(),
             min_score=0.95,
             scorer=accuracy_score,
         )
@@ -252,7 +252,7 @@ def single_output_binary_softmax():
             X=X,
             y=y_,
             X_expected_dtype_keras=X.dtype,
-            y_expected_dtype_keras=tf.keras.backend.floatx(),
+            y_expected_dtype_keras=keras.backend.floatx(),
             min_score=0.95,
             scorer=accuracy_score,
         )
@@ -275,7 +275,7 @@ def single_output_multiclass_sparse():
             X=X,
             y=y_,
             X_expected_dtype_keras=X.dtype,
-            y_expected_dtype_keras=tf.keras.backend.floatx(),
+            y_expected_dtype_keras=keras.backend.floatx(),
             min_score=0.95,
             scorer=accuracy_score,
         )
@@ -286,7 +286,7 @@ def single_output_multiclass_one_hot():
     X = y.reshape(-1, 1)
     # For compatibility with Keras, accept one-hot-encoded inputs
     # with categorical_crossentropy loss
-    y = OneHotEncoder(sparse=False).fit_transform(y.reshape(-1, 1))
+    y = OneHotEncoder(sparse_output=False).fit_transform(y.reshape(-1, 1))
     sklearn_est = MLPClassifier(**mlp_kwargs)
     scikeras_est = KerasClassifier(
         create_model("softmax", [3]), **scikeras_kwargs, loss="categorical_crossentropy"
@@ -299,7 +299,7 @@ def single_output_multiclass_one_hot():
             X=X,
             y=y_,
             X_expected_dtype_keras=X.dtype,
-            y_expected_dtype_keras=tf.keras.backend.floatx(),
+            y_expected_dtype_keras=keras.backend.floatx(),
             min_score=0.95,
             scorer=accuracy_score,
         )
@@ -502,11 +502,11 @@ def test_output_shapes_and_dtypes_against_sklearn_reg(test_data: TestParams):
     assert y_out_scikeras.shape == y_out_sklearn.shape
     # Check dtype
     # By default, KerasRegressor (or rather it's default target_encoder)
-    # always returns tf.keras.backend.floatx(). This is similar to sklearn, which always
+    # always returns keras.backend.floatx(). This is similar to sklearn, which always
     # returns float64, except that we avoid a pointless conversion from
     # float32 -> float64 that would just be adding noise if TF is using float32
     # internally (which is usually the case).
-    assert y_out_scikeras.dtype.name == tf.keras.backend.floatx()
+    assert y_out_scikeras.dtype.name == keras.backend.floatx()
     scikeras_score = test_data.scorer(y_test, y_out_scikeras)
     assert scikeras_score >= test_data.min_score
 
@@ -535,7 +535,7 @@ def test_input_dtype_conversion(X_dtype, est):
     def check_dtypes(*args, **kwargs):
         x = kwargs["x"]
         if X_dtype == "object":
-            assert x.dtype == tf.keras.backend.floatx()
+            assert x.dtype == keras.backend.floatx()
         else:
             assert x.dtype == X_dtype
         return fit_orig(*args, **kwargs)

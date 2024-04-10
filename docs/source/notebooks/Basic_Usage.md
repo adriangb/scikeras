@@ -66,7 +66,7 @@ warnings.filterwarnings("ignore", message="Setting the random state for TF")
 ```python
 import numpy as np
 from scikeras.wrappers import KerasClassifier, KerasRegressor
-from tensorflow import keras
+import keras
 ```
 
 ## 2. Training a classifier and making predictions
@@ -100,7 +100,7 @@ do for binary classification. The second option is usually reserved for when
 you have >2 classes.
 
 ```python
-from tensorflow import keras
+import keras
 
 
 def get_clf(meta, hidden_layer_sizes, dropout):
@@ -182,16 +182,18 @@ def get_reg(meta, hidden_layer_sizes, dropout):
 
 ### 3.3 Defining and training the neural net regressor
 
-Training a regressor has nearly the same data flow as training a classifier. The differences include using `KerasRegressor` instead of `KerasClassifier` and adding `KerasRegressor.r_squared` as a metric. Most of the Scikit-learn regressors use the coefficient of determination or R^2 as a metric function, which measures correlation between the true labels and predicted labels.
+Training a regressor has nearly the same data flow as training a classifier. The differences include using `KerasRegressor` instead of `KerasClassifier` and adding `keras.metrics.R2Score` as a metric. Most of the Scikit-learn regressors use the coefficient of determination or R^2 as a metric function, which measures correlation between the true labels and predicted labels.
 
 ```python
+import keras
+import keras.models
 from scikeras.wrappers import KerasRegressor
 
 
 reg = KerasRegressor(
     model=get_reg,
     loss="mse",
-    metrics=[KerasRegressor.r_squared],
+    metrics=[keras.metrics.R2Score],
     hidden_layer_sizes=(100,),
     dropout=0.5,
 )
@@ -239,12 +241,12 @@ You should use this method if you plan on sharing your saved models.
 ```python
 # Save to disk
 pred_old = reg.predict(X_regr)
-reg.model_.save("/tmp/my_model")  # saves just the Keras model
+reg.model_.save("/tmp/my_model.keras")  # saves just the Keras model
 ```
 
 ```python
 # Load the model back into memory
-new_reg_model = keras.models.load_model("/tmp/my_model")
+new_reg_model = keras.saving.load_model("/tmp/my_model.keras")
 # Now we need to instantiate a new SciKeras object
 # since we only saved the Keras model
 reg_new = KerasRegressor(new_reg_model)
@@ -355,13 +357,13 @@ This is exactly the same logic that allows to access estimator parameters in `sk
 
 This feature is useful in several ways. For one, it allows to set those parameters in the model definition. Furthermore, it allows you to set parameters in an `sklearn GridSearchCV` as shown below.
 
-To differentiate paramters like `callbacks` which are accepted by both `tf.keras.Model.fit` and `tf.keras.Model.predict` you can add a `fit__` or `predict__` routing suffix respectively. Similar, the `model__` prefix may be used to specify that a paramter is destined only for `get_clf`/`get_reg` (or whatever callable you pass as your `model` argument).
+To differentiate paramters like `callbacks` which are accepted by both `keras.Model.fit` and `keras.Model.predict` you can add a `fit__` or `predict__` routing suffix respectively. Similar, the `model__` prefix may be used to specify that a paramter is destined only for `get_clf`/`get_reg` (or whatever callable you pass as your `model` argument).
 
 For more information on parameter routing with special prefixes, see the [Advanced Usage Docs](https://www.adriangb.com/scikeras/stable/advanced.html#routed-parameters)
 
 ### 7.2 Performing a grid search
 
-Below we show how to perform a grid search over the learning rate (`optimizer__lr`), the model's number of hidden layers (`model__hidden_layer_sizes`), the model's dropout rate (`model__dropout`).
+Below we show how to perform a grid search over the learning rate (`optimizer__learning_rate`), the model's number of hidden layers (`model__hidden_layer_sizes`), the model's dropout rate (`model__dropout`).
 
 ```python
 from sklearn.model_selection import GridSearchCV
@@ -371,7 +373,7 @@ clf = KerasClassifier(
     model=get_clf,
     loss="binary_crossentropy",
     optimizer="adam",
-    optimizer__lr=0.1,
+    optimizer__learning_rate=0.1,
     model__hidden_layer_sizes=(100,),
     model__dropout=0.5,
     verbose=False,
@@ -382,7 +384,7 @@ clf = KerasClassifier(
 
 ```python
 params = {
-    'optimizer__lr': [0.05, 0.1],
+    'optimizer__learning_rate': [0.05, 0.1],
     'model__hidden_layer_sizes': [(100, ), (50, 50, )],
     'model__dropout': [0, 0.5],
 }

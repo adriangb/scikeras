@@ -3,8 +3,15 @@ import pickle
 from functools import partial
 from typing import Any, Dict
 
+import keras
 import numpy as np
 import pytest
+from keras import backend as K
+from keras import losses as losses_module
+from keras import metrics as metrics_module
+from keras.layers import Conv2D, Dense, Flatten, Input
+from keras.models import Model, Sequential
+from keras.utils import to_categorical
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.datasets import load_diabetes, load_digits, load_iris
 from sklearn.ensemble import (
@@ -17,13 +24,6 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from tensorflow import keras
-from tensorflow.keras import backend as K
-from tensorflow.keras import losses as losses_module
-from tensorflow.keras import metrics as metrics_module
-from tensorflow.keras.layers import Conv2D, Dense, Flatten, Input
-from tensorflow.keras.models import Model, Sequential
-from tensorflow.keras.utils import register_keras_serializable, to_categorical
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
@@ -321,7 +321,7 @@ class TestAdvancedAPIFuncs:
         loader, model, build_fn, ensembles = CONFIG[config]
         base_estimator = model(build_fn, epochs=1, model__hidden_layer_sizes=[])
         for ensemble in ensembles:
-            estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
+            estimator = ensemble(estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
 
     @pytest.mark.parametrize("config", ["MLPClassifier"])
@@ -331,7 +331,7 @@ class TestAdvancedAPIFuncs:
         base_estimator = KerasClassifier(
             build_fn, epochs=1, model__hidden_layer_sizes=[]
         )
-        estimator = CalibratedClassifierCV(base_estimator=base_estimator, cv=5)
+        estimator = CalibratedClassifierCV(estimator=base_estimator, cv=5)
         basic_checks(estimator, loader)
 
 
@@ -428,7 +428,7 @@ class TestPrebuiltModel:
 
         base_estimator = model(model=keras_model)
         for ensemble in ensembles:
-            estimator = ensemble(base_estimator=base_estimator, n_estimators=2)
+            estimator = ensemble(estimator=base_estimator, n_estimators=2)
             basic_checks(estimator, loader)
 
 
@@ -460,7 +460,6 @@ def test_warm_start():
         model = estimator.model_
 
 
-@register_keras_serializable(name="CustomMetric")
 class CustomMetric(metrics_module.MeanAbsoluteError):
     pass
 
@@ -852,11 +851,8 @@ class TestInitialize:
         y_pred_keras = y_pred_keras.reshape(
             -1,
         )
-        # Extract the weights into a copy of the model
-        weights = m1.get_weights()
-        m2 = keras.models.clone_model(m1)
-        m2.set_weights(weights)
-        m2.compile()  # No loss, inference models shouldn't need a loss!
+        # Make a copy of the model to make sure we don't modify the original
+        m2 = pickle.loads(pickle.dumps(m1))
         # Wrap with SciKeras
         est = wrapper(model=m2)
         # Without calling initialize, a NotFittedError is raised

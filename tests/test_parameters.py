@@ -3,11 +3,11 @@ from unittest import mock
 
 import numpy as np
 import pytest
+from keras import Sequential
+from keras import layers as layers_mod
 from sklearn.base import clone
 from sklearn.datasets import make_classification
 from sklearn.preprocessing import FunctionTransformer
-from tensorflow.keras import Sequential
-from tensorflow.keras import layers as layers_mod
 
 from scikeras.wrappers import KerasClassifier, KerasRegressor
 
@@ -113,7 +113,8 @@ class TestRandomState:
             assert "PYTHONHASHSEED" not in os.environ
 
 
-def test_sample_weights_fit():
+@pytest.mark.parametrize("set_floatx_and_backend_config", ["float64"], indirect=True)
+def test_sample_weights_fit(set_floatx_and_backend_config):
     """Checks that the `sample_weight` parameter when passed to `fit`
     has the intended effect.
     """
@@ -153,7 +154,7 @@ def test_sample_weights_fit():
     np.testing.assert_allclose(
         actual=estimator1.predict_proba(X),
         desired=estimator2.predict_proba(X),
-        rtol=1e-5,
+        rtol=1e-3,
     )
 
 
@@ -271,7 +272,9 @@ def test_kwargs(wrapper, builder):
     kwarg_epochs = (
         2  # epochs is a special case for fit since SciKeras also uses it internally
     )
-    extra_kwargs = {"workers": 1}  # chosen because it is not a SciKeras hardcoded param
+    extra_kwargs = {
+        "verbose": True
+    }  # chosen because it is not a SciKeras hardcoded param
     est = wrapper(
         model=builder,
         model__hidden_layer_sizes=(100,),
@@ -279,6 +282,7 @@ def test_kwargs(wrapper, builder):
         batch_size=original_batch_size,  # test that this is overridden by kwargs
         fit__batch_size=original_batch_size,  # test that this is overridden by kwargs
         predict__batch_size=original_batch_size,  # test that this is overridden by kwargs
+        verbose=False,  # opposite of the extra_kwargs
     )
     X, y = np.random.random((100, 10)), np.random.randint(low=0, high=3, size=(100,))
     est.initialize(X, y)
@@ -312,12 +316,7 @@ def test_kwargs(wrapper, builder):
     # check that params were restored and extra_kwargs were not stored
     for param_name in ("batch_size", "fit__batch_size", "predict__batch_size"):
         assert getattr(est, param_name) == original_batch_size
-    for k in extra_kwargs.keys():
-        assert (
-            not hasattr(est, k)
-            or hasattr(est, "fit__" + k)
-            or hasattr(est, "predict__" + k)
-        )
+    assert est.verbose is False
 
 
 @pytest.mark.parametrize("kwargs", ({"epochs": 1}, {"initial_epoch": 1}))

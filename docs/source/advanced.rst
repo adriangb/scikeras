@@ -17,11 +17,11 @@ on the overall functionality of the wrappers and hence will refer to
 Detailed information on usage of specific classes is available in the
 :ref:`scikeras-api` documentation.
 
-SciKeras wraps the Keras :py:class:`~tensorflow.keras.Model` to
+SciKeras wraps the Keras :py:class:`~keras.Model` to
 provide an interface that should be familiar for Scikit-Learn users and is compatible
 with most of the Scikit-Learn ecosystem.
 
-To get started, define your :py:class:`~tensorflow.keras.Model` architecture like you always do,
+To get started, define your :py:class:`~keras.Model` architecture like you always do,
 but within a callable top-level function (we will call this function ``model_build_fn`` for
 the remained of these docs, but you are free to name it as you wish).
 Then pass this function to :py:class:`.BaseWrapper` in the ``model`` parameter.
@@ -42,9 +42,9 @@ estimator. The finished code could look something like this:
 
 Let's see what SciKeras did:
 
-- wraps ``tensorflow.keras.Model`` in an sklearn interface
+- wraps ``keras.Model`` in an sklearn interface
 - handles encoding and decoding of the target ``y``
-- compiles the :py:class:`~tensorflow.keras.Model` (unless you do it yourself in ``model_build_fn``)
+- compiles the :py:class:`~keras.Model` (unless you do it yourself in ``model_build_fn``)
 - makes all ``Keras`` objects serializable so that they can be used with :py:mod:`~sklearn.model_selection`.
 
 SciKeras abstracts away the incompatibilities and data conversions,
@@ -112,7 +112,7 @@ offer an easy way to compile and tune compilation parameters. Examples:
 
 .. code:: python
 
-    from tensorflow.keras.optimizers import Adam
+    from keras.optimizers import Adam
 
     def model_build_fn():
         model = Model(...)
@@ -164,7 +164,7 @@ see the :ref:`scikeras-api` documentation.
 
 ``compile_kwargs``
 ++++++++++++++++++++++++
-This is a dictionary of parameters destined for :py:func:`tensorflow.Keras.Model.compile`.
+This is a dictionary of parameters destined for :py:func:`keras.Model.compile`.
 This dictionary can be used like ``model.compile(**compile_kwargs)``.
 All optimizers, losses and metrics will be compiled to objects,
 even if string shorthands (e.g. ``optimizer="adam"``) were passed.
@@ -192,7 +192,7 @@ To work around this issue, SciKeras implements a data conversion
 abstraction in the form of Scikit-Learn style transformers,
 one for ``X`` (features) and one for ``y`` (target).
 By implementing a custom transformer, you can split a single input ``X`` into multiple inputs
-for :py:class:`tensorflow.keras.Model` or perform any other manipulation you need.
+for :py:class:`keras.Model` or perform any other manipulation you need.
 To override the default transformers, simply override
 :py:func:`scikeras.wrappers.BaseWrappers.target_encoder` or
 :py:func:`scikeras.wrappers.BaseWrappers.feature_encoder` for ``y`` and ``X`` respectively.
@@ -248,8 +248,8 @@ All special prefixes are stored in the ``prefixes_`` class attribute
 of :py:class:`scikeras.wrappers.BaseWrappers`. Currently, they are:
 
 - ``model__``: passed to ``model_build_fn`` (or whatever function is passed to the ``model`` param of :class:`scikeras.wrappers.BaseWrapper`).
-- ``fit__``: passed to :func:`tensorflow.keras.Model.fit`
-- ``predict__``: passed to :func:`tensorflow.keras.Model.predict`. Note that internally SciKeras also uses :func:`tensorflow.keras.Model.predict` within :func:`scikeras.wrappers.BaseWrapper.score` and so this prefix applies to both.
+- ``fit__``: passed to :func:`keras.Model.fit`
+- ``predict__``: passed to :func:`keras.Model.predict`. Note that internally SciKeras also uses :func:`keras.Model.predict` within :func:`scikeras.wrappers.BaseWrapper.score` and so this prefix applies to both.
 - ``callbacks__``: used to instantiate callbacks.
 - ``optimizer__``: used to instantiate optimizers.
 - ``loss__``: used to instantiate losses.
@@ -280,7 +280,7 @@ Optimizer
 .. code:: python
 
     from scikeras.wrappers import KerasClassifier
-    from tensorflow import keras
+    import keras
 
     clf = KerasClassifier(
         model=model_build_fn,
@@ -305,7 +305,7 @@ Losses
 
 .. code:: python
 
-    from tensorflow.keras.losses import BinaryCrossentropy, CategoricalCrossentropy
+    from keras.losses import BinaryCrossentropy, CategoricalCrossentropy
 
     clf = KerasClassifier(
         ...,
@@ -322,7 +322,7 @@ Additionally, SciKeras supports routed parameters to each individual loss, or to
 
 .. code:: python
 
-    from tensorflow.keras.losses import BinaryCrossentropy, CategoricalCrossentropy
+    from keras.losses import BinaryCrossentropy, CategoricalCrossentropy
 
     clf = KerasClassifier(
         ...,
@@ -348,7 +348,7 @@ Here are several support use cases:
 
 .. code:: python
 
-    from tensorflow.keras.metrics import BinaryAccuracy, AUC
+    from keras.metrics import BinaryAccuracy, AUC
 
     clf = KerasClassifier(
         ...,
@@ -388,7 +388,7 @@ SciKeras can route parameters to callbacks.
 
     clf = KerasClassifier(
         ...,
-        callbacks=tf.keras.callbacks.EarlyStopping
+        callbacks=keras.callbacks.EarlyStopping
         callbacks__monitor="loss",
     )
 
@@ -399,13 +399,13 @@ Just like metrics and losses, callbacks support several syntaxes to compile them
     # for multiple callbacks using dict syntax
     clf = KerasClassifier(
         ...,
-        callbacks={"bl": tf.keras.callbacks.BaseLogger, "es": tf.keras.callbacks.EarlyStopping}
+        callbacks={"bl": keras.callbacks.BaseLogger, "es": keras.callbacks.EarlyStopping}
         callbacks__es__monitor="loss",
     )
     # or using list sytnax
     clf = KerasClassifier(
         ...,
-        callbacks=[tf.keras.callbacks.BaseLogger, tf.keras.callbacks.EarlyStopping]
+        callbacks=[keras.callbacks.BaseLogger, keras.callbacks.EarlyStopping]
         callbacks__1__monitor="loss",  # EarlyStopping(monitor="loss")
     )
 
@@ -413,7 +413,7 @@ Keras callbacks are event based, and are triggered depending on the methods they
 For example:
 
 .. code:: python
-    from tensorflow import keras
+    import keras
 
     class MyCallback(keras.callbacks.Callback):
 
@@ -433,9 +433,9 @@ simply use the ``fit__`` or ``predict__`` routing prefixes on your callback:
 
     clf = KerasClassifier(
         ...,
-        callbacks=tf.keras.callbacks.Callback,  # called from both fit and predict
-        fit__callbacks=tf.keras.callbacks.Callback,  # called only from fit
-        predict__callbacks=tf.keras.callbacks.Callback,  # called only from predict
+        callbacks=keras.callbacks.Callback,  # called from both fit and predict
+        fit__callbacks=keras.callbacks.Callback,  # called only from fit
+        predict__callbacks=keras.callbacks.Callback,  # called only from predict
     )
 
 Any routed constructor parameters must also use the corresponding prefix to get routed correctly.
@@ -449,7 +449,7 @@ which tells SciKeras to pass that parameter as an positional argument instead of
 
 .. code:: python
 
-   from tensorflow import keras
+   import keras
 
     class Schedule:
         """Exponential decay lr scheduler.
@@ -478,6 +478,6 @@ as the scoring functions for :class:`scikeras.wrappers.KerasClassifier`
 and :class:`scikeras.wrappers.KerasRegressor` respectively. To override these scoring functions,
 
 
-.. _Keras Callbacks docs: https://www.tensorflow.org/api_docs/python/tf/keras/callbacks
+.. _Keras Callbacks docs: https://keras.io/api/callbacks/
 
-.. _Keras Metrics docs: https://www.tensorflow.org/api_docs/python/tf/keras/metrics
+.. _Keras Metrics docs: https://keras.io/api/metrics/
