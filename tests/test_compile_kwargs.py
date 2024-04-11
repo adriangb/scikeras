@@ -5,9 +5,9 @@ import pytest
 from keras import losses as losses_module
 from keras import metrics as metrics_module
 from keras import optimizers as optimizers_module
-from keras.backend.common.variables import KerasVariable
 from keras.layers import Dense, Input
 from keras.models import Model
+from keras.src.backend.common.variables import KerasVariable
 from sklearn.datasets import make_classification
 
 from scikeras.wrappers import KerasClassifier

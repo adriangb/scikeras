@@ -3,9 +3,8 @@ from typing import Any, Callable, Dict, Hashable, List, Tuple
 
 import keras as keras
 import keras.saving
-import keras.saving.object_registration
 import numpy as np
-from keras.saving.saving_lib import load_model, save_model
+from keras.src.saving.saving_lib import load_model, save_model
 
 
 def unpack_keras_model(
@@ -25,7 +24,7 @@ def pack_keras_model(
     """Support for Pythons's Pickle protocol."""
     tp = type(model)
     out = BytesIO()
-    if tp not in keras.saving.object_registration.GLOBAL_CUSTOM_OBJECTS:
+    if tp not in keras.saving.get_custom_objects():
         module = ".".join(tp.__qualname__.split(".")[:-1])
         name = tp.__qualname__.split(".")[-1]
         keras.saving.register_keras_serializable(module, name)(tp)
