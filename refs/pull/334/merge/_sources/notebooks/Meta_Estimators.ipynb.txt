@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "77989be0",
+   "id": "6e7479d4",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/Meta_Estimators.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "7e1aef62",
+   "id": "7f5aa4a1",
    "metadata": {},
    "source": [
     "# Meta Estimators in SciKeras\n",
@@ -31,13 +31,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "d58c2a06",
+   "id": "29776fe6",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:31:58.514564Z",
-     "iopub.status.busy": "2024-12-12T21:31:58.514158Z",
-     "iopub.status.idle": "2024-12-12T21:32:02.972806Z",
-     "shell.execute_reply": "2024-12-12T21:32:02.972069Z"
+     "iopub.execute_input": "2024-12-12T21:32:07.988605Z",
+     "iopub.status.busy": "2024-12-12T21:32:07.988326Z",
+     "iopub.status.idle": "2024-12-12T21:32:12.383995Z",
+     "shell.execute_reply": "2024-12-12T21:32:12.383230Z"
     }
    },
    "outputs": [
@@ -46,8 +46,8 @@
      "output_type": "stream",
      "text": [
       "WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\n",
-      "E0000 00:00:1734039119.065329    4986 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
-      "E0000 00:00:1734039119.072390    4986 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"
+      "E0000 00:00:1734039128.511975    4887 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
+      "E0000 00:00:1734039128.519263    4887 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"
      ]
     },
     {
@@ -74,7 +74,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "312edd61",
+   "id": "5fc1390d",
    "metadata": {},
    "source": [
     "Silence TensorFlow logging to keep output succinct."
@@ -83,13 +83,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "e379a87b",
+   "id": "0cc1ef62",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:32:02.975425Z",
-     "iopub.status.busy": "2024-12-12T21:32:02.974705Z",
-     "iopub.status.idle": "2024-12-12T21:32:02.978636Z",
-     "shell.execute_reply": "2024-12-12T21:32:02.978197Z"
+     "iopub.execute_input": "2024-12-12T21:32:12.388043Z",
+     "iopub.status.busy": "2024-12-12T21:32:12.387024Z",
+     "iopub.status.idle": "2024-12-12T21:32:12.394392Z",
+     "shell.execute_reply": "2024-12-12T21:32:12.393622Z"
     }
    },
    "outputs": [],
@@ -103,13 +103,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "30273fb4",
+   "id": "935ee3bd",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:32:02.980394Z",
-     "iopub.status.busy": "2024-12-12T21:32:02.980200Z",
-     "iopub.status.idle": "2024-12-12T21:32:03.515271Z",
-     "shell.execute_reply": "2024-12-12T21:32:03.514603Z"
+     "iopub.execute_input": "2024-12-12T21:32:12.398118Z",
+     "iopub.status.busy": "2024-12-12T21:32:12.397126Z",
+     "iopub.status.idle": "2024-12-12T21:32:13.112317Z",
+     "shell.execute_reply": "2024-12-12T21:32:13.111227Z"
     }
    },
    "outputs": [],
@@ -121,7 +121,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "a664e7a3",
+   "id": "298b32d8",
    "metadata": {},
    "source": [
     "## 2. Defining the Keras Model\n",
@@ -132,13 +132,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "3027a3a6",
+   "id": "2085181f",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:32:03.518217Z",
-     "iopub.status.busy": "2024-12-12T21:32:03.517648Z",
-     "iopub.status.idle": "2024-12-12T21:32:03.523068Z",
-     "shell.execute_reply": "2024-12-12T21:32:03.522449Z"
+     "iopub.execute_input": "2024-12-12T21:32:13.116842Z",
+     "iopub.status.busy": "2024-12-12T21:32:13.115325Z",
+     "iopub.status.idle": "2024-12-12T21:32:13.125989Z",
+     "shell.execute_reply": "2024-12-12T21:32:13.124766Z"
     }
    },
    "outputs": [],
@@ -171,7 +171,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "19183388",
+   "id": "39248bd7",
    "metadata": {},
    "source": [
     "Next we wrap this Keras model with SciKeras"
@@ -180,13 +180,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "efdb6dbd",
+   "id": "2ffa156f",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:32:03.525037Z",
-     "iopub.status.busy": "2024-12-12T21:32:03.524845Z",
-     "iopub.status.idle": "2024-12-12T21:32:03.528130Z",
-     "shell.execute_reply": "2024-12-12T21:32:03.527508Z"
+     "iopub.execute_input": "2024-12-12T21:32:13.128940Z",
+     "iopub.status.busy": "2024-12-12T21:32:13.128360Z",
+     "iopub.status.idle": "2024-12-12T21:32:13.133029Z",
+     "shell.execute_reply": "2024-12-12T21:32:13.131955Z"
     }
    },
    "outputs": [],
@@ -203,7 +203,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "11f33d68",
+   "id": "51dfc215",
    "metadata": {},
    "source": [
     "### 2.1 Building a boosting ensemble\n",
@@ -214,13 +214,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "42f272f3",
+   "id": "54a91c80",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:32:03.530124Z",
-     "iopub.status.busy": "2024-12-12T21:32:03.529937Z",
-     "iopub.status.idle": "2024-12-12T21:32:03.906561Z",
-     "shell.execute_reply": "2024-12-12T21:32:03.905915Z"
+     "iopub.execute_input": "2024-12-12T21:32:13.136815Z",
+     "iopub.status.busy": "2024-12-12T21:32:13.135895Z",
+     "iopub.status.idle": "2024-12-12T21:32:13.619131Z",
+     "shell.execute_reply": "2024-12-12T21:32:13.618425Z"
     }
    },
    "outputs": [],
@@ -233,7 +233,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "e9329a7c",
+   "id": "b228194f",
    "metadata": {},
    "source": [
     "## 3. Testing with a toy dataset\n",
@@ -244,13 +244,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "03cb28e1",
+   "id": "7508f15b",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:32:03.909290Z",
-     "iopub.status.busy": "2024-12-12T21:32:03.908598Z",
-     "iopub.status.idle": "2024-12-12T21:33:10.638081Z",
-     "shell.execute_reply": "2024-12-12T21:33:10.636999Z"
+     "iopub.execute_input": "2024-12-12T21:32:13.623849Z",
+     "iopub.status.busy": "2024-12-12T21:32:13.623164Z",
+     "iopub.status.idle": "2024-12-12T21:33:23.994668Z",
+     "shell.execute_reply": "2024-12-12T21:33:23.993406Z"
     }
    },
    "outputs": [
@@ -266,7 +266,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Single score: 0.53\n",
+      "Single score: 0.50\n",
       "AdaBoost score: 0.87\n"
      ]
     }
@@ -287,7 +287,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "e79f8190",
+   "id": "ddaa0e92",
    "metadata": {},
    "source": [
     "We see that the score for the AdaBoost classifier is slightly higher than that of an individual MLPRegressor instance. We can explore the individual classifiers, and see that each one is composed of a Keras Model with it's own individual weights.\n"
@@ -296,13 +296,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "ebd8937f",
+   "id": "81c2ad9e",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:33:10.641570Z",
-     "iopub.status.busy": "2024-12-12T21:33:10.640869Z",
-     "iopub.status.idle": "2024-12-12T21:33:10.653369Z",
-     "shell.execute_reply": "2024-12-12T21:33:10.652527Z"
+     "iopub.execute_input": "2024-12-12T21:33:23.998373Z",
+     "iopub.status.busy": "2024-12-12T21:33:23.997163Z",
+     "iopub.status.idle": "2024-12-12T21:33:24.012626Z",
+     "shell.execute_reply": "2024-12-12T21:33:24.011663Z"
     }
    },
    "outputs": [
@@ -310,8 +310,8 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "[-0.00960536  0.04676935  0.08661538 -0.20464933  0.11117794]\n",
-      "[ 0.22743635  0.19937468  0.21174628  0.03133063 -0.09943357]\n"
+      "[-0.00938201  0.04680922  0.08665226 -0.20484108  0.1112568 ]\n",
+      "[ 0.22979799  0.20112297  0.21413517  0.03175489 -0.09941372]\n"
      ]
     }
    ],
@@ -322,7 +322,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "0a242dcd",
+   "id": "e6eaea56",
    "metadata": {},
    "source": [
     "## 4. Bagging ensemble\n",
@@ -333,13 +333,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "78e5dd2f",
+   "id": "9e07996c",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:33:10.658266Z",
-     "iopub.status.busy": "2024-12-12T21:33:10.656232Z",
-     "iopub.status.idle": "2024-12-12T21:33:26.292445Z",
-     "shell.execute_reply": "2024-12-12T21:33:26.291510Z"
+     "iopub.execute_input": "2024-12-12T21:33:24.016445Z",
+     "iopub.status.busy": "2024-12-12T21:33:24.015880Z",
+     "iopub.status.idle": "2024-12-12T21:33:38.950105Z",
+     "shell.execute_reply": "2024-12-12T21:33:38.948835Z"
     }
    },
    "outputs": [
@@ -348,23 +348,37 @@
      "output_type": "stream",
      "text": [
       "WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\n",
-      "E0000 00:00:1734039193.566522    7526 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
-      "E0000 00:00:1734039193.573664    7526 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n",
+      "E0000 00:00:1734039206.710293    7535 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
+      "E0000 00:00:1734039206.719506    7535 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n",
       "WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\n",
-      "E0000 00:00:1734039193.765746    7525 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
-      "WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\n"
+      "E0000 00:00:1734039206.823534    7537 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
+      "E0000 00:00:1734039206.831076    7537 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"
      ]
     },
     {
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "E0000 00:00:1734039193.766944    7527 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
-      "E0000 00:00:1734039193.785007    7525 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n",
-      "E0000 00:00:1734039193.791111    7527 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n",
       "WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\n",
-      "E0000 00:00:1734039193.872843    7528 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
-      "E0000 00:00:1734039193.901262    7528 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"
+      "E0000 00:00:1734039207.198830    7536 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
+      "E0000 00:00:1734039207.205458    7536 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n",
+      "WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\n",
+      "E0000 00:00:1734039207.347047    7534 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
+      "E0000 00:00:1734039207.357592    7534 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/runner/work/scikeras/scikeras/scikeras/__init__.py:20: UserWarning: \n",
+      "    This project is now deprecated. Keras has re-introduced wrappers with a similar API to those in SciKeras, but they will be better maintained.\n",
+      "    SciKeras was a project to meet a specific need that was developed by a single developer.\n",
+      "    I no longer use Keras nor do I have the time to maintain this project, which became increasingly difficult with multiple versions of Keras and Scikit-Learn to support.\n",
+      "    I thank all of the users and contributors over the years and hope that the new Keras wrappers will meet your needs.\n",
+      "    TODO: add link to Keras docs and release here.\n",
+      "    \n",
+      "  warn(\n"
      ]
     },
     {
@@ -404,34 +418,20 @@
      ]
     },
     {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "/home/runner/work/scikeras/scikeras/scikeras/__init__.py:20: UserWarning: \n",
-      "    This project is now deprecated. Keras has re-introduced wrappers with a similar API to those in SciKeras, but they will be better maintained.\n",
-      "    SciKeras was a project to meet a specific need that was developed by a single developer.\n",
-      "    I no longer use Keras nor do I have the time to maintain this project, which became increasingly difficult with multiple versions of Keras and Scikit-Learn to support.\n",
-      "    I thank all of the users and contributors over the years and hope that the new Keras wrappers will meet your needs.\n",
-      "    TODO: add link to Keras docs and release here.\n",
-      "    \n",
-      "  warn(\n"
-     ]
-    },
-    {
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Bagging score: 0.74\n"
+      "Bagging score: 0.73\n"
      ]
     },
     {
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "WARNING:tensorflow:5 out of the last 9 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7fd892c35300> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n",
-      "WARNING:tensorflow:5 out of the last 9 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7ff3c70045e0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n",
-      "WARNING:tensorflow:6 out of the last 12 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7fd892c35300> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n",
-      "WARNING:tensorflow:6 out of the last 12 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7ff3c70045e0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
+      "WARNING:tensorflow:5 out of the last 9 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7ff3384b0680> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n",
+      "WARNING:tensorflow:5 out of the last 9 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7f8f46d29300> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n",
+      "WARNING:tensorflow:6 out of the last 12 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7ff3384b0680> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n",
+      "WARNING:tensorflow:6 out of the last 12 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x7f8f46d29300> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.\n"
      ]
     }
    ],

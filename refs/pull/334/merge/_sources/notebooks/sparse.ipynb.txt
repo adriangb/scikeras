@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "30046b0b",
+   "id": "4389be4a",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/AutoEncoders.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "78a23f33",
+   "id": "a31eb911",
    "metadata": {},
    "source": [
     "# Sparse Inputs"
@@ -18,7 +18,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "f75ca4e5",
+   "id": "d0abf453",
    "metadata": {},
    "source": [
     "SciKeras supports sparse inputs (`X`/features).\n",
@@ -29,7 +29,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "4834a8e2",
+   "id": "7d21b6de",
    "metadata": {},
    "source": [
     "## Setup"
@@ -38,13 +38,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "96be094d",
+   "id": "207af564",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:27:54.730505Z",
-     "iopub.status.busy": "2024-12-12T21:27:54.730223Z",
-     "iopub.status.idle": "2024-12-12T21:27:56.522717Z",
-     "shell.execute_reply": "2024-12-12T21:27:56.522103Z"
+     "iopub.execute_input": "2024-12-12T21:28:19.594665Z",
+     "iopub.status.busy": "2024-12-12T21:28:19.594010Z",
+     "iopub.status.idle": "2024-12-12T21:28:21.096431Z",
+     "shell.execute_reply": "2024-12-12T21:28:21.095554Z"
     }
    },
    "outputs": [
@@ -54,13 +54,7 @@
      "text": [
       "Collecting memory_profiler\r\n",
       "  Downloading memory_profiler-0.61.0-py3-none-any.whl.metadata (20 kB)\r\n",
-      "Requirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from memory_profiler) (6.1.0)\r\n"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
+      "Requirement already satisfied: psutil in /home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages (from memory_profiler) (6.1.0)\r\n",
       "Downloading memory_profiler-0.61.0-py3-none-any.whl (31 kB)\r\n"
      ]
     },
@@ -68,7 +62,13 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Installing collected packages: memory_profiler\r\n",
+      "Installing collected packages: memory_profiler\r\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
       "Successfully installed memory_profiler-0.61.0\r\n"
      ]
     }
@@ -81,13 +81,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "fd2c76fc",
+   "id": "4f46e93b",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:27:56.525124Z",
-     "iopub.status.busy": "2024-12-12T21:27:56.524885Z",
-     "iopub.status.idle": "2024-12-12T21:27:59.571948Z",
-     "shell.execute_reply": "2024-12-12T21:27:59.571213Z"
+     "iopub.execute_input": "2024-12-12T21:28:21.099511Z",
+     "iopub.status.busy": "2024-12-12T21:28:21.098995Z",
+     "iopub.status.idle": "2024-12-12T21:28:24.227788Z",
+     "shell.execute_reply": "2024-12-12T21:28:24.227210Z"
     }
    },
    "outputs": [
@@ -96,8 +96,8 @@
      "output_type": "stream",
      "text": [
       "WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\n",
-      "E0000 00:00:1734038876.694897    4063 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
-      "E0000 00:00:1734038876.699061    4063 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"
+      "E0000 00:00:1734038901.331979    3975 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
+      "E0000 00:00:1734038901.338066    3975 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"
      ]
     }
    ],
@@ -113,13 +113,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "9278bb9c",
+   "id": "447afcb3",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:27:59.575285Z",
-     "iopub.status.busy": "2024-12-12T21:27:59.574776Z",
-     "iopub.status.idle": "2024-12-12T21:27:59.582343Z",
-     "shell.execute_reply": "2024-12-12T21:27:59.581667Z"
+     "iopub.execute_input": "2024-12-12T21:28:24.230097Z",
+     "iopub.status.busy": "2024-12-12T21:28:24.229762Z",
+     "iopub.status.idle": "2024-12-12T21:28:24.235303Z",
+     "shell.execute_reply": "2024-12-12T21:28:24.234734Z"
     }
    },
    "outputs": [
@@ -148,13 +148,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "98d41e28",
+   "id": "593dea7f",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:27:59.584941Z",
-     "iopub.status.busy": "2024-12-12T21:27:59.584454Z",
-     "iopub.status.idle": "2024-12-12T21:28:00.215119Z",
-     "shell.execute_reply": "2024-12-12T21:28:00.214593Z"
+     "iopub.execute_input": "2024-12-12T21:28:24.237175Z",
+     "iopub.status.busy": "2024-12-12T21:28:24.236815Z",
+     "iopub.status.idle": "2024-12-12T21:28:24.671079Z",
+     "shell.execute_reply": "2024-12-12T21:28:24.670488Z"
     }
    },
    "outputs": [],
@@ -169,7 +169,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "c7f439cc",
+   "id": "e19837fa",
    "metadata": {},
    "source": [
     "## Data\n",
@@ -182,13 +182,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "8aa59f15",
+   "id": "96a60f72",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:28:00.218692Z",
-     "iopub.status.busy": "2024-12-12T21:28:00.217646Z",
-     "iopub.status.idle": "2024-12-12T21:28:00.222421Z",
-     "shell.execute_reply": "2024-12-12T21:28:00.221647Z"
+     "iopub.execute_input": "2024-12-12T21:28:24.673596Z",
+     "iopub.status.busy": "2024-12-12T21:28:24.672996Z",
+     "iopub.status.idle": "2024-12-12T21:28:24.676625Z",
+     "shell.execute_reply": "2024-12-12T21:28:24.676081Z"
     }
    },
    "outputs": [],
@@ -201,7 +201,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ec57b0de",
+   "id": "662a2a6b",
    "metadata": {},
    "source": [
     "## Model\n",
@@ -212,13 +212,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "22b42242",
+   "id": "e85222eb",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:28:00.225034Z",
-     "iopub.status.busy": "2024-12-12T21:28:00.224532Z",
-     "iopub.status.idle": "2024-12-12T21:28:00.228459Z",
-     "shell.execute_reply": "2024-12-12T21:28:00.227842Z"
+     "iopub.execute_input": "2024-12-12T21:28:24.678608Z",
+     "iopub.status.busy": "2024-12-12T21:28:24.678281Z",
+     "iopub.status.idle": "2024-12-12T21:28:24.681622Z",
+     "shell.execute_reply": "2024-12-12T21:28:24.681123Z"
     }
    },
    "outputs": [],
@@ -235,7 +235,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "11bd3b62",
+   "id": "88fc3167",
    "metadata": {},
    "source": [
     "## Pipelines\n",
@@ -247,13 +247,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "4c8bc0c4",
+   "id": "a8ef722d",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:28:00.230759Z",
-     "iopub.status.busy": "2024-12-12T21:28:00.230481Z",
-     "iopub.status.idle": "2024-12-12T21:28:00.234638Z",
-     "shell.execute_reply": "2024-12-12T21:28:00.233997Z"
+     "iopub.execute_input": "2024-12-12T21:28:24.683352Z",
+     "iopub.status.busy": "2024-12-12T21:28:24.683010Z",
+     "iopub.status.idle": "2024-12-12T21:28:24.686270Z",
+     "shell.execute_reply": "2024-12-12T21:28:24.685709Z"
     }
    },
    "outputs": [],
@@ -275,7 +275,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "537757b4",
+   "id": "b134716d",
    "metadata": {},
    "source": [
     "## Benchmark\n",
@@ -286,13 +286,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "3250731f",
+   "id": "adf53da7",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:28:00.237777Z",
-     "iopub.status.busy": "2024-12-12T21:28:00.236782Z",
-     "iopub.status.idle": "2024-12-12T21:28:27.953378Z",
-     "shell.execute_reply": "2024-12-12T21:28:27.952612Z"
+     "iopub.execute_input": "2024-12-12T21:28:24.688004Z",
+     "iopub.status.busy": "2024-12-12T21:28:24.687681Z",
+     "iopub.status.idle": "2024-12-12T21:29:02.386306Z",
+     "shell.execute_reply": "2024-12-12T21:29:02.384183Z"
     }
    },
    "outputs": [
@@ -300,7 +300,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 5149.04 MiB, increment: 4570.89 MiB\n"
+      "peak memory: 5120.73 MiB, increment: 4542.89 MiB\n"
      ]
     }
    ],
@@ -311,13 +311,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "15f313ba",
+   "id": "e5051fed",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:28:27.955425Z",
-     "iopub.status.busy": "2024-12-12T21:28:27.955223Z",
-     "iopub.status.idle": "2024-12-12T21:29:14.672697Z",
-     "shell.execute_reply": "2024-12-12T21:29:14.672048Z"
+     "iopub.execute_input": "2024-12-12T21:29:02.389521Z",
+     "iopub.status.busy": "2024-12-12T21:29:02.389190Z",
+     "iopub.status.idle": "2024-12-12T21:29:43.009234Z",
+     "shell.execute_reply": "2024-12-12T21:29:43.008394Z"
     }
    },
    "outputs": [
@@ -325,7 +325,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 1106.84 MiB, increment: 76.86 MiB\n"
+      "peak memory: 1090.97 MiB, increment: 134.29 MiB\n"
      ]
     }
    ],
@@ -335,7 +335,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "cb94ec46",
+   "id": "09703ac9",
    "metadata": {},
    "source": [
     "You should see at least 100x more memory consumption **increment** in the dense pipeline."
@@ -343,7 +343,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "f3a11d5c",
+   "id": "08ef4868",
    "metadata": {},
    "source": [
     "### Runtime\n",
@@ -354,13 +354,13 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "24d6aa66",
+   "id": "894e5c00",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:29:14.675786Z",
-     "iopub.status.busy": "2024-12-12T21:29:14.675519Z",
-     "iopub.status.idle": "2024-12-12T21:34:06.791101Z",
-     "shell.execute_reply": "2024-12-12T21:34:06.790506Z"
+     "iopub.execute_input": "2024-12-12T21:29:43.012221Z",
+     "iopub.status.busy": "2024-12-12T21:29:43.011984Z",
+     "iopub.status.idle": "2024-12-12T21:34:15.133401Z",
+     "shell.execute_reply": "2024-12-12T21:34:15.132662Z"
     }
    },
    "outputs": [
@@ -368,7 +368,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "35.7 s ± 7.66 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
+      "32.5 s ± 6.53 s per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
      ]
     }
    ],
@@ -379,13 +379,13 @@
   {
    "cell_type": "code",
    "execution_count": 11,
-   "id": "6e6fa18f",
+   "id": "89799e5e",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:34:06.795214Z",
-     "iopub.status.busy": "2024-12-12T21:34:06.793133Z",
-     "iopub.status.idle": "2024-12-12T21:37:01.613609Z",
-     "shell.execute_reply": "2024-12-12T21:37:01.613129Z"
+     "iopub.execute_input": "2024-12-12T21:34:15.137112Z",
+     "iopub.status.busy": "2024-12-12T21:34:15.135365Z",
+     "iopub.status.idle": "2024-12-12T21:37:13.110443Z",
+     "shell.execute_reply": "2024-12-12T21:37:13.109848Z"
     }
    },
    "outputs": [
@@ -393,7 +393,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "21.8 s ± 506 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
+      "22.3 s ± 356 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)\n"
      ]
     }
    ],
@@ -403,7 +403,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "a4373f93",
+   "id": "f135ae70",
    "metadata": {},
    "source": [
     "## Tensorflow Datasets\n",
@@ -420,7 +420,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "dc6c0137",
+   "id": "8b8f8a3a",
    "metadata": {},
    "source": [
     "## Bonus: dtypes\n",
@@ -431,13 +431,13 @@
   {
    "cell_type": "code",
    "execution_count": 12,
-   "id": "5ca1825c",
+   "id": "3f804b6e",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:37:01.615628Z",
-     "iopub.status.busy": "2024-12-12T21:37:01.615257Z",
-     "iopub.status.idle": "2024-12-12T21:37:01.618434Z",
-     "shell.execute_reply": "2024-12-12T21:37:01.617980Z"
+     "iopub.execute_input": "2024-12-12T21:37:13.112452Z",
+     "iopub.status.busy": "2024-12-12T21:37:13.112118Z",
+     "iopub.status.idle": "2024-12-12T21:37:13.115266Z",
+     "shell.execute_reply": "2024-12-12T21:37:13.114736Z"
     }
    },
    "outputs": [],
@@ -453,13 +453,13 @@
   {
    "cell_type": "code",
    "execution_count": 13,
-   "id": "699be31a",
+   "id": "23a84487",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:37:01.620089Z",
-     "iopub.status.busy": "2024-12-12T21:37:01.619782Z",
-     "iopub.status.idle": "2024-12-12T21:37:23.593616Z",
-     "shell.execute_reply": "2024-12-12T21:37:23.593059Z"
+     "iopub.execute_input": "2024-12-12T21:37:13.117324Z",
+     "iopub.status.busy": "2024-12-12T21:37:13.116991Z",
+     "iopub.status.idle": "2024-12-12T21:37:35.581155Z",
+     "shell.execute_reply": "2024-12-12T21:37:35.580610Z"
     }
    },
    "outputs": [
@@ -467,7 +467,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "peak memory: 1350.37 MiB, increment: 121.01 MiB\n"
+      "peak memory: 1379.41 MiB, increment: 76.45 MiB\n"
      ]
     }
    ],
