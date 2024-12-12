@@ -25,5 +25,6 @@ warn(
     I thank all of the users and contributors over the years and hope that the new Keras wrappers will meet your needs.
     TODO: add link to Keras docs and release here.
     """,
+    DeprecationWarning,
     stacklevel=1,
 )
