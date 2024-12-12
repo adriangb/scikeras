@@ -186,16 +186,8 @@
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1734038920.147006    4126 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1734038920.154708    4126 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-/home/runner/work/scikeras/scikeras/scikeras/__init__.py:20: UserWarning:
-    This project is now deprecated. Keras has re-introduced wrappers with a similar API to those in SciKeras, but they will be better maintained.
-    SciKeras was a project to meet a specific need that was developed by a single developer.
-    I no longer use Keras nor do I have the time to maintain this project, which became increasingly difficult with multiple versions of Keras and Scikit-Learn to support.
-    I thank all of the users and contributors over the years and hope that the new Keras wrappers will meet your needs.
-    TODO: add link to Keras docs and release here.
-
-  warn(
+E0000 00:00:1734039554.584788    3737 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1734039554.591610    3737 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
 </pre></div></div>
 </div>
 <p>Silence TensorFlow warnings to keep output succint.</p>
@@ -386,7 +378,7 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-bold">4/4</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">0s</span> 19ms/step
+<span class="ansi-bold">4/4</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">0s</span> 11ms/step
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -402,8 +394,8 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.5451964]
- [0.5355441]]
+[[0.4522208 ]
+ [0.53824496]]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -419,8 +411,8 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[[0.25976637 0.1971219  0.24332424 0.14920756 0.15057984]
- [0.24317467 0.1991331  0.22396968 0.1466002  0.18712232]]
+[[0.2316314  0.23314717 0.1439303  0.1830156  0.20827545]
+ [0.22643328 0.18958646 0.15654194 0.2348982  0.1925402 ]]
 </pre></div></div>
 </div>
 <p>As you can see, our <code class="docutils literal notranslate"><span class="pre">predict</span></code> output is also a list of arrays, except it contains probabilities instead of the class predictions.</p>
@@ -510,7 +502,7 @@ docs</a>.</p>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 `y`, as will be passed to Keras:
-[array([0, 0, 0, 0]), array([4, 3, 0, 4])]
+[array([0, 0, 1, 1]), array([0, 3, 4, 1])]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -537,11 +529,11 @@ docs</a>.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[1, 0],
-       [1, 0],
-       [1, 0],
-       [1, 0],
-       [1, 2]])
+array([[0, 1],
+       [1, 3],
+       [0, 1],
+       [0, 1],
+       [0, 0]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -614,7 +606,7 @@ metadata = {&#39;n_classes_&#39;: [2, 5], &#39;n_outputs_expected_&#39;: 2}
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-np.float64(0.45999999999999996)
+np.float64(0.505)
 </pre></div></div>
 </div>
 </section>
@@ -684,12 +676,21 @@ np.float64(0.45999999999999996)
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages/keras/src/models/functional.py:225: UserWarning: The structure of `inputs` doesn&#39;t match the expected structure: [&#39;keras_tensor_8&#39;, &#39;keras_tensor_9&#39;]. Received: the structure of inputs=(&#39;*&#39;, &#39;*&#39;)
+  warnings.warn(
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-bold">4/4</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">0s</span> 19ms/step
+<span class="ansi-bold">4/4</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">0s</span> 15ms/step
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -708,7 +709,7 @@ np.float64(0.45999999999999996)
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--4.812543837594419
+-6.498213492806823
 </pre></div></div>
 </div>
 <p>Having verified that our model builds without errors and accepts the inputs types we expect, we move onto integrating a transformer into our SciKeras model.</p>
@@ -749,13 +750,24 @@ np.float64(0.45999999999999996)
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages/keras/src/models/functional.py:225: UserWarning: The structure of `inputs` doesn&#39;t match the expected structure: [&#39;keras_tensor_14&#39;, &#39;keras_tensor_15&#39;]. Received: the structure of inputs=(&#39;*&#39;, &#39;*&#39;)
+  warnings.warn(
+/home/runner/work/scikeras/scikeras/.venv/lib/python3.12/site-packages/keras/src/models/functional.py:225: UserWarning: The structure of `inputs` doesn&#39;t match the expected structure: [&#39;keras_tensor_14&#39;, &#39;keras_tensor_15&#39;]. Received: the structure of inputs=(&#39;*&#39;, &#39;*&#39;)
+  warnings.warn(
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
--3.1555271036919734
+-3.8220510626515836
 </pre></div></div>
 </div>
 </section>
@@ -929,25 +941,25 @@ np.float64(0.45999999999999996)
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/10
-<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">18s</span> 40ms/step - loss: 0.6742 - val_loss: 0.0753
+<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">17s</span> 38ms/step - loss: 0.6743 - val_loss: 0.0757
 Epoch 2/10
-<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">20s</span> 38ms/step - loss: 0.1209 - val_loss: 0.0551
+<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">16s</span> 39ms/step - loss: 0.1212 - val_loss: 0.0552
 Epoch 3/10
-<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">16s</span> 37ms/step - loss: 0.0879 - val_loss: 0.0469
+<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">16s</span> 37ms/step - loss: 0.0881 - val_loss: 0.0469
 Epoch 4/10
-<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">18s</span> 43ms/step - loss: 0.0726 - val_loss: 0.0431
+<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">16s</span> 38ms/step - loss: 0.0728 - val_loss: 0.0424
 Epoch 5/10
-<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">16s</span> 33ms/step - loss: 0.0646 - val_loss: 0.0374
+<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">22s</span> 41ms/step - loss: 0.0646 - val_loss: 0.0371
 Epoch 6/10
-<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">17s</span> 40ms/step - loss: 0.0586 - val_loss: 0.0359
+<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">21s</span> 43ms/step - loss: 0.0587 - val_loss: 0.0357
 Epoch 7/10
-<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">20s</span> 40ms/step - loss: 0.0557 - val_loss: 0.0344
+<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">18s</span> 37ms/step - loss: 0.0554 - val_loss: 0.0342
 Epoch 8/10
-<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">18s</span> 34ms/step - loss: 0.0523 - val_loss: 0.0329
+<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">18s</span> 43ms/step - loss: 0.0524 - val_loss: 0.0331
 Epoch 9/10
-<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">23s</span> 39ms/step - loss: 0.0492 - val_loss: 0.0344
+<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">20s</span> 42ms/step - loss: 0.0491 - val_loss: 0.0342
 Epoch 10/10
-<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">20s</span> 37ms/step - loss: 0.0456 - val_loss: 0.0323
+<span class="ansi-bold">422/422</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">16s</span> 38ms/step - loss: 0.0454 - val_loss: 0.0320
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1360,7 +1372,7 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
   background-color: var(--sklearn-color-fitted-level-3);
 }
 </style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>MultiDimensionalClassifier(
-    model=&lt;function get_model at 0x7f71f8433ba0&gt;
+    model=&lt;function get_model at 0x7f9a98137240&gt;
     build_fn=None
     warm_start=False
     random_state=0
@@ -1377,7 +1389,7 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
     epochs=10
     class_weight=None
 )</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item"><div class="sk-estimator fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox" checked><label for="sk-estimator-id-1" class="sk-toggleable__label fitted sk-toggleable__label-arrow fitted">&nbsp;MultiDimensionalClassifier<span class="sk-estimator-doc-link fitted">i<span>Fitted</span></span></label><div class="sk-toggleable__content fitted"><pre>MultiDimensionalClassifier(
-    model=&lt;function get_model at 0x7f71f8433ba0&gt;
+    model=&lt;function get_model at 0x7f9a98137240&gt;
     build_fn=None
     warm_start=False
     random_state=0
@@ -1409,7 +1421,7 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-bold">79/79</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">1s</span> 14ms/step
+<span class="ansi-bold">79/79</span> <span class="ansi-green-fg">━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-bold">1s</span> 15ms/step
 Test score (accuracy): 0.99
 </pre></div></div>
 </div>
