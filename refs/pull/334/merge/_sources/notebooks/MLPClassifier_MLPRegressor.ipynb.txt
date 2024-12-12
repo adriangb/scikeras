@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "raw",
-   "id": "a3070cce",
+   "id": "a148a93a",
    "metadata": {},
    "source": [
     "<a href=\"https://colab.research.google.com/github/adriangb/scikeras/blob/docs-deploy/refs/heads/master/notebooks/MLPClassifier_MLPRegressor.ipynb\"><img src=\"https://www.tensorflow.org/images/colab_logo_32px.png\">Run in Google Colab</a>"
@@ -10,7 +10,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "a8b60d5d",
+   "id": "a79fdc66",
    "metadata": {},
    "source": [
     "# MLPClassifier and MLPRegressor in SciKeras\n",
@@ -39,13 +39,13 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "7bd27b0a",
+   "id": "37a866bd",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:32.456115Z",
-     "iopub.status.busy": "2024-12-12T21:44:32.455930Z",
-     "iopub.status.idle": "2024-12-12T21:44:35.132952Z",
-     "shell.execute_reply": "2024-12-12T21:44:35.131809Z"
+     "iopub.execute_input": "2024-12-12T21:48:14.344883Z",
+     "iopub.status.busy": "2024-12-12T21:48:14.344611Z",
+     "iopub.status.idle": "2024-12-12T21:48:18.211514Z",
+     "shell.execute_reply": "2024-12-12T21:48:18.210710Z"
     }
    },
    "outputs": [
@@ -54,8 +54,8 @@
      "output_type": "stream",
      "text": [
       "WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\n",
-      "E0000 00:00:1734039872.800075    6984 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
-      "E0000 00:00:1734039872.804409    6984 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"
+      "E0000 00:00:1734040094.894289    7090 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
+      "E0000 00:00:1734040094.901755    7090 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"
      ]
     }
    ],
@@ -68,7 +68,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "14148c43",
+   "id": "a895ca39",
    "metadata": {},
    "source": [
     "Silence TensorFlow logging to keep output succinct."
@@ -77,13 +77,13 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "db53d641",
+   "id": "5c74a35a",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:35.137702Z",
-     "iopub.status.busy": "2024-12-12T21:44:35.136105Z",
-     "iopub.status.idle": "2024-12-12T21:44:35.144230Z",
-     "shell.execute_reply": "2024-12-12T21:44:35.142491Z"
+     "iopub.execute_input": "2024-12-12T21:48:18.216060Z",
+     "iopub.status.busy": "2024-12-12T21:48:18.214414Z",
+     "iopub.status.idle": "2024-12-12T21:48:18.221366Z",
+     "shell.execute_reply": "2024-12-12T21:48:18.220396Z"
     }
    },
    "outputs": [],
@@ -97,13 +97,13 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "bf370545",
+   "id": "18672268",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:35.148589Z",
-     "iopub.status.busy": "2024-12-12T21:44:35.148041Z",
-     "iopub.status.idle": "2024-12-12T21:44:35.696510Z",
-     "shell.execute_reply": "2024-12-12T21:44:35.695906Z"
+     "iopub.execute_input": "2024-12-12T21:48:18.226230Z",
+     "iopub.status.busy": "2024-12-12T21:48:18.225398Z",
+     "iopub.status.idle": "2024-12-12T21:48:18.773221Z",
+     "shell.execute_reply": "2024-12-12T21:48:18.772390Z"
     }
    },
    "outputs": [],
@@ -115,7 +115,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "6d589f88",
+   "id": "02c0d790",
    "metadata": {},
    "source": [
     "## 2. Defining the Keras Model\n",
@@ -126,13 +126,13 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "f3b122a0",
+   "id": "790636e2",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:35.700990Z",
-     "iopub.status.busy": "2024-12-12T21:44:35.699475Z",
-     "iopub.status.idle": "2024-12-12T21:44:35.705680Z",
-     "shell.execute_reply": "2024-12-12T21:44:35.704371Z"
+     "iopub.execute_input": "2024-12-12T21:48:18.776600Z",
+     "iopub.status.busy": "2024-12-12T21:48:18.775627Z",
+     "iopub.status.idle": "2024-12-12T21:48:18.781424Z",
+     "shell.execute_reply": "2024-12-12T21:48:18.779107Z"
     }
    },
    "outputs": [],
@@ -144,7 +144,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "065bf981",
+   "id": "cf82f877",
    "metadata": {},
    "source": [
     "### 2.1 Inputs\n",
@@ -155,13 +155,13 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "86913d7f",
+   "id": "506110fc",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:35.709918Z",
-     "iopub.status.busy": "2024-12-12T21:44:35.709476Z",
-     "iopub.status.idle": "2024-12-12T21:44:35.714204Z",
-     "shell.execute_reply": "2024-12-12T21:44:35.713488Z"
+     "iopub.execute_input": "2024-12-12T21:48:18.785756Z",
+     "iopub.status.busy": "2024-12-12T21:48:18.784945Z",
+     "iopub.status.idle": "2024-12-12T21:48:18.790874Z",
+     "shell.execute_reply": "2024-12-12T21:48:18.789899Z"
     }
    },
    "outputs": [],
@@ -178,7 +178,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "46bdd42a",
+   "id": "93015326",
    "metadata": {},
    "source": [
     "### 2.2 Hidden Layers\n",
@@ -189,13 +189,13 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "8c85a7ed",
+   "id": "ff38f806",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:35.717231Z",
-     "iopub.status.busy": "2024-12-12T21:44:35.716367Z",
-     "iopub.status.idle": "2024-12-12T21:44:35.724127Z",
-     "shell.execute_reply": "2024-12-12T21:44:35.722968Z"
+     "iopub.execute_input": "2024-12-12T21:48:18.794997Z",
+     "iopub.status.busy": "2024-12-12T21:48:18.793180Z",
+     "iopub.status.idle": "2024-12-12T21:48:18.800036Z",
+     "shell.execute_reply": "2024-12-12T21:48:18.799064Z"
     }
    },
    "outputs": [],
@@ -212,7 +212,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "747c4880",
+   "id": "0cdef96f",
    "metadata": {},
    "source": [
     "### 2.3 Output layers\n",
@@ -227,13 +227,13 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "9b829dc2",
+   "id": "f6f06727",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:35.728460Z",
-     "iopub.status.busy": "2024-12-12T21:44:35.727639Z",
-     "iopub.status.idle": "2024-12-12T21:44:35.736139Z",
-     "shell.execute_reply": "2024-12-12T21:44:35.734677Z"
+     "iopub.execute_input": "2024-12-12T21:48:18.803175Z",
+     "iopub.status.busy": "2024-12-12T21:48:18.802857Z",
+     "iopub.status.idle": "2024-12-12T21:48:18.810403Z",
+     "shell.execute_reply": "2024-12-12T21:48:18.809690Z"
     }
    },
    "outputs": [],
@@ -260,7 +260,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "d26db6b1",
+   "id": "5c953b61",
    "metadata": {},
    "source": [
     "For now, we raise a `NotImplementedError` for other target types. For an example handling multi-output target types, see the [Multi Output notebook](https://colab.research.google.com/github/adriangb/scikeras/blob/master/notebooks/MultiInput.ipynb).\n",
@@ -273,13 +273,13 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "4e4df996",
+   "id": "a8610d4d",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:35.741314Z",
-     "iopub.status.busy": "2024-12-12T21:44:35.739830Z",
-     "iopub.status.idle": "2024-12-12T21:44:35.748533Z",
-     "shell.execute_reply": "2024-12-12T21:44:35.747058Z"
+     "iopub.execute_input": "2024-12-12T21:48:18.813810Z",
+     "iopub.status.busy": "2024-12-12T21:48:18.813161Z",
+     "iopub.status.idle": "2024-12-12T21:48:18.820724Z",
+     "shell.execute_reply": "2024-12-12T21:48:18.819697Z"
     }
    },
    "outputs": [],
@@ -309,7 +309,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "3cddf4e6",
+   "id": "27cc657d",
    "metadata": {},
    "source": [
     "At this point, we have a valid, compiled model. However if we want to be able to tune the optimizer, we should accept `compile_kwargs` as a parameter in `get_clf_model`. `compile_kwargs` will be a dictionary containing valid `kwargs` for `Model.compile`, so we can unpack it directly like `model.compile(**compile_kwargs)`. In this case however, we will only be taking the `optimizer` kwarg."
@@ -318,13 +318,13 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "3676426d",
+   "id": "7bee5022",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:35.752270Z",
-     "iopub.status.busy": "2024-12-12T21:44:35.751721Z",
-     "iopub.status.idle": "2024-12-12T21:44:35.758772Z",
-     "shell.execute_reply": "2024-12-12T21:44:35.757892Z"
+     "iopub.execute_input": "2024-12-12T21:48:18.823931Z",
+     "iopub.status.busy": "2024-12-12T21:48:18.823204Z",
+     "iopub.status.idle": "2024-12-12T21:48:18.832987Z",
+     "shell.execute_reply": "2024-12-12T21:48:18.830896Z"
     }
    },
    "outputs": [],
@@ -354,7 +354,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "f9e677a5",
+   "id": "03976282",
    "metadata": {},
    "source": [
     "### 2.5 Wrapping with SciKeras\n",
@@ -369,13 +369,13 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "f4a95679",
+   "id": "53e0da68",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:35.762050Z",
-     "iopub.status.busy": "2024-12-12T21:44:35.761740Z",
-     "iopub.status.idle": "2024-12-12T21:44:35.766780Z",
-     "shell.execute_reply": "2024-12-12T21:44:35.765126Z"
+     "iopub.execute_input": "2024-12-12T21:48:18.836700Z",
+     "iopub.status.busy": "2024-12-12T21:48:18.836122Z",
+     "iopub.status.idle": "2024-12-12T21:48:18.841369Z",
+     "shell.execute_reply": "2024-12-12T21:48:18.840331Z"
     }
    },
    "outputs": [],
@@ -392,7 +392,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "35021dde",
+   "id": "41252e95",
    "metadata": {},
    "source": [
     "## 3. Testing our classifier\n",
@@ -403,13 +403,13 @@
   {
    "cell_type": "code",
    "execution_count": 11,
-   "id": "36b97c1e",
+   "id": "6ed82aca",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:35.771994Z",
-     "iopub.status.busy": "2024-12-12T21:44:35.769695Z",
-     "iopub.status.idle": "2024-12-12T21:44:39.759101Z",
-     "shell.execute_reply": "2024-12-12T21:44:39.758354Z"
+     "iopub.execute_input": "2024-12-12T21:48:18.844671Z",
+     "iopub.status.busy": "2024-12-12T21:48:18.844040Z",
+     "iopub.status.idle": "2024-12-12T21:48:22.538164Z",
+     "shell.execute_reply": "2024-12-12T21:48:22.537438Z"
     }
    },
    "outputs": [
@@ -417,7 +417,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "0.99\n"
+      "0.95\n"
      ]
     }
    ],
@@ -435,7 +435,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "77160e5b",
+   "id": "586b5f69",
    "metadata": {},
    "source": [
     "We get a score above 0.7, which is reasonable and indicates that our classifier is generally working.\n",
@@ -454,13 +454,13 @@
   {
    "cell_type": "code",
    "execution_count": 12,
-   "id": "135fc18d",
+   "id": "56e2c931",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:39.762304Z",
-     "iopub.status.busy": "2024-12-12T21:44:39.761620Z",
-     "iopub.status.idle": "2024-12-12T21:44:39.767838Z",
-     "shell.execute_reply": "2024-12-12T21:44:39.766878Z"
+     "iopub.execute_input": "2024-12-12T21:48:22.542035Z",
+     "iopub.status.busy": "2024-12-12T21:48:22.541440Z",
+     "iopub.status.idle": "2024-12-12T21:48:22.548037Z",
+     "shell.execute_reply": "2024-12-12T21:48:22.546558Z"
     }
    },
    "outputs": [],
@@ -485,7 +485,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "e4644348",
+   "id": "4fa4ebb7",
    "metadata": {},
    "source": [
     "Next, we will embed our model into `_keras_build_fn`, which takes the place of `get_clf_model`. Note that since this is now an part of the model, we no longer need to accept the any parameters in the function signature. We still accept `compile_kwargs` because we use it to get the optimizer initialized with all of it's parameters."
@@ -494,13 +494,13 @@
   {
    "cell_type": "code",
    "execution_count": 13,
-   "id": "63345b18",
+   "id": "32bce80b",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:39.771172Z",
-     "iopub.status.busy": "2024-12-12T21:44:39.770700Z",
-     "iopub.status.idle": "2024-12-12T21:44:39.781346Z",
-     "shell.execute_reply": "2024-12-12T21:44:39.780303Z"
+     "iopub.execute_input": "2024-12-12T21:48:22.550867Z",
+     "iopub.status.busy": "2024-12-12T21:48:22.550622Z",
+     "iopub.status.idle": "2024-12-12T21:48:22.560377Z",
+     "shell.execute_reply": "2024-12-12T21:48:22.558592Z"
     }
    },
    "outputs": [],
@@ -547,7 +547,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "36ff9db5",
+   "id": "1255ec43",
    "metadata": {},
    "source": [
     "Let's check that our subclassed model works:"
@@ -556,13 +556,13 @@
   {
    "cell_type": "code",
    "execution_count": 14,
-   "id": "b2d73dc7",
+   "id": "4e6dbc79",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:39.784707Z",
-     "iopub.status.busy": "2024-12-12T21:44:39.784200Z",
-     "iopub.status.idle": "2024-12-12T21:44:41.966001Z",
-     "shell.execute_reply": "2024-12-12T21:44:41.965053Z"
+     "iopub.execute_input": "2024-12-12T21:48:22.564133Z",
+     "iopub.status.busy": "2024-12-12T21:48:22.563580Z",
+     "iopub.status.idle": "2024-12-12T21:48:24.634447Z",
+     "shell.execute_reply": "2024-12-12T21:48:24.633419Z"
     }
    },
    "outputs": [
@@ -570,7 +570,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "0.97\n"
+      "0.93\n"
      ]
     }
    ],
@@ -583,7 +583,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "2c876e02",
+   "id": "aef15b29",
    "metadata": {},
    "source": [
     "## 5. MLPRegressor\n",
@@ -594,13 +594,13 @@
   {
    "cell_type": "code",
    "execution_count": 15,
-   "id": "b8ff61c1",
+   "id": "56e02c29",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:41.969280Z",
-     "iopub.status.busy": "2024-12-12T21:44:41.968736Z",
-     "iopub.status.idle": "2024-12-12T21:44:41.976395Z",
-     "shell.execute_reply": "2024-12-12T21:44:41.975827Z"
+     "iopub.execute_input": "2024-12-12T21:48:24.637802Z",
+     "iopub.status.busy": "2024-12-12T21:48:24.637514Z",
+     "iopub.status.idle": "2024-12-12T21:48:24.648663Z",
+     "shell.execute_reply": "2024-12-12T21:48:24.647610Z"
     },
     "lines_to_next_cell": 2
    },
@@ -639,13 +639,13 @@
   {
    "cell_type": "code",
    "execution_count": 16,
-   "id": "923599fa",
+   "id": "09488069",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-12-12T21:44:41.982564Z",
-     "iopub.status.busy": "2024-12-12T21:44:41.979731Z",
-     "iopub.status.idle": "2024-12-12T21:44:44.304788Z",
-     "shell.execute_reply": "2024-12-12T21:44:44.304107Z"
+     "iopub.execute_input": "2024-12-12T21:48:24.652116Z",
+     "iopub.status.busy": "2024-12-12T21:48:24.651581Z",
+     "iopub.status.idle": "2024-12-12T21:48:26.987826Z",
+     "shell.execute_reply": "2024-12-12T21:48:26.986771Z"
     }
    },
    "outputs": [
@@ -653,7 +653,7 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "-0.05879330635070801\n"
+      "-0.21310842037200928\n"
      ]
     }
    ],
