@@ -1,5 +1,12 @@
 # Scikit-Learn Wrapper for Keras
 
+> [!WARNING]  
+> This project is now deprecated. Keras has re-introduced wrappers with a similar API to those in SciKeras, but they will be better maintained.
+> SciKeras was a project to meet a specific need that was developed by a single developer.
+> I no longer use Keras nor do I have the time to maintain this project, which became increasingly difficult with multiple versions of Keras and Scikit-Learn to support.
+> I thank all of the users and contributors over the years and hope that the new Keras wrappers will meet your needs.
+> TODO: add link to Keras docs and release here.
+
 [![Build Status](https://github.com/adriangb/scikeras/workflows/Tests/badge.svg)](https://github.com/adriangb/scikeras/actions?query=workflow%3ATests+branch%3Amaster)
 [![Coverage Status](https://codecov.io/gh/adriangb/scikeras/branch/master/graph/badge.svg)](https://codecov.io/gh/adriangb/scikeras)
 [![Docs](https://github.com/adriangb/scikeras/workflows/Build%20Docs/badge.svg)](https://www.adriangb.com/scikeras/)
